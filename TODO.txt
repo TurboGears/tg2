@@ -1,0 +1,19 @@
+TODO:
+=====
+
+* transaction middleware, pre-configured for a transaction-per-request model
+    with auto-rollback and auto-commit    
+* Updated database setup code that allows for use of model files outside of Pylons/TG
+* Additional paster commands for TurboGears shell, etc?
+* Comments and documentation.  
+    I added some docstrings and comments, and started placing TODO's in the code. 
+* Plenty of unit tests
+* Upgrade Guide
+
+Done: 
+
+* name change -- Kevin changed the name of the egg, and the but the two pygears folders should be change when we move this to trunk. 
+
+Decided not to do:
+
+* A clone of tg-admin on top of paster (started by Noah) -- 
