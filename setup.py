@@ -1,19 +1,22 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1'
+if sys.version_info < (2, 3):
+    raise SystemExit("Python 2.3 or later is required")
+
+execfile(os.path.join("tg", "release.py"))
 
 setup(
     name='TurboGears2',
     version=version,
-    description='Next generation TurboGears',
-    long_description='Next generation TurboGears built on Pylons',
+    description=description,
+    long_description=long_description,
     classifiers=[],
     keywords='turbogears pylons',
-    author='Mark Ramm',
-    author_email='mark.ramm@gmail.com',
-    url='http://www.turbogears.org/',
-    license='MIT',
+    author=author,
+    author_email=email,
+    url=url,
+    license=license,
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
