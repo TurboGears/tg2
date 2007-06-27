@@ -11,7 +11,8 @@ To install TurboGears2, the following software packages must be installed:
    + Please keep in mind, that for RPM-based systems you will also need
    python-devel and python-xml packages.
  * Pylons version > 0.9.5
-
+   + A development version is preferable since pylons' trunk had fixed some 
+   bugs that we had cooperated with.
 
 Installing TurboGears2
 -----------------------
@@ -24,37 +25,43 @@ site-packages directory of your python installation.
 
 Another way is getting the source from svn::
 
-    $ svn co http://svn.turbogears.org/branch/pygears pygears
+    $ svn co http://pylonshq.com/svn/Pylons/trunk pylons
+    $ svn co http://svn.turbogears.org/trunk tg2
 
 and install the source in development mode::
 
-    $ python ./setup.py develop
-
+    $ python ./pylons/setup.py develop
+    $ python ./tg2/setup.py develop
+    
 Update the source 
 -----------------
 
-To update the source to the current develop version. Enter the pygears folder and type the command::
+To update the source to the current develop version. Enter the tg2 folder and type the command::
 
     $ svn update
  
+Creating a Quickstart Project
+------------------------------
+
+TurboGears2 is built on Pylons and share pylons' "paster" commands.
+Enter command::
+
+    $ paster --help
+ 
+to get the availble command list.
+
+The command::
+
+    $ paster quickstart tutorial
+
+will generate the "tutorial" package based on quickstart templates for you.
+
+ 
 Running the Demo 
 -----------------
- 
-TurboGears2 is built on Pylons and share pylons' "paster" commands.
- 
-enter the blogtutorial folder and type::
+
+Enter the tutorial folder and type::
  
     $ paster serve development.ini
  
 Browse http://127.0.0.1:8080 for demo.
- 
-
-Creating a Quickstart Project
-------------------------------
-
-The command::
-
-    $ paster quickstart
-
-will generate the quickstart templates for you.
-
