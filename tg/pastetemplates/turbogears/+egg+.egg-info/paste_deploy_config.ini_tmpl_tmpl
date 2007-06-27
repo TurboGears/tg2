@@ -1,0 +1,36 @@
+#
+# ${project} - Pylons configuration
+#
+# The %(here)s variable will be replaced with the parent directory of this file
+#
+[DEFAULT]
+debug = true
+email_to = you@yourdomain.com
+smtp_server = localhost
+error_email_from = paste@localhost
+
+[server:main]
+use = egg:Paste#http
+host = 0.0.0.0
+port = 8080
+
+[app:main]
+use = egg:${project}
+cache_dir = %(here)s/data
+session_key = ${package}
+session_secret = $${app_instance_secret}
+app_instance_uuid = $${app_instance_uuid}
+
+# Specify the database for SQLAlchemy to use via
+# pylons.database.session_context.
+# %(here) may include a ':' character on Windows environments; this can
+# invalidate the URI when specifying a SQLite db via path name
+#sqlalchemy.dburi = sqlite:///%(here)s/somedb.db
+
+# Specify the database for SQLObject to use via pylons.database.PackageHub.
+#sqlobject.dburi = sqlite://%(here)s/somedb.db
+
+# WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
+# Debug mode will enable the interactive debugging tool, allowing ANYONE to
+# execute malicious code after an exception is raised.
+set debug = false

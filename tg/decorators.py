@@ -1,0 +1,154 @@
+import formencode
+from paste.util.mimeparse import best_match
+
+def _schema(d=None, **kw):
+    dd = {}
+    if d:
+        dd.update(d)
+    dd.update(**kw)
+    return formencode.Schema.__metaclass__('schema', (formencode.Schema,), dd)
+
+class TGDecoration(object):
+
+    def __init__(self):
+        self.engines = {}
+        self.validator = None
+        self.error_handler = None
+        self.hooks = dict(
+            before_validate=[],
+            before_call=[],
+            before_render=[],
+            after_render=[])
+
+
+    @classmethod
+    def get_decoration(klass, func):
+        if not hasattr(func, 'tg_info'):
+            func.tg_info=klass()
+        return func.tg_info
+
+    @property
+    def exposed(self):
+        if self.engines: return True
+        else: return False
+
+    def run_hooks(self, hook, *l, **kw):
+        for func in self.hooks[hook]:
+            func(*l, **kw)
+
+    def register_template_engine(self, content_type, engine, template, exclude_names):
+        if content_type is None:
+            content_type = '*/*'
+        self.engines[content_type] = engine, template, exclude_names
+
+    def lookup_template_engine(self, request):
+        tg_format = request.headers.get('tg_format')
+        if tg_format:
+            assert '/' in tg_format, 'Invalid tg_format: must be a MIME type'
+            accept_types = tg_format
+        else: accept_types = request.headers.get('accept', '*/*')
+        content_type = best_match(self.engines.keys(), accept_types)
+        engine, template, exclude_names = self.engines[content_type]
+        return content_type, engine, template, exclude_names
+
+    def register_hook(self, hook_name, func):
+        self.hooks[hook_name].append(func)
+
+class _hook_decorator(object):
+    hook_name=None # must be overridden
+
+    def __init__(self, hook_func):
+        self.hook_func = hook_func
+
+    def __call__(self, func):
+        deco = TGDecoration.get_decoration(func)
+        deco.register_hook(self.hook_name, self.hook_func)
+        return func
+
+class before_validate(_hook_decorator):
+    hook_name = 'before_validate'
+    
+class before_call(_hook_decorator):
+    hook_name = 'before_call'
+    
+class before_render(_hook_decorator):
+    hook_name = 'before_render'
+    
+class after_render(_hook_decorator):
+    hook_name = 'after_render'
+
+class expose(object):
+    """The expose decorator regesters a number of attributes on the decorated function, but 
+    does not actually wrap the function the way TurboGears 1.0 style expose decorators did. 
+    
+    This means that we don't have to play any kind of special tricks to maintain the signature 
+    of the exposed function.
+    
+    The exclude_names parameter is new, and it takes a list of keys that ought to be scrubbed
+    from the dictinary before passing it on to the rendering engine.   This is particularly 
+    usefull for JSON. 
+    
+    Expose decorator can be stacked like this:
+    
+    @expose('json', exclude_names='d')
+    @expose('kid:blogtutorial.templates.test_form', content_type='text/html')
+    def my_exposed_method(self):
+        return dict(a=1, b=2, d="username")
+    
+    the expose('json') syntax is a special case.  json is the buffet rendering engine, but
+    it does not require a template, and expose assumes that it matches content_type='text/json'
+    
+    Otherwise expose assumes that the template is for html.   All other content_types must 
+    be explicitly matched to a template and engine.   
+    """
+    def __init__(self, template='', content_type=None, exclude_names=None):
+        if exclude_names is None:
+            exclude_names = []
+        if template == 'json':
+            engine, template = 'json', ''
+        elif ':' in template:
+            engine, template = template.split(':', 1)
+        elif template:
+            engine, template = 'genshi', template
+        else:
+            engine, template = None, None
+        if content_type is None:
+            if engine == 'json': content_type = 'application/json'
+            else: content_type = 'text/html'
+        if engine == 'json' and 'context' not in exclude_names:
+            exclude_names.append('context')
+        self.engine = engine
+        self.template = template
+        self.content_type = content_type
+        self.exclude_names = exclude_names
+
+    def __call__(self, func):
+        deco = TGDecoration.get_decoration(func)
+        deco.register_template_engine(
+            self.content_type, self.engine, self.template, self.exclude_names)
+        return func
+
+class validate(object):
+    """Validate regesters validator on the decorated function.
+    
+    The syntax for validators is:
+    
+    
+    """
+    def __init__(self, validator=None, error_handler=None, **kw):
+        if not hasattr(validator, 'to_python') and hasattr(validator, 'validator'):
+            validator = validator.validator
+        elif kw:
+            assert validator is None, \
+                   'validator must not be specified with additional keyword arguments'
+            validator = kw
+        if not isinstance(validator, formencode.Schema):
+            validator = _schema(validator)
+        self.validator = validator
+        self.error_handler = error_handler
+
+    def __call__(self, func):
+        deco = TGDecoration.get_decoration(func)
+        deco.validator = self.validator
+        deco.error_handler = self.error_handler
+        return func

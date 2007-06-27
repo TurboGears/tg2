@@ -1,0 +1,34 @@
+[egg_info]
+tag_build = dev
+tag_svn_revision = true
+
+[easy_install]
+find_links = http://www.pylonshq.com/download/
+
+[pudge]
+theme = pythonpaste.org
+
+# Add extra doc files here with spaces between them
+docs = ${package}/docs/index.txt 
+
+# Doc Settings
+doc_base = ${package}/docs/
+dest = ${package}/docs/html
+
+# Add extra modules here separated with commas
+modules = ${package}
+title = ${package.capitalize()}
+organization = Pylons
+
+# Optionally add extra links
+#organization_url = http://pylonshq.com/
+#trac_url = http://pylonshq.com/project
+settings = no_about=true
+
+# Optionally add extra settings 
+#           link1=/community/ Community
+#           link2=/download/ Download
+ 
+[publish]
+doc-dir=${package}/docs/html
+make-dirs=1

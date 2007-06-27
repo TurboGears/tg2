@@ -1,0 +1,9 @@
+from tg import expose, validate, TurboGearsController
+from pylons.helpers import redirect_to
+        
+class rootController(TurboGearsController):
+    
+    @expose('${package}.templates.index')
+    def index(self):
+    	from datetime import datetime
+        return dict(now=datetime.now())

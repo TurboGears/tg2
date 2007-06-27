@@ -1,0 +1,4 @@
+from ${package}.lib.database import *
+
+# Import or define your Elixir classes here
+# from elixir import *

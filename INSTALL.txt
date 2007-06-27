@@ -1,0 +1,60 @@
+TurboGears2 Installation Guide
+===============================
+
+.. Note:: At current stage TurboGears2 is avaliable for developers.
+
+Requirements
+------------
+To install TurboGears2, the following software packages must be installed:
+
+ * Python, version >= 2.3.
+   + Please keep in mind, that for RPM-based systems you will also need
+   python-devel and python-xml packages.
+ * Pylons version > 0.9.5
+
+
+Installing TurboGears2
+-----------------------
+The command:
+
+  $ python ./setup.py install
+
+will byte-compile the python source code and install it in the
+site-packages directory of your python installation.
+
+Another way is getting the source from svn::
+
+    $ svn co http://svn.turbogears.org/branch/pygears pygears
+
+and install the source in development mode::
+
+    $ python ./setup.py develop
+
+Update the source 
+-----------------
+
+To update the source to the current develop version. Enter the pygears folder and type the command::
+
+    $ svn update
+ 
+Running the Demo 
+-----------------
+ 
+TurboGears2 is built on Pylons and share pylons' "paster" commands.
+ 
+enter the blogtutorial folder and type::
+ 
+    $ paster serve development.ini
+ 
+Browse http://127.0.0.1:8080 for demo.
+ 
+
+Creating a Quickstart Project
+------------------------------
+
+The command::
+
+    $ paster quickstart
+
+will generate the quickstart templates for you.
+
