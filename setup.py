@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 import sys, os
 
-if sys.version_info < (2, 3):
-    raise SystemExit("Python 2.3 or later is required")
+if sys.version_info < (2, 4):
+    raise SystemExit("Python 2.4 or later is required")
 
 execfile(os.path.join("tg", "release.py"))
 
