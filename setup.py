@@ -24,6 +24,9 @@ setup(
         'PasteScript>=1.3',
         'Pylons==dev,<0.9.6'
     ],
+    extras_requires={
+        'core-testing' = ["nose", "TurboKid", "TurboJson"]
+    },
     entry_points='''
         [paste.paster_create_template]
         turbogears2=tg.pastetemplate:TurboGearsTemplate
