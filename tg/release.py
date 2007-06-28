@@ -1,17 +1,15 @@
 version = "2.0a1"
 description = "Next generation TurboGears built on Pylons"
 long_description="""
-TurboGears brings together four major pieces to create an
-easy to install, easy to use web megaframework. It covers
-everything from front end (AJAX for the browser and server,
-template engines in Python) to the controllers (http framework) to
-the back end (Object Relational Model).
+TurboGears brings together a variety of best of breed python tools 
+to create an easy to install, easy to use web megaframework. 
 
-The TurboGears project is focused on providing documentation
-and integration with these tools without losing touch
-with the communities that already exist around those tools.
+It provides and integrated and well tested set of tools for everything you need 
+to build dynamic, database driven applications.  TurboGears 2 provides you with 
+everything you need from the javascript programming tools, like ToscaWidgets and 
+automatic JSON generation, to one of the world's most powerful Object Relational 
+Mappers (SQLAlchemy).
 
-TurboGears is easy to use for a wide range of web applications.
 
 The latest development version is available in
 <a href="http://svn.turbogears.org/trunk#egg=turbogears-dev"

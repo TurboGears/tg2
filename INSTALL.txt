@@ -1,18 +1,19 @@
 TurboGears2 Installation Guide
 ===============================
 
-.. Note:: At current stage TurboGears2 is avaliable for developers.
+.. Note:: At current stage TurboGears2 is available testing by developers who are willing to use Subversion to track the latest changes. 
 
 Requirements
 ------------
-To install TurboGears2, the following software packages must be installed:
+While in Development there are several dependencies: 
 
- * Python, version >= 2.3.
+ * Python, version >= 2.4.
    + Please keep in mind, that for RPM-based systems you will also need
    python-devel and python-xml packages.
- * Pylons version > 0.9.5
-   + A development version is preferable since pylons' trunk had fixed some 
-   bugs that we had cooperated with.
+ * Pylons Trunk checkout. 
+    We require the development version is preferable since there are important
+    controller features which we need, as well as a template rendering bugfix 
+    which is nessisary for TurboJSON to work properly.
 
 Installing TurboGears2
 -----------------------
@@ -23,12 +24,13 @@ The command:
 will byte-compile the python source code and install it in the
 site-packages directory of your python installation.
 
-Another way is getting the source from svn::
+If you don't already have the turbogears and pylons source, you can 
+get them from svn::
 
     $ svn co http://pylonshq.com/svn/Pylons/trunk pylons
     $ svn co http://svn.turbogears.org/trunk tg2
 
-and install the source in development mode::
+and install TurboGears 2 in development mode::
 
     $ python ./pylons/setup.py develop
     $ python ./tg2/setup.py develop
@@ -39,6 +41,7 @@ Update the source
 To update the source to the current develop version. Enter the tg2 folder and type the command::
 
     $ svn update
+    $ python setup.py develop
  
 Creating a Quickstart Project
 ------------------------------
