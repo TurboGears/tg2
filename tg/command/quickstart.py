@@ -18,8 +18,11 @@ beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
 class quickstart(command.Command):
-    "Implementation of quickstart."
-    version = "0.1"
+    """
+    Implementation of quickstart.
+    
+    """
+    version = pkg_resources.get_distribution('turbogears2').version
     max_args = 3
     min_args = 0
     usage = "paster quickstart [options] [project name]"
@@ -30,7 +33,8 @@ class quickstart(command.Command):
     package = None
     dry_run = False
     templates = "turbogears2"
-    sqlalchemy = False
+    sqlalchemy = True
+    sqlobject = False
     identity = False
     
     parser = command.Command.standard_parser(verbose=True)
@@ -48,7 +52,10 @@ class quickstart(command.Command):
             dest="templates", default = templates)
     parser.add_option("-s", "--sqlalchemy",
             help="use SQLAlchemy instead of SQLObject",
-            action="store_true", dest="sqlalchemy", default = False)
+            action="store_true", dest="sqlalchemy", default = True)
+    parser.add_option("-o", "--sqlobject",
+            help="use SQLObject instead of SQLAlchemy",
+            action="store_true", dest="sqlobject", default = False)
     parser.add_option("-i", "--identity",
             help="provide Identity support",
             action="store_true", dest="identity", default = False)
@@ -57,7 +64,10 @@ class quickstart(command.Command):
         "Quickstarts the new project."
         if self.args:
             self.name = self.args[0]
-        
+
+        if self.sqlobject:
+            self.sqlalchemy = False
+
         while not self.name:
             self.name = raw_input("Enter project name: ")
         
