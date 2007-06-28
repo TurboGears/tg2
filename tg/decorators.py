@@ -96,7 +96,8 @@ class after_render(_hook_decorator):
     hook_name = 'after_render'
 
 class expose(object):
-    """The expose decorator regesters a number of attributes on the decorated function, but 
+    """
+    The expose decorator regesters a number of attributes on the decorated function, but 
     does not actually wrap the function the way TurboGears 1.0 style expose decorators did. 
     
     This means that we don't have to play any kind of special tricks to maintain the signature 
@@ -106,12 +107,12 @@ class expose(object):
     from the dictinary before passing it on to the rendering engine.   This is particularly 
     usefull for JSON. 
     
-    Expose decorator can be stacked like this:
+    Expose decorator can be stacked like this::
     
-    @expose('json', exclude_names='d')
-    @expose('kid:blogtutorial.templates.test_form', content_type='text/html')
-    def my_exposed_method(self):
-        return dict(a=1, b=2, d="username")
+        @expose('json', exclude_names='d')
+        @expose('kid:blogtutorial.templates.test_form', content_type='text/html')
+        def my_exposed_method(self):
+            return dict(a=1, b=2, d="username")
     
     the expose('json') syntax is a special case.  json is the buffet rendering engine, but
     it does not require a template, and expose assumes that it matches content_type='text/json'
