@@ -1,7 +1,7 @@
 from tg import expose, validate, TurboGearsController
 from pylons.helpers import redirect_to
         
-class rootController(TurboGearsController):
+class RootController(TurboGearsController):
     
     @expose('${package}.templates.index')
     def index(self):
