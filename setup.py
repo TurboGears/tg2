@@ -22,7 +22,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'PasteScript>=1.3',
-        'Pylons>0.9.5'
+        'Pylons==dev,<0.9.6'
     ],
     entry_points='''
         [paste.paster_create_template]
