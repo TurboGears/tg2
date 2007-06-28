@@ -9,16 +9,16 @@ from formencode.variabledecode import variable_decode
 
 from dispatch import object_dispatch
 
-
 _configured_engines = set()
 
-#TODO:  Should we make render response return a string if passed a string an not a dict...
+#TODO:  We make render response return a string if passed a string??
 
 def render_response(controller, response):
-    ''' Render response takes the dictionary returned by the controller calls the apropriate
-    template engine.   It uses information off of the tg_info object to decide which engine
-    and template to use, and removes anything in the exclude_names list.  All of these values 
-    are populated into the context object by the expose decorator. 
+    ''' Render response takes the dictionary returned by the controller calls 
+    the apropriate template engine.   It uses information off of the tg_info 
+    object to decide which engine and template to use, and removes anything 
+    in the exclude_names list.  All of these values are populated into the context 
+    object by the expose decorator. 
     '''
     content_type, engine_name, template_name, exclude_names = \
                   controller.tg_info.lookup_template_engine(pylons.request)
@@ -42,7 +42,7 @@ def render_response(controller, response):
 
 def error_for(name):
     '''Returns the error value for a particular filed name.'''
-    #TODO: Should we move tg_errors into the tg_info object, and just call it errors?
+    #TODO: Move tg_errors into the tg_info object?
     err = pylons.c.tg_errors.get(name)
     if err is None: return None
     return err
@@ -50,11 +50,11 @@ def error_for(name):
 def value_for(name):
     '''Returns the value for a particular form field when the form is redisplayed
     to show error messages'''
-    #TODO: Should we move the tg_values object into tg_info?
+    #TODO: Move the tg_values object into tg_info?
     return pylons.c.tg_values.get(name)
 
 class TurboGearsController(WSGIController):
-
+    
     def route(self, url='/', start_response=None, **kw):
         pylons.c.tg_errors = {}
         pylons.c.tg_values = {}

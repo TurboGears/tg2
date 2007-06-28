@@ -37,11 +37,25 @@ class TGDecoration(object):
             func(*l, **kw)
 
     def register_template_engine(self, content_type, engine, template, exclude_names):
+        '''Regesters an engine on the controller.   Multiple engines can be regestered, 
+        but only one engine per content_type.   If no content type is specified the engine
+        is regestered at */* which is the default, and will be used whenever no content 
+        type is specified.  
+        
+        exclude_names keeps track of a list of keys which will be removed from the 
+        controller's dictionary before it is loaded into the template.  This allows you to 
+        exclude some information from JSONification, and other 'automatic' engines which 
+        don't require a template.'''
+        
         if content_type is None:
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
 
     def lookup_template_engine(self, request):
+        '''Provides a convenience method to get the proper engine, content_type, template, 
+        and exclude_names for a particular tg_format (which is pulled off of the request
+        headers)."
+        '''
         tg_format = request.headers.get('tg_format')
         if tg_format:
             assert '/' in tg_format, 'Invalid tg_format: must be a MIME type'
@@ -52,6 +66,10 @@ class TGDecoration(object):
         return content_type, engine, template, exclude_names
 
     def register_hook(self, hook_name, func):
+        '''We now have four core hooks that can be applied by adding decorators: 
+        before_validate, before_call, before_render, and after_render.   regester_hook attaches the
+        function to the hook which get's called at the apropriate time in the controller's life cycle.)
+        '''
         self.hooks[hook_name].append(func)
 
 class _hook_decorator(object):
@@ -132,7 +150,6 @@ class validate(object):
     """Validate regesters validator on the decorated function.
     
     The syntax for validators is:
-    
     
     """
     def __init__(self, validator=None, error_handler=None, **kw):
