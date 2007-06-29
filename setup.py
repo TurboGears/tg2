@@ -25,7 +25,7 @@ setup(
         'Pylons==dev,<0.9.6'
     ],
     extras_requires={
-        'core-testing' = ["nose", "TurboKid", "TurboJson"]
+        'core-testing':["nose", "TurboKid", "TurboJson"]
     },
     entry_points='''
         [paste.paster_create_template]
