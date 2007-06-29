@@ -38,8 +38,10 @@ class TGDecoration(object):
             func(*l, **kw)
 
     def register_template_engine(self, content_type, engine, template, exclude_names):
-        '''Regesters an engine on the controller.   Multiple engines can be regestered, 
-        but only one engine per content_type.   If no content type is specified the engine
+        '''Regesters an engine on the controller.
+        
+        Multiple engines can be regestered, but only one engine per content_type.   
+        If no content type is specified the engine
         is regestered at */* which is the default, and will be used whenever no content 
         type is specified.  
         
@@ -98,6 +100,19 @@ class after_render(_hook_decorator):
 
 class expose(object):
     """
+    regesters attributes on the decorated function
+    
+    :Parameters:
+      template
+        Assign a template, you could use the syntax 'genshi:template' to 
+        use different templates. 
+        The default template engine is genshi.
+      content_type
+        Assign content type.
+        The default content type is 'text/html'.
+      exclude_names
+        Assign exclude names
+        
     The expose decorator regesters a number of attributes on the decorated function, but 
     does not actually wrap the function the way TurboGears 1.0 style expose decorators did. 
     
@@ -119,7 +134,8 @@ class expose(object):
     it does not require a template, and expose assumes that it matches content_type='text/json'
     
     Otherwise expose assumes that the template is for html.   All other content_types must 
-    be explicitly matched to a template and engine.   
+    be explicitly matched to a template and engine.
+    
     """
     def __init__(self, template='', content_type=None, exclude_names=None):
         if exclude_names is None:
@@ -151,8 +167,11 @@ class expose(object):
 class validate(object):
     """Validate regesters validator on the decorated function.
     
-    The syntax for validators is:
-    
+    :Parameters:
+      validator
+        Valdators
+      error_handler
+        Assign error handler
     """
     def __init__(self, validator=None, error_handler=None, **kw):
         if not hasattr(validator, 'to_python') and hasattr(validator, 'validator'):

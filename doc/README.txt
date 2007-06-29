@@ -43,4 +43,4 @@ Debug Docs
 
 To find where the format error is, use command::
 
-    $ epydoc --config doc.ini -v
+    $ epydoc --config doc/doc.ini -v

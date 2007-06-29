@@ -10,13 +10,13 @@ TODO:
 * Plenty of unit tests
 * Upgrade Guide
 * Make TurboGearsTemplate work
-* API doc generation
 * Fit python open source project quality by cheesecake
 
 Done: 
 
 * name change -- Kevin changed the name of the egg, and the but the two pygears folders should be change when we move this to trunk. 
 * paster quickstart command -- Fred had ported it from the origin tg-admin command
+* API doc generation -- Fred commit the epydoc configs and instructions
 
 Decided not to do:
 

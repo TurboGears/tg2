@@ -48,7 +48,13 @@ class TurboGearsController(WSGIController):
         pylons.c.value_for=value_for
 
     def _tg_routing_info(self, url):
-        """Returns a (controller, *args, **kw) tuple"""
+        """
+        Returns a tuple (controller, remainder, params) 
+        
+        :Parameters:
+          url
+            url as string
+        """
         url_path = url.split('/')
         controller, remainder = object_dispatch(self, url_path)
         #XXX Place controller url at context temporarily... we should be
