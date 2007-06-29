@@ -19,32 +19,6 @@ def _configured_engines():
     return g.tg_configured_engines
 
 
-#TODO:  We make render response return a string if passed a string??
-
-def render_response(controller, response):
-    ''' Render response takes the dictionary returned by the controller calls 
-    the apropriate template engine.   It uses information off of the tg_info 
-    object to decide which engine and template to use, and removes anything 
-    in the exclude_names list.  All of these values are populated into the context 
-    object by the expose decorator. 
-    '''
-    content_type, engine_name, template_name, exclude_names = \
-                  controller.tg_info.lookup_template_engine(pylons.request)
-    if template_name is None: return response
-    if engine_name not in _configured_engines():
-        pylons.buffet.prepare(engine_name)
-        _configured_engines().add(engine_name)
-    namespace = dict(context=pylons.c)
-    namespace.update(response)
-    for name in exclude_names:
-        namespace.pop(name)
-    result = pylons.buffet.render(engine_name=engine_name,
-                                  template_name=template_name,
-                                  include_pylons_variables=False,
-                                  namespace=namespace)
-    response = pylons.Response(result)
-    response.headers['Content-Type'] = content_type
-    return response
 
 
 
@@ -72,52 +46,98 @@ class TurboGearsController(WSGIController):
         pylons.c.error_for=error_for
         pylons.c.value_for=value_for
 
-    def _tg_find_controller(self, url):
+    def _tg_routing_info(self, url):
         """Returns a (controller, *args, **kw) tuple"""
+        url_path = url.split('/')
+        controller, remainder = object_dispatch(self, url_path)
+        #XXX Place controller url at context temporarily... we should be
+        #    really using SCRIPT_NAME for this.
+        if remainder:
+            pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
+        else:
+            pylons.c.controller_url = url
+        if remainder and remainder[-1] == '': remainder.pop()
+        return controller, remainder, pylons.request.params
+
+    def _tg_validate(self, controller, params):
+        params = variable_decode(params)
+        if controller.tg_info.validator:
+            params = controller.tg_info.validator.to_python(params)
+        return params
+
+    #TODO:  We make render response return a string if passed a string??
+
+    def _tg_render_response(self, controller, response):
+        '''Render response takes the dictionary returned by the controller calls        the apropriate template engine. It uses information off of the tg_info 
+        object to decide which engine and template to use, and removes anything 
+        in the exclude_names list.  All of these values are populated into the
+        context object by the expose decorator. 
+        '''
+        content_type, engine_name, template_name, exclude_names = \
+                      controller.tg_info.lookup_template_engine(pylons.request)
+        if template_name is None: return response
+        if engine_name not in _configured_engines():
+            pylons.buffet.prepare(engine_name)
+            _configured_engines().add(engine_name)
+        namespace = dict(context=pylons.c)
+        namespace.update(response)
+        for name in exclude_names:
+            namespace.pop(name)
+        result = pylons.buffet.render(engine_name=engine_name,
+                                      template_name=template_name,
+                                      include_pylons_variables=False,
+                                      namespace=namespace)
+        response = pylons.Response(result)
+        response.headers['Content-Type'] = content_type
+        return response
+
+    def _tg_handle_validation_errors(self, controller, exception):
+        """Handles the Invalid exception raised when trying to call the
+        controller method.
+        
+        Returns an error_handler method (could be the same controller method)
+        and whatever that method returned"""
+        pylons.c.tg_errors = exception.error_dict
+        pylons.c.tg_values = exception.value
+        error_handler = controller.tg_info.error_handler
+        if not error_handler: raise
+        if isinstance(error_handler, basestring):
+            controller_url = pylons.c.controller_url
+            error_handler_absolute_url = urlparse.urljoin(controller_url, error_handler)
+            error_handler, remainder = object_dispatch(self, error_handler_absolute_url.split('/'))
+            if remainder and remainder[-1] == '': remainder.pop()
+            output = error_handler(*remainder)
+        else:
+            output = error_handler(controller.im_self)
+        return error_handler, output
 
     def route(self, url='/', start_response=None, **kw):
         self._tg_initialize_app_context()
         try:
             # Lookup controller
-            url_path = url.split('/')
-            controller, remainder = object_dispatch(self, url_path)
-            if remainder:
-                controller_url = '/'.join(url_path[:-len(remainder)])
-            else:
-                controller_url = url
-            if remainder and remainder[-1] == '': remainder.pop()
+            controller, remainder, params = self._tg_routing_info(url)
 
             # Convert positional args to keyword args
-            remainder, params = to_kw(controller, remainder, pylons.request.params)
+            remainder, params = to_kw(controller, remainder, params)
             kw_self = params.pop('self', None)
             pylons.request.headers['tg_format'] = params.pop('tg_format', None)
 
             # Validate user input
             controller.tg_info.run_hooks('before_validate', remainder, params)
-            params = variable_decode(params)
-            if controller.tg_info.validator:
-                params = controller.tg_info.validator.to_python(params)
+            params = self._tg_validate(controller, params)
             pylons.c.tg_values = params
+
+            # call controller
             controller.tg_info.run_hooks('before_call', remainder, params)
-            response = controller(*remainder, **params)
-            controller.tg_info.run_hooks('before_render', remainder, params, response)
-            # Render template
-            response = render_response(controller, response)
-            controller.tg_info.run_hooks('after_render', response)
-            return response
+            output = controller(*remainder, **params)
+
         except formencode.api.Invalid, inv:
-            pylons.c.tg_errors = inv.error_dict
-            pylons.c.tg_values = params
-            error_handler = controller.tg_info.error_handler
-            if not error_handler: raise
-            if isinstance(error_handler, basestring):
-                error_handler_absolute_url = urlparse.urljoin(controller_url, error_handler)
-                error_handler, remainder = object_dispatch(self, error_handler_absolute_url.split('/'))
-                if remainder and remainder[-1] == '': remainder.pop()
-                response = error_handler(*remainder)
-            else:
-                response = error_handler(controller.im_self)
-            response = render_response(error_handler, response)
-            return response
+            controller, output = self._tg_handle_validation_errors(controller, inv)
+
+        # Render template
+        controller.tg_info.run_hooks('before_render', remainder, params, output)
+        response = self._tg_render_response(controller, output)
+        controller.tg_info.run_hooks('after_render', response)
+        return response
             
 
