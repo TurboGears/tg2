@@ -16,7 +16,9 @@ class BaseTestController(TestCase):
         TestCase.__init__(self, *args)
 
 
-class TestTGController(BaseTestController):
+class TestOutputFormat(BaseTestController):
+    """Test that controller methods negotiate content type based on "expose"d
+    configuration and request type."""
     def test_html(self):
         response = self.app.get(url_for('/test_json'))
         self.failUnless('Welcome to PyGears' in response)
@@ -27,3 +29,31 @@ class TestTGController(BaseTestController):
         print str(response)
         json = loads(response.body)
         self.failUnlessEqual(json, dict(a=1, b=2, c={'result':'wo-hoo!'}))
+
+class TestObjectDispatch(BaseTestController):
+    """Test that object dispatch works properly"""
+    
+    def test_root(self):
+        response = self.app.get(url_for('/'))
+        self.failUnless('Welcome to PyGears' in response)
+
+    def test_sub(self):
+        response = self.app.get(url_for('/sub'))
+        self.failUnless('SubIndex' in response)
+
+class TestArgsMarshalling(BaseTestController):
+    """Test that controller methods receive their positional and kw args
+    properly."""
+
+    def test_positional(self):
+        r = self.app.get(url_for('/test_args/foo/bar'))
+        self.failUnlessEqual(r.args, ('foo', 'bar'))
+
+    def test_kw(self):
+        r = self.app.get(url_for('/test_args?foo=1&bar=2'))
+        self.failUnlessEqual(r.kw, dict(foo='1', bar='2'))
+
+    def test_both(self):
+        r = self.app.get(url_for('/test_args/foo/bar?foo=1&bar=2'))
+        self.failUnlessEqual(r.kw, dict(foo='1', bar='2'))
+        self.failUnlessEqual(r.args, ('foo', 'bar'))

@@ -1,7 +1,7 @@
 from pylons.controllers import WSGIController
 import pylons
 from util import to_kw
-from turbojson.jsonify import jsonify
+#from turbojson.jsonify import jsonify
 
 import urlparse
 import formencode
@@ -9,7 +9,15 @@ from formencode.variabledecode import variable_decode
 
 from dispatch import object_dispatch
 
-_configured_engines = set()
+
+def _configured_engines():
+    """Returns set with the currently configured template engine's names from
+    the active application's globals"""
+    g = pylons.g._current_obj()
+    if not hasattr(g, 'tg_configured_engines'):
+        g.tg_configured_engines = set()
+    return g.tg_configured_engines
+
 
 #TODO:  We make render response return a string if passed a string??
 
@@ -23,9 +31,9 @@ def render_response(controller, response):
     content_type, engine_name, template_name, exclude_names = \
                   controller.tg_info.lookup_template_engine(pylons.request)
     if template_name is None: return response
-    if engine_name not in _configured_engines:
+    if engine_name not in _configured_engines():
         pylons.buffet.prepare(engine_name)
-        _configured_engines.add(engine_name)
+        _configured_engines().add(engine_name)
     namespace = dict(context=pylons.c)
     namespace.update(response)
     for name in exclude_names:
@@ -44,7 +52,8 @@ def error_for(name):
     '''Returns the error value for a particular filed name.'''
     #TODO: Move tg_errors into the tg_info object?
     err = pylons.c.tg_errors.get(name)
-    if err is None: return None
+    if err is None:
+        return None
     return err
 
 def value_for(name):
@@ -55,11 +64,19 @@ def value_for(name):
 
 class TurboGearsController(WSGIController):
     
-    def route(self, url='/', start_response=None, **kw):
+    def _tg_initialize_app_context(self):
+        """Place tg specific attributes at app's context."""
         pylons.c.tg_errors = {}
         pylons.c.tg_values = {}
+        #XXX These funcs. better at h?
         pylons.c.error_for=error_for
         pylons.c.value_for=value_for
+
+    def _tg_find_controller(self, url):
+        """Returns a (controller, *args, **kw) tuple"""
+
+    def route(self, url='/', start_response=None, **kw):
+        self._tg_initialize_app_context()
         try:
             # Lookup controller
             url_path = url.split('/')

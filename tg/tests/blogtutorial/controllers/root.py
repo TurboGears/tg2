@@ -1,3 +1,4 @@
+from blogtutorial.lib.base import request
 import tg
 from tg import expose, validate
 from tg.decorators import *
@@ -89,7 +90,6 @@ class RootController(tg.TurboGearsController):
     sub=MySubController()
 
     @expose('kid:blogtutorial.templates.test_form')
-
     def index(self):
         return {}
 
@@ -111,3 +111,11 @@ class RootController(tg.TurboGearsController):
     @expose()
     def lookup(self, arg, *remainder):
         return CoolSubController(arg), remainder
+
+
+    @expose()
+    def test_args(self, *args, **kw):
+        if request.environ.get('paste.testing', False):
+            tv = request.environ['paste.testing_variables']
+            tv.update(args=args, kw=kw)
+        return "%r, %r" % (args, kw)
