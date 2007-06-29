@@ -13,6 +13,15 @@ def to_kw(func, args, kw, start=0):
         kw[k] = v 
     return args[len(argnames)-len(defaults)-start:], kw
 
+def from_kw(func, args, kw, start=0):
+    """Extract named positional arguments from keyword arguments."""
+    argnames, defaults = getargspec(func)[::3]
+    defaults = ensure_sequence(defaults)
+    newargs = [kw.pop(name) for name in islice(argnames, start,
+               len(argnames) - len(defaults)) if name in kw]
+    newargs.extend(args)
+    return newargs, kw
+
 def ensure_sequence(obj):
     """Construct a sequence from object."""
     if obj is None:

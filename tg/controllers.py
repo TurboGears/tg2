@@ -1,6 +1,6 @@
 from pylons.controllers import WSGIController
 import pylons
-from util import to_kw
+from util import to_kw, from_kw
 #from turbojson.jsonify import jsonify
 
 import urlparse
@@ -128,6 +128,9 @@ class TurboGearsController(WSGIController):
             pylons.c.tg_values = params
 
             # call controller
+            if kw_self:
+                params['self'] = kw_self
+            remainder, params = from_kw(controller, remainder, params)
             controller.tg_info.run_hooks('before_call', remainder, params)
             output = controller(*remainder, **params)
 
