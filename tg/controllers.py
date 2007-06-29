@@ -1,3 +1,4 @@
+"""Classes and methods for TurboGears controllers."""
 from pylons.controllers import WSGIController
 import pylons
 from util import to_kw, from_kw

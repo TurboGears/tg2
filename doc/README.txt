@@ -12,18 +12,18 @@ And follow epydoc's doc to install it.
 Check Modules
 -------------
 
-To check what docs need to be written, use the command in tg2 folder::
+To check what docs need to be written, use the command in source folder::
 
-    $ epydoc --check
+    $ epydoc --check tg
 
 The command will gather all undocumented and no description python methods.
 
 Generate Docs
 -------------
 
-To generate Turbogears2 API, enter the tg2/doc folder, and use the command::
+To generate Turbogears2 API, use the command in source folder::
 
-    $ epydoc --config doc.ini 
+    $ epydoc --config doc/doc.ini 
 
 to generate API documents into tg2/apidoc folder.
 

@@ -1,3 +1,6 @@
+"""
+Definitions for TurboGears quickstart templates
+"""
 from paste.script import templates
 
 class TurboGearsTemplate(templates.Template):

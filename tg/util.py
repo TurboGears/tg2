@@ -1,3 +1,6 @@
+"""
+Utility functions for TurobGears
+"""
 from inspect import getargspec
 from itertools import izip, islice
 from operator import isSequenceType

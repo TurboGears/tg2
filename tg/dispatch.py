@@ -1,3 +1,4 @@
+"""object dispather for TurboGears"""
 from paste import httpexceptions
 
 def object_dispatch(obj, url_path):

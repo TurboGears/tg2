@@ -1,3 +1,4 @@
+"""Classes and methods for TurboGears decorators"""
 import formencode
 from paste.util.mimeparse import best_match
 

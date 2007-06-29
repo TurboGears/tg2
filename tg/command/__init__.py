@@ -1,7 +1,11 @@
 """
-TurboGears console commands.
+TurboGears command line tools.
 
 TurboGears commands are the extensions based on 'paster' command.
 
-All TurboGears commands are grouped to 'TurboGears2' section.
+You could investigating all TurboGears commands with following command::
+
+    $ paster --help
+
+All TurboGears commands are grouped in the 'TurboGears2' section.
 """
