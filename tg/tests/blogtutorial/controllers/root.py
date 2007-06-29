@@ -105,8 +105,10 @@ class RootController(tg.TurboGearsController):
     @after_render(my_after_render)
     @validate(a=Int(), error_handler='./index')
     def do_test(self, a):
-        return dict(current_time=datetime.now(),
-                    a=repr(a))
+        if request.environ.get('paste.testing', False):
+            tv = request.environ['paste.testing_variables']
+            tv.update(a=a)
+        return dict(current_time=datetime.now(), a=repr(a))
 
     @expose()
     def lookup(self, arg, *remainder):

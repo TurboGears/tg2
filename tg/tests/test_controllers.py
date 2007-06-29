@@ -57,3 +57,26 @@ class TestArgsMarshalling(BaseTestController):
         r = self.app.get(url_for('/test_args/foo/bar?foo=1&bar=2'))
         self.failUnlessEqual(r.kw, dict(foo='1', bar='2'))
         self.failUnlessEqual(r.args, ('foo', 'bar'))
+
+class TestValidation(BaseTestController):
+    def test_positional_good_value(self):
+        r = self.app.get(url_for('/do_test/2'))
+        self.failUnless(hasattr(r, 'a'), "Good value didn't reach controller")
+        self.failUnlessEqual(r.a, 2)
+     
+    def test_kw_good_value(self):
+        r = self.app.get(url_for('/do_test?a=2'))
+        self.failUnless(hasattr(r, 'a'), "Good value didn't reach controller")
+        self.failUnlessEqual(r.a, 2)
+
+    def test_kw_bad_value(self):
+        r = self.app.get(url_for('/do_test?a=foo'))
+        print r
+        self.failUnless(not hasattr(r, 'a'), "Bad value reached controller")
+        self.failUnless('value="foo"' in r)
+
+    def test_positional_bad_value(self):
+        r = self.app.get(url_for('/do_test/foo'))
+        print r
+        self.failUnless(not hasattr(r, 'a'), "Bad value reached controller")
+        self.failUnless('value="foo"' in r)
