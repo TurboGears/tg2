@@ -8,8 +8,5 @@ your favorite Python components and libraries::
     * AJAX: ToscaWidgets, WebHelpers based on Prototype or Mochikit, Dojo, JQuery, Ext & more
 
 """
-__docformat__ = 'restructuredtext en'
-
-
 from controllers import TurboGearsController
 from decorators import expose, validate

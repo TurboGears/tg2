@@ -1,8 +1,35 @@
 """Quickstart command to generate a new project.
 
 Quickstart takes the files from turbogears.quickstart and processes them to produce
-a new, ready-to-run project."""
+a new, ready-to-run project.
 
+Usage: 
+
+.. parsed-literal::
+
+    paster quickstart [--version][-h|--help]
+            [-p *PACKAGE*][--dry-run][-t|--templates *TEMPLATES*]
+            [-s|--sqlalchemy][-o|--sqlobject][-i|--identity]
+
+.. container:: paster-usage
+
+  --version
+      how program's version number and exit
+  -h, --help
+      show this help message and exit
+  -p PACKAGE, --package=PACKAGE
+      package name for the code
+  --dry-run
+      dry run (don't actually do anything)
+  -t TEMPLATES, --templates=TEMPLATES
+      user specific templates
+  -s, --sqlalchemy
+      use SQLAlchemy instead of SQLObject
+  -o, --sqlobject
+      use SQLObject instead of SQLAlchemy
+  -i, --identity
+      provide Identity support
+"""
 import pkg_resources
 import re
 import optparse
