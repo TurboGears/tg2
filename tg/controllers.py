@@ -72,8 +72,6 @@ class TurboGearsController(WSGIController):
             params = controller.tg_info.validator.to_python(params)
         return params
 
-    #TODO:  We make render response return a string if passed a string??
-
     def _tg_render_response(self, controller, response):
         '''Render response takes the dictionary returned by the controller calls        the apropriate template engine. It uses information off of the tg_info 
         object to decide which engine and template to use, and removes anything 
@@ -92,7 +90,7 @@ class TurboGearsController(WSGIController):
             namespace.pop(name)
         result = pylons.buffet.render(engine_name=engine_name,
                                       template_name=template_name,
-                                      include_pylons_variables=False,
+                                      include_pylons_variables=True,
                                       namespace=namespace)
         response = pylons.Response(result)
         response.headers['Content-Type'] = content_type

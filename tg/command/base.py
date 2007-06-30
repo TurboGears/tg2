@@ -3,8 +3,8 @@ import optparse
 import sys
 import os
 import pkg_resources
-import turbogears
-from turbogears.util import load_project_config, get_project_config
+import tg
+from tg.util import load_project_config, get_project_config
 
 
 sys.path.insert(0, os.getcwd())

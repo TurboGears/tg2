@@ -131,7 +131,7 @@ class expose(object):
             return dict(a=1, b=2, d="username")
     
     the expose('json') syntax is a special case.  json is the buffet rendering engine, but
-    it does not require a template, and expose assumes that it matches content_type='text/json'
+    it does not require a template, and expose assumes that it matches content_type='application/json'
     
     Otherwise expose assumes that the template is for html.   All other content_types must 
     be explicitly matched to a template and engine.
