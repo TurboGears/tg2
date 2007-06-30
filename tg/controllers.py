@@ -90,7 +90,7 @@ class TurboGearsController(WSGIController):
             namespace.pop(name)
         result = pylons.buffet.render(engine_name=engine_name,
                                       template_name=template_name,
-                                      include_pylons_variables=True,
+                                      include_pylons_variables=False,
                                       namespace=namespace)
         response = pylons.Response(result)
         response.headers['Content-Type'] = content_type
