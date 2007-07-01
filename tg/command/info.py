@@ -4,13 +4,17 @@ Gathering TurboGears related infos
 import pkg_resources
 from paste.script import command
 
-entrypoints = {"tg-admin Commands" : "turbogears.command",
+entrypoints = {"TurboGears Commands" : "turbogears2.command",
     "Template Engines" : "python.templating.engines", 
+    "TurboGears Templates": "turbogears2.template",
+}
+"""
     "Widget Packages" : "turbogears.widgets", 
     "TurboGears Extensions" : "turbogears.extensions",
     "Identity Providers" : "turbogears.identity.provider",
     "Visit Managers" : "turbogears.visit.manager",
-    "Toolbox Plugins" : "turbogears.toolboxcommand"}
+    "Toolbox Plugins" : "turbogears.toolboxcommand"
+"""
 
 def retrieve_info():
     packages=['%s' % i for i in pkg_resources.require("TurboGears2")]

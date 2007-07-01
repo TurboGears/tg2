@@ -21,8 +21,9 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'PasteScript>=1.3',
-        'Pylons==dev,<0.9.6'
+        'Pylons==dev,<0.9.6',
+        'genshi>=0.4',
+        'sqlalchemy>=0.3',
     ],
     extras_requires={
         'core-testing':["nose", "TurboKid", "TurboJson"]
@@ -33,5 +34,13 @@ setup(
         [paste.global_paster_command]
         tginfo = tg.command.info:InfoCommand
         quickstart = tg.command.quickstart:QuickstartCommand
+        
+        [turbogears2.template]
+        turbogears2=tg.pastetemplate:TurboGearsTemplate
+        [turbogears2.command]
+        tginfo = tg.command.info:InfoCommand
+        quickstart = tg.command.quickstart:QuickstartCommand
+        serve = paste.script.serve:ServeCommand [Config]
+        shell = pylons.commands:ShellCommand
     ''',
 )
