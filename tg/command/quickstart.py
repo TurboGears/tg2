@@ -1,7 +1,14 @@
 """Quickstart command to generate a new project.
 
-Quickstart takes the files from turbogears.quickstart and processes them to produce
+TurboGears 2 uses Paste to create and deploy projects as well as create new 
+controllers and their tests.
+
+Quickstart takes the files from turbogears.pastetemplates and processes them to produce
 a new, ready-to-run project.
+
+Create a new project named helloworld with this command::
+
+    $ paster quickstart helloworld
 
 Usage: 
 
@@ -29,6 +36,8 @@ Usage:
       use SQLObject instead of SQLAlchemy
   -i, --identity
       provide Identity support
+
+
 """
 import pkg_resources
 import re
@@ -45,15 +54,22 @@ beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
 class quickstart(command.Command):
-    """
-    Implementation of quickstart.
+    """Create a new TurboGears project
+    Create a new Turbogears project with this command.
     
+    Example usage::
+    
+        $ paster quickstart yourproj
+
+    or start project with sqlobject::
+    
+        $ paster quickstart -o yourproj
     """
     version = pkg_resources.get_distribution('turbogears2').version
     max_args = 3
     min_args = 0
-    usage = "paster quickstart [options] [project name]"
-    summary = "Create a new TurboGears project"
+    summary = __doc__.splitlines()[0]
+    usage = '\n' + __doc__
     group_name = "TurboGears2"
     
     name = None
