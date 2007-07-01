@@ -9,15 +9,15 @@ TODO:
     I added some docstrings and comments, and started placing TODO's in the code. 
 * Plenty of unit tests
 * Upgrade Guide
-* Make TurboGearsTemplate work
 * Fit python open source project quality by cheesecake
 
 Done: 
 
 * name change -- Kevin changed the name of the egg, and the but the two pygears folders should be change when we move this to trunk. 
 * paster quickstart command -- Fred had ported it from the origin tg-admin command
-* paster tginfo command -- Fred had ported it from the origin tg-admin command
 * API doc generation -- Fred commit the epydoc configs and instructions
+* paster tginfo command -- Fred had ported it from the origin tg-admin command
+* Make TurboGearsTemplate work
 
 Decided not to do:
 
