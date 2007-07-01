@@ -31,6 +31,7 @@ setup(
         [paste.paster_create_template]
         turbogears2=tg.pastetemplate:TurboGearsTemplate
         [paste.global_paster_command]
-        quickstart = tg.command.quickstart:quickstart
+        tginfo = tg.command.info:InfoCommand
+        quickstart = tg.command.quickstart:QuickstartCommand
     ''',
 )

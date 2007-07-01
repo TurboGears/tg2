@@ -1,4 +1,8 @@
+"""
+Gathering TurboGears related infos
+"""
 import pkg_resources
+from paste.script import command
 
 entrypoints = {"tg-admin Commands" : "turbogears.command",
     "Template Engines" : "python.templating.engines", 
@@ -9,7 +13,7 @@ entrypoints = {"tg-admin Commands" : "turbogears.command",
     "Toolbox Plugins" : "turbogears.toolboxcommand"}
 
 def retrieve_info():
-    packages=['%s' % i for i in pkg_resources.require("Turbogears")]
+    packages=['%s' % i for i in pkg_resources.require("TurboGears2")]
     plugins = {}
     for name, pointname in entrypoints.items():
         plugins[name] = ["%s (%s)" % (entrypoint.name, str(entrypoint.dist))
@@ -17,15 +21,18 @@ def retrieve_info():
         ]
     return packages, plugins
 
-class InfoCommand:
-    """Shows version info for debuging"""
+class InfoCommand(command.Command):
+    """Show version info
+    Shows version info for debuging"""
+    max_args = 0
+    min_args = 0
+    summary = __doc__.splitlines()[0]
+    usage = '\n' + __doc__
+    group_name = "TurboGears2"
 
-    desc = "Show version info"
-
-    def __init__(self,*args, **kwargs):
-        pass
-
-    def run(self):
+    parser = command.Command.standard_parser(verbose=True)
+    
+    def command(self):
         print """TurboGears Complete Version Information
 
 TurboGears requires:

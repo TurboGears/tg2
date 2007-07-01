@@ -53,7 +53,7 @@ import sys
 beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
-class quickstart(command.Command):
+class QuickstartCommand(command.Command):
     """Create a new TurboGears project
     Create a new Turbogears project with this command.
     
