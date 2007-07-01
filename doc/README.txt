@@ -32,7 +32,10 @@ You could custom the doc.ini setting to generate other type of docs.
 Write Docs
 ----------
 
-Check docs about reStructuredText format.
+Note in TurboGears 2 we use reStructuredText format for doc strings.
+
+It's a bit different from epydoc's default format.
+Check docs about reStructuredText format on epydoc site.
 
 http://epydoc.sourceforge.net/manual-docstring.html
 http://epydoc.sourceforge.net/manual-othermarkup.html
