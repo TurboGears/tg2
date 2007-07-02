@@ -27,7 +27,7 @@ def retrieve_info():
 
 class InfoCommand(command.Command):
     """Show version info
-    Shows version info for debuging"""
+Shows version info for debuging"""
     max_args = 0
     min_args = 0
     summary = __doc__.splitlines()[0]

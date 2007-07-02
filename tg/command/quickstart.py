@@ -10,6 +10,8 @@ Create a new project named helloworld with this command::
 
     $ paster quickstart helloworld
 
+You could use TurboGears2, Pylons, and WebHelper paster commands within the project.
+
 Usage: 
 
 .. parsed-literal::
@@ -55,15 +57,15 @@ valid_only = re.compile(r"[^a-z0-9_]")
 
 class QuickstartCommand(command.Command):
     """Create a new TurboGears project
-    Create a new Turbogears project with this command.
+Create a new Turbogears project with this command.
     
-    Example usage::
+Example usage::
     
-        $ paster quickstart yourproj
+    $ paster quickstart yourproj
 
-    or start project with sqlobject::
+or start project with sqlobject::
     
-        $ paster quickstart -o yourproj
+    $ paster quickstart -o yourproj
     """
     version = pkg_resources.get_distribution('turbogears2').version
     max_args = 3

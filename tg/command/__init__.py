@@ -3,13 +3,17 @@ TurboGears command line tools.
 
 TurboGears commands are the extensions based on 'paster' command.
 
-You could investigating all TurboGears commands with following command::
+You could investigating all paster commands with following command::
 
     $ paster --help
 
 All TurboGears commands are grouped in the 'TurboGears2' section.
 
-Create a new project named helloworld with this command::
+Or you could check out the TurboGears-related infomation with command::
+
+    $ paster tginfo
+
+To create a new project named helloworld, you could start with quickstart command::
 
     $ paster quickstart helloworld
 
