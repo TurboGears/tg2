@@ -21,6 +21,6 @@ The latest development version is available in
 url="http://www.turbogears.org"
 author='Alberto Valverde, Mark Ramm'
 email = "alberto@toscat.net, mark.ramm@gmail.com"
-copyright = """Copyright 2005-2007 Kavin Dangoor, 
+copyright = """Copyright 2005-2007 Kevin Dangoor, 
 Alberto Valverde, Mark.Ramm and contributors"""
 license = "MIT"
