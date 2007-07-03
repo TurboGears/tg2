@@ -32,14 +32,14 @@ setup(
         [paste.paster_create_template]
         turbogears2=tg.pastetemplate:TurboGearsTemplate
         [paste.global_paster_command]
-        tginfo = tg.command.info:InfoCommand
-        quickstart = tg.command.quickstart:QuickstartCommand
+        tginfo = tg.commands.info:InfoCommand
+        quickstart = tg.commands.quickstart:QuickstartCommand
         
         [turbogears2.template]
         turbogears2=tg.pastetemplate:TurboGearsTemplate
         [turbogears2.command]
-        tginfo = tg.command.info:InfoCommand
-        quickstart = tg.command.quickstart:QuickstartCommand
+        tginfo = tg.commands.info:InfoCommand
+        quickstart = tg.commands.quickstart:QuickstartCommand
         serve = paste.script.serve:ServeCommand [Config]
         shell = pylons.commands:ShellCommand
     ''',
