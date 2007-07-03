@@ -82,7 +82,7 @@ or start project with sqlobject::
     sqlobject = False
     identity = False
     
-    parser = command.Command.standard_parser(verbose=True)
+    parser = command.Command.standard_parser(quiet=True)
     parser = optparse.OptionParser(
                     usage="%prog quickstart [options] [project name]",
                     version="%prog " + version)
@@ -174,6 +174,7 @@ or start project with sqlobject::
         cmd_args.append("package=%s" % self.package)
         cmd_args.append("identity=%s" % self.identity)
         cmd_args.append("sqlalchemy=%s" % self.sqlalchemy)
+        cmd_args.append("tgversion=%s"%self.version)
         if self.dry_run:
             cmd_args.append("--simulate")
             cmd_args.append("-q")
@@ -195,79 +196,3 @@ or start project with sqlobject::
                 for file in files:
                     if file  == "empty":
                         os.remove(os.path.join(base, file))
-
-#class update:
-#    "Implementation of update"
-#    
-#    desc = "Update an existing turbogears project"
-#    need_project = True
-#    
-#    name = None
-#    templates = "turbogears"
-#    identity = False
-#    sqlalchemy = False
-#    
-#    def __init__(self, version):
-#        parser = optparse.OptionParser(usage="%prog quickstart [options]",
-#                                       version="%prog " + version)
-#        parser.add_option("-t", "--templates", help="user specific templates",
-#            dest="templates", default=self.templates)
-#        parser.add_option("-s", "--sqlalchemy",
-#            help="use SQLAlchemy instead of SQLObject",
-#            action="store_true", dest="sqlalchemy", default = False)
-#        parser.add_option("-i", "--identity",
-#            help="provide Identity support",
-#            action="store_true", dest="identity", default = False)
-#        (options, args) = parser.parse_args()
-#        self.__dict__.update(options.__dict__)
-#        self.turbogearsversion = version
-#
-#    def run(self):
-#        "Updates an existing project"
-#        self.name = turbogears.util.get_project_name()
-#        self.package = turbogears.util.get_package_name()
-#        turbogears.command.base.load_project_config()
-#        if not self.sqlalchemy:
-#            if turbogears.config.get('sqlalchemy.dburi'):
-#                self.sqlalchemy = True 
-#        if not self.identity:
-#            if turbogears.config.get('identity.on'):
-#                self.identity = True
-#        if self.identity:
-#            if self.sqlalchemy:
-#                self.identity = 'sqlalchemy'
-#            else:
-#                self.identity =  'sqlobject'
-#        else:
-#            self.identity = 'none'
-#        currentdir = os.path.basename(os.getcwd())
-#        if not currentdir == self.name:
-#            print 'it looks like your project dir "%s" is named wrongly. Please rename it to "%s"' %(currentdir, self.name)
-#            return
-#        
-#        command = create_distro.CreateDistroCommand("create")
-#        cmd_args = []
-#        cmd_args.append("-o../")
-#        for template in self.templates.split(" "):
-#            cmd_args.append("--template=%s" % template)
-#        cmd_args.append(self.name)
-#        cmd_args.append("package=%s" %self.package)
-#        cmd_args.append("identity=%s" %self.identity)
-#        cmd_args.append("sqlalchemy=%s" %self.sqlalchemy)
-#        command.run(cmd_args)
-#
-#        startscript = "start-%s.py" % self.package
-#        if os.path.exists(startscript):
-#            oldmode = os.stat(startscript).st_mode
-#            os.chmod(startscript, 
-#                    oldmode | stat.S_IXUSR)
-#        sys.argv = ["setup.py", "egg_info"]
-#        import imp
-#        imp.load_module("setup", *imp.find_module("setup", ["."]))
-#        
-#        # dirty hack to allow "empty" dirs
-#        for base,path,files in os.walk("./"):
-#            for file in files:
-#                if file  == "empty":
-#                    os.remove(os.path.join(base, file))
-
