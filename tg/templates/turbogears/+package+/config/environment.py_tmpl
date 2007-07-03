@@ -1,14 +1,14 @@
 import os
 
-import pylons.config
+from paste.deploy.config import CONFIG
+
+from pylons import config
 import webhelpers
 
 from ${package}.config.routing import make_map
 
-def load_environment(conf={}):
-        
-    map = make_map(conf)
-    # Setup our paths
+def load_environment(global_conf, app_conf):
+    # Create our paths
     root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     paths = {'root_path': root_path,
              'controllers': os.path.join(root_path, 'controllers'),
@@ -16,14 +16,24 @@ def load_environment(conf={}):
                            ('components', 'templates')],
              'static_files': os.path.join(root_path, 'public')
              }
+        
+    # Initialize the other basic options
+    config.init_app(global_conf, app_conf, package='${package}', 
+                    template_engine='genshi', paths=paths)
     
-    # The following template options are passed to your template engines
-    tmpl_options = {}
-    tmpl_options['myghty.log_errors'] = True
-    tmpl_options['myghty.escapes'] = dict(l=webhelpers.auto_link, s=webhelpers.simple_format)
+    map = make_map(config)
+    config['pylons.map'] = map
+    
     
     # Add your own template options config options here, note that all config options will override
     # any Pylons config options
     
-    # Return our loaded config object
-    return pylons.config.Config(tmpl_options, map, paths)
+    # The following template options are passed to your template engines
+    tmpl_options = {}
+    
+    # Load-up the template options
+    config['buffet.template_options'] = tmpl_options
+        
+    # Setup the Paste CONFIG object for legacy code
+    CONFIG.push_process_config(config._current_obj())
+    
