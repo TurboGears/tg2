@@ -7,13 +7,14 @@ from paste.script import command
 entrypoints = {"TurboGears Commands" : "turbogears2.command",
     "Template Engines" : "python.templating.engines", 
     "TurboGears Templates": "turbogears2.template",
+    "Toolbox Gadgets" : "turbogears2.toolboxcommand",
 }
 """
     "Widget Packages" : "turbogears.widgets", 
     "TurboGears Extensions" : "turbogears.extensions",
     "Identity Providers" : "turbogears.identity.provider",
     "Visit Managers" : "turbogears.visit.manager",
-    "Toolbox Plugins" : "turbogears.toolboxcommand"
+    
 """
 
 def retrieve_info():
