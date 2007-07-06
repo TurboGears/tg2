@@ -4,9 +4,6 @@ TODO:
 * transaction middleware, pre-configured for a transaction-per-request model
     with auto-rollback and auto-commit    
 * Updated database setup code that allows for use of model files outside of Pylons/TG
-* Additional paster commands for TurboGears shell, etc?
-* Comments and documentation.  
-    I added some docstrings and comments, and started placing TODO's in the code. 
 * Plenty of unit tests
 * Upgrade Guide
 * Fit python open source project quality by cheesecake

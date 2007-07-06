@@ -23,7 +23,7 @@ Generate Docs
 
 To generate Turbogears2 API, use the command in source folder::
 
-    $ epydoc --config doc/doc.ini 
+    $ epydoc --config docs/doc.ini 
 
 to generate API documents into tg2/apidoc folder.
 
@@ -46,4 +46,4 @@ Debug Docs
 
 To find where the format error is, use command::
 
-    $ epydoc --config doc/doc.ini -v
+    $ epydoc --config docs/doc.ini -v

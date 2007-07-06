@@ -1,5 +1,5 @@
 """
-Gathering TurboGears related infos
+TurboGears related projects and their versions
 """
 import pkg_resources
 from paste.script import command
@@ -27,8 +27,7 @@ def retrieve_info():
     return packages, plugins
 
 class InfoCommand(command.Command):
-    """Show version info
-Shows version info for debuging"""
+    """show related projects and their versions"""
     max_args = 0
     min_args = 0
     summary = __doc__.splitlines()[0]
