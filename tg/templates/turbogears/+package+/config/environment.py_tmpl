@@ -1,39 +1,31 @@
+"""Pylons environment configuration"""
 import os
 
-from paste.deploy.config import CONFIG
-
 from pylons import config
-import webhelpers
 
 from ${package}.config.routing import make_map
+import ${package}.lib.app_globals as app_globals
+import ${package}.lib.helpers
 
 def load_environment(global_conf, app_conf):
-    # Create our paths
-    root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    paths = {'root_path': root_path,
-             'controllers': os.path.join(root_path, 'controllers'),
-             'templates': [os.path.join(root_path, path) for path in \
-                           ('components', 'templates')],
-             'static_files': os.path.join(root_path, 'public')
+    # Pylons paths
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    paths = {'root_path': root,
+             'controllers': os.path.join(root, 'controllers'),
+             'templates': [os.path.join(root, 'templates')],
+             'static_files': os.path.join(root, 'public')
              }
         
     # Initialize the other basic options
     config.init_app(global_conf, app_conf, package='${package}', 
                     template_engine='genshi', paths=paths)
     
-    map = make_map(config)
-    config['pylons.map'] = map
-    
-    
-    # Add your own template options config options here, note that all config options will override
-    # any Pylons config options
-    
-    # The following template options are passed to your template engines
-    tmpl_options = {}
-    
+    config['pylons.map'] = make_map()
+    config['pylons.g'] = app_globals.Globals()
+    config['pylons.h'] = ${package}.lib.helpers
+
     # Load-up the template options
-    config['buffet.template_options'] = tmpl_options
-        
-    # Setup the Paste CONFIG object for legacy code
-    CONFIG.push_process_config(config._current_obj())
-    
+    tmpl_options = config['buffet.template_options']
+
+    # CONFIGURATION OPTIONS HERE (note: all config options will override any
+    # Pylons config options)

@@ -1,28 +1,25 @@
-"""Setup your Routes options here"""
+"""Routes configuration
 
-import os
-
+The more specific and detailed routes should be defined first so they may take
+precedent over the more generic routes. For more information refer to the
+routes manual at http://routes.groovie.org/docs/
+"""
+from pylons import config
 from routes import Mapper
 
-
-def make_map(conf={}):
-
-    root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    map = Mapper(directory=os.path.join(root_path, 'controllers'))
+def make_map():
+    map = Mapper(directory=config['pylons.paths']['controllers'],
+                 always_scan=config['debug'])
     
     # This route connects your root controller
     map.connect('*url', controller='root', action='route')
     
-    # This route handles displaying the error page and graphics used in the 404/500
-    # error pages. It should likely stay at the top to ensure that the error page is
-    # displayed properly.
-    
+    # The ErrorController route (handles 404/500 error pages): it should likely
+    # stay at the top to ensure that it can always be resolved
     map.connect('error/:action/:id', controller='error')
     
-    # Define your routes. The more specific and detailed routes should be defined first,
-    # so they may take precedent over the more generic routes. For more information, refer
-    # to the routes manual @ http://routes.groovie.org/docs/
+    # CUSTOM ROUTES HERE
     
-    map.connect('*url', controller='template', action='view', _encoding=None)
+    map.connect('*url', controller='template', action='view')
     
     return map
