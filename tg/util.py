@@ -33,3 +33,18 @@ def ensure_sequence(obj):
         return obj
     else:
         return [obj]
+
+def get_project_meta(name):
+    """get metadata"""
+    import os
+    for dirname in os.listdir("./"):
+        if dirname.lower().endswith("egg-info"):
+            fname = os.path.join(dirname, name)
+            return fname
+
+def get_project_name():
+    """get project name"""
+    pkg_info = get_project_meta('PKG-INFO')
+    if pkg_info:
+        name = list(open(pkg_info))[1][6:-1]
+        return name.strip()
