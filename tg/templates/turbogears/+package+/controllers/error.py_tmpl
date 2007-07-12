@@ -19,7 +19,7 @@ class ErrorController(BaseController):
             'code': request.params.get('code', ''),
             'message': request.params.get('message', ''),
         }
-        return Response(page)
+        return page
 
     def img(self, id):
         return self._serve_file(os.path.join(media_path, 'img', id))

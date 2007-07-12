@@ -10,19 +10,19 @@ import ${package}.lib.helpers
 def load_environment(global_conf, app_conf):
     # Pylons paths
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    paths = {'root_path': root,
+    paths = {'root': root,
              'controllers': os.path.join(root, 'controllers'),
              'templates': [os.path.join(root, 'templates')],
              'static_files': os.path.join(root, 'public')
              }
         
-    # Initialize the other basic options
+    # Initialize config with the basic options
     config.init_app(global_conf, app_conf, package='${package}', 
                     template_engine='genshi', paths=paths)
     
-    config['pylons.map'] = make_map()
     config['pylons.g'] = app_globals.Globals()
     config['pylons.h'] = ${package}.lib.helpers
+    config['routes.map'] = make_map()
 
     # Load-up the template options
     tmpl_options = config['buffet.template_options']
