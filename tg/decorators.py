@@ -41,15 +41,15 @@ class TGDecoration(object):
         '''Regesters an engine on the controller.
         
         Multiple engines can be regestered, but only one engine per content_type.   
-        If no content type is specified the engine
-        is regestered at */* which is the default, and will be used whenever no content 
-        type is specified.  
+        If no content type is specified the engine is regestered at */* which is the 
+        default, and will be used whenever no content type is specified.  
         
         exclude_names keeps track of a list of keys which will be removed from the 
         controller's dictionary before it is loaded into the template.  This allows you to 
         exclude some information from JSONification, and other 'automatic' engines which 
-        don't require a template.'''
-        
+        don't require a template.
+        '''
+        #TODO: Are there some other things like lookup paths which need to be setup here?
         if content_type is None:
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
@@ -71,7 +71,7 @@ class TGDecoration(object):
     def register_hook(self, hook_name, func):
         '''We now have four core hooks that can be applied by adding decorators: 
         before_validate, before_call, before_render, and after_render.   regester_hook attaches the
-        function to the hook which get's called at the apropriate time in the controller's life cycle.)
+        function to the hook which get's called at the apropriate time in the request life cycle.)
         '''
         self.hooks[hook_name].append(func)
 
@@ -145,6 +145,7 @@ class expose(object):
         elif ':' in template:
             engine, template = template.split(':', 1)
         elif template:
+            #TODO: lookup the default template engine from the config.
             engine, template = 'genshi', template
         else:
             engine, template = None, None
