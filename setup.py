@@ -25,7 +25,7 @@ setup(
         'genshi>=0.4',
         'sqlalchemy>=0.3',
     ],
-    extras_requires={
+    extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
     },
     entry_points='''
