@@ -22,7 +22,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
             [DEFAULT] section of the Paste ini file.
 
         `full_stack`
-            Whether or not this application provides a full WSGI stack (by default
+            Whether or not this application provides a full WSGI stack (by default,
             meaning it handles its own exceptions and errors). Disable full_stack
             when this application is "managed" by another WSGI middleware.
 

@@ -39,3 +39,26 @@ beaker.session.secret = somesecret
 # Debug mode will enable the interactive debugging tool, allowing ANYONE to
 # execute malicious code after an exception is raised.
 #set debug = false
+
+# Logging Setup 
+[loggers] 
+keys = root 
+ 
+[handlers] 
+keys = console 
+  
+[formatters] 
+keys = generic 
+ 
+[logger_root] 
+level = DEBUG 
+handlers = console 
+  
+[handler_console] 
+class = StreamHandler 
+args = (sys.stderr,) 
+level = NOTSET 
+formatter = generic 
+  
+[formatter_generic] 
+format = [%(levelname)s] %(asctime)s %(name)s  %(message)s 

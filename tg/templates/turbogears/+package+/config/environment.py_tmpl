@@ -24,7 +24,7 @@ def load_environment(global_conf, app_conf):
     config['pylons.h'] = ${package}.lib.helpers
     config['routes.map'] = make_map()
 
-    # Load-up the template options
+    # Customize templating options via this variable
     tmpl_options = config['buffet.template_options']
 
     # CONFIGURATION OPTIONS HERE (note: all config options will override any
