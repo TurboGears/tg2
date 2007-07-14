@@ -9,16 +9,19 @@ find_links = http://www.pylonshq.com/download/
 theme = pythonpaste.org
 
 # Add extra doc files here with spaces between them
-docs = ${package}/docs/index.txt 
+docs = docs/index.txt
 
 # Doc Settings
-doc_base = ${package}/docs/
-dest = ${package}/docs/html
+doc_base = docs/
+dest = docs/html
 
 # Add extra modules here separated with commas
 modules = ${package}
 title = ${package.capitalize()}
 organization = Pylons
+
+# Highlight code-block sections with Pygments
+highlighter = pygments
 
 # Optionally add extra links
 #organization_url = http://pylonshq.com/
@@ -30,5 +33,5 @@ settings = no_about=true
 #           link2=/download/ Download
  
 [publish]
-doc-dir=${package}/docs/html
+doc-dir=docs/html
 make-dirs=1

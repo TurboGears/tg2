@@ -1,11 +1,11 @@
 from ${package}.lib.base import *
 
 class TemplateController(BaseController):
+
     def view(self, url):
-        """
-        By default the final controller tried to fulfill the request when no
-        other routes match. It may be used to display a template when all else 
-        fails, e.g.::
+        """By default, the final controller tried to fulfill the request when
+        no other routes match. It may be used to display a template when all
+        else fails, e.g.::
         
             def view(self, url):
                 return render('/%s' % url)

@@ -15,8 +15,8 @@ def make_map():
     # This route connects your root controller
     map.connect('*url', controller='root', action='route')
     
-    # The ErrorController route (handles 404/500 error pages): it should likely
-    # stay at the top to ensure that it can always be resolved
+    # The ErrorController route (handles 404/500 error pages); it should likely
+    # stay at the top, ensuring it can always be resolved
     map.connect('error/:action/:id', controller='error')
     
     # CUSTOM ROUTES HERE
