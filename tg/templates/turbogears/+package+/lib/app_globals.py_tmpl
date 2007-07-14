@@ -1,4 +1,4 @@
-"""Pylons application's Globals object""" 
+"""The application's Globals object""" 
 from pylons import config
 
 class Globals(object):

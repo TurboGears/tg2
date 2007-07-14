@@ -1,8 +1,6 @@
-"""
-${package}
+"""${package}
 
 This file loads the finished app from ${package}.config.middleware.
-
 """
 
 from ${package}.config.middleware import make_app

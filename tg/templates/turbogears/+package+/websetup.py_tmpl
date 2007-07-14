@@ -1,12 +1,10 @@
+"""Setup the ${project} application"""
 from paste.deploy import appconfig
 from pylons import config
 
 from ${package}.config.environment import load_environment 
 
 def setup_config(command, filename, section, vars):
-    """
-    Place any commands to setup ${package} here.
-    """
+    """Place any commands to setup ${package} here"""
     conf = appconfig('config:' + filename) 
     load_environment(conf.global_conf, conf.local_conf)
-
