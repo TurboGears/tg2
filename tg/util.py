@@ -1,6 +1,4 @@
-"""
-Utility functions for TurobGears
-"""
+"""Utility functions for TurobGears"""
 from inspect import getargspec
 from itertools import izip, islice
 from operator import isSequenceType
@@ -48,3 +46,5 @@ def get_project_name():
     if pkg_info:
         name = list(open(pkg_info))[1][6:-1]
         return name.strip()
+
+__all__ = ['to_kw', 'from_kw', 'get_project_name']

@@ -1,6 +1,4 @@
-"""
-TurboGears project related information
-"""
+"""TurboGears project related information"""
 version = "2.0a1"
 description = "Next generation TurboGears built on Pylons"
 long_description="""
