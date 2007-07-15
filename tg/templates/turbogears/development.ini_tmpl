@@ -16,9 +16,16 @@ port = 8080
 
 [app:main]
 use = egg:${project}
+full_stack = true
 cache_dir = %(here)s/data
 beaker.session.key = ${package}
 beaker.session.secret = somesecret
+
+# If you'd like to fine-tune the individual locations of the cache data dirs
+# for the Cache data, or the Session saves, un-comment the desired settings
+# here:
+#beaker.cache.data_dir = %(here)s/data/cache
+#beaker.session.data_dir = %(here)s/data/sessions
 
 # If you'd like to fine-tune the individual locations of the cache data dirs
 # for the Cache data, or the Session saves, un-comment the desired
@@ -27,12 +34,12 @@ beaker.session.secret = somesecret
 #beaker.session.data_dir = %(here)s/data/sessions
 
 # Specify the database for SQLAlchemy to use via
-# pylons.database.session_context.
+# turbogears.database
 # %(here) may include a ':' character on Windows environments; this can
 # invalidate the URI when specifying a SQLite db via path name
 #sqlalchemy.dburi = sqlite:///%(here)s/somedb.db
 
-# Specify the database for SQLObject to use via pylons.database.PackageHub.
+# Specify the database for SQLObject to use via turbogears.database.PackageHub.
 #sqlobject.dburi = sqlite://%(here)s/somedb.db
 
 # WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
@@ -40,25 +47,26 @@ beaker.session.secret = somesecret
 # execute malicious code after an exception is raised.
 #set debug = false
 
-# Logging Setup 
-[loggers] 
-keys = root 
- 
-[handlers] 
-keys = console 
-  
-[formatters] 
-keys = generic 
- 
-[logger_root] 
-level = DEBUG 
-handlers = console 
-  
-[handler_console] 
-class = StreamHandler 
-args = (sys.stderr,) 
-level = NOTSET 
-formatter = generic 
-  
-[formatter_generic] 
-format = [%(levelname)s] %(asctime)s %(name)s  %(message)s 
+# Logging Setup
+[loggers]
+keys = root
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s]  %(message)s
+datefmt = %H:%M:%S

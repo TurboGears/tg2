@@ -3,7 +3,7 @@
 his module provides the BaseController for all controllers to subclass, as
 well as functions and objects for use by those controllers.
 """
-from pylons import c, cache, g, request, response, session
+from pylons import c, cache, config, g, request, response, session
 from pylons.controllers import WSGIController
 from pylons.decorators import jsonify, validate
 from pylons.helpers import abort, etag_cache, redirect_to
