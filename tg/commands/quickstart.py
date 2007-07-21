@@ -80,6 +80,7 @@ or start project with sqlobject::
     templates = "turbogears2"
     sqlalchemy = True
     sqlobject = False
+    elixir = True
     identity = False
     
     parser = command.Command.standard_parser(quiet=True)
@@ -98,6 +99,9 @@ or start project with sqlobject::
     parser.add_option("-s", "--sqlalchemy",
             help="use SQLAlchemy instead of SQLObject",
             action="store_true", dest="sqlalchemy", default = True)
+    parser.add_option("-e", "--elixir",
+            help="use SQLAlchemy Elixir instead of SQLObject",
+            action="store_true", dest="elixir", default = True)
     parser.add_option("-o", "--sqlobject",
             help="use SQLObject instead of SQLAlchemy",
             action="store_true", dest="sqlobject", default = False)
@@ -112,6 +116,13 @@ or start project with sqlobject::
 
         if self.sqlobject:
             self.sqlalchemy = False
+            self.elixir = False
+
+        if self.sqlalchemy:
+            self.elixir = False
+
+        if self.elixir:
+            self.sqlalchemy = True
 
         while not self.name:
             self.name = raw_input("Enter project name: ")
@@ -174,6 +185,7 @@ or start project with sqlobject::
         cmd_args.append("package=%s" % self.package)
         cmd_args.append("identity=%s" % self.identity)
         cmd_args.append("sqlalchemy=%s" % self.sqlalchemy)
+        cmd_args.append("elixir=%s" % self.elixir)
         cmd_args.append("tgversion=%s"%self.version)
         if self.dry_run:
             cmd_args.append("--simulate")
