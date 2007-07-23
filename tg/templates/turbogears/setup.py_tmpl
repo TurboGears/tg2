@@ -1,6 +1,9 @@
-from ez_setup import use_setuptools
-use_setuptools()
-from setuptools import setup, find_packages
+try:
+	from setuptools import setup, find_packages
+except ImportError:
+	from ez_setup import use_setuptools
+	use_setuptools()
+	from setuptools import setup, find_packages 
 
 setup(
     name=${repr(project)|empty},
@@ -16,7 +19,7 @@ setup(
     package_data={'${package}': ['i18n/*/LC_MESSAGES/*.mo']},
     entry_points="""
     [paste.app_factory]
-    main = ${package}:make_app
+    main = ${package}.config.middleware:make_app
     [paste.app_install]
     main = pylons.util:PylonsInstaller
     """,
