@@ -7,10 +7,10 @@ from ${package}.lib.base import *
 
 class ErrorController(BaseController):
     """Generates error documents as and when they are required.
-    
+
     The ErrorDocuments middleware forwards to ErrorController when error
     related status codes are returned from the application.
-    
+
     This behaviour can be altered by changing the parameters to the
     ErrorDocuments middleware in your config/middleware.py file.
     """
@@ -21,13 +21,13 @@ class ErrorController(BaseController):
             dict(prefix=request.environ.get('SCRIPT_NAME', ''), 
                 code=request.params.get('code', ''),
                 message=request.params.get('message', ''))
-        }
+
         return page
 
     def img(self, id):
         """Serve Pylons' stock images""" 
         return self._serve_file(os.path.join(media_path, 'img', id))
-        
+
     def style(self, id):
         """Serve Pylons' stock stylesheets"""
         return self._serve_file(os.path.join(media_path, 'style', id))

@@ -1,35 +1,62 @@
-from pylons.database import create_engine
-
+import sacontext
 import elixir
 
-metadata = elixir.metadata
-objectstore = elixir.objectstore
-session_context = objectstore.context
-engine = None
+class ElixirStrategy(sacontext.ContextualStrategy):
 
-def connect(dburi=None, echo = None):
+    def create_session(self, context):
+        return elixir.objectstore.session
+
+    def create_metadata(self, key, context):
+        elixir.metadata.connect(context.get_engine(key))
+        return elixir.metadata
+
+    def get_connectable(self, key, context):
+        return context.get_engine(key)
+
+context = sacontext.PylonsSAContext(strategy=ElixirStrategy())
+
+def connect(name=None):
     """
-    Connects engine to metadata 
+    Connects engine 
     """
-    global engine
-    engine = create_engine(dburi, echo)
-    metadata.connect(engine)
+    context.add_engine_from_config(name)
     elixir.setup_all()
 
 def resync():
     """
     Renews SQLAlchemy session with current thread
     """
-    del session_context.current
+    context.session.clear()
 
 def flush_all():
     """
     Flushes all changes to database
     """
-    objectstore.flush()
+    elixir.objectstore.flush()
+
+def execute(query):
+    """
+    Executes an SQL query string
+    """
+    return context.engine.text(query).execute()
+
+def create_all(*args, **kw):
+    """
+    Shortcut for metadata.create_all()
+    """
+    context.metadata.create_all(*args, **kw)
+
+def drop_all(*args, **kw):
+    """
+    Shortcut for metadata.drop_all()
+    """
+    context.metadata.drop_all(*args, **kw)
+
+def get_context():
+    return context
 
 # Uncomment these lines if you want to use the "autoload" option with your Elixir models
-# if not metadata.is_bound():
+#if not metadata.is_bound():
 #    elixir.delay_setup = True
 
-__all__ = ['metadata', 'objectstore', 'session_context', 'engine', 'connect', 'resync', 'flush_all']
+__all__ = ['context', 'connect', 'resync', 'flush_all']

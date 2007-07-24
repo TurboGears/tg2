@@ -28,7 +28,7 @@ highlighter = pygments
 #trac_url = http://pylonshq.com/project
 settings = no_about=true
 
-# Optionally add extra settings 
+# Optionally add extra settings
 #           link1=/community/ Community
 #           link2=/download/ Download
  
