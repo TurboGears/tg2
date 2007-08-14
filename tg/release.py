@@ -2,15 +2,20 @@
 version = "2.0a1"
 description = "Next generation TurboGears built on Pylons"
 long_description="""
-TurboGears brings together a variety of best of breed python tools
-to create an easy to install, easy to use web megaframework.
+TurboGears brings together a best of breed python tools
+to create a flexible, full featured, and easy to use web 
+framework.
 
-It provides and integrated and well tested set of tools for
+TurboGears 2 provides and integrated and well tested set of tools for
 everything you need to build dynamic, database driven applications.
-TurboGears 2 provides you with everything you need from the
-javascript programming tools, like ToscaWidgets and automatic
-JSON generation, to one of the world's most powerful Object
-Relational Mappers (SQLAlchemy).
+It provides a full range of tools for front end javascript 
+develeopment, back database development and everything in between: 
+
+ * dynamic javascript powered widgets ToscaWidgets 
+ * automatic JSON generation from your controllers 
+ * powerfull, designer friendly XHTML basted templating (Genshi)
+ * object or route based URL dispatching
+ * powerful Object Relational Mappers (SQLAlchemy)
 
 The latest development version is available in the
 `TurboGears subversion repository`_.

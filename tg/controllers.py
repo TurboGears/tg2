@@ -38,9 +38,8 @@ class TurboGearsController(WSGIController):
         """Place tg specific attributes at app's context."""
         pylons.c.tg_errors = {}
         pylons.c.tg_values = {}
-        #XXX These funcs. better at h?
-        pylons.c.error_for=error_for
-        pylons.c.value_for=value_for
+        pylons.h.error_for=error_for
+        pylons.h.value_for=value_for
 
     def _tg_routing_info(self, url):
         """

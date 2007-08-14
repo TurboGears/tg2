@@ -11,8 +11,8 @@
     <h1>Welcome to PyGears!!!</h1>
 
     <form method="POST" action="sub/do_test">
-      A: <input name="a" value="${context.value_for('a')}"/>
-      ${context.error_for('a')}
+      A: <input name="a" value="${h.value_for('a')}"/>
+      ${h.error_for('a')}
     </form>
 
   </body>

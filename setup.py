@@ -22,8 +22,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'Pylons==dev,<0.9.7',
-        'Genshi>=0.4',A
-        'SQLAAlchemy>=0.3',
+        'Genshi>=0.4',
+        'SQLAlchemy>=0.3'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
