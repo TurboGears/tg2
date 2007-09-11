@@ -6,7 +6,7 @@
 [DEFAULT]
 debug = true
 # Uncomment and replace with the address which should receive any error reports 
-# email_to = you@yourdomain.com
+#email_to = you@yourdomain.com
 smtp_server = localhost
 error_email_from = paste@localhost
 
@@ -36,10 +36,10 @@ beaker.session.secret = somesecret
 # If you have sqlite, here's a simple default to get you started
 # in development
 
-sqlalchemy.default.uri = sqlite:///%(here)s/devdata.db
-sqlalchemy.default.echo = true
-sqlalchemy.default.echo_pool = false
-sqlalchemy.default.pool_recycle = 3600
+sqlalchemy.uri = sqlite:///%(here)s/devdata.db
+sqlalchemy.echo = true
+sqlalchemy.echo_pool = false
+sqlalchemy.pool_recycle = 3600
     
 # Specify the database for SQLObject to use via turbogears.database.PackageHub.
 #sqlobject.dburi = sqlite://%(here)s/devdata.db
@@ -49,9 +49,9 @@ sqlalchemy.default.pool_recycle = 3600
 # execute malicious code after an exception is raised.
 #set debug = false
 
-# Logging Setup
+# Logging configuration
 [loggers]
-keys = root
+keys = root, ${package_logger}
 
 [handlers]
 keys = console
@@ -63,6 +63,11 @@ keys = generic
 level = INFO
 handlers = console
 
+[logger_${package_logger}]
+level = DEBUG
+handlers =
+qualname = ${package_logger}
+
 [handler_console]
 class = StreamHandler
 args = (sys.stderr,)
@@ -70,5 +75,5 @@ level = NOTSET
 formatter = generic
 
 [formatter_generic]
-format = %(asctime)s %(levelname)-5.5s [%(name)s]  %(message)s
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S

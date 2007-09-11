@@ -8,7 +8,9 @@ import ${package}.lib.helpers
 from ${package}.config.routing import make_map
 
 def load_environment(global_conf, app_conf):
-    """Configure the Pylons environment via the ``pylons.config`` object""" 
+    """Configure the Pylons environment via the ``pylons.config``
+    object
+    """
     # Pylons paths
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     paths = dict(root=root,
@@ -20,12 +22,12 @@ def load_environment(global_conf, app_conf):
     config.init_app(global_conf, app_conf, package='${package}', 
                     template_engine='genshi', paths=paths)
 
+    config['routes.map'] = make_map()
     config['pylons.g'] = app_globals.Globals()
     config['pylons.h'] = ${package}.lib.helpers
-    config['routes.map'] = make_map()
 
     # Customize templating options via this variable
     tmpl_options = config['buffet.template_options']
 
-    # CONFIGURATION OPTIONS HERE (note: all config options will override any
-    # Pylons config options)
+    # CONFIGURATION OPTIONS HERE (note: all config options will override
+    # any Pylons config options)

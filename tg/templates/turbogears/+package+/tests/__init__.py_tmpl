@@ -1,12 +1,12 @@
 """Pylons application test package
 
-When the test runner finds and executes tests within this directory, this file 
-will be loaded to setup the test environment.
+When the test runner finds and executes tests within this directory,
+this file will be loaded to setup the test environment.
 
-It registers the root directory of the project in sys.path and pkg_resources, 
-in case the project hasn't been installed with setuptools. It also initializes 
-the application via websetup (paster setup-app) with the project's test.ini 
-configuration file.
+It registers the root directory of the project in sys.path and
+pkg_resources, in case the project hasn't been installed with
+setuptools. It also initializes the application via websetup (paster
+setup-app) with the project's test.ini configuration file.
 """
 import os
 import sys
@@ -38,4 +38,3 @@ class TestController(TestCase):
         wsgiapp = loadapp('config:test.ini', relative_to=conf_dir)
         self.app = paste.fixture.TestApp(wsgiapp)
         TestCase.__init__(self, *args, **kwargs)
-
