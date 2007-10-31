@@ -38,8 +38,13 @@ class TurboGearsController(WSGIController):
         """Place tg specific attributes at app's context."""
         pylons.c.tg_errors = {}
         pylons.c.tg_values = {}
-        pylons.h.error_for=error_for
-        pylons.h.value_for=value_for
+        
+        
+        #TODO: Pylons.h is gone away... we need someplace better to put these functions. 
+        #I'm throwing them on the context object, but it is an ugly hack! --Mark
+        #since these are just functions, perhaps we can keep them in the tg namespace directly...
+        pylons.c.error_for=error_for
+        pylons.c.value_for=value_for
 
     def _tg_routing_info(self, url):
         """
@@ -80,7 +85,6 @@ class TurboGearsController(WSGIController):
         All of these values are populated into the context object by the 
         expose decorator. 
         '''
-
         content_type, engine_name, template_name, exclude_names = \
                       controller.tg_info.lookup_template_engine(pylons.request)
         if template_name is None: return response
@@ -94,10 +98,9 @@ class TurboGearsController(WSGIController):
         result = pylons.buffet.render(engine_name=engine_name,
                                       template_name=template_name,
                                       include_pylons_variables=False,
-                                      namespace=namespace)
-        response = pylons.Response(result)
-        response.headers['Content-Type'] = content_type
-        return response
+                                      namespace=namespace)                          
+        pylons.response.headers['Content-Type'] = content_type
+        return result
 
     def _tg_handle_validation_errors(self, controller, exception):
         """Handles the Invalid exception raised when trying to call the

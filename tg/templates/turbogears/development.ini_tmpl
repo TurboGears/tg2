@@ -49,24 +49,7 @@ sqlalchemy.pool_recycle = 3600
 # execute malicious code after an exception is raised.
 #set debug = false
 
-# Logging configuration
-[loggers]
-keys = root, ${package_logger}
 
-[handlers]
-keys = console
-
-[formatters]
-keys = generic
-
-[logger_root]
-level = INFO
-handlers = console
-
-[logger_${package_logger}]
-level = DEBUG
-handlers =
-qualname = ${package_logger}
 
 [handler_console]
 class = StreamHandler

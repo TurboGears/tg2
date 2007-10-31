@@ -1,6 +1,7 @@
 """Classes and methods for TurboGears decorators"""
 import formencode
 from paste.util.mimeparse import best_match
+import pylons
 
 def _schema(d=None, **kw):
     dd = {}
@@ -130,7 +131,7 @@ class expose(object):
         def my_exposed_method(self):
             return dict(a=1, b=2, d="username")
     
-    the expose('json') syntax is a special case.  json is the buffet rendering engine, but
+    the expose('json') syntax is a special case.  json is a buffet rendering engine, but unlike others
     it does not require a template, and expose assumes that it matches content_type='application/json'
     
     Otherwise expose assumes that the template is for html.   All other content_types must 
@@ -139,7 +140,7 @@ class expose(object):
     """
     def __init__(self, template='', content_type=None, exclude_names=None):
         if exclude_names is None:
-            exclude_names = []
+            exclude_names = []    
         if template == 'json':
             engine, template = 'json', ''
         elif ':' in template:
@@ -165,6 +166,7 @@ class expose(object):
             self.content_type, self.engine, self.template, self.exclude_names)
         return func
 
+#TODO: Consider depricating this in favor of pylons validate decorator
 class validate(object):
     """Validate regesters validator on the decorated function.
     
