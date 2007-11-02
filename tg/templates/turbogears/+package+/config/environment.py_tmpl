@@ -6,7 +6,9 @@ from pylons import config
 import ${package}.lib.app_globals as app_globals
 import ${package}.lib.helpers
 from ${package}.config.routing import make_map
-
+#if $sqlalchemy == 'True'
+from sqlalchemy import engine_from_config
+#end if
 def load_environment(global_conf, app_conf):
     """Configure the Pylons environment via the ``pylons.config``
     object
@@ -21,7 +23,9 @@ def load_environment(global_conf, app_conf):
     # Initialize config with the basic options
     config.init_app(global_conf, app_conf, package='${package}', 
                     template_engine='genshi', paths=paths)
-
+#if $sqlalchemy == 'True'
+    config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
+#end if
     config['routes.map'] = make_map()
     config['pylons.g'] = app_globals.Globals()
     config['pylons.h'] = ${package}.lib.helpers

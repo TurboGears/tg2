@@ -20,8 +20,14 @@ class BaseController(WSGIController):
         # WSGIController.__call__ dispatches to the Controller method
         # the request is routed to. This routing information is
         # available in environ['pylons.routes_dict']
-        return WSGIController.__call__(self, environ, start_response)
-
+#if $sqlalchemy == 'True'
+        try:
+        	return WSGIController.__call__(self, environ, start_response)
+		finally:
+			model.Session.remove()
+#else
+		return WSGIController.__call__(self, environ, start_response)
+#end if
 # Include the '_' function in the public names
 __all__ = [__name for __name in locals().keys() if not __name.startswith('_') \
            or __name == '_']

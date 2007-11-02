@@ -1,7 +1,41 @@
-from ${package}.lib.database import *
+from pylons import config
+#if $sqlalchemy == 'True'
+from sqlalchemy import Column, MetaData, Table, types
+from sqlalchemy.orm import mapper, relation
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+# Global session manager.  Session() returns the session object
+# appropriate for the current web request.
+Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
+                                      bind=config['pylons.g'].sa_engine))
+
+# Global metadata. If you have multiple databases with overlapping table
+# names, you'll need a metadata for each database.
+metadata = MetaData()
+
+# Define a table.
+table1 = Table("table1", metadata,
+    Column("id", types.Integer, primary_key=True),
+    Column("name", types.String, nullable=False),
+    )
+
+# Define another table, reading its structure from an existing database
+# table.  You must provide an engine in this case.
+table2 = Table("table2", metadata, autoload=True,
+               autoload_with=config['pylons.g'].sa_engine)
+
+# Define ORM classes (often called "mapped classes").
+# attributes will be added by the mapper below
+class MyClass(object):
+    pass
+
+# Map each class to its corresponding table.
+mapper(MyClass, table1)
+
 
 # Import or define your Elixir classes here
 # from elixir import *
 
 # class YourClass(Entity):
 #     has_field('data', Unicode)
+#end if

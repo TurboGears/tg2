@@ -73,7 +73,6 @@ or start project with sqlobject::
     summary = __doc__.splitlines()[0]
     usage = '\n' + __doc__
     group_name = "TurboGears2"
-    
     name = None
     package = None
     dry_run = False
@@ -99,30 +98,25 @@ or start project with sqlobject::
     parser.add_option("-s", "--sqlalchemy",
             help="use SQLAlchemy instead of SQLObject",
             action="store_true", dest="sqlalchemy", default = True)
-    parser.add_option("-e", "--elixir",
-            help="use SQLAlchemy Elixir instead of SQLObject",
-            action="store_true", dest="elixir", default = True)
     parser.add_option("-o", "--sqlobject",
             help="use SQLObject instead of SQLAlchemy",
             action="store_true", dest="sqlobject", default = False)
+    parser.add_option("-e", "--elixir",
+            help="use SQLAlchemy Elixir instead of SQLObject",
+            action="store_true", dest="elixir", default = True)
     parser.add_option("-i", "--identity",
             help="provide Identity support",
             action="store_true", dest="identity", default = False)
     
     def command(self):
         "Quickstarts the new project."
-        if self.args:
-            self.name = self.args[0]
-
-        if self.sqlobject:
-            self.sqlalchemy = False
-            self.elixir = False
-
-        if self.sqlalchemy:
-            self.elixir = False
-
+        if not True in [self.elixir, self.sqlalchemy, self.sqlobject]:
+            self.sqlobject = True
         if self.elixir:
             self.sqlalchemy = True
+            
+        if self.args:
+            self.name = self.args[0]
 
         while not self.name:
             self.name = raw_input("Enter project name: ")
@@ -184,6 +178,7 @@ or start project with sqlobject::
         cmd_args.append(self.name)
         cmd_args.append("package=%s" % self.package)
         cmd_args.append("identity=%s" % self.identity)
+        cmd_args.append("sqlobject=%s" % self.sqlobject)
         cmd_args.append("sqlalchemy=%s" % self.sqlalchemy)
         cmd_args.append("elixir=%s" % self.elixir)
         cmd_args.append("tgversion=%s"%self.version)
@@ -194,6 +189,9 @@ or start project with sqlobject::
         
         if not self.dry_run:
             os.chdir(self.name)
+            sodir = '%s/sqlobject-history' % self.package
+            if self.sqlobject and not os.path.exists(sodir):
+                os.mkdir(sodir)
             startscript = "start-%s.py" % self.package
             if os.path.exists(startscript):
                 oldmode = os.stat(startscript).st_mode
@@ -202,7 +200,7 @@ or start project with sqlobject::
             sys.argv = ["setup.py", "egg_info"]
             import imp
             imp.load_module("setup", *imp.find_module("setup", ["."]))
-            
+
             # dirty hack to allow "empty" dirs
             for base,path,files in os.walk("./"):
                 for file in files:
