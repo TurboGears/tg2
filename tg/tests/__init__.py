@@ -5,7 +5,7 @@ from xmlrpclib import loads, dumps
 import pylons
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from pylons.util import ContextObj
-from routes import request_config
+
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,14 +32,6 @@ class TestWSGIController(TestCase):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
         return self.app.post(url, extra_environ=self.environ, params=kargs)
-    
-    def xmlreq(self, method, args=None):
-        if args is None:
-            args = ()
-        ee = dict(CONTENT_TYPE='text/xml')
-        data = dumps(args, methodname=method)
-        self.response = response = self.app.post('/', params = data, extra_environ=ee)
-        return loads(response.body)[0][0]
     
 
 class ControllerWrap(object):

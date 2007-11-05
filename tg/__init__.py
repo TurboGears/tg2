@@ -20,18 +20,32 @@ your favorite Python components and libraries::
 The zen of TurboGears is::
 
     Keep simple things simple and complex things possible
-    Give defaults while you give choices
-    Give choices while the one obvious way depends
+    Give god defaults everywhere and allow choices where they matter
+    Don't pretend that there's one obvious way, when there isn't
 
-TurboGears 2 as like Ubuntu Linux and Pylons as Debian.
-We're focused on user experience, and creating a novice friendly environment.
-Pylons provide the power and flexibilty of the underlying core. 
-And we don't intend to hide that power and flexibility from advanced users. 
+TurboGears 2 is to Pylons as Ubuntu is to Debian Debian.
 
-Sensible defaults will be provided but that more powerful mechanisms will be 
-available to those projects who need them.
+We're focused on user experience, and creating a user friendly environment.
+We make choices, setup sane defaults, and build on top of a powerfull, flexible core. 
+Pylons provide that core, and focuses on maximizing flexibility, stability. 
+
+we don't intend to hide that power and flexibility from advanced users, we just want
+them to be able to get up and running quickly, and have a well lit development path
+to walk. 
 
 
 """
 from controllers import TurboGearsController
-from decorators import expose, validate
+from pylons.decorators import expose, new_validate as validate
+from pylons.wsgiapp import BaseApp
+
+
+class TurboGearsApplication(BaseApp):
+    def __init__(self, root, **kwargs):
+        BaseApp.__init__(self, **kwargs)
+        self.root = root
+
+    def __call__(self, environ, start_response):
+        environ['pylons.routes_dict'] = {}
+        self.setup_app_env(environ, start_response)
+        return self.root(environ, start_response)

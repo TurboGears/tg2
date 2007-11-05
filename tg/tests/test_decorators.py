@@ -45,7 +45,7 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.baseenviron = {}
-        app = ControllerWrap(BasicTGController)
+        app = ControllerWrap(BasicDispatchController)
         app = self.sap = SetupCacheGlobal(app, self.baseenviron)
         app = RegistryManager(app)
         self.app = TestApp(app)
@@ -56,39 +56,3 @@ class TestTGController(TestWSGIController):
         self.baseenviron.update(self.environ)
         self.baseenviron['pylons.routes_dict']['action'] = 'route' #Do TG style dispatch
         
-    def test_simple_jsonification(self):
-        self.baseenviron['pylons.routes_dict']['url']= 'json'
-        resp = self.app.get('/json')
-        print resp.body
-        assert '{"a": "hello world", "b": true}' in resp.body
-                
-    def test_custom_jsonification(self):
-        self.baseenviron['pylons.routes_dict']['url']= 'custom'
-        resp = self.app.get('/custom')
-        print resp.body
-        assert "wo-hoo!" in resp.body
-            
-    def test_template_default_engine(self):
-        pass
-    
-    def test_genshi_rendering(self):
-        pass
-    
-    def test_kid_rendering(self):
-        pass
-    
-    def test_multi_dispatch_json(self):
-        pass
-    
-    def test_multi_dispatch_accept_headers(self):
-        pass
-    
-    def test_multi_dispatch_extension(self):
-        pass
-        
-    def test_multi_dispatch_fileextensions_overide_acceptheaders(self):
-        pass
-    
-    def test_hide_undesired_fields(self):
-        pass
-                

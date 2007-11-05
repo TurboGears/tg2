@@ -1,7 +1,9 @@
-from tg import expose, validate, TurboGearsController
-from pylons.helpers import redirect_to
+from ${package}.lib.base import BaseController
+from tg import expose, validate
+
+from pylons.controllers.util import redirect_to
         
-class RootController(TurboGearsController):
+class RootController(BaseController):
     
     @expose('${package}.templates.index')
     def index(self):

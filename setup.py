@@ -21,7 +21,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Pylons==dev,<0.9.7',
+        'Pylons',
         'Genshi>=0.4',
         'SQLAlchemy>=0.3'
     ],

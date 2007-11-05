@@ -6,7 +6,6 @@ TODO:
 * Updated database setup code that allows for use of model files outside of Pylons/TG
 * Plenty of unit tests
 * Upgrade Guide
-* Fit python open source project quality by cheesecake
 
 Done: 
 

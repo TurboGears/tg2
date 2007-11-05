@@ -8,9 +8,11 @@ from pylons import config
 from pylons.error import error_template
 from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
     StaticJavascripts
-from pylons.wsgiapp import PylonsApp
+from beaker.middleware import SessionMiddleware, CacheMiddleware
+from tg import TurboGearsApplication
 
 from ${package}.config.environment import load_environment
+from ${package}.controllers.root import RootController
 
 def make_app(global_conf, full_stack=True, **app_conf):
     """Create a Pylons WSGI application and return it
@@ -34,10 +36,13 @@ def make_app(global_conf, full_stack=True, **app_conf):
     load_environment(global_conf, app_conf)
 
     # The Pylons WSGI app
-    app = PylonsApp()
+    app = TurboGearsApplication(RootController())
 
+    app = SessionMiddleware(app, config)
+    app = CacheMiddleware(app, config)
+    
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
-
+    
     if asbool(full_stack):
         # Handle Python exceptions
         app = ErrorHandler(app, global_conf, error_template=error_template,
