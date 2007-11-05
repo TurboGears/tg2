@@ -42,6 +42,7 @@ from pylons.wsgiapp import BaseApp
 from pylons import c as context
 from pylons import g as app_globals
 from pylons import request
+from pylons import session
 
 
 class TurboGearsApplication(BaseApp):
@@ -57,5 +58,5 @@ class TurboGearsApplication(BaseApp):
 
 __all__ = [
     'expose', 'validate', 'TurboGearsController', 'context', 'app_globals', 
-    'request', 'TurboGearsApplication'
+    'request', 'TurboGearsApplication', 'session'
 ]
