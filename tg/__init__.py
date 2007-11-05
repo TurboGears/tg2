@@ -38,17 +38,20 @@ to walk.
 from controllers import TurboGearsController
 
 from pylons.decorators import expose, new_validate as validate
-from pylons.wsgiapp import BaseApp
+from pylons.wsgiapp import PylonsApp
 from pylons import c as context
 from pylons import g as app_globals
 from pylons import request
 from pylons import session
 
 
-class TurboGearsApplication(BaseApp):
+class TurboGearsApplication(PylonsApp):
     def __init__(self, root, **kwargs):
-        BaseApp.__init__(self, **kwargs)
+        PylonsApp.__init__(self, **kwargs)
         self.root = root
+
+    def resolve(self, environ, start_response):
+        return self.root
 
     def __call__(self, environ, start_response):
         environ['pylons.routes_dict'] = {}
