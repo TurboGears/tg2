@@ -36,8 +36,12 @@ to walk.
 
 """
 from controllers import TurboGearsController
+
 from pylons.decorators import expose, new_validate as validate
 from pylons.wsgiapp import BaseApp
+from pylons import c as context
+from pylons import g as app_globals
+from pylons import request
 
 
 class TurboGearsApplication(BaseApp):
@@ -49,3 +53,9 @@ class TurboGearsApplication(BaseApp):
         environ['pylons.routes_dict'] = {}
         self.setup_app_env(environ, start_response)
         return self.root(environ, start_response)
+
+
+__all__ = [
+    'expose', 'validate', 'TurboGearsController', 'context', 'app_globals', 
+    'request', 'TurboGearsApplication'
+]
