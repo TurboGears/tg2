@@ -10,6 +10,7 @@ While in Development there are several dependencies:
  * Python, version >= 2.4.
    + Please keep in mind, that for RPM-based systems you will also need
    python-devel and python-xml packages.
+   + You may need python-dev and python-setuptools in ubuntu
  * Pylons Trunk checkout. 
     We require the development version is preferable since there are important
     controller features which we need, as well as a template rendering bugfix 
@@ -24,10 +25,11 @@ The command:
 will byte-compile the python source code and install it in the
 site-packages directory of your python installation.
 
-If you don't already have the turbogears and pylons source, you can 
-get them from svn::
+If you don't already have the pylons and turbogears source, you can 
+get them from their repository::
 
-    $ svn co http://pylonshq.com/svn/Pylons/trunk pylons
+    $ easy_install -U mercurial
+    $ hg clone https://www.knowledgetap.com/hg/pylons-dev
     $ svn co http://svn.turbogears.org/trunk tg2
 
 and install TurboGears 2 in development mode::
