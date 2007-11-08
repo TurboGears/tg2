@@ -12,27 +12,29 @@ built upon thousands of lines of other libraries.
 Now TurboGears2 is built on Pylons and allows you to use 
 your favorite Python components and libraries::
 
-    * Models: SQLAlchemy, SQLObject, plain old DB-API
-    * Template engines: Genshi, Kid, Myghty, Mako, Cheetah, or whatever you like - using Buffet
-    * URL Dispatching: Object dispatch, Routes, or plug in your favorite
-    * AJAX: ToscaWidgets, WebHelpers based on Prototype or Mochikit, Dojo, JQuery, Ext & more
+    * Models: SQLAlchemy, SQLObject, or plain old DB-API.
+    * Template engines: Genshi, Kid, Myghty, Mako, Cheetah, or 
+      whatever you like - using Buffet.
+    * URL Dispatching: Object dispatch, Routes, or plug in your favorite.
+    * AJAX: ToscaWidgets, WebHelpers based on Prototype or Mochikit, Dojo,
+      JQuery, Ext & more.
 
 The zen of TurboGears is::
 
     Keep simple things simple and complex things possible
-    Give god defaults everywhere and allow choices where they matter
+    Give good defaults everywhere and allow choices where they matter
     Don't pretend that there's one obvious way, when there isn't
 
-TurboGears 2 is to Pylons as Ubuntu is to Debian Debian.
+TurboGears 2 is to Pylons as Ubuntu is to Debian.
 
 We're focused on user experience, and creating a user friendly environment.
-We make choices, setup sane defaults, and build on top of a powerfull, flexible core. 
+We make choices, setup sane defaults, and build on top of a powerfull,
+flexible core. 
 Pylons provide that core, and focuses on maximizing flexibility, stability. 
 
-we don't intend to hide that power and flexibility from advanced users, we just want
-them to be able to get up and running quickly, and have a well lit development path
-to walk. 
-
+We don't intend to hide that power and flexibility from advanced users,
+we just want them to be able to get up and running quickly, and have a
+well lit development path to walk. 
 
 """
 from controllers import TurboGearsController
@@ -46,6 +48,7 @@ from pylons import session
 
 
 class TurboGearsApplication(PylonsApp):
+    """basis TurboGears application class which is derived from PylonsApp"""
     def __init__(self, root, **kwargs):
         PylonsApp.__init__(self, **kwargs)
         self.root = root

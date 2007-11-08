@@ -2,6 +2,9 @@
 from paste.script import templates
 
 class TurboGearsTemplate(templates.Template):
+    """
+    TurboGears 2 default paste template class
+    """
     egg_plugins = ['TurboGears2', 'Pylons', 'WebHelpers']
     required_templates = []
     _template_dir = 'templates/turbogears'
