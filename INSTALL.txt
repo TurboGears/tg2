@@ -1,7 +1,8 @@
 TurboGears2 Installation Guide
 ===============================
 
-.. Note:: At current stage TurboGears2 is available testing by developers who are willing to use Subversion to track the latest changes. 
+.. Note:: At current stage TurboGears2 is available testing by developers 
+   who are willing to use Subversion to track the latest changes. 
 
 Requirements
 ------------
@@ -29,7 +30,7 @@ If you don't already have the pylons and turbogears source, you can
 get them from their repository::
 
     $ easy_install -U mercurial
-    $ hg clone https://www.knowledgetap.com/hg/pylons-dev
+    $ hg clone https://www.knowledgetap.com/hg/pylons-dev pylons
     $ svn co http://svn.turbogears.org/trunk tg2
 
 and install TurboGears 2 in development mode::
@@ -40,7 +41,8 @@ and install TurboGears 2 in development mode::
 Update the source 
 -----------------
 
-To update the source to the current develop version. Enter the tg2 folder and type the command::
+To update the source to the current develop version. Enter the tg2 folder and
+type the command::
 
     $ svn update
     $ python setup.py develop
