@@ -4,8 +4,9 @@ from xmlrpclib import loads, dumps
 
 import pylons
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
-from pylons.util import ContextObj
-
+from pylons.util import ContextObj, PylonsContext
+from pylons.testutil import ControllerWrap, SetupCacheContext
+import pylons.tests
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,46 +34,3 @@ class TestWSGIController(TestCase):
         self.environ['pylons.routes_dict'].update(kargs)
         return self.app.post(url, extra_environ=self.environ, params=kargs)
     
-
-class ControllerWrap(object):
-    def __init__(self, controller):
-        self.controller = controller
-
-    def __call__(self, environ, start_response):
-        app = self.controller()
-        app.start_response = None
-        return app(environ, start_response)
-
-class SetupCacheGlobal(object):
-    def __init__(self, app, environ, setup_g=True, setup_cache=False,
-                 setup_session=False):
-        if setup_g:
-            g = type('G object', (object,), {})
-            g.message = 'Hello'
-            g.counter = 0
-            g.pylons_config = type('App conf', (object,), {})
-            g.pylons_config.app_conf = dict(cache_enabled='True')
-            self.g = g
-        self.app = app
-        self.environ = environ
-        self.setup_cache = setup_cache
-        self.setup_session = setup_session
-        self.setup_g = setup_g
-
-    def __call__(self, environ, start_response):
-        registry = environ['paste.registry']
-        environ_config = environ.setdefault('pylons.environ_config', {})
-        if self.setup_cache:
-            registry.register(pylons.cache, environ['beaker.cache'])
-            environ_config['cache'] = 'beaker.cache'
-        if self.setup_session:
-            registry.register(pylons.session, environ['beaker.session'])
-            environ_config['session'] = 'beaker.session'
-        if self.setup_g:
-            registry.register(pylons.g, self.g)
-
-        # Update the environ
-        environ.update(self.environ)
-        registry.register(pylons.request, WSGIRequest(environ))
-        registry.register(pylons.response, WSGIResponse())
-        return self.app(environ, start_response)
