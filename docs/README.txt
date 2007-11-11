@@ -23,7 +23,7 @@ Generate Docs
 
 To generate Turbogears2 API, use the command in source folder::
 
-    $ epydoc --config docs/doc.ini 
+    $ epydoc --config docs/doc.ini
 
 to generate API documents into tg2/apidoc folder.
 

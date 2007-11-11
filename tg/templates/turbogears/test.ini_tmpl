@@ -5,7 +5,7 @@
 #
 [DEFAULT]
 debug = true
-# Uncomment and replace with the address which should receive any error reports 
+# Uncomment and replace with the address which should receive any error reports
 # email_to = you@yourdomain.com
 smtp_server = localhost
 error_email_from = paste@localhost

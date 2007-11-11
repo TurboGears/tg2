@@ -2,10 +2,10 @@ from ${package}.lib.base import BaseController
 from tg import expose, validate
 
 from pylons.controllers.util import redirect_to
-        
+
 class RootController(BaseController):
-    
+
     @expose('${package}.templates.index')
     def index(self):
-    	from datetime import datetime
+        from datetime import datetime
         return dict(now=datetime.now())

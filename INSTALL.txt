@@ -1,32 +1,32 @@
 TurboGears2 Installation Guide
 ===============================
 
-.. Note:: At current stage TurboGears2 is available testing by developers 
-   who are willing to use Subversion to track the latest changes. 
+.. Note:: At current stage TurboGears2 is available testing by developers
+    who are willing to use Subversion to track the latest changes.
 
 Requirements
 ------------
-While in Development there are several dependencies: 
+While in Development there are several dependencies:
 
- * Python, version >= 2.4.
-   + Please keep in mind, that for RPM-based systems you will also need
-   python-devel and python-xml packages.
-   + You may need python-dev and python-setuptools in ubuntu
- * Pylons Trunk checkout. 
-    We require the development version is preferable since there are important
-    controller features which we need, as well as a template rendering bugfix 
-    which is nessisary for TurboJSON to work properly.
+    * Python, version >= 2.4.
+        + Please keep in mind, that for RPM-based systems you will also need
+        python-devel and python-xml packages.
+        + You may need python-dev and python-setuptools in ubuntu
+    * Pylons Trunk checkout.
+        We require the development version is preferable since there are important
+        controller features which we need, as well as a template rendering bugfix
+        which is nessisary for TurboJSON to work properly.
 
 Installing TurboGears2
 -----------------------
 The command:
 
-  $ python ./setup.py install
+    $ python ./setup.py install
 
 will byte-compile the python source code and install it in the
 site-packages directory of your python installation.
 
-If you don't already have the pylons and turbogears source, you can 
+If you don't already have the pylons and turbogears source, you can
 get them from their repository::
 
     $ easy_install -U mercurial
@@ -37,8 +37,8 @@ and install TurboGears 2 in development mode::
 
     $ python ./pylons/setup.py develop
     $ python ./tg2/setup.py develop
-    
-Update the source 
+
+Update the source
 -----------------
 
 To update the source to the current develop version. Enter the tg2 folder and
@@ -46,7 +46,7 @@ type the command::
 
     $ svn update
     $ python setup.py develop
- 
+
 Creating a Quickstart Project
 ------------------------------
 
@@ -54,7 +54,7 @@ TurboGears2 is built on Pylons and share pylons' "paster" commands.
 Enter command::
 
     $ paster --help
- 
+
 to get the availble command list.
 
 The command::
@@ -63,12 +63,12 @@ The command::
 
 will generate the "tutorial" package based on quickstart templates for you.
 
- 
-Running the Demo 
+
+Running the Demo
 -----------------
 
 Enter the tutorial folder and type::
- 
+
     $ paster serve development.ini
- 
+
 Browse http://127.0.0.1:8080 for demo.

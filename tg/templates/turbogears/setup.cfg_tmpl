@@ -31,7 +31,7 @@ settings = no_about=true
 # Optionally add extra settings
 #           link1=/community/ Community
 #           link2=/download/ Download
- 
+
 [publish]
 doc-dir=docs/html
 make-dirs=1

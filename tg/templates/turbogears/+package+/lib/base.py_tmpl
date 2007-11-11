@@ -22,5 +22,5 @@ class BaseController(TurboGearsController):
         finally:
             #after everything is done clear out the Database Session
             #so we don't have trouble with cross request DBSession
-            #polution. 
+            #polution.
             model.DBSession.remove()

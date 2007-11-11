@@ -13,9 +13,8 @@ def setup_config(command, filename, section, vars):
     conf = appconfig('config:' + filename)
     load_environment(conf.global_conf, conf.local_conf)
 
-	# create model
-	from ${package} import model
-	print "Creating tables"
-	model.metadata.create_all(bind=config['pylons.g'].sa_engine)
+        # create model
+        from ${package} import model
+        print "Creating tables"
+        model.metadata.create_all(bind=config['pylons.g'].sa_engine)
     print "Successfully setup"
-    

@@ -3,16 +3,16 @@ version = "2.0a1"
 description = "Next generation TurboGears built on Pylons"
 long_description="""
 TurboGears brings together a best of breed python tools
-to create a flexible, full featured, and easy to use web 
+to create a flexible, full featured, and easy to use web
 framework.
 
 TurboGears 2 provides and integrated and well tested set of tools for
 everything you need to build dynamic, database driven applications.
-It provides a full range of tools for front end javascript 
-develeopment, back database development and everything in between: 
+It provides a full range of tools for front end javascript
+develeopment, back database development and everything in between:
 
- * dynamic javascript powered widgets ToscaWidgets 
- * automatic JSON generation from your controllers 
+ * dynamic javascript powered widgets ToscaWidgets
+ * automatic JSON generation from your controllers
  * powerfull, designer friendly XHTML basted templating (Genshi)
  * object or route based URL dispatching
  * powerful Object Relational Mappers (SQLAlchemy)

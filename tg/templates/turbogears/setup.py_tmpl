@@ -23,7 +23,7 @@ setup(
     entry_points="""
     [paste.app_factory]
     main = ${package}.config.middleware:make_app
-    
+
     [paste.app_install]
     main = pylons.util:PylonsInstaller
     """,

@@ -12,4 +12,3 @@ You can set this by executing this command in your project directory::
 
 And then adding the line shown above to the file that comes up for editing.
 Then, whenever you update your project, ``ez_setup`` will be updated as well.
-
