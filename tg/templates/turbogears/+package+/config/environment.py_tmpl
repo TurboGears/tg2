@@ -30,4 +30,4 @@ def load_environment(global_conf, app_conf):
     # any Pylons config options)
     
     from ${package} import model
-    model.Session.bind=config['pylons.g'].sa_engine
+    model.DBSession.bind=config['pylons.g'].sa_engine
