@@ -30,7 +30,7 @@ If you don't already have the pylons and turbogears source, you can
 get them from their repository::
 
     $ easy_install -U mercurial
-    $ hg clone https://www.knowledgetap.com/hg/pylons-dev pylons
+    $ hg clone http://pylonshq.com/hg/pylons-dev pylons
     $ svn co http://svn.turbogears.org/trunk tg2
 
 and install TurboGears 2 in development mode::
