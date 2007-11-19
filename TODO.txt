@@ -3,18 +3,5 @@ TODO:
 
 * transaction middleware, pre-configured for a transaction-per-request model
     with auto-rollback and auto-commit
-* Updated database setup code that allows for use of model files outside of Pylons/TG
 * Plenty of unit tests
 * Upgrade Guide
-
-Done:
-
-* name change -- Kevin changed the name of the egg, and the but the two pygears folders should be change when we move this to trunk.
-* paster quickstart command -- Fred had ported it from the origin tg-admin command
-* API doc generation -- Fred commit the epydoc configs and instructions
-* paster tginfo command -- Fred had ported it from the origin tg-admin command
-* Make TurboGearsTemplate work
-
-Decided not to do:
-
-* A clone of tg-admin on top of paster (started by Noah) --
