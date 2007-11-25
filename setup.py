@@ -23,7 +23,8 @@ setup(
     install_requires=[
         'Pylons',
         'Genshi>=0.4',
-        'SQLAlchemy>=0.4'
+        'SQLAlchemy>=0.4',
+        'ToscaWidgets>=0.2rc1'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]

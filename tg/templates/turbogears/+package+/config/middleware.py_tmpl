@@ -10,9 +10,12 @@ from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
     StaticJavascripts
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from tg import TurboGearsApplication
+from toscawidgets.middleware import TGWidgetsMiddleware
+from toscawidgets.mods.pylonshf import PylonsHostFramework
 
-from ${package}.config.environment import load_environment
-from ${package}.controllers.root import RootController
+
+from  ${package}.config.environment import load_environment
+from  ${package}.controllers.root import RootController
 
 def make_app(global_conf, full_stack=True, **app_conf):
     """Create a Pylons WSGI application and return it
@@ -34,12 +37,17 @@ def make_app(global_conf, full_stack=True, **app_conf):
     """
     # Configure the Pylons environment
     load_environment(global_conf, app_conf)
-
-    # The Pylons WSGI app
+    
+    # Create the TurboGears WSGI app stack
     app = TurboGearsApplication(RootController())
-
+    
+    # Add Session and Cashing support 
     app = SessionMiddleware(app, config)
     app = CacheMiddleware(app, config)
+    
+    #Configure and add ToscaWidgets support 
+    host_framework = PylonsHostFramework(default_view="genshi")
+    app = TGWidgetsMiddleware(app, host_framework)
 
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
 
