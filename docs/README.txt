@@ -1,49 +1,62 @@
-Document generation Guide
-=========================
+API Documentation Generation Guide
+==================================
 
-You need to install epydoc 3 first before go through this doc.
+You need to install epydoc_ 3 first to generate the TurboGears API 
+documentation from the source code.
 
-You could got epydoc source from epydoc svn::
+You can either download a beta release from sourceforge_ or get the epydoc source from epydoc's SVN repository::
 
-    $ svn co https://svn.sourceforge.net/svnroot/epydoc
+    $ svn co https://epydoc.svn.sourceforge.net/svnroot/epydoc/
 
-And follow epydoc's doc to install it.
+Follow the documentation on the epydoc web site to install it.
 
-Check Modules
--------------
 
-To check what docs need to be written, use the command in source folder::
+Checking for missing doc strings
+--------------------------------
+
+To check which docs need to be written, use the following command in the 
+top directory of the TurboGears trunk source::
 
     $ epydoc --check tg
 
-The command will gather all undocumented and no description python methods.
+The command will check that every module, class, method, and function has a description; that every parameter has a description and a type; and that every variable has a type. It will list those that don't meet these requirements.
 
-Generate Docs
--------------
 
-To generate Turbogears2 API, use the command in source folder::
+Generating HTML docs
+--------------------
+
+Use this command in the top directory::
 
     $ epydoc --config docs/doc.ini
 
-to generate API documents into tg2/apidoc folder.
+to generate the TurboGears 2 API documentation in the ``apidocs`` folder.
 
-You could custom the doc.ini setting to generate other type of docs.
+You can change the settings in the file ``doc.ini`` in the ``apigen`` folder 
+to customize the output.
 
-Write Docs
-----------
 
-Note in TurboGears 2 we use reStructuredText format for doc strings.
+Writing docs
+------------
 
-It's a bit different from epydoc's default format.
-Check docs about reStructuredText format on epydoc site.
+.. note:: The TurboGears project uses reStructuredText_ format for doc strings.
 
-http://epydoc.sourceforge.net/manual-docstring.html
-http://epydoc.sourceforge.net/manual-othermarkup.html
-http://epydoc.sourceforge.net/manual-fields.html
+It's a bit different from epydoc's default format. Check the documentation
+about using reStructuredText with epydoc on the epydoc web site:
 
-Debug Docs
------------
+* http://epydoc.sourceforge.net/manual-docstring.html
+* http://epydoc.sourceforge.net/manual-othermarkup.html
+* http://epydoc.sourceforge.net/manual-fields.html
 
-To find where the format error is, use command::
+
+Debugging docs
+--------------
+
+If you get a formatting error and want to locate the position in the source
+quickly, use the verbose mode of epydoc by supplying the ``-v`` option::
 
     $ epydoc --config docs/doc.ini -v
+
+
+.. _epydoc: http://epydoc.sourceforge.net/
+.. _sourceforge: http://sourceforge.net/project/showfiles.php?group_id=32455
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html
