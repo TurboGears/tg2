@@ -6,7 +6,7 @@ import paste.httpexceptions as httpexceptions
 import tg
 import pylons
 from tg.controllers import TurboGearsController
-from tg.decorators import expose, before_call
+from pylons.decorators import expose
 
 from turbojson.jsonify import jsonify
 

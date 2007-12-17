@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from paste.fixture import TestApp
 from paste.registry import RegistryManager
-import paste.httpexceptions as httpexceptions
+from paste import httpexceptions
 
 import tg
 import pylons
 from tg.controllers import TurboGearsController
 from pylons.decorators import expose
-from pylons.controllers.util import redirect_to
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
@@ -37,6 +36,9 @@ class BasicTGController(TurboGearsController):
         
     sub = SubController()
 
+    @expose()
+    def redirect_me(self):
+        tg.redirect('/')
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -45,6 +47,7 @@ class TestTGController(TestWSGIController):
         app = ControllerWrap(BasicTGController)
         app = self.sap = SetupCacheGlobal(app, self.baseenviron)
         app = RegistryManager(app)
+        app = httpexceptions.make_middleware(app)
         self.app = TestApp(app)
         
     def setUp(self):
@@ -69,3 +72,7 @@ class TestTGController(TestWSGIController):
         assert "bob" in resp.body
         assert 'tim' in resp.body
         assert 'joe' in resp.body 
+
+    def test_redirect(self):
+        resp = self.app.get('/redirect_me').follow()
+        self.failUnless('hello world' in resp)

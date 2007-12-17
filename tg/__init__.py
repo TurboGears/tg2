@@ -37,7 +37,7 @@ we just want them to be able to get up and running quickly, and have a
 well lit development path to walk.
 
 """
-from controllers import TurboGearsController
+from controllers import TurboGearsController, redirect
 
 from pylons.decorators import expose, new_validate as validate
 from pylons.wsgiapp import PylonsApp

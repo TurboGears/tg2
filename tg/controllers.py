@@ -1,5 +1,6 @@
 """Basic controller class for turbogears"""
 from pylons.controllers import ObjectDispatchController, DecoratedController
+from tg.exceptions import HTTPFound
 
 class TurboGearsController(ObjectDispatchController):
     """Basis TurboGears controller class which is derived from
@@ -11,3 +12,11 @@ class TurboGearsController(ObjectDispatchController):
 
     def _dispatch_call(self):
         return self._perform_call(None, None)
+
+def redirect(url, redirect_params=None, **kw):
+    """Redirect to a given url."""
+    params = redirect_params or {}
+    params.update(kw)
+    if params:
+        url += '?' + urllib.urlencode(params, True)
+    raise HTTPFound(url)

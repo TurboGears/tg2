@@ -3,6 +3,7 @@ from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
+from paste import httpexceptions
 
 from pylons import config
 from pylons.error import error_template
@@ -45,7 +46,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
     app = SessionMiddleware(app, config)
     app = CacheMiddleware(app, config)
     
-    #Configure and add ToscaWidgets support 
+    # Configure and add ToscaWidgets support 
     host_framework = PylonsHostFramework(default_view="genshi")
     app = TGWidgetsMiddleware(app, host_framework)
 
@@ -59,6 +60,10 @@ def make_app(global_conf, full_stack=True, **app_conf):
         # Display error documents for 401, 403, 404 status codes (and
         # 500 when debug is disabled)
         app = ErrorDocuments(app, global_conf, mapper=error_mapper, **app_conf)
+
+    # Stack httpexceptions middleware so redirect, abort, etc.. work
+    # XXX: Why doesn't Pylons stack this internally?
+    app = httpexceptions.make_middleware(app)
 
     # Establish the Registry for this application
     app = RegistryManager(app)

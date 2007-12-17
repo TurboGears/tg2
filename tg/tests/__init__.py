@@ -5,8 +5,8 @@ from xmlrpclib import loads, dumps
 import pylons
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from pylons.util import ContextObj, PylonsContext
-from pylons.testutil import ControllerWrap, SetupCacheContext
-import pylons.tests
+from pylons.testutil import ControllerWrap, SetupCacheGlobal
+#import pylons.tests
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
