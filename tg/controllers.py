@@ -1,5 +1,6 @@
 """Basic controller class for turbogears"""
 from pylons.controllers import ObjectDispatchController, DecoratedController
+from pylons import response
 from tg.exceptions import HTTPFound
 
 class TurboGearsController(ObjectDispatchController):
@@ -19,4 +20,8 @@ def redirect(url, redirect_params=None, **kw):
     params.update(kw)
     if params:
         url += '?' + urllib.urlencode(params, True)
-    raise HTTPFound(url)
+    found = HTTPFound(url)
+    # Merging cookies in global response into redirect
+    for c in response.cookies.values():
+        found.headers.append(('Set-Cookie', c.output(header='')))
+    raise found

@@ -40,6 +40,22 @@ class BasicTGController(TurboGearsController):
     def redirect_me(self):
         tg.redirect('/')
 
+    @expose()
+    def flash_redirect(self):
+        tg.flash("Wow, flash!")
+        tg.redirect("/flash_after_redirect")
+
+    @expose()
+    def flash_after_redirect(self):
+        return tg.get_flash()
+
+    @expose()
+    def flash_no_redirect(self):
+        tg.flash("Wow, flash!")
+        return tg.get_flash()
+
+
+
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
@@ -76,3 +92,11 @@ class TestTGController(TestWSGIController):
     def test_redirect(self):
         resp = self.app.get('/redirect_me').follow()
         self.failUnless('hello world' in resp)
+
+    def test_flash_redirect(self):
+        resp = self.app.get('/flash_redirect').follow()
+        self.failUnless('Wow, flash!' in resp, resp)
+
+    def test_flash_no_redirect(self):
+        resp = self.app.get('/flash_no_redirect')
+        self.failUnless('Wow, flash!' in resp, resp)
