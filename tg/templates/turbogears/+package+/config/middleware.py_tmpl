@@ -53,6 +53,10 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
 
     if asbool(full_stack):
+        # Stack httpexceptions middleware so redirect, abort, etc.. work
+        # XXX: Why doesn't Pylons stack this internally anymore??
+        app = httpexceptions.make_middleware(app)
+
         # Handle Python exceptions
         app = ErrorHandler(app, global_conf, error_template=error_template,
                            **config['pylons.errorware'])
@@ -60,10 +64,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
         # Display error documents for 401, 403, 404 status codes (and
         # 500 when debug is disabled)
         app = ErrorDocuments(app, global_conf, mapper=error_mapper, **app_conf)
-
-    # Stack httpexceptions middleware so redirect, abort, etc.. work
-    # XXX: Why doesn't Pylons stack this internally?
-    app = httpexceptions.make_middleware(app)
 
     # Establish the Registry for this application
     app = RegistryManager(app)
