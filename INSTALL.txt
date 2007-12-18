@@ -1,35 +1,51 @@
 TurboGears2 Installation Guide
 ===============================
 
-.. Note:: At current stage TurboGears2 is available testing by developers
+.. note:: At current stage TurboGears2 is available for testing by developers
     who are willing to use Subversion to track the latest changes.
+
 
 Requirements
 ------------
+
 While in Development there are several dependencies:
 
-    * Python, version >= 2.4.
-        + Please keep in mind, that for RPM-based systems you will also need
-        python-devel and python-xml packages.
-        + You may need python-dev and python-setuptools in ubuntu
-    * Pylons Trunk checkout.
-        We require the development version is preferable since there are important
-        controller features which we need, as well as a template rendering bugfix
-        which is nessisary for TurboJSON to work properly.
+* Python, version >= 2.4.
 
-Installing TurboGears2
+    + Please keep in mind, that for RPM-based systems you will also need
+      ``python-devel`` and ``python-xml`` packages.
+
+    + You may need ``python-dev`` and ``python-setuptools`` in ubuntu.
+
+* Pylons trunk checkout.
+
+  We require the development version, since there are important controller
+  features which we need, as well as a template rendering bugfix
+  which is necesssary for TurboJSON to work properly.
+
+
+Installing TurboGears 2
 -----------------------
-The command:
+
+The command::
 
     $ python ./setup.py install
 
-will byte-compile the python source code and install it in the
-site-packages directory of your python installation.
+will byte-compile the Python source code and install it in the
+``site-packages`` directory of your Python installation.
 
-If you don't already have the pylons and turbogears source, you can
+If you don't already have the Pylons and TurboGears source, you can
 get them from their repository::
 
-    $ easy_install -U mercurial
+Install mercurial via easy_install [1]_::
+
+    $ easy_install -U Mercurial
+
+.. [1] Or go to http://www.selenic.com/mercurial/wiki/index.cgi/Download and 
+download & install a binary package for your system.
+
+Check out the Pylons and TurboGears 2 source::
+
     $ hg clone http://pylonshq.com/hg/pylons-dev pylons
     $ svn co http://svn.turbogears.org/trunk tg2
 
@@ -37,6 +53,7 @@ and install TurboGears 2 in development mode::
 
     $ python ./pylons/setup.py develop
     $ python ./tg2/setup.py develop
+
 
 Update the source
 -----------------
@@ -47,10 +64,11 @@ type the command::
     $ svn update
     $ python setup.py develop
 
+
 Creating a Quickstart Project
 ------------------------------
 
-TurboGears2 is built on Pylons and share pylons' "paster" commands.
+TurboGears 2 is built on Pylons and shares pylons' "paster" commands.
 Enter command::
 
     $ paster --help
