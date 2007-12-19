@@ -1,8 +1,8 @@
-TurboGears2 Installation Guide
+TurboGears 2 Installation Guide
 ===============================
 
-.. note:: At current stage TurboGears2 is available for testing by developers
-    who are willing to use Subversion to track the latest changes.
+.. note:: At the current stage TurboGears 2 is available for testing by
+    developers who are willing to use Subversion to track the latest changes.
 
 
 Requirements
@@ -34,14 +34,14 @@ The command::
 will byte-compile the Python source code and install it in the
 ``site-packages`` directory of your Python installation.
 
-If you don't already have the Pylons and TurboGears source, you can
+If you don't already have the Pylons and TurboGears 2 source, you can
 get them from their repository::
 
 Install mercurial via easy_install [1]_::
 
     $ easy_install -U Mercurial
 
-.. [1] Or go to http://www.selenic.com/mercurial/wiki/index.cgi/Download and 
+.. [1] Or go to http://www.selenic.com/mercurial/wiki/index.cgi/Download and
 download & install a binary package for your system.
 
 Check out the Pylons and TurboGears 2 source::
@@ -51,15 +51,17 @@ Check out the Pylons and TurboGears 2 source::
 
 and install TurboGears 2 in development mode::
 
-    $ python ./pylons/setup.py develop
-    $ python ./tg2/setup.py develop
+    $ cd pylons
+    $ python setup.py develop
+    $ cd ../tg2
+    $ python setup.py develop
 
 
 Update the source
 -----------------
 
-To update the source to the current develop version. Enter the tg2 folder and
-type the command::
+To update the source to the current develop version. Enter the ``tg2`` folder
+and type the command::
 
     $ svn update
     $ python setup.py develop
