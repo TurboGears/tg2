@@ -8,7 +8,10 @@ class TurboGearsController(ObjectDispatchController):
     pylons ObjectDispatchController"""
     def _perform_call(self, func, args):
         self._initialize_validation_context()
-        controller, remainder, params = self._get_routing_info()
+        routingArgs = None
+        if isinstance(args, dict) and 'url' in args:
+            routingArgs = args['url']
+        controller, remainder, params = self._get_routing_info(routingArgs)
         return DecoratedController._perform_call(self, controller, params, remainder=remainder)
 
     def _dispatch_call(self):
