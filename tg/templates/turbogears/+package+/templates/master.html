@@ -4,7 +4,7 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       py:strip="">
-
+<?pythonimport tgtg_flash = tg.get_flash()?>
 <head py:match="head" py:attrs="select('@*')">
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
@@ -17,6 +17,7 @@
 <body py:match="body" py:attrs="select('@*')">
   <div id="header">&nbsp;</div>
   <div id="main_content">
+  <div id="status_block" py:if="tg_flash" class="flash" py:content="tg_flash"></div>
   <div py:for="js in tg_js_bodytop" py:replace="ET(js.display())" />
   <div py:replace="select('*|text()')"/>
   <div py:for="js in tg_js_bodybottom" py:replace="ET(js.display())" />
