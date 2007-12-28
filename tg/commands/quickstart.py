@@ -104,10 +104,10 @@ or start project with sqlobject::
     parser.add_option("-e", "--elixir",
             help="use SQLAlchemy Elixir instead of SQLObject",
             action="store_true", dest="elixir", default = True)
-    parser.add_option("-i", "--identity",
+    """parser.add_option("-i", "--identity",
             help="provide Identity support",
             action="store_true", dest="identity", default = False)
-    
+    """
     def command(self):
         "Quickstarts the new project."
         if not True in [self.elixir, self.sqlalchemy, self.sqlobject]:
@@ -130,7 +130,7 @@ or start project with sqlobject::
                 self.package = package
 
         doidentity = self.identity
-        while not doidentity:
+        """while not doidentity:
             doidentity = raw_input("Do you need Identity "
                         "(usernames/passwords) in this project? [no] ")
             doidentity = doidentity.lower()
@@ -148,6 +148,7 @@ or start project with sqlobject::
                 self.identity = "sqlalchemy"
             else:
                 self.identity = "sqlobject"
+        """
         self.name = pkg_resources.safe_name(self.name)
 
         env = pkg_resources.Environment()
