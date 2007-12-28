@@ -4,16 +4,16 @@ TurboGears related projects and their versions
 import pkg_resources
 from paste.script import command
 
-entrypoints = {"TurboGears Commands" : "turbogears2.command",
+entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
     "Template Engines" : "python.templating.engines", 
-    "TurboGears Templates": "turbogears2.template",
-    "Toolbox Gadgets" : "turbogears2.toolboxcommand",
+    "TurboGears2 Templates": "turbogears2.template",
+    "Widget Packages" : "toscawidgets.widgets", 
 }
-"""
-    "Widget Packages" : "turbogears.widgets", 
-    "TurboGears Extensions" : "turbogears.extensions",
-    "Identity Providers" : "turbogears.identity.provider",
-    "Visit Managers" : "turbogears.visit.manager",
+"""#elements that not clear yet
+    "Toolbox Gadgets" : "turbogears2.toolboxcommand",
+    "TurboGears2 Extensions" : "turbogears2.extensions",
+    "Identity Providers" : "turbogears2.identity.provider",
+    "Visit Managers" : "turbogears2.visit.manager",
     
 """
 
@@ -37,9 +37,9 @@ class InfoCommand(command.Command):
     parser = command.Command.standard_parser(verbose=True)
     
     def command(self):
-        print """TurboGears Complete Version Information
+        print """TurboGears2 Complete Version Information
 
-TurboGears requires:
+TurboGears2 requires:
 """
         packages, plugins = retrieve_info()
         for p in packages:
