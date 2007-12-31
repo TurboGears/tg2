@@ -1,7 +1,7 @@
 from ${package}.lib.base import BaseController
-from tg import expose, validate, flash
+from tg import expose, flash
+#from tg import redirect, validate
 #from ${package}.model import DBSession
-#from pylons.controllers.util import redirect_to
 
 class RootController(BaseController):
 
