@@ -56,7 +56,7 @@ beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
 class QuickstartCommand(command.Command):
-    """Create a new TurboGears project
+    """Create a new TurboGears 2 project
 Create a new Turbogears project with this command.
     
 Example usage::

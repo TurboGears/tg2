@@ -27,7 +27,7 @@ def retrieve_info():
     return packages, plugins
 
 class InfoCommand(command.Command):
-    """show related projects and their versions"""
+    """Show TurboGears 2 related projects and their versions"""
     max_args = 0
     min_args = 0
     summary = __doc__.splitlines()[0]
