@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<xi:include href="../master.html" />
+
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+  <title>show $${modelname}</title>
+</head>
+
+<body>
+    <table>
+        <!--tr>
+            <th> title: </th>
+            <td>$${record.title}</td>
+        </tr>
+        <tr>
+            <th> year: </th>
+            <td>$${record.year}</td>
+        </tr>
+        <tr>
+            <th> description: </th>
+            <td>$${record.description}</td>
+        </tr-->
+    </table>
+    <br/>
+    <a href="../edit/$${record.${id}}">Edit</a> | <a href="../list">Back</a>
+</body>
+</html>

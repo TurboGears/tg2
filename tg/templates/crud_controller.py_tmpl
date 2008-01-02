@@ -1,0 +1,82 @@
+from ${package}.lib.base import BaseController
+from tg import expose, validate, flash, redirect
+from ${package}.model import DBSession, Movie
+    
+from toscawidgets.widgets import formsfrom toscawidgets.api import WidgetsListfrom toscawidgets.widgets.forms import validatorsforms.FormField.engine_name = "genshi"
+class ${modelname}Form(forms.TableForm):
+    """form builder"""    class fields(WidgetsList):
+        """fields definitions. Replace to your Fields"""
+        #name="${modelname.capitalize()}"        title = forms.TextField(label="Title", validator = validators.UnicodeString(not_empty=True, max=16))        year = forms.TextField(label="Year", validator = validators.Number(not_empty=True))        description = forms.TextField(label="Descriptioin")model_form = ${modelname}Form("model_form")
+
+class ${modelpackage}(BaseController):
+    """Basic ${modelname} admin interface"""
+    modelname = '${modelname}'
+    
+    @expose()
+    def index(self):
+        """handle front page"""
+        raise redirect("list")
+
+    @expose('genshi:${package}.templates.${modelpackage}.list')
+    def list(self, **kw):
+        """List records in model"""
+        records = DBSession.query(${modelname}).all()
+        return dict(records = records, modelname=self.modelname)
+      
+    @expose('genshi:${package}.templates.${modelpackage}.show')
+    def show(self, id, **kw):
+        """Show record in model"""
+        record = DBSession.query(${modelname}).get(int(id))
+        return dict(record = record)
+    
+    @expose("genshi:${package}.templates.${modelpackage}.form")    
+    def new(self, **kw):
+        """Form to add new record"""
+        return dict(modelname = self.modelname, form = model_form, page='new')
+
+    #@validate(error_handler="new")
+    @expose()
+    def create(self, id=None, **kw):
+        """Create record to model"""
+        entry = ${modelname}(**kw)
+        #if not modeled
+        #entry = ${modelname}()
+        #for attr in kw:
+        #    setattr(entry, attr, kw[attr])
+        DBSession.save(entry)
+        DBSession.commit()
+        flash("Movie was successfully created.")
+        raise redirect("list")
+   
+    @expose("genshi:${package}.templates.${modelpackage}.form")
+    def edit(self, id, **kw):
+        """Form to edit record"""
+        try:
+            record = DBSession.query(${modelname}).get(int(id))
+        except:
+            flash("Not valid edit")
+        return dict(modelname = self.modelname, form = model_form, page='edit',
+            record = record)
+    
+    #@validate(error_handler="edit")        
+    @expose()
+    def update(self, id, **kw):
+        """Update record to model"""
+        record = DBSession.query(${modelname}).get(int(id))
+        for attr in kw:
+            setattr(record, attr, kw[attr])
+        DBSession.save(record)
+        DBSession.commit()
+        flash("${modelname} was successfully updated.")
+        raise redirect("../list")
+        
+    @expose()
+    def destroy(self, id):
+        """Destroy record in model"""
+        record = DBSession.query(${modelname}).get(int(id))
+        DBSession.delete(record)
+        DBSession.commit()
+        flash("${modelname} was successfully destroyed.")
+        raise redirect("../list")
+
+  
