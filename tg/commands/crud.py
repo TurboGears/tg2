@@ -103,7 +103,7 @@ class CrudCommand(command.Command):
                  'modelname': self.modelname,
                  'modelpackage': self.modelpackage,
                  'id': self.primary_key})
-        file_op.copy_file(template='crud_controller.py_tmpl',
+        file_op.copy_file(template='crud_sqlalchemy.py_tmpl',
                          dest=os.path.join('controllers', directory),
                          filename=self.modelpackage)
         #setup templates
