@@ -2,11 +2,12 @@
 utilized by Controllers.
 """
 from pylons import c, cache, config, g, request, response, session
-from tg import TurboGearsController
+from tg import TurboGearsController, context
 from pylons.controllers.util import abort, etag_cache, redirect_to
-from pylons.decorators import jsonify, validate
+from pylons.decorators import jsonify
 from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
+from toscawidgets.api import WidgetBunch
 
 import ${package}.model as model
 
@@ -17,6 +18,11 @@ class BaseController(TurboGearsController):
         # TurboGearsController.__call__ dispatches to the Controller method
         # the request is routed to. This routing information is
         # available in environ['pylons.routes_dict']
+
+        # Create a container to send widgets to the template. Only those sent
+        # in here will have their resources automatically included in the
+        # template
+        context.w = WidgetBunch()
         try:
             return TurboGearsController.__call__(self, environ, start_response)
         finally:
