@@ -60,12 +60,12 @@ class TurboGearsApplication(PylonsApp):
         return self.root
 
     def __call__(self, environ, start_response):
-        
+
         environ['pylons.routes_dict'] = {}
         self.setup_app_env(environ, start_response)
-        
+
         # Initialize config if this is called by "paster shell"
-        # as indicated by the fact that the shell sets a special 
+        # as indicated by the fact that the shell sets a special
         # PATH_INFO
         if 'paste.testing_variables' in environ:
             self.load_test_env(environ)
@@ -73,7 +73,7 @@ class TurboGearsApplication(PylonsApp):
                 paste.registry.restorer.save_registry_state(environ)
                 start_response('200 OK', [('Content-type', 'text/plain')])
                 return ['%s' % paste.registry.restorer.get_request_id(environ)]
-        
+
         return self.root(environ, start_response)
 
 

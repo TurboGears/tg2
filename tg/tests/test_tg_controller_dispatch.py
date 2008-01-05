@@ -16,11 +16,11 @@ class SubController(object):
     @expose()
     def foo(self):
         return 'sub_foo'
-    
+
     @expose()
     def index(self):
         return 'sub index'
-    
+
     @expose()
     def default(self, *args):
         return ("recieved the following args (from the url): %s" %list(args))
@@ -29,11 +29,11 @@ class BasicTGController(TurboGearsController):
     @expose()
     def index(self):
         return 'hello world'
-    
-    @expose()    
+
+    @expose()
     def default(self, remainder):
-        return "Main Default Page called for url /%s"%remainder    
-        
+        return "Main Default Page called for url /%s"%remainder
+
     sub = SubController()
 
     @expose()
@@ -65,7 +65,7 @@ class TestTGController(TestWSGIController):
         app = RegistryManager(app)
         app = httpexceptions.make_middleware(app)
         self.app = TestApp(app)
-        
+
     def setUp(self):
         TestWSGIController.setUp(self)
         self.environ['pylons.routes_dict'] = {}
@@ -74,20 +74,20 @@ class TestTGController(TestWSGIController):
     def test_tg_style_default(self):
         resp = self.app.get('/sdfaswdfsdfa') #random string should be caught by the default route
         assert 'Default' in resp.body
-    
+
     def test_tg_style_index(self):
         resp = self.app.get('/index/')
         assert 'hello' in resp.body
-        
+
     def test_tg_style_subcontrolelr_index(self):
         resp = self.app.get('/sub/index')
         assert "sub index" in resp.body
-    
+
     def test_tg_style_subcontroller_default(self):
         resp=self.app.get('/sub/bob/tim/joe')
         assert "bob" in resp.body
         assert 'tim' in resp.body
-        assert 'joe' in resp.body 
+        assert 'joe' in resp.body
 
     def test_redirect(self):
         resp = self.app.get('/redirect_me').follow()

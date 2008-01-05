@@ -13,7 +13,7 @@ from turbojson.jsonify import jsonify
 from __init__ import TestWSGIController, SetupCacheGlobal, ControllerWrap
 
 pylons.buffet = pylons.templating.Buffet(default_engine='genshi')
-class MyClass(object): 
+class MyClass(object):
     pass
 
 @jsonify.when('isinstance(obj, MyClass)')
@@ -23,7 +23,7 @@ def jsonify_myclass(obj):
 
 
 class BasicTGController(TurboGearsController):
-    
+
     @expose('json')
     def json(self):
         return dict(a='hello world', b=True)
@@ -31,11 +31,11 @@ class BasicTGController(TurboGearsController):
     @expose('json', exclude_names=["b"])
     def excluded_b(self):
         return dict(a="visible", b="invisible")
-    
+
     @expose('json')
-    def custom(self): 
+    def custom(self):
         return dict(custom=MyClass())
-    
+
     @expose('json')
     @expose('xml', content_type='application/xml')
     def xml_or_json(self):
@@ -55,4 +55,3 @@ class TestTGController(TestWSGIController):
         TestWSGIController.setUp(self)
         self.baseenviron.update(self.environ)
         self.baseenviron['pylons.routes_dict']['action'] = 'route' #Do TG style dispatch
-        

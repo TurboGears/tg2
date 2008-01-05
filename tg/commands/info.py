@@ -5,16 +5,16 @@ import pkg_resources
 from paste.script import command
 
 entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
-    "Template Engines" : "python.templating.engines", 
+    "Template Engines" : "python.templating.engines",
     "TurboGears2 Templates": "turbogears2.template",
-    "Widget Packages" : "toscawidgets.widgets", 
+    "Widget Packages" : "toscawidgets.widgets",
 }
 """#elements that not clear yet
     "Toolbox Gadgets" : "turbogears2.toolboxcommand",
     "TurboGears2 Extensions" : "turbogears2.extensions",
     "Identity Providers" : "turbogears2.identity.provider",
     "Visit Managers" : "turbogears2.visit.manager",
-    
+
 """
 
 def retrieve_info():
@@ -35,7 +35,7 @@ class InfoCommand(command.Command):
     group_name = "TurboGears2"
 
     parser = command.Command.standard_parser(verbose=True)
-    
+
     def command(self):
         print """TurboGears2 Complete Version Information
 

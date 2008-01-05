@@ -14,9 +14,9 @@ import pylons.util as util
 
 class CrudCommand(command.Command):
     """Generate CRUD interface based on model
-    
+
     Example usage::
-    
+
     $ paster crud -i [primary key] [model name] [package name]
     """
     max_args = 4
@@ -30,7 +30,7 @@ class CrudCommand(command.Command):
     templates = "tgcrud2"
     primary_key = None
     base_package = None
-    
+
     parser = command.Command.standard_parser(quiet=True)
     parser = optparse.OptionParser(
                  usage="paster crud [model name] [package name]")
@@ -46,12 +46,12 @@ class CrudCommand(command.Command):
     parser.add_option("--dry-run",
             help="dry run (don't actually do anything)",
             action="store_true", dest="dry_run")
-                             
+
     def command(self):
         self.modelname = self.options.modelname
         self.modelpackage = self.options.modelpackage
         self.primary_key = self.options.primary_key
-        
+
         try:
             try:
                 # Determine the package name from the .egg-info top_level.txt.
@@ -68,13 +68,13 @@ class CrudCommand(command.Command):
                 self.base_package, directory = file_op.find_dir('controllers', True)
             except:
                 raise command.BadCommand('No egg_info directory was found')
-            
+
         except command.BadCommand, e:
             raise command.BadCommand('An error occurred. %s' % e)
         except:
             msg = str(sys.exc_info()[1])
             raise command.BadCommand('An unknown error occurred. %s' % msg)
-        
+
         # parse args
         if self.args:
             self.modelname = self.args[0]
@@ -82,7 +82,7 @@ class CrudCommand(command.Command):
                 self.modelpackage = self.args[1]
             except:
                 self.modelpackage = None
-        
+
         while not self.modelname:
             print "Note: Make sure you have created your models first"
             self.modelname = raw_input("Enter the model name: ")
@@ -130,4 +130,3 @@ class CrudCommand(command.Command):
                          dest=os.path.join(templatepath, self.modelpackage),
                          filename='form.html',
                          add_py=False)
-                                 

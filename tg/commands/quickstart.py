@@ -1,6 +1,6 @@
 """Quickstart command to generate a new project.
 
-TurboGears 2 uses Paste to create and deploy projects as well as create new 
+TurboGears 2 uses Paste to create and deploy projects as well as create new
 controllers and their tests.
 
 Quickstart takes the files from turbogears.pastetemplates and processes them to produce
@@ -12,7 +12,7 @@ Create a new project named helloworld with this command::
 
 You could use TurboGears2, Pylons, and WebHelper paster commands within the project.
 
-Usage: 
+Usage:
 
 .. parsed-literal::
 
@@ -58,13 +58,13 @@ valid_only = re.compile(r"[^a-z0-9_]")
 class QuickstartCommand(command.Command):
     """Create a new TurboGears 2 project
 Create a new Turbogears project with this command.
-    
+
 Example usage::
-    
+
     $ paster quickstart yourproj
 
 or start project with sqlobject::
-    
+
     $ paster quickstart -o yourproj
     """
     version = pkg_resources.get_distribution('turbogears2').version
@@ -81,18 +81,18 @@ or start project with sqlobject::
     sqlobject = False
     elixir = True
     identity = False
-    
+
     parser = command.Command.standard_parser(quiet=True)
     parser = optparse.OptionParser(
                     usage="%prog quickstart [options] [project name]",
                     version="%prog " + version)
-    parser.add_option("-p", "--package", 
+    parser.add_option("-p", "--package",
             help="package name for the code",
             dest="package")
-    parser.add_option("--dry-run", 
+    parser.add_option("--dry-run",
             help="dry run (don't actually do anything)",
             action="store_true", dest="dry_run")
-    parser.add_option("-t", "--templates", 
+    parser.add_option("-t", "--templates",
             help="user specific templates",
             dest="templates", default = templates)
     parser.add_option("-s", "--sqlalchemy",
@@ -114,13 +114,13 @@ or start project with sqlobject::
             self.sqlobject = True
         if self.elixir:
             self.sqlalchemy = True
-            
+
         if self.args:
             self.name = self.args[0]
 
         while not self.name:
             self.name = raw_input("Enter project name: ")
-        
+
         while not self.package:
             package = self.name.lower()
             package = beginning_letter.sub("", package)
@@ -134,7 +134,7 @@ or start project with sqlobject::
             doidentity = raw_input("Do you need Identity "
                         "(usernames/passwords) in this project? [no] ")
             doidentity = doidentity.lower()
-            if not doidentity or doidentity.startswith('n'): 
+            if not doidentity or doidentity.startswith('n'):
                 self.identity="none"
                 break
             if doidentity.startswith("y"):
@@ -142,7 +142,7 @@ or start project with sqlobject::
                 break
             print "Please enter y(es) or n(o)."
             doidentity = None
-        
+
         if doidentity is True:
             if self.sqlalchemy:
                 self.identity = "sqlalchemy"
@@ -169,9 +169,9 @@ or start project with sqlobject::
         if os.path.exists(self.name):
             print("A directory called '%s' already exists. Exiting."
                       % self.name)
-            return        
-            
-        
+            return
+
+
         command = create_distro.CreateDistroCommand("create")
         cmd_args = []
         for template in self.templates.split(" "):
@@ -187,7 +187,7 @@ or start project with sqlobject::
             cmd_args.append("--simulate")
             cmd_args.append("-q")
         command.run(cmd_args)
-        
+
         if not self.dry_run:
             os.chdir(self.name)
             sodir = '%s/sqlobject-history' % self.package
@@ -196,7 +196,7 @@ or start project with sqlobject::
             startscript = "start-%s.py" % self.package
             if os.path.exists(startscript):
                 oldmode = os.stat(startscript).st_mode
-                os.chmod(startscript, 
+                os.chmod(startscript,
                         oldmode | stat.S_IXUSR)
             sys.argv = ["setup.py", "egg_info"]
             import imp

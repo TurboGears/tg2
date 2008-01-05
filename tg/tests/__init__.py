@@ -23,7 +23,7 @@ class TestWSGIController(TestCase):
 
     def tearDown(self):
         pylons.c._pop_object()
-    
+
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
@@ -33,4 +33,3 @@ class TestWSGIController(TestCase):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
         return self.app.post(url, extra_environ=self.environ, params=kargs)
-    
