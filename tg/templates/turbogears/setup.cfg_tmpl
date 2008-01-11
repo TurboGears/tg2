@@ -36,10 +36,10 @@ settings = no_about=true
 # refer to http://epydoc.sourceforge.net/manual-reference.html
 
 # check undocumented strings by command::
-# epydoc --check tg
+# epydoc --check [package name]
 
 # you could generate api docs by command::
-# epydoc --config doc/doc.ini
+# epydoc --config setup.cfg
 
 # Information about the project.
 name: ${package}
