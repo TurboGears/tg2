@@ -32,6 +32,45 @@ settings = no_about=true
 #           link1=/community/ Community
 #           link2=/download/ Download
 
+[epydoc]
+# refer to http://epydoc.sourceforge.net/manual-reference.html
+
+# check undocumented strings by command::
+# epydoc --check tg
+
+# you could generate api docs by command::
+# epydoc --config doc/doc.ini
+
+# Information about the project.
+name: ${package}
+url: http://www.turbogears.org/
+modules: ${package}
+
+# Input format
+docformat: restructuredtext
+
+# Whether or not parsing should be used to examine objects.
+parse: yes
+introspect: yes
+
+# Don't examine in any way the modules whose dotted name match this
+# regular expression pattern.
+exclude: .*\.tests.*
+
+inheritance: listed
+private: no
+imports: no
+include-log: no
+
+# Write one of html, text, latex, dvi, ps, pdf output to the directory "apidocs"
+output: html
+target: docs/
+
+# Include all automatically generated graphs.  These graphs are
+# generated using Graphviz dot.
+# graph: all
+# dotpath: /usr/local/bin/dot
+
 [publish]
 doc-dir=docs/html
 make-dirs=1
