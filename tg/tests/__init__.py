@@ -28,7 +28,7 @@ except:
     pass
 
 default_environ = {
-    'pylons.use_webob' : True,
+    'pylons.use_webob' : False,
     'pylons.routes_dict': dict(action='index'),
     'paste.config': dict(global_conf=dict(debug=True))
 }

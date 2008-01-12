@@ -1,3 +1,4 @@
+
 from ${package}.lib.base import BaseController
 from tg import expose, flash
 #from tg import redirect, validate

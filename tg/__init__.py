@@ -53,6 +53,8 @@ from pylons import session
 class TurboGearsApplication(PylonsApp):
     """basis TurboGears application class which is derived from PylonsApp"""
     def __init__(self, root, **kwargs):
+        # see ticket #1687
+        kwargs['use_webob'] = False
         PylonsApp.__init__(self, **kwargs)
         self.root = root
 
