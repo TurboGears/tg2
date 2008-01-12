@@ -18,7 +18,7 @@ class TurboGearsController(ObjectDispatchController):
     def _dispatch_call(self):
         return self._perform_call(None, None)
 
-def redirect(url, params={}, **kw):
+def redirect(url, params=None, **kw):
     """Generate an HTTP redirect. The function raises an exception internally,
     which is handled by the framework. The URL may be either absolute (e.g.
     http://example.com or /myfile.html) or relative. Relative URLs are
@@ -27,6 +27,8 @@ def redirect(url, params={}, **kw):
     browser; if the request is POST, the browser will issue GET for the second
     request.
     """
+    if not params:
+        params = {}
     url = urlparse.urljoin(request.path_info, url)
     params.update(kw)
     if params:

@@ -10,7 +10,7 @@ from tg.tests import TestWSGIController, make_app
 
 class SubController(object):
     @expose()
-    def foo(self):
+    def foo(self,):
         return 'sub_foo'
 
     @expose()
@@ -36,7 +36,7 @@ class SubController(object):
 
 class BasicTGController(TurboGearsController):
     @expose()
-    def index(self):
+    def index(self, **kwargs):
         return 'hello world'
 
     @expose()
@@ -136,7 +136,7 @@ class TestTGController(TestWSGIController):
         self.failUnless('Hello stefanha' in resp)
 
     def test_subcontroller_redirect_subindex(self):
-        resp=self.app.get('/sub/redirect_sub')
+        resp=self.app.get('/sub/redirect_sub').follow()
         self.failUnless('sub index' in resp)
 
     def test_flash_redirect(self):
