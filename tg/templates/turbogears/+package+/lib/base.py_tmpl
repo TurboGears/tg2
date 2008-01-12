@@ -11,7 +11,7 @@ from toscawidgets.api import WidgetBunch
 
 import ${package}.model as model
 
-class Controller(object)
+class Controller(object):
     """Base class for a web application's controller.
     
     Currently, this provides positional parameters functionality
