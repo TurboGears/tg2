@@ -27,6 +27,12 @@ try:
 except:
     pass
 
+default_environ = {
+    'pylons.use_webob' : True,
+    'pylons.routes_dict': dict(action='index'),
+    'paste.config': dict(global_conf=dict(debug=True))
+}
+
 def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance.
     """
@@ -43,6 +49,7 @@ def make_app(controller_klass=None, environ=None):
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
+
 def create_request(path, environ=None):
     """Helper used in test cases to quickly setup a request obj.
 
@@ -54,11 +61,9 @@ def create_request(path, environ=None):
     Returns an instance of the `webob.Request` object.
     """
     # setup the environ
-    extra_environ = {'pylons.routes_dict':dict(action='index'),
-                    'paste.config':dict(global_conf=dict(debug=True))}
     if environ is None:
         environ = {}
-    environ.update(extra_environ)
+    environ.update(default_environ)
     # create a "blank" WebOb Request object
     req = webob.Request.blank(path, environ)
     # setup a Registry
@@ -72,8 +77,7 @@ def create_request(path, environ=None):
 
 class TestWSGIController(TestCase):
     def setUp(self):
-        self.environ = {'pylons.routes_dict':dict(action='index'),
-                        'paste.config':dict(global_conf=dict(debug=True))}
+        self.environ = default_environ.copy()
         context._push_object(ContextObj())
 
     def tearDown(self):
