@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import tg
+import tg, pylons
 from tg.controllers import TurboGearsController
 from pylons.decorators import expose
 from routes import Mapper
@@ -21,6 +21,15 @@ class SubController(object):
     def default(self, *args):
         return ("recieved the following args (from the url): %s" %list(args))
 
+    @expose()
+    def redirect_me(self, target, **kw):
+        tg.redirect(target, **kw)
+
+    @expose()
+    def hello(self, name):
+        return "Why HELLO! " + name
+
+
 class BasicTGController(TurboGearsController):
     @expose()
     def index(self):
@@ -33,8 +42,21 @@ class BasicTGController(TurboGearsController):
     sub = SubController()
 
     @expose()
-    def redirect_me(self):
-        tg.redirect('/')
+    def redirect_me(self, target, **kw):
+        tg.redirect(target, kw)
+
+    @expose()
+    def hello(self, name, silly=None):
+        return "Hello " + name
+
+    @expose()
+    def redirect_cookie(self, name):
+        pylons.response.set_cookie('name', name)
+        tg.redirect('/hello_cookie')
+
+    @expose()
+    def hello_cookie(self):
+        return "Hello " + pylons.request.cookies['name']
 
     @expose()
     def flash_redirect(self):
@@ -79,9 +101,35 @@ class TestTGController(TestWSGIController):
         assert 'tim' in resp.body
         assert 'joe' in resp.body
 
-    def test_redirect(self):
-        resp = self.app.get('/redirect_me').follow()
+    def test_redirect_absolute(self):
+        resp = self.app.get('/redirect_me?target=/')
+        assert resp.status == 302 and dict(resp.headers)['location'] == '/'
+        resp = resp.follow()
         self.failUnless('hello world' in resp)
+
+    def test_redirect_relative(self):
+        resp = self.app.get('/redirect_me?target=hello&name=abc').follow()
+        self.failUnless('Hello abc' in resp)
+        resp = self.app.get('/sub/redirect_me?target=hello&name=def').follow()
+        self.failUnless('Why HELLO! def' in resp)
+        resp = self.app.get('/sub/redirect_me?target=../hello&name=ghi').follow()
+        self.failUnless('Hello ghi' in resp)
+
+    def test_redirect_external(self):
+        resp = self.app.get('/redirect_me?target=http://example.com')
+        assert resp.status == 302 and dict(resp.headers)['location'] == 'http://example.com'
+
+    def test_redirect_param(self):
+        resp = self.app.get('/redirect_me?target=/hello&name=paj').follow()
+        self.failUnless('Hello paj' in resp)
+        resp = self.app.get('/redirect_me?target=/hello%3fname=pbj').follow()
+        self.failUnless('Hello pbj' in resp)
+        resp = self.app.get('/redirect_me?target=/hello%3fsilly=billy&name=pcj').follow()
+        self.failUnless('Hello pcj' in resp)
+
+    def test_redirect_cookie(self):
+        resp = self.app.get('/redirect_cookie?name=stefanha').follow()
+        self.failUnless('Hello stefanha' in resp)
 
     def test_flash_redirect(self):
         resp = self.app.get('/flash_redirect').follow()
