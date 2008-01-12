@@ -5,6 +5,7 @@ import formencode
 
 import pylons
 from pylons.controllers import WSGIController
+from paste import httpexceptions
 
 log = logging.getLogger(__name__)
 
