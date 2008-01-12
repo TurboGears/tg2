@@ -3,6 +3,7 @@ from unittest import TestCase
 from xmlrpclib import loads, dumps
 
 import pylons
+from paste.fixture import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from pylons.util import ContextObj, PylonsContext
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
@@ -14,6 +15,15 @@ try:
     shutil.rmtree(data_dir)
 except:
     pass
+
+def make_app():
+    """Creates a `TestApp` instance.
+    """
+    baseenviron = {}
+    app = ControllerWrap(BasicDispatchController)
+    app = SetupCacheGlobal(app, baseenviron)
+    app = RegistryManager(app)
+    return TestApp(app)
 
 class TestWSGIController(TestCase):
     def setUp(self):

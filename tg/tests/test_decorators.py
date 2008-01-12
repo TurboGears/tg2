@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from paste.fixture import TestApp
-from paste.registry import RegistryManager
 import paste.httpexceptions as httpexceptions
 
 import tg
@@ -10,7 +8,7 @@ from pylons.decorators import expose
 
 from turbojson.jsonify import jsonify
 
-from __init__ import TestWSGIController, SetupCacheGlobal, ControllerWrap
+from tg.tests import TestWSGIController, make_app
 
 pylons.buffet = pylons.templating.Buffet(default_engine='genshi')
 class MyClass(object):
@@ -45,11 +43,7 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.baseenviron = {}
-        app = ControllerWrap(BasicDispatchController)
-        app = self.sap = SetupCacheGlobal(app, self.baseenviron)
-        app = RegistryManager(app)
-        self.app = TestApp(app)
-
+        self.app = make_app(self.baseenviron)
 
     def setUp(self):
         TestWSGIController.setUp(self)
