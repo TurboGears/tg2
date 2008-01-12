@@ -48,10 +48,9 @@ class TestTGController(TestWSGIController):
     def setUp(self):
         TestWSGIController.setUp(self)
         self.baseenviron.update(self.environ)
-        
+
     def test_basic_json(self):
         pass
-    
+
     def test_content_negotiation(self):
         pass
-                
