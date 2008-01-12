@@ -26,6 +26,10 @@ class SubController(object):
         tg.redirect(target, **kw)
 
     @expose()
+    def redirect_sub(self):
+        tg.redirect('index')
+
+    @expose()
     def hello(self, name):
         return "Why HELLO! " + name
 
@@ -130,6 +134,10 @@ class TestTGController(TestWSGIController):
     def test_redirect_cookie(self):
         resp = self.app.get('/redirect_cookie?name=stefanha').follow()
         self.failUnless('Hello stefanha' in resp)
+
+    def test_subcontroller_redirect_subindex(self):
+        resp=self.app.get('/sub/redirect_sub')
+        self.failUnless('sub index' in resp)
 
     def test_flash_redirect(self):
         resp = self.app.get('/flash_redirect').follow()
