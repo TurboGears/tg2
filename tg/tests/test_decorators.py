@@ -35,7 +35,7 @@ class BasicTGController(TurboGearsController):
         return dict(custom=MyClass())
 
     @expose('json')
-    @expose('xml', content_type='application/xml')
+    @expose('genshi:', content_type='application/xml')
     def xml_or_json(self):
         return dict(name="John Carter", title='officer', status='missing')
 
@@ -48,4 +48,9 @@ class TestTGController(TestWSGIController):
     def setUp(self):
         TestWSGIController.setUp(self)
         self.baseenviron.update(self.environ)
-        self.baseenviron['pylons.routes_dict']['action'] = 'route' #Do TG style dispatch
+        
+    def test_basic_json():
+        pass
+    
+    def test_content_negotiation():
+                

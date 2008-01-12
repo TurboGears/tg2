@@ -5,3 +5,49 @@ TODO:
     with auto-rollback and auto-commit
 * Plenty of unit tests
 * Upgrade Guide
+
+* Improve tests and test coverage of TG2 proper.
+
+* Add sample tests to TurboGears paster template (use nose style setup functions) 
+
+* Create TG2 Docs on the Wiki
+
+  * Port getting started code/docs to tg2 (partially complete already)
+  * Document the new expose decorator
+  * Explain the context and global objects 
+  * Document paster commands (shell, quickstart) etc. 
+  * Document paste.fixture tests
+  * Document babel based internationalization -- possibly write some helpers
+  * Write a basic TG2 + SQLAlchemy tutorial -- possibly "borrowing lots" from the pylons version ;) 
+
+* Work on authorization/authentication
+ 
+  * update quickstart template to add nessisary models for SA (this can easily come from TG1)
+  * Replace the visit tracking stuff with beaker sessions. 
+
+* Setup automatic transaction middleware (use a modified version Jonathan's if nothing else..)
+
+* User account registration/authentication support library (like turbogears.identity), but with support for user registration, etc. 
+
+* a tg1 test compatibility layer, to aid user upgrades (possibly with newtests)
+
+* improved content negotiation and RESTful resource support 
+
+* allow choosing the return format based on the file extension 
+
+* Write additional unit tests for TG2 controller features
+
+  * Tests for validators
+  * more dispatch tests
+  * tests for multiple expose
+  * tests for redirect
+
+* Write url_for function like TG1...
+
+* write load/stress test for simple TG2 application
+
+* Port the tg.url function to tg2
+
+* Create a TG2 custom Google search engine for TG2 subproject docs/mailing lists:
+
+  * See: http://www.google.com/coop/manage/cse/create/1?Get+Started=Customize+Your+Own+Search+Engine

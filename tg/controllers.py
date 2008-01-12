@@ -1,6 +1,6 @@
 """Basic controller class for turbogears"""
 import urlparse, urllib
-from pylons.controllers import ObjectDispatchController, DecoratedController
+from tg.decorated import ObjectDispatchController, DecoratedController
 from pylons import request, response
 from tg.exceptions import HTTPFound
 
