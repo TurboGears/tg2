@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-from paste.fixture import TestApp
-from paste.registry import RegistryManager
-from paste import httpexceptions
 
 import tg
-import pylons
 from tg.controllers import TurboGearsController
 from pylons.decorators import expose
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
-from __init__ import TestWSGIController, SetupCacheGlobal, ControllerWrap
+from tg.tests import TestWSGIController, make_app
 
 class SubController(object):
     @expose()
@@ -54,22 +50,11 @@ class BasicTGController(TurboGearsController):
         tg.flash("Wow, flash!")
         return tg.get_flash()
 
-
-
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.baseenviron = {}
-        app = ControllerWrap(BasicTGController)
-        app = self.sap = SetupCacheGlobal(app, self.baseenviron)
-        app = RegistryManager(app)
-        app = httpexceptions.make_middleware(app)
-        self.app = TestApp(app)
-
-    def setUp(self):
-        TestWSGIController.setUp(self)
-        self.environ['pylons.routes_dict'] = {}
-        self.baseenviron.update(self.environ)
+        self.app = make_app(BasicTGController, self.baseenviron)
 
     def test_tg_style_default(self):
         resp = self.app.get('/sdfaswdfsdfa') #random string should be caught by the default route

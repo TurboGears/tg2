@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
+
 import os
 from unittest import TestCase
 from xmlrpclib import loads, dumps
 
-import pylons
+from paste.registry import RegistryManager
 from paste.fixture import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
+from paste import httpexceptions
+
+from tg import context
 from pylons.util import ContextObj, PylonsContext
+from tg.controllers import TurboGearsController
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
 #import pylons.tests
 
@@ -16,23 +22,29 @@ try:
 except:
     pass
 
-def make_app():
+def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance.
     """
-    baseenviron = {}
-    app = ControllerWrap(BasicDispatchController)
-    app = SetupCacheGlobal(app, baseenviron)
+    if environ is None:
+        environ = {}
+    environ['pylons.routes_dict'] = {}
+    if controller_klass is None:
+        controller_klass = TurboGearsController
+
+    app = ControllerWrap(controller_klass)
+    app = SetupCacheGlobal(app, environ)
     app = RegistryManager(app)
+    app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
 class TestWSGIController(TestCase):
     def setUp(self):
         self.environ = {'pylons.routes_dict':dict(action='index'),
                         'paste.config':dict(global_conf=dict(debug=True))}
-        pylons.c._push_object(ContextObj())
+        context._push_object(ContextObj())
 
     def tearDown(self):
-        pylons.c._pop_object()
+        context._pop_object()
 
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
