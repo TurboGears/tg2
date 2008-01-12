@@ -6,6 +6,8 @@ COOKIE_NAME = "tg_flash"
 def flash(msg):
     """Sets a message to be displayed on the page. This message will survive a
     redirect."""
+    if isinstance(msg, unicode):
+        msg = msg.encode('utf8')
     # In case no redirect occurs
     request._tg_flash = msg
     response.set_cookie(COOKIE_NAME, msg)
@@ -17,4 +19,4 @@ def get_flash():
     except AttributeError:
         msg = request.cookies.get(COOKIE_NAME, '')
     response.delete_cookie(COOKIE_NAME)
-    return msg
+    return msg.decode('utf8')

@@ -42,6 +42,11 @@ class BasicTGController(TurboGearsController):
         tg.redirect("/flash_after_redirect")
 
     @expose()
+    def flash_unicode(self):
+        tg.flash(u"Привет, мир!")
+        tg.redirect("/flash_after_redirect")
+
+    @expose()
     def flash_after_redirect(self):
         return tg.get_flash()
 
@@ -85,3 +90,8 @@ class TestTGController(TestWSGIController):
     def test_flash_no_redirect(self):
         resp = self.app.get('/flash_no_redirect')
         self.failUnless('Wow, flash!' in resp, resp)
+
+    def test_flash_unicode(self):
+        resp = self.app.get('/flash_unicode').follow()
+        content = resp.body.decode('utf8')
+        self.failUnless(u'Привет, мир!' in content, resp)
