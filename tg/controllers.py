@@ -1,6 +1,6 @@
 """Basic controller class for turbogears"""
 from pylons.controllers import ObjectDispatchController, DecoratedController
-from pylons import response
+from pylons import request, response
 from tg.exceptions import HTTPFound
 
 class TurboGearsController(ObjectDispatchController):
@@ -28,3 +28,16 @@ def redirect(url, redirect_params=None, **kw):
     for c in response.cookies.values():
         found.headers.append(('Set-Cookie', c.output(header='')))
     raise found
+
+def url(tgpath, tgparams=None, **kw):
+    """Broken url() re-implementation from TG1.
+
+    See #1649 for more info.
+    """
+    from tg import request
+    if not isinstance(tgpath, basestring):
+        tgpath = "/".join(list(tgpath))
+    path = request.relative_url(tgpath)
+    print 'path', path
+    base_url = request.path_url
+    return path[len(base_url):]
