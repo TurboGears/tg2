@@ -11,8 +11,20 @@ from toscawidgets.api import WidgetBunch
 
 import ${package}.model as model
 
+class Controller(object)
+    """Base class for a web application's controller.
+    
+    Currently, this provides positional parameters functionality
+    via a standard default method.
+    """
+    
 class BaseController(TurboGearsController):
-
+    """Base class for the root of a web application.
+    
+    Your web application should have one of these. The root of
+    your application is used to compute URLs used by your app.
+    """
+    
     def __call__(self, environ, start_response):
         """Invoke the Controller"""
         # TurboGearsController.__call__ dispatches to the Controller method
