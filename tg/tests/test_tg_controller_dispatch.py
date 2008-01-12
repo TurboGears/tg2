@@ -91,7 +91,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/index/')
         assert 'hello' in resp.body
 
-    def test_tg_style_subcontrolelr_index(self):
+    def test_tg_style_subcontroller_index(self):
         resp = self.app.get('/sub/index')
         assert "sub index" in resp.body
 

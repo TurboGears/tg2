@@ -18,6 +18,8 @@ from tg.controllers import TurboGearsController
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
 #import pylons.tests
 
+from beaker.middleware import CacheMiddleware
+
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
@@ -35,7 +37,8 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TurboGearsController
 
     app = ControllerWrap(controller_klass)
-    app = SetupCacheGlobal(app, environ)
+    app = SetupCacheGlobal(app, environ, setup_cache=True)
+    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
     app = RegistryManager(app)
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
