@@ -24,7 +24,8 @@ class DecoratedController(WSGIController):
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
-
+        
+        new_params=params
         if isinstance(validation.validators, dict):
             errors = {}
             new_params = {}
@@ -41,7 +42,7 @@ class DecoratedController(WSGIController):
         elif isinstance(validation.validators, formencode.Schema):
             new_params = validation.validators.to_python(params)
         elif hasattr(validation.validators, 'validate'):
-            params = validation.validators.validate(params)
+            new_params = validation.validators.validate(params)
 
 
         return new_params
