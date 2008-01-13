@@ -1,6 +1,7 @@
 
 from ${package}.lib.base import BaseController
 from tg import expose, flash
+from pylons.i18n import ugettext as _
 #from tg import redirect, validate
 #from ${package}.model import DBSession
 
@@ -9,5 +10,5 @@ class RootController(BaseController):
     @expose('${package}.templates.index')
     def index(self):
         from datetime import datetime
-        flash("Your application is now running")
+        flash(_("Your application is now running"))
         return dict(now=datetime.now())

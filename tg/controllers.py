@@ -1,13 +1,37 @@
 """Basic controller class for turbogears"""
+
+import logging
+
 import urlparse, urllib
 from tg.decorated import ObjectDispatchController, DecoratedController
 from pylons import request, response
 from tg.exceptions import HTTPFound
 
+log = logging.getLogger(__name__)
+
 class TurboGearsController(ObjectDispatchController):
     """Basis TurboGears controller class which is derived from
     pylons ObjectDispatchController"""
+
+    def _setup_i18n(self):
+        from pylons.i18n import add_fallback, set_lang, LanguageError
+        languages = request.accept_language.best_matches()
+        if languages:
+            for lang in languages[:]:
+                try:
+                    add_fallback(lang)
+                except LanguageError:
+                    # if there is no resource bundle for this language
+                    # remove the language from the list
+                    languages.remove(lang)
+                    log.debug("Skip language %s: not supported", lang)
+            # if any language is left, set the best match as a default
+            if languages:
+                set_lang(languages[0])
+                log.info("Set request language to %s", languages[0])
+
     def _perform_call(self, func, args):
+        self._setup_i18n()
         self._initialize_validation_context()
         routingArgs = None
         if isinstance(args, dict) and 'url' in args:

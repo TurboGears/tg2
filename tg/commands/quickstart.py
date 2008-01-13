@@ -190,16 +190,21 @@ or start project with sqlobject::
 
         if not self.dry_run:
             os.chdir(self.name)
-            sodir = '%s/sqlobject-history' % self.package
-            if self.sqlobject and not os.path.exists(sodir):
-                os.mkdir(sodir)
+            if self.sqlobject:
+                sodir = os.path.join(self.package, 'sqlobject-history')
+                if not os.path.exists(sodir):
+                    os.mkdir(sodir)
             startscript = "start-%s.py" % self.package
             if os.path.exists(startscript):
                 oldmode = os.stat(startscript).st_mode
                 os.chmod(startscript,
                         oldmode | stat.S_IXUSR)
-            sys.argv = ["setup.py", "egg_info"]
             import imp
+            sys.argv = ["setup.py", "egg_info"]
+            imp.load_module("setup", *imp.find_module("setup", ["."]))
+            sys.argv = ["setup.py", "extract_messages"]
+            imp.load_module("setup", *imp.find_module("setup", ["."]))
+            sys.argv = ["setup.py", "compile_catalog"]
             imp.load_module("setup", *imp.find_module("setup", ["."]))
 
             # dirty hack to allow "empty" dirs
