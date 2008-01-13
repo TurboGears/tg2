@@ -3,14 +3,15 @@
 TurboGears 2 uses Paste to create and deploy projects as well as create new
 controllers and their tests.
 
-Quickstart takes the files from turbogears.pastetemplates and processes them to produce
-a new, ready-to-run project.
+Quickstart takes the files from turbogears.pastetemplates and processes them to 
+produce a new, ready-to-run project.
 
 Create a new project named helloworld with this command::
 
     $ paster quickstart helloworld
 
-You could use TurboGears2, Pylons, and WebHelper paster commands within the project.
+You could use TurboGears2, Pylons, and WebHelper paster commands within the 
+project.
 
 Usage:
 
@@ -38,9 +39,8 @@ Usage:
       use SQLObject instead of SQLAlchemy
   -i, --identity
       provide Identity support
-
-
 """
+
 import pkg_resources
 import re
 import optparse
@@ -56,7 +56,8 @@ beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
 class QuickstartCommand(command.Command):
-    """Create a new TurboGears 2 project
+    """Create a new TurboGears 2 project.
+
 Create a new Turbogears project with this command.
 
 Example usage::
@@ -67,6 +68,7 @@ or start project with sqlobject::
 
     $ paster quickstart -o yourproj
     """
+
     version = pkg_resources.get_distribution('turbogears2').version
     max_args = 3
     min_args = 0
@@ -104,12 +106,15 @@ or start project with sqlobject::
     parser.add_option("-e", "--elixir",
             help="use SQLAlchemy Elixir instead of SQLObject",
             action="store_true", dest="elixir", default = True)
-    """parser.add_option("-i", "--identity",
-            help="provide Identity support",
-            action="store_true", dest="identity", default = False)
-    """
+    ## parser.add_option("-i", "--identity",
+    ##        help="provide Identity support",
+    ##        action="store_true", dest="identity", default = False)
+
     def command(self):
-        "Quickstarts the new project."
+        """Quickstarts the new project."""
+
+        self.__dict__.update(self.options.__dict__)
+
         if not True in [self.elixir, self.sqlalchemy, self.sqlobject]:
             self.sqlobject = True
         if self.elixir:
@@ -170,7 +175,6 @@ or start project with sqlobject::
             print("A directory called '%s' already exists. Exiting."
                       % self.name)
             return
-
 
         command = create_distro.CreateDistroCommand("create")
         cmd_args = []

@@ -8,42 +8,63 @@
 
 <head>
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-  <title>Welcome to TurboGears 2.0, standing on the 
-  shoulders of giants, since 2007</title>
+  <title>Welcome to TurboGears 2.0 - standing on the shoulders of giants 
+    since 2007</title>
 </head>
 
 <body>
     <!-- Debug template -->
-    <!--p><strong>all objects from locals():</strong>        <div py:for="item in sorted(locals()['data'].keys())">            ${item}: ${repr(locals()['data'][item])}</div></p--> 
+    <!-- 
+    <h1>All objects from locals():<h1>
+
+    <div py:for="item in sorted(locals()['data'].keys())">
+      ${item}: ${repr(locals()['data'][item])}</div>
+    -->
+
     <div id="sidebar">
-    <h2>Contribute</h2>
-    Get help
-    <ul class="links">
-      <li><a href="http://docs.turbogears.org">Documents</a></li>
-	  <li><a href="http://docs.turbogears.org">API</a></li>
-      <li><a href="http://trac.turbogears.org/turbogears/">Bug Tracker</a></li>
-      <li><a href="http://groups.google.com/group/turbogears">Mail List</a> </li>
-    </ul>
-    <span py:replace="now.strftime('%Y-%m-%d %H:%M')">now</span>
-  </div>
-  <div id="getting_started">
-    <ol id="getting_started_steps">
-      <li class="getting_started">
-        <h3>Code your data model</h3>
-        <p> Code your data model, Create the database, and Add some bootstrap data.</p>
-      </li>
-      <li class="getting_started">
-        <h3>Decide your URLs</h3>
-        <p> Decide your URLs, Program your controller methods, Design your 
-		templates, and Place some static files (CSS and/or JavaScript). </p>
-      </li>
-      <li class="getting_started">
-        <h3>Build a distribution</h3>
-        <p> Build a distribution, Test your source, Generate project documents.</p>
-      </li>
-    </ol>
-    <div class="notice"> TurboGears is an opensource project, help yourself to 
-	make turbogears better and make your life easier.</div>
-  </div>
+      <h2>Getting help</h2>
+
+      <ul class="links">
+        <li><a href="http://docs.turbogears.org/2.0">Documentation</a></li>
+        <li><a href="http://docs.turbogears.org/2.0/API">API Reference</a></li>
+        <li><a href="http://trac.turbogears.org/turbogears/">Bug Tracker</a></li>
+        <li><a href="http://groups.google.com/group/turbogears">Mailing 
+        List</a></li>
+      </ul>
+
+      <p><span py:replace="now.strftime('%Y-%m-%d %H:%M')">now</span></p>
+    </div>
+    <!-- End of sidebar -->
+
+    <div id="getting_started">
+      <ol id="getting_started_steps">
+        <li class="getting_started">
+          <h2>Design your data model</h2>
+
+          <p>Design your data model, create the database and add some 
+          bootstrap data.</p>
+        </li>
+
+        <li class="getting_started">
+          <h2>Style your URLs</h2>
+
+          <p> Style your URLs, program your controller methods, write your 
+          templates and add some static files (CSS and/or JavaScript).</p>
+        </li>
+      
+        <li class="getting_started">
+          <h2>Build a distribution</h2>
+
+          <p> Build a distribution, test your source, generate project 
+          documents.</p>
+        </li>
+      </ol>
+
+      <div class="notice"> TurboGears is an open source project.
+        <a href="http://docs.turbogears.org/Contributing">Contribute</a> 
+        to make TurboGears even better and your life more exciting.
+      </div>
+    </div>
+    <!-- End of getting_started -->
 </body>
 </html>
