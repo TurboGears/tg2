@@ -129,7 +129,13 @@ class DecoratedController(WSGIController):
 
             # call controller method
             controller.decoration.run_hooks('before_call', remainder, params)
-            output = controller(*remainder, **dict(params))
+            call_params = dict(params)
+            for k in call_params.keys():
+                # convert unicode keys into str
+                # otherwise you get weird TypeError
+                if isinstance(k, unicode):
+                    call_params[str(k)] = call_params.pop(k)
+            output = controller(*remainder, **call_params)
 
         except formencode.api.Invalid, inv:
             controller, output = self._handle_validation_errors(controller,
