@@ -38,7 +38,7 @@ class DecoratedController(WSGIController):
                 raise formencode.api.Invalid(
                     formencode.schema.format_compound_error(errors),
                     params, None, error_dict=errors)
-        elif isinstance(vnew_alidation.validators, formencode.Schema):
+        elif isinstance(validation.validators, formencode.Schema):
             new_params = validation.validators.to_python(params)
         elif hasattr(validation.validators, 'validate'):
             params = validation.validators.validate(params)
