@@ -107,7 +107,8 @@ class TestTGController(TestWSGIController):
 
     def test_redirect_absolute(self):
         resp = self.app.get('/redirect_me?target=/')
-        assert resp.status == 302 and dict(resp.headers)['location'] == '/'
+        assert resp.status == 302, resp.status
+        assert resp.header('location') == 'http://localhost/', resp.headers
         resp = resp.follow()
         self.failUnless('hello world' in resp)
 

@@ -145,9 +145,9 @@ class TestEtagCaching(TestWSGIController):
     def test_etags(self):
         """ Test that the etag in the response headers is the one we expect. """
         resp = self.app.get('/etagged/', params={'etag':'foo'})
-        assert dict(resp.headers)['etag'] == 'foo'
+        assert resp.header('etag') == 'foo', resp.headers
         resp = self.app.get('/etagged/', params={'etag':'bar'})
-        assert dict(resp.headers)['etag'] == 'bar'
+        assert resp.header('etag') == 'bar', resp.headers
         
     def test_304(self):
         resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': 'foo'})

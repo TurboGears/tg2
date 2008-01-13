@@ -70,13 +70,13 @@ def test_redirect():
         redirect("/foo")
         assert False, "redirect exception should have been raised"
     except HTTPFound, e:
-        eq_("http://localhost/coolsite/root/subthing/foo", e.location())
+        eq_("http://localhost/coolsite/root/subthing/foo", e.location)
    
     try:
         raise redirect("/foo")
         assert False, "redirect exception should have been raised"
     except HTTPFound, e:
-        eq_("http://localhost/coolsite/root/subthing/foo", e.location())
+        eq_("http://localhost/coolsite/root/subthing/foo", e.location)
 
 def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}
