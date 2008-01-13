@@ -2,4 +2,4 @@
 
 TurboGears http exceptions are inherited from paste httpexceptions
 """
-from paste.httpexceptions import *
+from webob.exc import *

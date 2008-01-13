@@ -5,7 +5,7 @@ import formencode
 
 import pylons
 from pylons.controllers import WSGIController
-from paste import httpexceptions
+import tg.exceptions
 
 log = logging.getLogger(__name__)
 
@@ -195,7 +195,7 @@ def object_dispatch(obj, url_path):
         try:
             obj, remainder = find_object(obj, remainder, notfound_handlers)
             return obj, remainder
-        except httpexceptions.HTTPNotFound:
+        except tg.exceptions.HTTPNotFound:
             if not notfound_handlers:
                 raise
             name, obj, remainder = notfound_handlers.pop()
@@ -209,7 +209,7 @@ def object_dispatch(obj, url_path):
 def find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
-            raise httpexceptions.HTTPNotFound()
+            raise tg.exceptions.HTTPNotFound()
         if iscontroller(obj):
             return obj, remainder
 
@@ -227,7 +227,7 @@ def find_object(obj, remainder, notfound_handlers):
             notfound_handlers.append(('lookup', lookup, remainder))
 
         if not remainder:
-            raise httpexceptions.HTTPNotFound()
+            raise tg.exceptions.HTTPNotFound()
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
 

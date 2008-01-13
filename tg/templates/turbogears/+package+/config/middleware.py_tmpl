@@ -53,10 +53,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
 
     if asbool(full_stack):
-        # Stack httpexceptions middleware so redirect, abort, etc.. work
-        # XXX: Why doesn't Pylons stack this internally anymore??
-        app = httpexceptions.make_middleware(app)
-
         # Handle Python exceptions
         app = ErrorHandler(app, global_conf, error_template=error_template,
                            **config['pylons.errorware'])

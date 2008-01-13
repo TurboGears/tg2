@@ -4,7 +4,7 @@ import logging
 
 import urlparse, urllib
 from tg.decorated import ObjectDispatchController, DecoratedController
-from tg.exceptions import HTTPFound
+from tg.exceptions import HTTPFound, HTTPException
 import pylons
 
 log = logging.getLogger(__name__)
@@ -36,8 +36,19 @@ class TurboGearsController(ObjectDispatchController):
         routingArgs = None
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
-        controller, remainder, params = self._get_routing_info(routingArgs)
-        return DecoratedController._perform_call(self, controller, params, remainder=remainder)
+        try:
+            controller, remainder, params = self._get_routing_info(routingArgs)
+            result = DecoratedController._perform_call(
+                self, controller, params, remainder=remainder
+                )
+        except HTTPException, httpe:
+            result = httpe
+            
+            # 304 Not Modified's shouldn't have a content-type set
+            if result.status_int == 304:
+                result.headers.pop('Content-Type', None)
+            result._exception = True
+        return result
 
     def _dispatch_call(self):
         return self._perform_call(None, None)
@@ -59,11 +70,11 @@ def redirect(url, params=None, **kw):
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
     if isinstance(url, unicode):
         url = url.encode('utf8')
-    found = HTTPFound(url)
-    # Merging cookies and headers from global response into redirect
-    for header in pylons.response.headerlist:
-        if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
-            found.headers.append(header)
+    found = HTTPFound(location=url)
+    ## Merging cookies and headers from global response into redirect
+    #for header in pylons.response.headerlist:
+        #if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
+            #found.headers.append(header)
     raise found
 
 def url(tgpath, tgparams=None, **kw):
