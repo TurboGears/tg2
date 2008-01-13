@@ -29,7 +29,8 @@ setup(
         'Pylons',
         'Genshi>=0.4',
         'SQLAlchemy>=0.4',
-        'ToscaWidgets>=0.2rc1'
+        'ToscaWidgets>=0.2rc2',
+        'twforms>=0.2rc2dev-r3751'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]

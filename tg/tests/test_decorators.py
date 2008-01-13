@@ -11,14 +11,13 @@ from turbojson.jsonify import jsonify
 from tg.tests import TestWSGIController, make_app
 
 pylons.buffet = pylons.templating.Buffet(default_engine='genshi')
+
 class MyClass(object):
     pass
 
 @jsonify.when('isinstance(obj, MyClass)')
 def jsonify_myclass(obj):
     return {'result':'wo-hoo!'}
-
-
 
 class BasicTGController(TurboGearsController):
 
@@ -43,14 +42,16 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.baseenviron = {}
-        self.app = make_app(self.baseenviron)
+        self.app = make_app(BasicTGController, self.baseenviron)
 
     def setUp(self):
         TestWSGIController.setUp(self)
         self.baseenviron.update(self.environ)
 
-    def test_basic_json(self):
-        pass
+    def test_simple_jsonification(self):
+        resp = self.app.get('/json')
+        assert '{"a": "hello world", "b": true}' in resp.body
 
-    def test_content_negotiation(self):
-        pass
+    def test_custom_jsonification(self):
+        resp = self.app.get('/custom')
+        assert "wo-hoo!" in resp.body

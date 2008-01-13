@@ -4,8 +4,8 @@ import logging
 
 import urlparse, urllib
 from tg.decorated import ObjectDispatchController, DecoratedController
-from pylons import request, response
 from tg.exceptions import HTTPFound
+import pylons
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class TurboGearsController(ObjectDispatchController):
 
     def _setup_i18n(self):
         from pylons.i18n import add_fallback, set_lang, LanguageError
-        languages = request.accept_language.best_matches()
+        languages = pylons.request.accept_language.best_matches()
         if languages:
             for lang in languages[:]:
                 try:
@@ -53,7 +53,7 @@ def redirect(url, params=None, **kw):
     """
     if not params:
         params = {}
-    url = urlparse.urljoin(request.path_info, url)
+    url = urlparse.urljoin(pylons.request.path_info, url)
     params.update(kw)
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
@@ -61,20 +61,56 @@ def redirect(url, params=None, **kw):
         url = url.encode('utf8')
     found = HTTPFound(url)
     # Merging cookies and headers from global response into redirect
-    for header in response.headerlist:
+    for header in pylons.response.headerlist:
         if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
             found.headers.append(header)
     raise found
 
 def url(tgpath, tgparams=None, **kw):
     """Broken url() re-implementation from TG1.
-
     See #1649 for more info.
     """
-    from tg import request
+
     if not isinstance(tgpath, basestring):
         tgpath = "/".join(list(tgpath))
-    path = request.relative_url(tgpath)
-    print 'path', path
-    base_url = request.path_url
-    return path[len(base_url):]
+    if tgpath.startswith("/"):
+        app_root = pylons.request.application_url[len(pylons.request.host_url):]
+        tgpath = app_root + tgpath
+        tgpath = pylons.config.get("server.webpath", "") + tgpath 
+        result = tgpath
+    else:
+        result = tgpath 
+
+    if tgparams is None:
+        tgparams = kw
+    else:
+        try:
+            tgparams = tgparams.copy()
+            tgparams.update(kw)
+        except AttributeError:
+            raise TypeError('url() expects a dictionary for query parameters')
+
+    args = []
+    for key, value in tgparams.iteritems():
+        if value is None:
+            continue
+
+        if isinstance(value, (list, tuple)):
+            pairs = [(key, v) for v in value]
+        else:
+            pairs = [(key, value)]
+        
+        for (k, v) in pairs:
+            if v is None:
+                continue
+
+            if isinstance(v, unicode):
+                v = v.encode("utf8")
+
+            args.append("%s=%s" % (k, urllib.quote(str(v))))
+
+    if args:
+        result += "?" + "&".join(args)
+
+    return result
+
