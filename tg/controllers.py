@@ -33,6 +33,8 @@ def redirect(url, params=None, **kw):
     params.update(kw)
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
+    if isinstance(url, unicode):
+        url = url.encode('utf8')
     found = HTTPFound(url)
     # Merging cookies and headers from global response into redirect
     for header in response.headerlist:
