@@ -34,9 +34,10 @@ def redirect(url, params=None, **kw):
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
     found = HTTPFound(url)
-    # Merging cookies in global response into redirect
-    for c in response.cookies.values():
-        found.headers.append(('Set-Cookie', c.output(header='')))
+    # Merging cookies and headers from global response into redirect
+    for header in response.headerlist:
+        if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
+            found.headers.append(header)
     raise found
 
 def url(tgpath, tgparams=None, **kw):

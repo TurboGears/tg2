@@ -14,6 +14,7 @@ from paste import httpexceptions
 
 from tg import context
 from pylons.util import ContextObj, PylonsContext
+from pylons.controllers.util import Request, Response
 from tg.controllers import TurboGearsController
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
 #import pylons.tests
@@ -65,7 +66,9 @@ def create_request(path, environ=None):
         environ = {}
     environ.update(default_environ)
     # create a "blank" WebOb Request object
-    req = webob.Request.blank(path, environ)
+    # using Pylon's Request which is a webob Request plus
+    # some compatibility methods
+    req = Request.blank(path, environ)
     # setup a Registry
     reg = environ.setdefault('paste.registry', Registry())
     reg.prepare()
