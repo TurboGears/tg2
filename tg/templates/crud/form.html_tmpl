@@ -24,7 +24,7 @@ $${form(value=record, action='../update/%d'%record.${id}, submit_text = "Update"
 <br/>
 
 <div id="footbar" class="footbar" py:if="page=='edit'">
-<a href="../show/$${record.${id}}">Show</a> | <a href="../list">Back</a>
+<a href="$${tg.url('../show/%s'%record.${id})}">Show</a> | <a href="$${tg.url('../list')}">Back</a>
 </div>
 
 </body>

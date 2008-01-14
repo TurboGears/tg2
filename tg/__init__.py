@@ -37,7 +37,7 @@ we just want them to be able to get up and running quickly, and have a
 well lit development path to walk.
 
 """
-from tg.controllers import TurboGearsController, redirect
+from tg.controllers import TurboGearsController, redirect, url
 from tg.flash import flash, get_flash
 
 import paste
