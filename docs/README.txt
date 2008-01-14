@@ -27,11 +27,11 @@ Generating HTML docs
 
 Use this command in the top directory::
 
-    $ epydoc --config docs/doc.ini
+    $ epydoc --config setup.cfg
 
 to generate the TurboGears 2 API documentation in the ``apidocs`` folder.
 
-You can change the settings in the file ``doc.ini`` in the ``apigen`` folder 
+You can change the settings in the file ``setup.cfg`` in the main folder 
 to customize the output.
 
 
@@ -54,7 +54,7 @@ Debugging docs
 If you get a formatting error and want to locate the position in the source
 quickly, use the verbose mode of epydoc by supplying the ``-v`` option::
 
-    $ epydoc --config docs/doc.ini -v
+    $ epydoc --config setup.cfg -v
 
 
 .. _epydoc: http://epydoc.sourceforge.net/
