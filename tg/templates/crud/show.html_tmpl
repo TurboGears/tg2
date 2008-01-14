@@ -13,7 +13,8 @@
 
 <body>
     <table>
-        <!--tr>
+        <!--
+        <tr>
             <th> title: </th>
             <td>$${record.title}</td>
         </tr>
@@ -24,7 +25,8 @@
         <tr>
             <th> description: </th>
             <td>$${record.description}</td>
-        </tr-->
+        </tr>
+        -->
     </table>
     <br/>
     <a href="../edit/$${record.${id}}">Edit</a> | <a href="../list">Back</a>

@@ -14,14 +14,19 @@
 <body>
     <h1>Listing $${modelname}</h1>
     <table>
-    <!--tr>
+    <!--
+    <tr>
         <th> title </th>
         <th> year </th>
         <th> description </th>
-    </tr-->
+    </tr>
+    -->
     <tr py:for="i, record in enumerate(records)" class="$${i%2 and 'odd' or 'even'}">
-        <!--td>$${record.title}</td>
-        <td>$${record.year}</td-->
+        <!--
+        <td>$${record.title}</td>
+        <td>$${record.year}</td>
+        <td>${record.description}</td>
+        -->
         <td><a href="show/$${record.${id}}">Show</a></td>
         <td><a href="edit/$${record.${id}}">Edit</a></td>
         <td><a href="destroy/$${record.${id}}" onclick="if (confirm('Are you sure?')) { var f = document.createElement('form');this.parentNode.appendChild(f); f.method = 'POST'; f.action = this.href; f.submit(); };return false;">Destroy</a></td>
