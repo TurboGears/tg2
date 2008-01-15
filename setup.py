@@ -28,6 +28,7 @@ setup(
     install_requires=[
         'Babel',
         'Pylons',
+	'WebOb',
         'Genshi>=0.4',
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
