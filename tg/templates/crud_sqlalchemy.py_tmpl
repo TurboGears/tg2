@@ -1,12 +1,7 @@
 from ${package}.lib.base import Controller
 from tg import expose, validate, flash, redirect
-from ${package}.model import DBSession, Movie
-    
-from toscawidgets.widgets import formsfrom toscawidgets.api import WidgetsListfrom toscawidgets.widgets.forms import validatorsforms.FormField.engine_name = "genshi"
-class ${modelname}Form(forms.TableForm):
-    """form builder"""    class fields(WidgetsList):
-        """fields definitions. Replace to your Fields"""
-        #name="${modelname.capitalize()}"        title = forms.TextField(label="Title", validator = validators.UnicodeString(not_empty=True, max=16))        year = forms.TextField(label="Year", validator = validators.Number(not_empty=True))        description = forms.TextField(label="Descriptioin")model_form = ${modelname}Form("model_form")
+from ${package}.model import DBSession, ${modelname}
+from ${modelname}Form import model_form
 
 class ${modelpackage}(Controller):
     """Basic ${modelname} admin interface"""

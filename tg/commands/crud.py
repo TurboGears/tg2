@@ -27,6 +27,7 @@ class CrudCommand(command.Command):
 
     modelname = None
     modelpackage = None
+    modelform = None
     templates = "tgcrud2"
     primary_key = None
     base_package = None
@@ -40,6 +41,9 @@ class CrudCommand(command.Command):
     parser.add_option("-p", "--package",
             help="package name for the code",
             dest="modelpackage")
+    parser.add_option("-f", "--form",
+            help="form name for model",
+            dest="modelform")
     parser.add_option("-i", "--id",
             help="model primary key",
             dest="primary_key")
@@ -50,6 +54,7 @@ class CrudCommand(command.Command):
     def command(self):
         self.modelname = self.options.modelname
         self.modelpackage = self.options.modelpackage
+        self.modelform = self.options.modelform
         self.primary_key = self.options.primary_key
 
         try:
@@ -92,9 +97,15 @@ class CrudCommand(command.Command):
                 self.primary_key = 'id'
         while not self.modelpackage:
             self.modelpackage = raw_input("Enter the package name [%s]: "
-                                            % (self.modelname.capitalize()+'Controller'))
+                                            % (str(self.modelname.capitalize())+'Controller'))
             if not self.modelpackage:
-                self.modelpackage = self.modelname.capitalize()
+                self.modelpackage = str(self.modelname.capitalize())+'Controller'
+        while not self.modelform:
+            self.modelform = raw_input("Enter the model form name [%s]: "
+                                            % (str(self.modelname.capitalize())+'Form'))
+            if not self.modelform:
+               self.modelform = self.modelname.capitalize()
+
         #check for lib name conflict
         print self.primary_key
         # Setup the controller
@@ -106,6 +117,9 @@ class CrudCommand(command.Command):
         file_op.copy_file(template='crud_sqlalchemy.py_tmpl',
                          dest=os.path.join('controllers', directory),
                          filename=self.modelpackage)
+        file_op.copy_file(template='crud_form.py_tmpl',
+                         dest=os.path.join('controllers', directory),
+                         filename=self.modelname+'Form')
         #setup templates
         templatepath = file_op.find_dir('templates', True)[1]
         print templatepath
