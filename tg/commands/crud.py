@@ -92,7 +92,7 @@ class CrudCommand(command.Command):
                 self.primary_key = 'id'
         while not self.modelpackage:
             self.modelpackage = raw_input("Enter the package name [%s]: "
-                                            % self.modelname.capitalize())
+                                            % (self.modelname.capitalize()+'Controller'))
             if not self.modelpackage:
                 self.modelpackage = self.modelname.capitalize()
         #check for lib name conflict
