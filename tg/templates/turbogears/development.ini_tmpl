@@ -18,7 +18,7 @@ port = 8080
 [app:main]
 use = egg:${project}
 full_stack = true
-# lang = ru
+#lang = ru
 cache_dir = %(here)s/data
 beaker.session.key = ${package}
 beaker.session.secret = somesecret

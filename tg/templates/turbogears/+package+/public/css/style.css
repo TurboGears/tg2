@@ -130,7 +130,7 @@ span.code {
 	background: #eee;
 	}
 
-#status_block {
+#status_ok {
 	margin: 0 auto 0.5em auto;
 	padding: 15px 10px 15px 55px;
 	background: #cec URL('../images/ok.png') left center no-repeat;

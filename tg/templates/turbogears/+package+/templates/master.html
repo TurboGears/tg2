@@ -7,6 +7,7 @@
 <?python
 import tg
 tg_flash = tg.get_flash()
+tg_status = tg.get_status()
 ?>
 <xi:include href="${tg.url('tw_resources.html')}" />
 <head py:match="head" py:attrs="select('@*')">
@@ -21,7 +22,7 @@ tg_flash = tg.get_flash()
 
   <div id="main_content">
 
-    <div id="status_block" py:if="tg_flash" class="flash" py:content="tg_flash"
+    <div id="${tg_status}" py:if="tg_flash" class="flash" py:content="tg_flash"
     ></div>
     <!-- End of status_block -->
 

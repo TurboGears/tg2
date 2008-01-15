@@ -38,7 +38,7 @@ well lit development path to walk.
 
 """
 from tg.controllers import TurboGearsController, redirect, url
-from tg.flash import flash, get_flash
+from tg.flash import flash, get_flash, get_status
 
 import paste
 from pylons.decorators import expose, new_validate as validate
