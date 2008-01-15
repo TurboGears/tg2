@@ -34,8 +34,7 @@ class ${modelpackage}(Controller):
     def create(self, id=None, **kw):
         """Create record to model"""
         entry = ${modelname}(**kw)
-        #if not modeled
-        #entry = ${modelname}()
+        #entry = ${modelname}() #if not modeled
         #for attr in kw:
         #    setattr(entry, attr, kw[attr])
         DBSession.save(entry)
