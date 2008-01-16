@@ -140,6 +140,26 @@ span.code {
 	font-weight: bolder;
 	}
 
+#status_warning {
+	margin: 0 auto 0.5em auto;
+	padding: 15px 10px 15px 55px;
+	background: #ff6 left center no-repeat;
+	border: 2px solid #f90;
+	width: 450px;
+	font-size: 120%;
+	font-weight: bolder;
+	}
+
+#status_alert {
+	margin: 0 auto 0.5em auto;
+	padding: 15px 10px 15px 55px;
+	background: #faa left center no-repeat;
+	border: 2px solid #c00;
+	width: 450px;
+	font-size: 120%;
+	font-weight: bolder;
+	}
+
 .notice {
 	margin: 1.5em auto 0.5em auto;
 	padding: 15px 10px 15px 55px;

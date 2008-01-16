@@ -1,4 +1,3 @@
-
 from ${package}.lib.base import BaseController
 from tg import expose, flash
 from pylons.i18n import ugettext as _

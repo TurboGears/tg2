@@ -9,7 +9,7 @@
 #                omittedFields=omittedFields)
 
 # Use Widget Form
-from toscawidgets.widgets import formsfrom toscawidgets.api import WidgetsListfrom toscawidgets.widgets.forms import validatorsforms.FormField.engine_name = "genshi"
+from toscawidgets.widgets import formsfrom toscawidgets.api import WidgetsListfrom toscawidgets.widgets.forms import validators
 class ${modelname}Form(forms.TableForm):
     """form builder"""    class fields(WidgetsList):
         """fields definitions. Replace to your Fields"""
