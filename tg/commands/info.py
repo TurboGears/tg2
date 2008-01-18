@@ -8,9 +8,9 @@ entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
     "Template Engines" : "python.templating.engines",
     "TurboGears2 Templates": "turbogears2.template",
     "Widget Packages" : "toscawidgets.widgets",
+    "Toolbox2 Gadgets" : "turbogears2.toolboxcommand",
 }
 """#elements that not clear yet
-    "Toolbox Gadgets" : "turbogears2.toolboxcommand",
     "TurboGears2 Extensions" : "turbogears2.extensions",
     "Identity Providers" : "turbogears2.identity.provider",
     "Visit Managers" : "turbogears2.visit.manager",
@@ -41,9 +41,14 @@ class InfoCommand(command.Command):
 
 TurboGears2 requires:
 """
+        li = []
         packages, plugins = retrieve_info()
         for p in packages:
+            li.append(p)
+        # print dependent modules
+        for p in list(set(li)):
             print '*', p
+        # print plugins
         for name, pluginlist in plugins.items():
             print "\n", name, "\n"
             for plugin in pluginlist:
