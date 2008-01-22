@@ -68,7 +68,10 @@ class TurboGearsApplication(PylonsApp):
                 paste.registry.restorer.save_registry_state(environ)
                 start_response('200 OK', [('Content-type', 'text/plain')])
                 return ['%s' % paste.registry.restorer.get_request_id(environ)]
-
+        
+        # Pylons expects fresh instances of the controller on every request,
+        # so instantiate a new instance of the root controller, and let it
+        # handle the request.
         return self.root.__class__()(environ, start_response)
 
 
