@@ -24,6 +24,9 @@ class DecoratedController(WSGIController):
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
+
+        if hasattr(validation, '_before_validate'):
+            validation._before_validate(controller, params)
         
         new_params=params
         if isinstance(validation.validators, dict):
@@ -103,16 +106,23 @@ class DecoratedController(WSGIController):
                                       namespace=namespace)
         return result
 
-    def _handle_validation_errors(self, controller, exception):
+    def _handle_validation_errors(self, controller, exception, args):
         pylons.c.form_errors = exception.error_dict
         pylons.c.form_values = exception.value
 
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
             error_handler = controller
-
-        output = error_handler(controller.im_self)
-
+        
+        #output = error_handler(controller.im_self, **args2)
+#        self._perform_call(error_handler, args2)
+        call_params = dict(args)
+        for k in call_params.keys():
+            # convert unicode keys into str
+            # otherwise you get weird TypeError
+            if isinstance(k, unicode):
+                call_params[str(k)] = call_params.pop(k)
+        output = error_handler(controller.im_self, **call_params)
         return error_handler, output
 
     def _perform_call(self, func, args, remainder=None):
@@ -140,7 +150,7 @@ class DecoratedController(WSGIController):
 
         except formencode.api.Invalid, inv:
             controller, output = self._handle_validation_errors(controller,
-                                                                inv)
+                                                                inv, args)
 
         # Render template
         controller.decoration.run_hooks('before_render', remainder, params,
