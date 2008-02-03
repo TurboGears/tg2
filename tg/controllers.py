@@ -64,13 +64,17 @@ def redirect(url, params=None, **kw):
     """
     if not params:
         params = {}
-    url = urlparse.urljoin(pylons.request.path_info, url)
+
+    url = urlparse.urljoin(pylons.request.url, url)
     params.update(kw)
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
     if isinstance(url, unicode):
         url = url.encode('utf8')
-    found = HTTPFound(location=url)
+    found = HTTPFound(location=url).exception
+    
+    #TODO: Make this work with WebOb
+    
     ## Merging cookies and headers from global response into redirect
     #for header in pylons.response.headerlist:
         #if header[0] == 'Set-Cookie' or header[0].startswith('X-'):

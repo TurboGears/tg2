@@ -205,7 +205,7 @@ def object_dispatch(obj, url_path):
         try:
             obj, remainder = find_object(obj, remainder, notfound_handlers)
             return obj, remainder
-        except tg.exceptions.HTTPNotFound:
+        except tg.exceptions.HTTPException:
             if not notfound_handlers:
                 raise
             name, obj, remainder = notfound_handlers.pop()
@@ -219,7 +219,7 @@ def object_dispatch(obj, url_path):
 def find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
-            raise tg.exceptions.HTTPNotFound()
+            raise tg.exceptions.HTTPNotFound().exception
         if iscontroller(obj):
             return obj, remainder
 
@@ -237,7 +237,7 @@ def find_object(obj, remainder, notfound_handlers):
             notfound_handlers.append(('lookup', lookup, remainder))
 
         if not remainder:
-            raise tg.exceptions.HTTPNotFound()
+            raise tg.exceptions.HTTPNotFound().exception
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
 

@@ -61,22 +61,7 @@ def test_list():
         '/?foo=bar&foo=%C3%A0'
     )
 
-def test_redirect():
-    pylons.config.update({"server.webpath":"/coolsite/root"})
-    create_request(
-            '/coolsite/root/subthing/', 
-            )
-    try:
-        redirect("/foo")
-        assert False, "redirect exception should have been raised"
-    except HTTPFound, e:
-        eq_("http://localhost/coolsite/root/subthing/foo", e.location)
-   
-    try:
-        raise redirect("/foo")
-        assert False, "redirect exception should have been raised"
-    except HTTPFound, e:
-        eq_("http://localhost/coolsite/root/subthing/foo", e.location)
+
 
 def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}
@@ -88,13 +73,7 @@ def test_url_doesnt_change_tgparams():
     result = url('/foo', params, spamm='ham')
     eq_(params['spamm'], 'eggs')
 
-def test_url_without_request_available():
-    #not sure what the tg1 version of this was actually 
-    #testing, unimplemented for now
-    assert False, "Not ported from tg1 yet" 
-
 def test_approotsWithPath():
     create_request('/coolsite/root/subthing', {'SCRIPT_NAME' : '/subthing'})
     pylons.config.update({"server.webpath":"/coolsite/root"})
     eq_("/coolsite/root/subthing/foo", url("/foo"))
-
