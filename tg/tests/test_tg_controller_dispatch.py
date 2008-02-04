@@ -33,6 +33,14 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
+class SubController2(object):
+    @expose()
+    def index(self):
+        tg.redirect('list')
+    
+    @expose()
+    def list(self, **kw):
+        return "hello list"
 
 class BasicTGController(TurboGearsController):
     @expose()
@@ -44,6 +52,7 @@ class BasicTGController(TurboGearsController):
         return "Main Default Page called for url /%s"%remainder
 
     sub = SubController()
+    sub2 = SubController2()
 
     @expose()
     def redirect_me(self, target, **kw):
@@ -141,6 +150,14 @@ class TestTGController(TestWSGIController):
     def test_subcontroller_redirect_subindex(self):
         resp=self.app.get('/sub/redirect_sub').follow()
         self.failUnless('sub index' in resp)
+
+    def test_subcontroller_redirect_sub2index(self):
+        resp=self.app.get('/sub2/').follow()
+        self.failUnless('hello list' in resp)
+
+    def test_subcontroller_redirect_no_slash_sub2index(self):
+        resp=self.app.get('/sub2').follow()
+        self.failUnless('hello list' in resp)
 
     ##TODO: Add beaker sessions to the test framework so that flash works. 
     
