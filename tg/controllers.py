@@ -43,7 +43,6 @@ class TurboGearsController(ObjectDispatchController):
                 )
         except HTTPException, httpe:
             result = httpe
-            
             # 304 Not Modified's shouldn't have a content-type set
             if result.status_int == 304:
                 result.headers.pop('Content-Type', None)
