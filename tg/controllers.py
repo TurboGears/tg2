@@ -3,7 +3,7 @@
 import logging
 
 import urlparse, urllib
-from tg.decorated import ObjectDispatchController, DecoratedController
+from pylons.controllers import ObjectDispatchController, DecoratedController
 from tg.exceptions import HTTPFound, HTTPException
 import pylons
 
