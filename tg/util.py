@@ -34,3 +34,15 @@ def get_package_name():
         package = package.rstrip()
         if package and package != 'locales':
             return package
+
+def get_model():
+    """return model"""
+    package_name = get_package_name()
+
+    if not package_name:
+        return None
+
+    package = __import__(package_name, {}, {}, ["model"])
+
+    if hasattr(package, "model"):
+        return package.model
