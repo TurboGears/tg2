@@ -2,7 +2,7 @@
 utilized by Controllers.
 """
 from pylons import c, cache, config, g, request, response, session
-from tg import TurboGearsController, context
+from tg import TGController, context
 from pylons.controllers.util import abort, etag_cache, redirect_to
 from pylons.decorators import jsonify
 from pylons.i18n import _, ungettext, N_
@@ -18,7 +18,7 @@ class Controller(object):
     via a standard default method.
     """
     
-class BaseController(TurboGearsController):
+class BaseController(TGController):
     """Base class for the root of a web application.
     
     Your web application should have one of these. The root of
@@ -27,7 +27,7 @@ class BaseController(TurboGearsController):
     
     def __call__(self, environ, start_response):
         """Invoke the Controller"""
-        # TurboGearsController.__call__ dispatches to the Controller method
+        # TGController.__call__ dispatches to the Controller method
         # the request is routed to. This routing information is
         # available in environ['pylons.routes_dict']
 
@@ -36,9 +36,8 @@ class BaseController(TurboGearsController):
         # template
         context.w = WidgetBunch()
         try:
-            return TurboGearsController.__call__(self, environ, start_response)
+            return TGController.__call__(self, environ, start_response)
         finally:
             #after everything is done clear out the Database Session
-            #so we don't have trouble with cross request DBSession
-            #polution.
+            #so to eliminate possible cross request DBSession polution.
             model.DBSession.remove()

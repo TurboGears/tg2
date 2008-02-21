@@ -40,6 +40,8 @@ def make_app(controller_klass=None, environ=None):
     if environ is None:
         environ = {}
     environ['pylons.routes_dict'] = {}
+    environ['pylons.routes_dict']['action'] = "route"
+    print environ
     if controller_klass is None:
         controller_klass = TurboGearsController
 
@@ -85,7 +87,8 @@ class TestWSGIController(TestCase):
 
     def tearDown(self):
         context._pop_object()
-
+        
+        
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)

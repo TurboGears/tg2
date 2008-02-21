@@ -3,7 +3,7 @@ import paste.httpexceptions as httpexceptions
 
 import tg
 import pylons
-from tg.controllers import TurboGearsController
+from tg.controllers import TGController
 from pylons.decorators import expose
 
 from turbojson.jsonify import jsonify
@@ -19,7 +19,7 @@ class MyClass(object):
 def jsonify_myclass(obj):
     return {'result':'wo-hoo!'}
 
-class BasicTGController(TurboGearsController):
+class BasicTGController(TGController):
 
     @expose('json')
     def json(self):
@@ -41,15 +41,11 @@ class BasicTGController(TurboGearsController):
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
-        self.baseenviron = {}
-        self.app = make_app(BasicTGController, self.baseenviron)
-
-    def setUp(self):
-        TestWSGIController.setUp(self)
-        self.baseenviron.update(self.environ)
+        self.app = make_app(BasicTGController)
 
     def test_simple_jsonification(self):
         resp = self.app.get('/json')
+        print resp.body
         assert '{"a": "hello world", "b": true}' in resp.body
 
     def test_custom_jsonification(self):

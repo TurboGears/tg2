@@ -24,11 +24,11 @@ class ErrorController(BaseController):
         return page
 
     def img(self, id):
-        """Serve Pylons' stock images"""
+        """Serve stock images"""
         return self._serve_file(os.path.join(media_path, 'img', id))
 
     def style(self, id):
-        """Serve Pylons' stock stylesheets"""
+        """Serve stock stylesheets"""
         return self._serve_file(os.path.join(media_path, 'style', id))
 
     def _serve_file(self, path):

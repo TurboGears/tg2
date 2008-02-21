@@ -31,7 +31,7 @@ And like Ubuntu, we don't intend to hide that power and flexibility from advance
 
 Sensible defaults actually encourage code re-use within TurboGears because they make it possible for a group of TurboGears components to share assumptions about how things will work.
 """
-from tg.controllers import TurboGearsController, redirect, url
+from tg.controllers import TurboGearsController, TGController, redirect, url
 from tg.flash import flash, get_flash, get_status
 
 import paste

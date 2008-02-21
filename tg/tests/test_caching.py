@@ -10,7 +10,7 @@ For more details.
 
 
 import tg
-from tg.controllers import TurboGearsController
+from tg.controllers import TGController
 from pylons.decorators import expose
 from pylons.decorators.cache import beaker_cache
 from pylons.controllers.util import etag_cache
@@ -40,7 +40,7 @@ mocktime = MockTime()
 import beaker.container
 beaker.container.time = mocktime
 
-class SimpleCachingController(TurboGearsController):
+class SimpleCachingController(TGController):
     
     """ Pylons supports a mechanism for arbitrary caches that can be allocated
     within controllers. Each cache value has a creation function associated
@@ -95,7 +95,7 @@ class TestSimpleCaching(TestWSGIController):
         resp = self.app.get('/expiry/', params={'a':'foo2'})
         assert resp.body == 'cached foo2'
 
-class DecoratorController(TurboGearsController):
+class DecoratorController(TGController):
     
     @beaker_cache(expire=100, type='memory')
     @expose()
@@ -126,7 +126,7 @@ class TestDecoratorCaching(TestWSGIController):
         resp = self.app.get('/simple/')
         assert resp.body == 'cached foo2'
 
-class EtagController(TurboGearsController):
+class EtagController(TGController):
 
     @expose()
     def etagged(self, etag):
@@ -139,8 +139,7 @@ class TestEtagCaching(TestWSGIController):
     
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
-        self.baseenviron = {}
-        self.app = make_app(EtagController, self.baseenviron)
+        self.app = make_app(EtagController)
 
     def test_etags(self):
         """ Test that the etag in the response headers is the one we expect. """

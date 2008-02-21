@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TurboGearsController
+from tg.controllers import TGController
 from pylons.decorators import expose
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -42,7 +42,7 @@ class SubController2(object):
     def list(self, **kw):
         return "hello list"
 
-class BasicTGController(TurboGearsController):
+class BasicTGController(TGController):
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -96,33 +96,35 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.baseenviron = {}
+        self.baseenviron['pylons.routes_dict'] = {}
+        self.baseenviron['pylons.routes_dict']['action'] = 'route'
         self.app = make_app(BasicTGController, self.baseenviron)
-
+        
     def test_tg_style_default(self):
-        resp = self.app.get('/sdfaswdfsdfa') #random string should be caught by the default route
+        resp = self.goto('/sdfaswdfsdfa') #random string should be caught by the default route
         assert 'Default' in resp.body
-
+    
     def test_tg_style_index(self):
-        resp = self.app.get('/index/')
+        resp = self.goto('/index/')
         assert 'hello' in resp.body
-
+    
     def test_tg_style_subcontroller_index(self):
-        resp = self.app.get('/sub/index')
+        resp = self.goto('/sub/index')
         assert "sub index" in resp.body
-
+    
     def test_tg_style_subcontroller_default(self):
-        resp=self.app.get('/sub/bob/tim/joe')
+        resp=self.goto('/sub/bob/tim/joe')
         assert "bob" in resp.body
         assert 'tim' in resp.body
         assert 'joe' in resp.body
-
+    
     def test_redirect_absolute(self):
-        resp = self.app.get('/redirect_me?target=/')
+        resp = self.goto('/redirect_me?target=/')
         assert resp.status == 302, resp.status
         assert resp.header('location') == 'http://localhost/', resp.headers
         resp = resp.follow()
         self.failUnless('hello world' in resp)
-
+    
     def test_redirect_relative(self):
         resp = self.app.get('/redirect_me?target=hello&name=abc').follow()
         self.failUnless('Hello abc' in resp)
@@ -130,11 +132,11 @@ class TestTGController(TestWSGIController):
         self.failUnless('Why HELLO! def' in resp)
         resp = self.app.get('/sub/redirect_me?target=../hello&name=ghi').follow()
         self.failUnless('Hello ghi' in resp)
-
+    
     def test_redirect_external(self):
         resp = self.app.get('/redirect_me?target=http://example.com')
         assert resp.status == 302 and dict(resp.headers)['location'] == 'http://example.com'
-
+    
     def test_redirect_param(self):
         resp = self.app.get('/redirect_me?target=/hello&name=paj').follow()
         self.failUnless('Hello paj' in resp)
@@ -142,23 +144,23 @@ class TestTGController(TestWSGIController):
         self.failUnless('Hello pbj' in resp)
         resp = self.app.get('/redirect_me?target=/hello%3fsilly=billy&name=pcj').follow()
         self.failUnless('Hello pcj' in resp)
-
+    
     def test_redirect_cookie(self):
         resp = self.app.get('/redirect_cookie?name=stefanha').follow()
         self.failUnless('Hello stefanha' in resp)
-
+    
     def test_subcontroller_redirect_subindex(self):
         resp=self.app.get('/sub/redirect_sub').follow()
         self.failUnless('sub index' in resp)
-
+    
     def test_subcontroller_redirect_sub2index(self):
         resp=self.app.get('/sub2/').follow()
         self.failUnless('hello list' in resp)
-
+    
     def test_subcontroller_redirect_no_slash_sub2index(self):
-        resp=self.app.get('/sub2').follow()
+        resp=self.app.get('/sub2/').follow()
         self.failUnless('hello list' in resp)
-
+    
     ##TODO: Add beaker sessions to the test framework so that flash works. 
     
     #def test_flash_redirect(self):
