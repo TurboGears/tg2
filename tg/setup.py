@@ -11,13 +11,16 @@ def make_default_route_map():
     """Create, configure and return the routes Mapper"""
     map = Mapper(directory=config['pylons.paths']['controllers'],
                 always_scan=config['debug'])
-                
+    
+    # Setup a default route for the error controller:
+    map.connect('error/:action/:id', controller='error')
+    
     ## Replace the next line with your overides.   Overides should generally come
     ## bevore the default route defined below
-    
     # map.connect('overide/url/here', controller='mycontrller', action='send_stuff')
     
-    # This route connects your root controller
+    # This route connects your root controller, it should be after
+    # more specific routes since the wildcard will pick up everything...
     map.connect('*url', controller='root', action='route')
 
     return map
