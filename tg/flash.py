@@ -20,7 +20,7 @@ def flash(msg, status=None):
 def get_flash():
     """Returns the message previously set by calling flash()"""
     msg = session.get('flash_message', '')
-    return 
+    return msg
 
 def get_status():
     status = session.get('flash_status', 'status_ok')
