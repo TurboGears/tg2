@@ -161,7 +161,6 @@ class TestTGController(TestWSGIController):
         resp=self.app.get('/sub2/').follow()
         self.failUnless('hello list' in resp)
     
-    ##TODO: Add beaker sessions to the test framework so that flash works. 
     def test_flash_redirect(self):
         resp = self.app.get('/flash_redirect').follow()
         self.failUnless('Wow, flash!' in resp, resp)

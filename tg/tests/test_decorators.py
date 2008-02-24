@@ -15,7 +15,10 @@ def setup():
 def teardown():
     teardown_session_dir()
 
-pylons.buffet = pylons.templating.Buffet(default_engine='genshi')
+tmpl_options = {}
+tmpl_options['genshi.search_path'] = ['tests']
+
+pylons.buffet = pylons.templating.Buffet(default_engine='genshi',tmpl_options=tmpl_options)
 
 class MyClass(object):
     pass
@@ -39,7 +42,7 @@ class BasicTGController(TGController):
         return dict(custom=MyClass())
 
     @expose('json')
-    @expose('genshi:', content_type='application/xml')
+    @expose('genshi:test', content_type='application/xml')
     def xml_or_json(self):
         return dict(name="John Carter", title='officer', status='missing')
 
@@ -50,9 +53,17 @@ class TestTGController(TestWSGIController):
 
     def test_simple_jsonification(self):
         resp = self.app.get('/json')
-        print resp.body
         assert '{"a": "hello world", "b": true}' in resp.body
 
     def test_custom_jsonification(self):
         resp = self.app.get('/custom')
         assert "wo-hoo!" in resp.body
+    
+    def test_multi_dispatch_json(self):
+        resp = self.app.get('/xml_or_json', headers={'accept':'application/json'})
+        assert '''"status": "missing"''' in resp
+        assert '''"name": "John Carter"''' in resp
+        assert '''"title": "officer"''' in resp
+    
+    #TODO: Setup genshi test path, and test genshi dispatch
+

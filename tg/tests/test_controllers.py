@@ -66,8 +66,6 @@ def test_list():
         '/?foo=bar&foo=%C3%A0'
     )
 
-
-
 def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}
     result = url('/foo', params, spamm='ham')
@@ -79,6 +77,6 @@ def test_url_doesnt_change_tgparams():
     eq_(params['spamm'], 'eggs')
 
 def test_approotsWithPath():
-    create_request('/coolsite/root/subthing', {'SCRIPT_NAME' : '/subthing'})
+    create_request('/coolsite/root/subthing/', {'SCRIPT_NAME' : '/subthing'})
     pylons.config.update({"server.webpath":"/coolsite/root"})
     eq_("/coolsite/root/subthing/foo", url("/foo"))
