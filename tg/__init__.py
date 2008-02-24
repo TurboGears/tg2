@@ -42,6 +42,8 @@ from pylons import g as app_globals
 from pylons import request
 from pylons import session
 
+from warnings import warn
+
 
 class TurboGearsApplication(PylonsApp):
     """basis TurboGears application class which is derived from PylonsApp"""
@@ -55,7 +57,7 @@ class TurboGearsApplication(PylonsApp):
         return self.root
 
     def __call__(self, environ, start_response):
-
+        warnings.warn("TurboGearsApplication is depricated UsePylonsApp", DeprecationWarning)
         environ['pylons.routes_dict'] = {}
         self.setup_app_env(environ, start_response)
 

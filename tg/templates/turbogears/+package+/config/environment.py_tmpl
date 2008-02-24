@@ -5,7 +5,7 @@ from pylons import config
 
 from pylons.i18n import ugettext
 from genshi.filters import Translator
-from tg import setup
+from tg import defaults
 from sqlalchemy import engine_from_config
 
 import ${package}.lib.app_globals as app_globals
@@ -29,7 +29,7 @@ def load_environment(global_conf, app_conf):
     # TG2 style object dispatch.   Fell free to overide it with 
     # custom routes.  TODO: Link to TG2+routes doc. 
     
-    make_map = setup.make_default_route_map
+    make_map = defaults.make_default_route_map
     
     # Initialize config with the basic options
     config.init_app(global_conf, app_conf, package='${package}',

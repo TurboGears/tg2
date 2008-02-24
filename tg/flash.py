@@ -15,8 +15,8 @@ def flash(msg, status=None):
     """
     session['flash_message'] = msg
     session['flash_status'] = status or "status_ok"
-
-
+    session.save()
+    
 def get_flash():
     """Returns the message previously set by calling flash()"""
     msg = session.get('flash_message', '')

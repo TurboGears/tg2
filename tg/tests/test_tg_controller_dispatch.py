@@ -83,8 +83,6 @@ class BasicTGController(TGController):
 
     @expose()
     def flash_after_redirect(self):
-        print "*"*50
-        print tg.get_flash()
         return tg.get_flash()
 
     @expose()
@@ -95,31 +93,28 @@ class BasicTGController(TGController):
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
-        self.baseenviron = {}
-        self.baseenviron['pylons.routes_dict'] = {}
-        self.baseenviron['pylons.routes_dict']['action'] = 'route'
-        self.app = make_app(BasicTGController, self.baseenviron)
+        self.app = make_app(BasicTGController)
         
     def test_tg_style_default(self):
-        resp = self.goto('/sdfaswdfsdfa') #random string should be caught by the default route
+        resp = self.app.get('/sdfaswdfsdfa') #random string should be caught by the default route
         assert 'Default' in resp.body
     
     def test_tg_style_index(self):
-        resp = self.goto('/index/')
+        resp = self.app.get('/index/')
         assert 'hello' in resp.body
     
     def test_tg_style_subcontroller_index(self):
-        resp = self.goto('/sub/index')
+        resp = self.app.get('/sub/index')
         assert "sub index" in resp.body
     
     def test_tg_style_subcontroller_default(self):
-        resp=self.goto('/sub/bob/tim/joe')
+        resp=self.app.get('/sub/bob/tim/joe')
         assert "bob" in resp.body
         assert 'tim' in resp.body
         assert 'joe' in resp.body
     
     def test_redirect_absolute(self):
-        resp = self.goto('/redirect_me?target=/')
+        resp = self.app.get('/redirect_me?target=/')
         assert resp.status == 302, resp.status
         assert resp.header('location') == 'http://localhost/', resp.headers
         resp = resp.follow()
@@ -162,17 +157,19 @@ class TestTGController(TestWSGIController):
         self.failUnless('hello list' in resp)
     
     ##TODO: Add beaker sessions to the test framework so that flash works. 
+    def test_flash_redirect(self):
+        resp = self.app.get('/flash_redirect').follow()
+        self.failUnless('Wow, flash!' in resp, resp)
     
-    #def test_flash_redirect(self):
-    #    resp = self.app.get('/flash_redirect').follow()
-    #    print resp
-    #    self.failUnless('Wow, flash!' in resp, resp)
-    #
-    #def test_flash_no_redirect(self):
-    #    resp = self.app.get('/flash_no_redirect')
-    #    self.failUnless('Wow, flash!' in resp, resp)
-    #
-    #def test_flash_unicode(self):
-    #    resp = self.app.get('/flash_unicode').follow()
-    #    content = resp.body.decode('utf8')
-    #    self.failUnless(u'Привет, мир!' in content, resp)
+    def test_flash_no_redirect(self):
+        resp = self.app.get('/flash_no_redirect')
+        self.failUnless('Wow, flash!' in resp, resp)
+    
+    def test_flash_unicode(self):
+        resp = self.app.get('/flash_unicode').follow()
+        content = resp.body.decode('utf8')
+        self.failUnless(u'Привет, мир!' in content, resp)
+    
+    def test_flash_status(self):
+        resp = self.app.get('/flash_status')
+        self.failUnless('status_ok')    

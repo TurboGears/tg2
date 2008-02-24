@@ -53,8 +53,11 @@ class TGController(ObjectDispatchController):
         setup_i18n()
         self._initialize_validation_context()
         routingArgs = None
+        
+        #TODO: Why do this, rather than always using the 
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
+            
         try:
             controller, remainder, params = self._get_routing_info(routingArgs)
             result = DecoratedController._perform_call(

@@ -5,6 +5,7 @@ from unittest import TestCase
 from xmlrpclib import loads, dumps
 
 import webob
+import beaker
 import pylons
 from paste.registry import Registry
 from paste.registry import RegistryManager
@@ -22,6 +23,7 @@ from pylons.testutil import ControllerWrap, SetupCacheGlobal
 from beaker.middleware import CacheMiddleware
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
+session_dir = os.path.join(data_dir, 'session')
 
 try:
     shutil.rmtree(data_dir)
@@ -35,20 +37,20 @@ default_environ = {
 }
 
 def make_app(controller_klass=None, environ=None):
-    """Creates a `TestApp` instance.
-    """
+    """Creates a `TestApp` instance."""
     if environ is None:
         environ = {}
     environ['pylons.routes_dict'] = {}
     environ['pylons.routes_dict']['action'] = "route"
-    print environ
+
     if controller_klass is None:
-        controller_klass = TurboGearsController
+        controller_klass = TGController
 
     app = ControllerWrap(controller_klass)
-    app = SetupCacheGlobal(app, environ, setup_cache=True)
-    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
+    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)    
     app = RegistryManager(app)
+    app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
+    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
@@ -82,12 +84,10 @@ def create_request(path, environ=None):
 
 class TestWSGIController(TestCase):
     def setUp(self):
-        self.environ = default_environ.copy()
         context._push_object(ContextObj())
 
     def tearDown(self):
         context._pop_object()
-        
         
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
