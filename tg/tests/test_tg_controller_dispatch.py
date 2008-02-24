@@ -89,11 +89,15 @@ class BasicTGController(TGController):
     @expose()
     def flash_after_redirect(self):
         return tg.get_flash()
+    
+    @expose()
+    def flash_status(self):
+        return tg.get_status()
 
     @expose()
     def flash_no_redirect(self):
         tg.flash("Wow, flash!")
-        return tg.get_flash()
+        return tg.get_flash() 
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -176,4 +180,4 @@ class TestTGController(TestWSGIController):
     
     def test_flash_status(self):
         resp = self.app.get('/flash_status')
-        self.failUnless('status_ok')    
+        self.failUnless('status_ok'in resp, resp)    
