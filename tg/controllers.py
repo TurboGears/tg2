@@ -25,7 +25,6 @@ class TurboGearsController(ObjectDispatchController):
             routingArgs = args['url']
         try:
             controller, remainder, params = self._get_routing_info(routingArgs)
-            print params
             result = DecoratedController._perform_call(
                 self, controller, params, remainder=remainder)
         except HTTPException, httpe:
