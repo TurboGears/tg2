@@ -8,7 +8,12 @@ from pylons.decorators import expose
 
 from turbojson.jsonify import jsonify
 
-from tg.tests import TestWSGIController, make_app
+from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+
+def setup():
+    setup_session_dir()
+def teardown():
+    teardown_session_dir()
 
 pylons.buffet = pylons.templating.Buffet(default_engine='genshi')
 

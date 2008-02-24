@@ -6,7 +6,12 @@ from pylons.decorators import expose
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
-from tg.tests import TestWSGIController, make_app
+from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+
+def setup():
+    setup_session_dir()
+def teardown():
+    teardown_session_dir()
 
 class SubController(object):
     @expose()

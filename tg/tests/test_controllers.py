@@ -3,9 +3,14 @@
 import pylons
 import tg
 from tg.controllers import *
-from tg.tests import TestWSGIController, make_app, create_request
 from tg.exceptions import HTTPFound
 from nose.tools import eq_
+from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+
+def setup():
+    setup_session_dir()
+def teardown():
+    teardown_session_dir()
 
 def test_create_request():
     environ = { 'SCRIPT_NAME' : '/xxx' }

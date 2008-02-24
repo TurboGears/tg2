@@ -18,7 +18,13 @@ from pylons import cache
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from webob.exc import HTTPNotModified
-from tg.tests import TestWSGIController, make_app
+from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+
+def setup():
+    setup_session_dir()
+    
+def teardown():
+    teardown_session_dir()
 
 # a variable used to represent state held outside the controllers
 mockdb = {}
