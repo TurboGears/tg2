@@ -65,5 +65,7 @@ class TestTGController(TestWSGIController):
         assert '''"name": "John Carter"''' in resp
         assert '''"title": "officer"''' in resp
     
-    #TODO: Setup genshi test path, and test genshi dispatch
+    #TODO: Setup genshi search path, and test genshi rendering
+    
+    #TODO: Add tests for 
 

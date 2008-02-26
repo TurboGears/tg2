@@ -9,6 +9,7 @@ from tg import defaults
 from sqlalchemy import engine_from_config
 
 import ${package}.lib.app_globals as app_globals
+from ${package}.model import init_model 
 
 def template_loaded(template):
     "Plug-in our i18n function to Genshi."
@@ -37,11 +38,11 @@ def load_environment(global_conf, app_conf):
     config['routes.map'] = make_map()                
     config['pylons.g'] = app_globals.Globals()
     config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
-
-    # Customize templating options via this variable
-    tmpl_options = config['buffet.template_options']
-    tmpl_options['genshi.loader_callback'] = template_loaded
-
+    
+    # Pass the engine to initmodel, to be able to introspect tables 
+    engine = engine_from_config(config, 'sqlalchemy.') 
+    init_model(engine) 
+    
     # CONFIGURATION OPTIONS HERE (note: all config options will override
     # any Pylons config options)
 
