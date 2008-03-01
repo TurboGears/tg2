@@ -18,10 +18,21 @@ def flash(msg, status=None):
     session.save()
     
 def get_flash():
-    """Returns the message previously set by calling flash()"""
+    """Returns the message previously set by calling flash()
+    
+    Additonally removes the old flash message """
     msg = session.get('flash_message', '')
+    session['flash_message']=''
+    session.save()
     return msg
 
 def get_status():
+    """Returns the status of the last flash messagese
+    
+    Additonally removes the old flash message status"""
+    
     status = session.get('flash_status', 'status_ok')
+    session['flash_status']=''
+    session.save()
     return status
+    
