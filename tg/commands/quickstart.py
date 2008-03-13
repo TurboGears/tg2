@@ -55,6 +55,15 @@ import sys
 beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
+"""def get_requirement(name, pkg=None):
+    dist = pkg_resources.get_distribution("TurboGears")
+    for r in set(dist.requires((name,))) - set(dist.requires()):
+        if r.project_name.lower() == (pkg or name):
+            return r
+    raise ValueError("Did not find matching %s requirement"
+        " in the TurboGears setup.py:extras_require." % name)
+"""
+
 class QuickstartCommand(command.Command):
     """Create a new TurboGears 2 project.
 
@@ -64,9 +73,9 @@ Example usage::
 
     $ paster quickstart yourproj
 
-or start project with sqlobject::
+or start project with elixir::
 
-    $ paster quickstart -o yourproj
+    $ paster quickstart -e yourproj
     """
 
     version = pkg_resources.get_distribution('turbogears2').version
@@ -79,24 +88,16 @@ or start project with sqlobject::
     package = None
     dry_run = False
     templates = "turbogears2"
-    sqlalchemy = True
+    svn_repository = None
+    sqlalchemy = False
     sqlobject = False
-    elixir = True
+    elixir = False
     identity = False
 
     parser = command.Command.standard_parser(quiet=True)
     parser = optparse.OptionParser(
                     usage="%prog quickstart [options] [project name]",
                     version="%prog " + version)
-    parser.add_option("-p", "--package",
-            help="package name for the code",
-            dest="package")
-    parser.add_option("--dry-run",
-            help="dry run (don't actually do anything)",
-            action="store_true", dest="dry_run")
-    parser.add_option("-t", "--templates",
-            help="user specific templates",
-            dest="templates", default = templates)
     parser.add_option("-s", "--sqlalchemy",
             help="use SQLAlchemy instead of SQLObject",
             action="store_true", dest="sqlalchemy", default = True)
@@ -105,10 +106,22 @@ or start project with sqlobject::
             action="store_true", dest="sqlobject", default = False)
     parser.add_option("-e", "--elixir",
             help="use SQLAlchemy Elixir instead of SQLObject",
-            action="store_true", dest="elixir", default = True)
-    ## parser.add_option("-i", "--identity",
-    ##        help="provide Identity support",
-    ##        action="store_true", dest="identity", default = False)
+            action="store_true", dest="elixir", default = False)
+#    parser.add_option("-i", "--identity",
+#            help="provide Identity support",
+#            action="store_true", dest="identity", default = False)
+    parser.add_option("-p", "--package",
+            help="package name for the code",
+            dest="package")
+    parser.add_option("-t", "--templates",
+            help="user specific templates",
+            dest="templates", default = templates)
+    parser.add_option("-r", "--svn-repository", metavar="REPOS",
+            help="create project in given SVN repository",
+            dest="svn_repository", default = svn_repository)
+    parser.add_option("--dry-run",
+            help="dry run (don't actually do anything)",
+            action="store_true", dest="dry_run")
 
     def command(self):
         """Quickstarts the new project."""
@@ -116,7 +129,7 @@ or start project with sqlobject::
         self.__dict__.update(self.options.__dict__)
 
         if not True in [self.elixir, self.sqlalchemy, self.sqlobject]:
-            self.sqlobject = True
+            self.sqlalchemy = True
         if self.elixir:
             self.sqlalchemy = True
 
@@ -158,7 +171,7 @@ or start project with sqlobject::
 
         env = pkg_resources.Environment()
         if self.name.lower() in env:
-            print "the name %s is already in use by" %self.name,
+            print 'The name "%s" is already in use by' % self.name,
             for dist in env[self.name]:
                 print dist
                 return
@@ -166,53 +179,74 @@ or start project with sqlobject::
         import imp
         try:
             if imp.find_module(self.package):
-                print "the package name %s is already in use" % self.package
+                print 'The package name "%s" is already in use' % self.package
                 return
         except ImportError:
             pass
 
         if os.path.exists(self.name):
-            print("A directory called '%s' already exists. Exiting."
-                      % self.name)
+            print 'A directory called "%s" already exists. Exiting.' % self.name
             return
 
         command = create_distro.CreateDistroCommand("create")
         cmd_args = []
         for template in self.templates.split(" "):
             cmd_args.append("--template=%s" % template)
-        cmd_args.append(self.name)
-        cmd_args.append("package=%s" % self.package)
-        cmd_args.append("identity=%s" % self.identity)
-        cmd_args.append("sqlobject=%s" % self.sqlobject)
-        cmd_args.append("sqlalchemy=%s" % self.sqlalchemy)
-        cmd_args.append("elixir=%s" % self.elixir)
-        cmd_args.append("tgversion=%s"%self.version)
+        if self.svn_repository:
+            cmd_args.append("--svn-repository=%s" % self.svn_repository)
         if self.dry_run:
             cmd_args.append("--simulate")
             cmd_args.append("-q")
+        cmd_args.append(self.name)
+        cmd_args.append("sqlalchemy=%s" % self.sqlalchemy)
+        cmd_args.append("elixir=%s" % self.elixir)
+        cmd_args.append("sqlobject=%s" % self.sqlobject)
+        cmd_args.append("identity=%s" % self.identity)
+        cmd_args.append("package=%s" % self.package)
+        cmd_args.append("tgversion=%s"%self.version)
+        # set the exact ORM-version for the proper requirements
+        # it's extracted from our own requirements, so looking
+        # them up must be in sync (there must be the extras_require named sqlobject/sqlalchemy)
+        """if self.sqlobject:
+            sqlobjectversion = str(get_requirement('sqlobject'))
+            cmd_args.append("sqlobjectversion=%s" % sqlobjectversion)
+        if self.sqlalchemy:
+            sqlalchemyversion = str(get_requirement('sqlalchemy'))
+            cmd_args.append("sqlalchemyversion=%s" % sqlalchemyversion)
+        if self.elixir:
+            elixirversion = str(get_requirement('future', 'elixir'))
+            cmd_args.append("elixirversion=%s" % elixirversion)
+        """
         command.run(cmd_args)
 
         if not self.dry_run:
             os.chdir(self.name)
             if self.sqlobject:
-                sodir = os.path.join(self.package, 'sqlobject-history')
+                # Create the SQLObject history directory only when needed.
+                # With paste.script it's only possible to skip files, but
+                # not directories. So we are handling this manually.
+                sodir = '%s/sqlobject-history' % self.package
                 if not os.path.exists(sodir):
                     os.mkdir(sodir)
+                try:
+                    if not os.path.exists(os.path.join(os.path.dirname(
+                            os.path.abspath(sodir)), '.svn')):
+                        raise OSError
+                    command.run_command('svn', 'add', sodir)
+                except OSError:
+                    pass
+
             startscript = "start-%s.py" % self.package
             if os.path.exists(startscript):
                 oldmode = os.stat(startscript).st_mode
                 os.chmod(startscript,
                         oldmode | stat.S_IXUSR)
-            import imp
             sys.argv = ["setup.py", "egg_info"]
-            imp.load_module("setup", *imp.find_module("setup", ["."]))
-            sys.argv = ["setup.py", "extract_messages"]
-            imp.load_module("setup", *imp.find_module("setup", ["."]))
-            sys.argv = ["setup.py", "compile_catalog"]
+            import imp
             imp.load_module("setup", *imp.find_module("setup", ["."]))
 
             # dirty hack to allow "empty" dirs
-            for base,path,files in os.walk("./"):
+            for base, path, files in os.walk("./"):
                 for file in files:
                     if file  == "empty":
                         os.remove(os.path.join(base, file))
