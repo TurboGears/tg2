@@ -6,7 +6,7 @@ from ${modelname}Form import model_form
 class ${modelpackage}(Controller):
     """Basic ${modelname} admin interface"""
     modelname = '${modelname}'
-    
+
     @expose()
     def index(self):
         """handle front page"""
@@ -17,14 +17,14 @@ class ${modelpackage}(Controller):
         """List records in model"""
         records = DBSession.query(${modelname}).all()
         return dict(records = records, modelname=self.modelname)
-      
+
     @expose('genshi:${package}.templates.${modelpackage}.show')
     def show(self, id, **kw):
         """Show record in model"""
         record = DBSession.query(${modelname}).get(int(id))
         return dict(record = record)
-    
-    @expose("genshi:${package}.templates.${modelpackage}.form")    
+
+    @expose("genshi:${package}.templates.${modelpackage}.form")
     def new(self, **kw):
         """Form to add new record"""
         return dict(modelname = self.modelname, form = model_form, page='new')
@@ -43,7 +43,7 @@ class ${modelpackage}(Controller):
         DBSession.commit()
         flash("Movie was successfully created.")
         raise redirect("list")
-   
+
     @expose("genshi:${package}.templates.${modelpackage}.form")
     def edit(self, id, **kw):
         """Form to edit record"""
@@ -53,8 +53,8 @@ class ${modelpackage}(Controller):
             flash("Not valid edit")
         return dict(modelname = self.modelname, form = model_form, page='edit',
             record = record)
-    
-    #@validate(error_handler="edit")        
+
+    #@validate(error_handler="edit")
     @expose()
     def update(self, id, **kw):
         """Update record to model"""
@@ -65,7 +65,7 @@ class ${modelpackage}(Controller):
         DBSession.commit()
         flash("${modelname} was successfully updated.")
         raise redirect("../list")
-        
+
     @expose()
     def destroy(self, id):
         """Destroy record in model"""
@@ -75,4 +75,3 @@ class ${modelpackage}(Controller):
         flash("${modelname} was successfully destroyed.")
         raise redirect("../list")
 
-  
