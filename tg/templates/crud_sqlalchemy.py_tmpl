@@ -33,10 +33,12 @@ class ${modelpackage}(Controller):
     @expose()
     def create(self, id=None, **kw):
         """Create record to model"""
-        entry = ${modelname}(**kw)
-        #entry = ${modelname}() #if not modeled
-        #for attr in kw:
-        #    setattr(entry, attr, kw[attr])
+        try:
+            entry = ${modelname}(**kw)
+        except:
+            entry = ${modelname}() #if not mapped
+            for attr in kw:
+                setattr(entry, attr, kw[attr])
         DBSession.save(entry)
         DBSession.commit()
         flash("Movie was successfully created.")
