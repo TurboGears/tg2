@@ -56,6 +56,10 @@ class BasicTGController(TGController):
     def default(self, remainder):
         return "Main Default Page called for url /%s"%remainder
 
+    @expose()
+    def feed(self, feed=None):
+        return feed
+        
     sub = SubController()
     sub2 = SubController2()
 
@@ -107,6 +111,10 @@ class TestTGController(TestWSGIController):
     def test_tg_style_default(self):
         resp = self.app.get('/sdfaswdfsdfa') #random string should be caught by the default route
         assert 'Default' in resp.body
+    
+    def test_url_encoded_param_passing(self):
+        resp = self.app.get('/feed?feed=http%3A%2F%2Fdeanlandolt.com%2Ffeed%2Fatom%2F')
+        assert "http://deanlandolt.com/feed/atom/" in resp.body
     
     def test_tg_style_index(self):
         resp = self.app.get('/index/')

@@ -13,7 +13,7 @@ class MochOptions:
     simulate = False
     overwrite=True
 
-def _setup():
+def setup():
     global app
     command = CreateDistroCommand('name')
     command.verbose = False
@@ -27,10 +27,10 @@ def _setup():
     pkg_resources.working_set.add_entry(proj_dir)
     app = loadapp('config:development.ini', relative_to=proj_dir)
     
-def _teardown():
+def teardown():
     shutil.rmtree(testDataPath, ignore_errors=True)
     
-def _test_app_runs_index():
+def test_app_runs_index():
     resp = app.get('/')
     s =  resp.body
     assert s == '', s
