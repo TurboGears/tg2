@@ -65,7 +65,7 @@ class CrudCommand(command.Command):
                         if l.strip() and not l.strip().startswith('#')]
                 f.close()
                 #upper 2 levels
-                baselink = os.path.split(os.path.split(__file__)[0])[0]
+                baselink = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 file_op = FileOp(source_dir=os.path.join(
                     baselink, 'templates'))
                 self.base_package, directory = file_op.find_dir('controllers', True)
