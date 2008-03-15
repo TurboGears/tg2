@@ -3,14 +3,12 @@ TurboGears CRUD interface generator
 
 """
 
-import pkg_resources
-from paste.script import command, create_distro
+from paste.script import command
 import optparse
 import sys
 import os
 from paste.script.filemaker import FileOp
 from paste.script.pluginlib import find_egg_info_dir
-import pylons.util as util
 
 class CrudCommand(command.Command):
     """Generate CRUD interface based on model
@@ -97,14 +95,14 @@ class CrudCommand(command.Command):
                 self.primary_key = 'id'
         while not self.modelpackage:
             self.modelpackage = raw_input("Enter the package name [%s]: "
-                                            % (str(self.modelname.capitalize())+'Controller'))
+                            % (str(self.modelname.capitalize())+'Controller'))
             if not self.modelpackage:
                 self.modelpackage = str(self.modelname.capitalize())+'Controller'
         while not self.modelform:
             self.modelform = raw_input("Enter the model form name [%s]: "
-                                            % (str(self.modelname.capitalize())+'Form'))
+                                % (str(self.modelname.capitalize())+'Form'))
             if not self.modelform:
-               self.modelform = self.modelname.capitalize()
+                self.modelform = self.modelname.capitalize()
 
         #check for lib name conflict
         print self.primary_key

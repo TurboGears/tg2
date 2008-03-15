@@ -17,6 +17,7 @@ entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
 
 """
 
+
 def retrieve_info():
     packages=['%s' % i for i in pkg_resources.require("TurboGears2")]
     plugins = {}

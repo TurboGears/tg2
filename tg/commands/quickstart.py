@@ -3,14 +3,14 @@
 TurboGears 2 uses Paste to create and deploy projects as well as create new
 controllers and their tests.
 
-Quickstart takes the files from turbogears.pastetemplates and processes them to 
+Quickstart takes the files from turbogears.pastetemplates and processes them to
 produce a new, ready-to-run project.
 
 Create a new project named helloworld with this command::
 
     $ paster quickstart helloworld
 
-You could use TurboGears2, Pylons, and WebHelper paster commands within the 
+You could use TurboGears2, Pylons, and WebHelper paster commands within the
 project.
 
 Usage:
@@ -45,10 +45,8 @@ import pkg_resources
 import re
 import optparse
 from paste.script import command
-from paste.script import templates, create_distro
-from tg.pastetemplate import TurboGearsTemplate
+from paste.script import create_distro
 import os
-import os.path
 import stat
 import sys
 
@@ -206,7 +204,8 @@ or start project with elixir::
         cmd_args.append("tgversion=%s"%self.version)
         # set the exact ORM-version for the proper requirements
         # it's extracted from our own requirements, so looking
-        # them up must be in sync (there must be the extras_require named sqlobject/sqlalchemy)
+        # them up must be in sync (there must be the extras_require named
+        # sqlobject/sqlalchemy)
         """if self.sqlobject:
             sqlobjectversion = str(get_requirement('sqlobject'))
             cmd_args.append("sqlobjectversion=%s" % sqlobjectversion)
@@ -248,5 +247,5 @@ or start project with elixir::
             # dirty hack to allow "empty" dirs
             for base, path, files in os.walk("./"):
                 for file in files:
-                    if file  == "empty":
+                    if file == "empty":
                         os.remove(os.path.join(base, file))
