@@ -82,15 +82,15 @@ def create_request(path, environ=None):
     # setup pylons.request to point to our Registry
     reg.register(pylons.request, req)
     # setup tmpl context
-    context._push_object(ContextObj())
+    tmpl_context._push_object(ContextObj())
     return req
 
 class TestWSGIController(TestCase):
     def setUp(self):
-        context._push_object(ContextObj())
+        tmpl_context._push_object(ContextObj())
 
     def tearDown(self):
-        context._pop_object()
+        tmpl_context._pop_object()
         
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')

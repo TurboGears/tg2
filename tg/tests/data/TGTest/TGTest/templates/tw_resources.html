@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
+  <?python resources = tmpl_context.w and tmpl_context.w.retrieve_resources() or {} ?>
+  <head py:match="head" py:attrs="select('@*')">
+    <link py:for="rsrc in resources.get('head', [])" 
+          py:replace="rsrc.display()" />
+    <meta py:replace="select('*|comment()|text()')" />
+  </head>
+  <body py:match="body" py:attrs="select('@*')">
+    <div py:for="rsrc in resources.get('bodytop', [])"
+         py:replace="rsrc.display()" />
+
+    <div py:replace="select('*|comment()|text()')" />
+
+    <div py:for="rsrc in resources.get('bodybottom', [])" 
+         py:replace="rsrc.display()" />
+  </body>
+</html>
