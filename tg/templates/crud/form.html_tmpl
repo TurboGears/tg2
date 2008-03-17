@@ -8,8 +8,8 @@
 
 <head>
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-  <title py:if="page=='edit'">edit</title>
-  <title py:if="page=='new'">new</title>
+  <title py:if="page=='edit'">Edit $${modelname}</title>
+  <title py:if="page=='new'">New $${modelname}</title>
 </head>
 
 <body>

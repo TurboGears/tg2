@@ -16,7 +16,7 @@ class ${modelpackage}(Controller):
     def list(self, **kw):
         """List records in model"""
         records = DBSession.query(${modelname}).all()
-        return dict(records = records, modelname=self.modelname)
+        return dict(records = records, modelname = self.modelname)
 
     @expose('genshi:${package}.templates.${modelpackage}.show')
     def show(self, id, **kw):
@@ -27,7 +27,7 @@ class ${modelpackage}(Controller):
     @expose("genshi:${package}.templates.${modelpackage}.form")
     def new(self, **kw):
         """Form to add new record"""
-        return dict(modelname = self.modelname, form = model_form, page='new')
+        return dict(modelname = self.modelname, form = model_form, page = 'new')
 
     #@validate(error_handler="new")
     @expose()
@@ -41,7 +41,7 @@ class ${modelpackage}(Controller):
                 setattr(entry, attr, kw[attr])
         DBSession.save(entry)
         DBSession.commit()
-        flash("Movie was successfully created.")
+        flash("${modelname} was successfully created.")
         raise redirect("list")
 
     @expose("genshi:${package}.templates.${modelpackage}.form")
@@ -51,7 +51,7 @@ class ${modelpackage}(Controller):
             record = DBSession.query(${modelname}).get(int(id))
         except:
             flash("Not valid edit")
-        return dict(modelname = self.modelname, form = model_form, page='edit',
+        return dict(modelname = self.modelname, form = model_form, page = 'edit',
             record = record)
 
     #@validate(error_handler="edit")
