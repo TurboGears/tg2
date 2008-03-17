@@ -121,7 +121,6 @@ class CrudCommand(command.Command):
         #setup templates
         templatepath = file_op.find_dir('templates', True)[1]
         print templatepath
-        print os.path.join(templatepath,'ooo')
         if not os.path.exists(os.path.join(templatepath, self.modelpackage)):
             print "create dir"
             os.mkdir(os.path.join(templatepath, self.modelpackage))
