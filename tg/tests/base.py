@@ -13,7 +13,7 @@ from paste.fixture import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
-from tg import context
+from tg import tmpl_context
 from pylons.util import ContextObj, PylonsContext
 from pylons.controllers.util import Request, Response
 from tg.controllers import TurboGearsController

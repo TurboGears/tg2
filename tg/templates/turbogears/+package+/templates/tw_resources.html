@@ -2,7 +2,7 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       py:strip="">
-  <?python resources = context.w and context.w.retrieve_resources() or {} ?>
+  <?python resources = tmpl_context.w and tmpl_context.w.retrieve_resources() or {} ?>
   <head py:match="head" py:attrs="select('@*')">
     <link py:for="rsrc in resources.get('head', [])" 
           py:replace="rsrc.display()" />

@@ -15,9 +15,6 @@ log = logging.getLogger(__name__)
 #TODO: Remove TurboGearsController before TG2 release
 warning_msg = """TurboGearsController is depricated,  please setup a default route, and use TGController instead"""
 
-
-
-
 log = logging.getLogger(__name__)
 
 def _configured_engines():
@@ -27,7 +24,6 @@ def _configured_engines():
     if not hasattr(g, 'tg_configured_engines'):
         g.tg_configured_engines = set()
     return g.tg_configured_engines
-
 
 class DecoratedController(WSGIController):
 
@@ -95,7 +91,7 @@ class DecoratedController(WSGIController):
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
-        namespace = dict(context=pylons.c)
+        namespace = dict(context=pylons.tmpl_context)
         namespace.update(response)
 
         for name in exclude_names:
@@ -182,7 +178,7 @@ class ObjectDispatchController(DecoratedController):
             pylons.c.controller_url = url
         if remainder and remainder[-1] == '':
             remainder.pop()
-        return controller, remainder, pylons.request.str_params
+        return controller, remainder, pylons.request.params
 
     def _perform_call(self, func, args):
         self._initialize_validation_context()
