@@ -86,6 +86,8 @@ class DecoratedController(WSGIController):
         if isinstance(response, dict):
             for key, item in response.iteritems():
                 if isinstance(item, Widget):
+                    msg = "Returning a widget is depricated, set them on pylons.w instead"
+                    warnings.warn(msg, DeprecationWarning)
                     setattr(pylons.c.w, key, item)
         
         if engine_name not in _configured_engines():
