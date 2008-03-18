@@ -9,6 +9,7 @@ import pylons
 from pylons.controllers import WSGIController
 
 from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException
+from toscawidgets.api import Widget
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +84,10 @@ class DecoratedController(WSGIController):
 
         #Prepare the engine, if it's not already been prepared.
 
+        for key, item in response.iteritems():
+            if isinstance(item, Widget):
+                setattr(pylons.c.w, key, item)
+        
         if engine_name not in _configured_engines():
             from pylons import config
             template_options = dict(config).get('buffet.template_options', {})
