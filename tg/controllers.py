@@ -83,10 +83,10 @@ class DecoratedController(WSGIController):
             return response
 
         #Prepare the engine, if it's not already been prepared.
-
-        for key, item in response.iteritems():
-            if isinstance(item, Widget):
-                setattr(pylons.c.w, key, item)
+        if isinstance(response, dict):
+            for key, item in response.iteritems():
+                if isinstance(item, Widget):
+                    setattr(pylons.c.w, key, item)
         
         if engine_name not in _configured_engines():
             from pylons import config
