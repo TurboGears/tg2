@@ -33,9 +33,12 @@ class DecoratedController(WSGIController):
         if validation is None:
             return params
         
+        if hasattr(validation, '_before_validate'):
+            validation._before_validate(controller, params)
+        
         new_params = None
+        errors = {}
         if isinstance(validation.validators, dict):
-            errors = {}
             #new_params = {}
             for field, validator in validation.validators.iteritems():
                 try:
@@ -50,8 +53,20 @@ class DecoratedController(WSGIController):
         elif isinstance(validation.validators, formencode.Schema):
             new_params = validation.validators.to_python(params)
         elif hasattr(validation.validators, 'validate'):
-            new_params = validation.validators.validate(params)
-
+            #the object validates itself
+            try:
+                new_params = validation.validators.validate(params)
+            except  formencode.api.Invalid, inv:
+                error_list = inv.__str__().split('\n')
+                #most invalids come back with a list of fields which are in error in the format: "fieldname1: error\nfieldname2: error"
+                for error in error_list:
+                    field_value = error.split(':')
+                    #if the error has no field associated with it, return the error as a global form error
+                    if len(field_value) == 1:
+                        errors['_the_form'] = field_value[0].strip()
+                        continue
+                    errors[field_value[0]] = field_value[1].strip()
+                raise inv
         if new_params is None:
             return params
         return new_params
@@ -117,7 +132,7 @@ class DecoratedController(WSGIController):
                                       namespace=namespace)
         return result
 
-    def _handle_validation_errors(self, controller, exception):
+    def _handle_validation_errors(self, controller, params, exception):
         pylons.c.form_errors = exception.error_dict
         pylons.c.form_values = exception.value
 
@@ -125,7 +140,7 @@ class DecoratedController(WSGIController):
         if error_handler is None:
             error_handler = controller
 
-        output = error_handler(controller.im_self)
+        output = error_handler(controller.im_self, **dict(params))
 
         return error_handler, output
 
@@ -147,7 +162,7 @@ class DecoratedController(WSGIController):
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller,
+            controller, output = self._handle_validation_errors(controller, params,
                                                                 inv)
 
         # Render template
