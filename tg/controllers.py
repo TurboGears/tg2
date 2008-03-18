@@ -98,7 +98,7 @@ class DecoratedController(WSGIController):
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
-        namespace = dict(context=pylons.tmpl_context)
+        namespace = dict(tmpl_context=pylons.tmpl_context)
         namespace.update(response)
 
         for name in exclude_names:
