@@ -1,9 +1,10 @@
 import os.path
 
 import paste.fileapp
+from pylons import request
 from pylons.middleware import error_document_template, media_path
 
-from ${package}.lib.base import *
+from ${package}.lib.base import BaseController
 
 class ErrorController(BaseController):
     """Generates error documents as and when they are required.
@@ -17,10 +18,11 @@ class ErrorController(BaseController):
 
     def document(self):
         """Render the error document"""
+        resp = request.environ.get('pylons.original_response')
         page = error_document_template % \
             dict(prefix=request.environ.get('SCRIPT_NAME', ''),
-                 code=request.params.get('code', ''),
-                 message=request.params.get('message', ''))
+                 code=request.params.get('code', resp.status_int),
+                 message=request.params.get('message', resp.body))
         return page
 
     def img(self, id):
