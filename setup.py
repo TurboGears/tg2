@@ -32,6 +32,7 @@ setup(
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
         'twforms>=0.2dev-r4241',
+        'DBSprockets',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
