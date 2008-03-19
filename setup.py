@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from ez_setup import use_setuptools
-use_setuptools() 
+use_setuptools()
 
 from setuptools import setup, find_packages
 import sys, os
@@ -28,7 +28,6 @@ setup(
     install_requires=[
         'Babel',
         'Pylons',
-	'WebOb',
         'Genshi>=0.4',
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
