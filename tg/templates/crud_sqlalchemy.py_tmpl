@@ -29,7 +29,7 @@ class ${modelpackage}(Controller):
         """Form to add new record"""
         return dict(modelname = self.modelname, form = model_form, page = 'new')
 
-    #@validate(error_handler="new")
+    @validate(model_form, error_handler = new)
     @expose()
     def create(self, id=None, **kw):
         """Create record to model"""
@@ -54,7 +54,7 @@ class ${modelpackage}(Controller):
         return dict(modelname = self.modelname, form = model_form, page = 'edit',
             record = record)
 
-    #@validate(error_handler="edit")
+    @validate(model_form, error_handler = edit)
     @expose()
     def update(self, id, **kw):
         """Update record to model"""
