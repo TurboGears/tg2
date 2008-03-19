@@ -1,0 +1,91 @@
+from ${package}.lib.base import Controller
+from tg import expose, validate, flash, redirect
+from ${package}.model import DBSession, ${modelname}, metadata
+from ${modelnameLower}form import new_form, edit_form
+import pylons
+
+from dbsprockets.primitives import makeForm
+from dbsprockets.saprovider import SAProvider
+
+provider = SAProvider(metadata)
+
+class ${modelpackage}(Controller):
+    """Basic ${modelname} admin interface"""
+    modelname    = '${modelname}'
+    model        = ${modelname}
+    tablename    = '${modelnameLower}'
+    packagename  = '${modelpackageLower}'
+    package      = '${package}'
+    listtemplate = 'genshi:%s.templates.%s.list'%(package, packagename)
+    showtemplate = 'genshi:%s.templates.%s.show'%(package, packagename)
+    newtemplate  = "genshi:%s.templates.%s.new_form"%(package, packagename)
+    edittemplate  = "genshi:%s.templates.%s.edit_form"%(package, packagename)
+    
+    @expose()
+    def index(self):
+        """handle front page"""
+        raise redirect("list")
+
+    @expose(listtemplate)
+    def list(self, **kw):
+        """List records in model"""
+        records = DBSession.query(self.model).all()
+        return dict(records = records, modelname = self.modelname)
+
+    @expose(showtemplate)
+    def show(self, ${id}, **kw):
+        """Show record in model"""
+        record = DBSession.query(self.model).get(int(id))
+        return dict(record = record)
+
+    @expose(newtemplate)
+    def new(self, **kw):
+        """Form to add new record"""
+        pylons.c.w.form = new_form
+        return dict(modelname = self.modelname)
+
+    @validate(new_form, error_handler=new)
+    @expose()
+    def create(self, ${id}=None, **kw):
+        """Create record to model"""
+#        try:
+        provider.add(tableName=self.tablename, values=kw)
+        flash("${modelname} was successfully created.")
+#        except:
+#            flash("${modelname} addition Failed")
+        raise redirect("list")
+
+    @expose(edittemplate)
+    def edit(self, **kw):
+#        try:
+        value = {}
+        pks = sorted(provider.getPrimaryKeys(self.tablename))
+        if pks == sorted(kw.keys()):
+            value = dict(provider.selectOnPks(self.tablename, values=kw)[0])
+        else:
+            value.update(kw)
+#        except:
+#            flash("Not valid edit")
+        pylons.c.w.form = edit_form
+        return dict(modelname = self.modelname, value=value)
+
+    @validate(edit_form, error_handler=edit)
+    @expose()
+    def update(self, **kw):
+        """Update record to model"""
+        #try:
+        provider.edit(tableName=self.tablename, values=kw)
+        #except:
+        #    flash("Not valid update")
+        
+        flash("%s was successfully updated."%self.modelname)
+        raise redirect("list")
+
+    @expose()
+    def destroy(self, id):
+        """Destroy record in model"""
+        record = DBSession.query(self.model).get(int(id))
+        DBSession.delete(record)
+        DBSession.commit()
+        flash("${modelname} was successfully destroyed.")
+        raise redirect("list")

@@ -66,8 +66,7 @@ class CrudCommand(command.Command):
                 f.close()
                 #upper 2 levels
                 baselink = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                file_op = FileOp(source_dir=os.path.join(
-                    baselink, 'templates'))
+                file_op = FileOp(source_dir=os.path.join(baselink, 'templates'))
                 self.base_package, directory = file_op.find_dir('controllers', True)
             except:
                 raise command.BadCommand('No egg_info directory was found')
@@ -105,39 +104,48 @@ class CrudCommand(command.Command):
                 self.modelform = self.modelname.capitalize()
 
         #check for lib name conflict
-        print self.primary_key
+        #print self.primary_key
         # Setup the controller
+        self.modelpackageLower = self.modelpackage.lower()
+        self.modelnameLower = self.modelname.lower()
         file_op.template_vars.update(
                 {'package': self.base_package,
                  'modelname': self.modelname,
+                 'modelnameLower': self.modelnameLower,
                  'modelpackage': self.modelpackage,
+                 'modelpackageLower': self.modelpackageLower,
                  'id': self.primary_key})
-        file_op.copy_file(template='crud_sqlalchemy.py_tmpl',
+        file_op.copy_file(template='crud_controller.py_tmpl',
                          dest=os.path.join('controllers', directory),
-                         filename=self.modelpackage)
-        file_op.copy_file(template='crud_form.py_tmpl',
+                         filename=self.modelpackage.lower())
+        file_op.copy_file(template='crud_form_widget.py_tmpl',
                          dest=os.path.join('controllers', directory),
-                         filename=self.modelname+'Form')
+                         filename=self.modelname.lower()+'form')
         #setup templates
         templatepath = file_op.find_dir('templates', True)[1]
-        print templatepath
-        if not os.path.exists(os.path.join(templatepath, self.modelpackage)):
-            print "create dir"
-            os.mkdir(os.path.join(templatepath, self.modelpackage))
+        #print templatepath
+        #print "create dir:", os.path.join(templatepath, self.modelpackageLower)
+        if not os.path.exists(os.path.join(templatepath, self.modelpackageLower)):
+            #print "create dir:", self.modelpackageLower
+            os.mkdir(os.path.join(templatepath, self.modelpackageLower))
 
-        print os.path.join(templatepath, self.modelpackage)
+        #print os.path.join(templatepath, self.modelpackage)
         file_op.copy_file(template='crud/__init__.py_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackage),
+                         dest=os.path.join(templatepath, self.modelpackageLower),
                          filename='__init__')
         file_op.copy_file(template='crud/list.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackage),
+                         dest=os.path.join(templatepath, self.modelpackageLower),
                          filename='list.html',
                          add_py=False)
         file_op.copy_file(template='crud/show.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackage),
+                         dest=os.path.join(templatepath, self.modelpackageLower),
                          filename='show.html',
                          add_py=False)
-        file_op.copy_file(template='crud/form.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackage),
-                         filename='form.html',
+        file_op.copy_file(template='crud/new_form.html_tmpl',
+                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         filename='new_form.html',
+                         add_py=False)
+        file_op.copy_file(template='crud/edit_form.html_tmpl',
+                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         filename='edit_form.html',
                          add_py=False)
