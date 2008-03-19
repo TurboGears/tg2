@@ -26,10 +26,10 @@ def init_model(engine):
 
     # Reflected tables must be defined and mapped here.
     #    
-    # global t_reflected
-    # t_reflected = Table("Reflected", metadata,
+    #global t_reflected
+    #t_reflected = Table("Reflected", metadata,
     #    autoload=True, autoload_with=engine)
-    # mapper(Reflected, t_reflected)
+    #mapper(Reflected, t_reflected)
 
 # Normal tables may be defined and mapped at module level.
 #

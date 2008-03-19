@@ -1,4 +1,5 @@
 """Pylons middleware initialization"""
+from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
@@ -6,10 +7,9 @@ from paste.deploy.converters import asbool
 from paste import httpexceptions
 
 from pylons import config
-from pylons.wsgiapp import PylonsApp
 from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
     StaticJavascripts, StatusCodeRedirect
-from beaker.middleware import SessionMiddleware, CacheMiddleware
+from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
 from tg import TurboGearsApplication
 from toscawidgets.middleware import TGWidgetsMiddleware
@@ -58,15 +58,18 @@ def make_app(global_conf, full_stack=True, **app_conf):
         # Handle Python exceptions
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
+        # Display error documents for 401, 403, 404 status codes (and
+        # 500 when debug is disabled)
         if asbool(config['debug']):
             app = StatusCodeRedirect(app)
         else:
-            app = StatusCodeRedirect(app, [401, 403, 404, 500])
+            app = StatusCodeRedirect(app, [400, 401, 403, 404, 500])
 
     # Establish the Registry for this application
     app = RegistryManager(app)
 
-    # Static files
+    # Static files (If running in production, and Apache or another web 
+    # server is handling this static content, remove the following 3 lines)
     javascripts_app = StaticJavascripts()
     static_app = StaticURLParser(config['pylons.paths']['static_files'])
     app = Cascade([static_app, javascripts_app, app])

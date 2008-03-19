@@ -5,6 +5,7 @@ from pylons import config
 
 from pylons.i18n import ugettext
 from genshi.filters import Translator
+from genshi.template import TemplateLoader
 from tg import defaults
 from sqlalchemy import engine_from_config
 
@@ -33,20 +34,22 @@ def load_environment(global_conf, app_conf):
     make_map = defaults.make_default_route_map
     
     # Initialize config with the basic options
-    config.init_app(global_conf, app_conf, package='${package}',
-                    template_engine='genshi', paths=paths)
+    config.init_app(global_conf, app_conf, package='${package}', paths=paths)
     config['routes.map'] = make_map()                
-    config['pylons.g'] = app_globals.Globals()
-    config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
+    config['pylons.app_globals'] = app_globals.Globals()
+    config['pylons.app_globals'].sa_engine = engine_from_config(config, 'sqlalchemy.')
     
     # Pass the engine to initmodel, to be able to introspect tables 
     engine = engine_from_config(config, 'sqlalchemy.') 
     init_model(engine) 
     
+    # Create the Genshi TemplateLoader
+    config['pylons.app_globals'].genshi_loader = TemplateLoader(paths['templates'])
+    
     # CONFIGURATION OPTIONS HERE (note: all config options will override
     # any Pylons config options)
 
     from ${package} import model
-    model.DBSession.configure(bind=config['pylons.g'].sa_engine)
-    model.metadata.bind = config['pylons.g'].sa_engine
+    model.DBSession.configure(bind=config['pylons.app_globals'].sa_engine)
+    model.metadata.bind = config['pylons.app_globals'].sa_engine
     
