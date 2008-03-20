@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 def _configured_engines():
     """Returns set with the currently configured template engine's names
     from the active application's globals"""
-    g = pylons.g._current_obj()
+    g = pylons.app_globals._current_obj()
     if not hasattr(g, 'tg_configured_engines'):
         g.tg_configured_engines = set()
     return g.tg_configured_engines
@@ -36,9 +36,11 @@ class DecoratedController(WSGIController):
         new_params = None
         errors = {}
         if isinstance(validation.validators, dict):
+            print validation.validators
             #new_params = {}
             for field, validator in validation.validators.iteritems():
                 try:
+                    validator.to_python(params.get(field))
                     new_params[field] = validator.to_python(params.get(field))
                 except formencode.api.Invalid, inv:
                     errors[field] = inv
@@ -261,7 +263,6 @@ def iscontroller(obj):
         return False
     return obj.decoration.exposed
 
-        
 class TGController(ObjectDispatchController):
     """Basis TurboGears controller class which is derived from
     pylons ObjectDispatchController
@@ -310,10 +311,9 @@ def redirect(url, params=None, **kw):
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
     if isinstance(url, unicode):
-        print dir(url)
-    if isinstance(url, unicode):
         url = url.encode('utf8')
     found = HTTPFound(location=url).exception
+    
     #TODO: Make this work with WebOb
     
     ## Merging cookies and headers from global response into redirect

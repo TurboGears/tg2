@@ -5,10 +5,17 @@ from pylons.i18n import ugettext as _
 #from tg import redirect, validate
 #from ${package}.model import DBSession
 
+# Supports the copyright date in the footer template
+from datetime import datetime
+now=datetime.now()
+
 class RootController(BaseController):
 
     @expose('${package}.templates.index')
     def index(self):
-        from datetime import datetime
-        flash(_("Your application is now running"))
-        return dict(now=datetime.now())
+        flash(_("You're running TG2! (change me in root.py)"))
+        return dict(now=now,page='index')
+
+    @expose('${package}.templates.about')
+    def about(self):
+        return dict(now=now,page='about')

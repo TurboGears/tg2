@@ -4,60 +4,46 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
-<xi:include href="master.html" />
+  <xi:include href="header.html" />
+  <xi:include href="sidebars.html" />
+  <xi:include href="footer.html" />
+  <xi:include href="master.html" />
 
 <head>
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-  <title>Welcome to TurboGears 2.0 - standing on the shoulders of giants 
-    since 2007</title>
+  <title>Welcome to TurboGears 2.0, standing on the 
+  shoulders of giants, since 2007</title>
 </head>
 
 <body>
+    ${sidebar_top()}
+    ${sidebar_bottom()}
+  <div id="getting_started">
+    <p>TurboGears 2 is fast web app construction with a strong Model/View/Controller (MVC) architecture.</p>
+    <ol id="getting_started_steps">
+      <li class="getting_started">
+        <h3>Code your data model</h3>
+        <p> Design your data model, Create the database, and Add some bootstrap data.</p>
+        <p> (It's easy.  SQLAlchemy turns your Python objects into SQL tables.  You work with Python (the gold standard in modern languages), SQLAlchemy handles the magic (base metals of SQL querying, for nearly any SQL database).</p>
+      </li>
+      <li class="getting_started">
+        <h3>Design your site architecture</h3>
+        <p> Decide your URLs, Program your controller methods, Design your 
+		templates, and Place some static files (CSS and/or JavaScript). </p>
+        <p> (Easy again.  All requests run through your Controller methods, where security is the first order of business.  Generate a Python dictionary of useful data and pass it to your display templates.  The Genshi template system renders it all in perfect XHTML --  and the templates play nicely with your web designer working with HTML layout software.)</p>
+      </li>
+      <li class="getting_started">
+        <h3>Distribute your app</h3>
+        <p> Test your source, Generate project documents, Build a distribution.</p>
+        <p> (All easy.  From the very quickstart your app is ready to be turned into a Python egg for easy distribution to other servers or for open source release.  Unit testing is integrated and ready to use.  Just add documentation and go.)</p>
+      </li>
+    </ol>
+    <p>For fun we've added "change me" notes in a couple places on this page, like the header, just to give you clues on where different things are coming from in TurboGears2.  For more details, click the first link in the "Get Started" sidebar to read a quick guide to this TG2 site.</p>
+  </div>
+  <div class="clearingdiv" />
+  <div class="notice"> TurboGears is an opensource project; help yourself to 
+	  make TurboGears better and make your life easier.
+  </div>
 
-    <div id="sidebar">
-      <h2>Getting help</h2>
-
-      <ul class="links">
-        <li><a href="http://docs.turbogears.org/2.0">Documentation</a></li>
-        <li><a href="http://docs.turbogears.org/2.0/API">API Reference</a></li>
-        <li><a href="http://trac.turbogears.org/turbogears/">Bug Tracker</a></li>
-        <li><a href="http://groups.google.com/group/turbogears">Mailing 
-        List</a></li>
-      </ul>
-
-      <p><span py:replace="now.strftime('%Y-%m-%d %H:%M')">now</span></p>
-    </div>
-    <!-- End of sidebar -->
-
-    <div id="getting_started">
-      <ol id="getting_started_steps">
-        <li class="getting_started">
-          <h2>Design your data model</h2>
-
-          <p>Design your data model, create the database and add some 
-          bootstrap data.</p>
-        </li>
-
-        <li class="getting_started">
-          <h2>Style your URLs</h2>
-
-          <p> Style your URLs, program your controller methods, write your 
-          templates and add some static files (CSS and/or JavaScript).</p>
-        </li>
-      
-        <li class="getting_started">
-          <h2>Build a distribution</h2>
-
-          <p> Build a distribution, test your source, generate project 
-          documents.</p>
-        </li>
-      </ol>
-
-      <div class="notice"> TurboGears is an open source project.
-        <a href="http://docs.turbogears.org/Contributing">Contribute</a> 
-        to make TurboGears even better and your life more exciting.
-      </div>
-    </div>
-    <!-- End of getting_started -->
 </body>
 </html>

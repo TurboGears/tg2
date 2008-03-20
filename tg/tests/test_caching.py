@@ -11,7 +11,7 @@ For more details.
 
 import tg
 from tg.controllers import TGController
-from pylons.decorators import expose
+from tg.decorators import expose
 from pylons.decorators.cache import beaker_cache
 from pylons.controllers.util import etag_cache
 from pylons import cache

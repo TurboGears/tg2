@@ -105,7 +105,7 @@ class BasicTGController(TGController):
         return tg.get_flash() 
 
     @expose()
-    @validate(validators.Int())
+    @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return str(int)

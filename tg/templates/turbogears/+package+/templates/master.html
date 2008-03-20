@@ -4,42 +4,30 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       py:strip="">
+<xi:include href="tw_resources.html" />
 <?python
 import tg
 tg_flash = tg.get_flash()
-tg_status = tg.get_status()
 ?>
-<xi:include href="tw_resources.html" />
 <head py:match="head" py:attrs="select('@*')">
-  <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-  <title py:replace="''">Your title goes here</title>
-  <meta py:replace="select('*')"/>
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/style.css')}" />
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+    <title py:replace="''">Your title goes here</title>
+	<link py:for="css in tg_css" py:replace="ET(css.display())" />
+    <link py:for="js in tg_js_head" py:replace="ET(js.display())" />
+    <meta py:replace="select('*')"/>
+    <link rel="stylesheet" type="text/css" media="screen" href="css/style.css" />
 </head>
 
 <body py:match="body" py:attrs="select('@*')">
-  <h1 id="header" title="TurboGears 2.0">&nbsp;</h1>
-
+  ${header()}
   <div id="main_content">
-
-    <div id="${tg_status}" py:if="tg_flash" class="flash" py:content="tg_flash"
-    ></div>
-    <!-- End of status_block -->
-
-    <!-- Start of page template body -->
+    <div id="status_block" py:if="tg_flash" class="flash" py:content="tg_flash"></div>
+    <div py:for="js in tg_js_bodytop" py:replace="ET(js.display())" />
     <div py:replace="select('*|text()')"/>
-    <!-- End of page template body -->
+    <div py:for="js in tg_js_bodybottom" py:replace="ET(js.display())" />
+    <!-- End of main_content -->
+    <div class="clearingdiv" />
+    ${footer()}
   </div>
-  <!-- End of main_content -->
-
-  <div id="footer"> 
-    <img src="images/under_the_hood_blue.png" alt="TurboGears" />
-    <p>TurboGears 2 is an open source front-to-back web development
-    framework written in Python</p>
-
-    <p>Copyright &#xa9; 2005-2008</p>
-  </div>
-  <!-- End of footer -->
 </body>
-
 </html>
