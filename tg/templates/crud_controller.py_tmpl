@@ -12,33 +12,26 @@ provider = SAProvider(metadata)
 class ${modelpackage}(Controller):
     """Basic ${modelname} admin interface"""
     modelname    = '${modelname}'
-    model        = ${modelname}
     tablename    = '${modelnameLower}'
-    packagename  = '${modelpackageLower}'
-    package      = '${package}'
-    listtemplate = 'genshi:%s.templates.%s.list'%(package, packagename)
-    showtemplate = 'genshi:%s.templates.%s.show'%(package, packagename)
-    newtemplate  = "genshi:%s.templates.%s.new_form"%(package, packagename)
-    edittemplate  = "genshi:%s.templates.%s.edit_form"%(package, packagename)
     
     @expose()
     def index(self):
         """handle front page"""
         raise redirect("list")
 
-    @expose(listtemplate)
+    @expose("genshi:${package}.templates.${modelpackageLower}.list")
     def list(self, **kw):
         """List records in model"""
-        records = DBSession.query(self.model).all()
+        records = DBSession.query(${modelname}).all()
         return dict(records = records, modelname = self.modelname)
 
-    @expose(showtemplate)
+    @expose("genshi:${package}.templates.${modelpackageLower}.show")
     def show(self, ${id}, **kw):
         """Show record in model"""
-        record = DBSession.query(self.model).get(int(id))
+        record = DBSession.query(${modelname}).get(int(id))
         return dict(record = record)
 
-    @expose(newtemplate)
+    @expose("genshi:${package}.templates.${modelpackageLower}.new_form")
     def new(self, **kw):
         """Form to add new record"""
         pylons.c.w.form = new_form
@@ -48,43 +41,49 @@ class ${modelpackage}(Controller):
     @expose()
     def create(self, ${id}=None, **kw):
         """Create record to model"""
-#        try:
+        #try:
+        #     entry = ${modelname}(**kw)
+        #except:
+        #    entry = ${modelname}() #if not mapped
+        #    for attr in kw:
+        #        setattr(entry, attr, kw[attr])
+        #DBSession.save(entry)
+        #DBSession.commit()
         provider.add(tableName=self.tablename, values=kw)
         flash("${modelname} was successfully created.")
-#        except:
-#            flash("${modelname} addition Failed")
         raise redirect("list")
 
-    @expose(edittemplate)
+    @expose("genshi:${package}.templates.${modelpackageLower}.edit_form")
     def edit(self, **kw):
-#        try:
+        pylons.c.w.form = edit_form
+        #try:
+        #    record = DBSession.query(${modelname}).get(int(id))
+        #except:
+        #    flash("Not valid edit")
         value = {}
         pks = sorted(provider.getPrimaryKeys(self.tablename))
         if pks == sorted(kw.keys()):
             value = dict(provider.selectOnPks(self.tablename, values=kw)[0])
         else:
             value.update(kw)
-#        except:
-#            flash("Not valid edit")
-        pylons.c.w.form = edit_form
         return dict(modelname = self.modelname, value=value)
 
     @validate(edit_form, error_handler=edit)
     @expose()
     def update(self, **kw):
         """Update record to model"""
-        #try:
+        #record = DBSession.query(${modelname}).get(int(id))
+        #for attr in kw:
+        #    setattr(record, attr, kw[attr])
+        #DBSession.commit()
         provider.edit(tableName=self.tablename, values=kw)
-        #except:
-        #    flash("Not valid update")
-        
-        flash("%s was successfully updated."%self.modelname)
+        flash("${modelname} was successfully updated.")
         raise redirect("list")
 
     @expose()
     def destroy(self, id):
         """Destroy record in model"""
-        record = DBSession.query(self.model).get(int(id))
+        record = DBSession.query(${modelname}).get(int(id))
         DBSession.delete(record)
         DBSession.commit()
         flash("${modelname} was successfully destroyed.")

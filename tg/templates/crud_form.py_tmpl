@@ -8,6 +8,10 @@ edit_form   = makeForm(Movie, 'edit', omittedFields=['${id}'])
 
 # Use Widget Form
 #from toscawidgets.widgets import forms#from toscawidgets.api import WidgetsList#from toscawidgets.widgets.forms import validators
+
+#class SQLiteCalendarDatePicker(forms.CalendarDatePicker):
+#    """SQLite version of CalendarDatePicker"""
+#    date_format = "%Y-%m-%d"
 #class ${modelname}Form(forms.TableForm):
 #    """form builder"""#    class fields(WidgetsList):
 #        """fields definitions. Replace to your Fields"""
