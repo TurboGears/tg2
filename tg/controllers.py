@@ -13,9 +13,6 @@ from toscawidgets.api import Widget
 
 log = logging.getLogger(__name__)
 
-#TODO: Remove TurboGearsController before TG2 release
-warning_msg = """TurboGearsController is depricated,  please setup a default route, and use TGController instead"""
-
 log = logging.getLogger(__name__)
 
 def _configured_engines():
@@ -264,32 +261,6 @@ def iscontroller(obj):
         return False
     return obj.decoration.exposed
 
-
-class TurboGearsController(ObjectDispatchController):
-    """Basis TurboGears controller class which is derived from
-    pylons ObjectDispatchController"""
-
-    def _perform_call(self, func, args):
-        setup_i18n()
-        self._initialize_validation_context()
-        routingArgs = None
-        if isinstance(args, dict) and 'url' in args:
-            routingArgs = args['url']
-        try:
-            controller, remainder, params = self._get_routing_info(routingArgs)
-            result = DecoratedController._perform_call(
-                self, controller, params, remainder=remainder)
-        except HTTPException, httpe:
-            result = httpe
-            # 304 Not Modified's shouldn't have a content-type set
-            if result.status_int == 304:
-                result.headers.pop('Content-Type', None)
-            result._exception = True
-        return result
-
-    def _dispatch_call(self):
-        warnings.warn(warning_msg, DeprecationWarning)
-        return self._perform_call(None, None)
         
 class TGController(ObjectDispatchController):
     """Basis TurboGears controller class which is derived from
@@ -338,6 +309,8 @@ def redirect(url, params=None, **kw):
     params.update(kw)
     if params:
         url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
+    if isinstance(url, unicode):
+        print dir(url)
     if isinstance(url, unicode):
         url = url.encode('utf8')
     found = HTTPFound(location=url).exception

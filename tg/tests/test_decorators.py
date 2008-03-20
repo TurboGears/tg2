@@ -4,7 +4,7 @@ import paste.httpexceptions as httpexceptions
 import tg
 import pylons
 from tg.controllers import TGController
-from pylons.decorators import expose
+from tg.decorators import expose
 
 from turbojson.jsonify import jsonify
 

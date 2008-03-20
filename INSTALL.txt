@@ -21,7 +21,7 @@ While in Development there are several dependencies:
 
   We require the development version, since there are important controller
   features which we need, as well as a template rendering bugfix
-  which is necesssary for TurboJSON to work properly.
+  which is necessary for TurboJSON to work properly.
 
 
 Installing TurboGears 2
