@@ -53,15 +53,6 @@ import sys
 beginning_letter = re.compile(r"^[^a-z]*")
 valid_only = re.compile(r"[^a-z0-9_]")
 
-"""def get_requirement(name, pkg=None):
-    dist = pkg_resources.get_distribution("TurboGears")
-    for r in set(dist.requires((name,))) - set(dist.requires()):
-        if r.project_name.lower() == (pkg or name):
-            return r
-    raise ValueError("Did not find matching %s requirement"
-        " in the TurboGears setup.py:extras_require." % name)
-"""
-
 class QuickstartCommand(command.Command):
     """Create a new TurboGears 2 project.
 
