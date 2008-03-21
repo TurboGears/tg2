@@ -5,14 +5,14 @@ from ${modelnameLower}form import new_form, edit_form
 import pylons
 
 #dbsprockets
-from dbsprockets.primitives import makeForm, makeTable, getTableValue
+from dbsprockets.primitives import makeForm, makeTable, getTableValue, makeRecordView
 from dbsprockets.saprovider import SAProvider
 from cStringIO import StringIO
 from genshi import HTML
 
 provider = SAProvider(metadata)
 
-def MakeLinks(viewConfig, row):
+def my_make_links(viewConfig, row):
     pks = viewConfig.metadata.primaryKeys()
     links = StringIO()
     links.write('<a href="show')
@@ -26,7 +26,8 @@ def MakeLinks(viewConfig, row):
     links.write('">delete</a>')
     return HTML(links.getvalue())
 
-${modelnameLower}_list = makeTable(${modelname}, '${modelnameLower}', makeLinks=MakeLinks)
+${modelnameLower}_list = makeTable(${modelname}, '${modelnameLower}', makeLinks=my_make_links)
+recordView = makeRecordView(${modelname})
 #dbsprockets end
 
 class ${modelpackage}(Controller):
@@ -54,13 +55,9 @@ class ${modelpackage}(Controller):
     @expose("genshi:${package}.templates.${modelpackageLower}.show")
     def show(self, **kw):
         """Show record in model"""
-        #raw sqlalchemy
-        #record = DBSession.query(${modelname}).get(int(kw['${id}']))
-
-        #dbsprockets
-        record = provider.selectOnPks(tableName=self.tablename,values=kw)[0]
-
-        return dict(record = record)
+        pylons.c.w.widget = recordView
+        value = provider.selectOnPks(tableName=self.tablename,values=kw)[0]
+        return dict(value=value)
 
     @expose("genshi:${package}.templates.${modelpackageLower}.new_form")
     def new(self, **kw):

@@ -12,23 +12,9 @@
 </head>
 
 <body>
-    <table>
-        <!--
-        <tr>
-            <th> title: </th>
-            <td>$${record.title}</td>
-        </tr>
-        <tr>
-            <th> year: </th>
-            <td>$${record.year}</td>
-        </tr>
-        <tr>
-            <th> description: </th>
-            <td>$${record.description}</td>
-        </tr>
-        -->
-    </table>
+    $${tmpl_context.w.widget(value)}
     <br/>
-    <a href="$${tg.url('edit?${id}=%s'%record.${id})}">Edit</a> | <a href="$${tg.url('list')}">Back</a>
+    <a href="$${tg.url('edit?${id}=%s'%value.${id})}">Edit</a> | <a href="$${tg.url('list')}">Back</a>
 </body>
 </html>
+
