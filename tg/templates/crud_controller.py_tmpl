@@ -25,13 +25,13 @@ def myMakeLinks(viewConfig, row):
     links.write('">delete</a>')
     return HTML(links.getvalue())
 
-listing = makeTable(${modelname}, '${tablename}', makeLinks=myMakeLinks)
+listing = makeTable(${modelname}, '${modelnameLower}', makeLinks=myMakeLinks)
 
 
 class ${modelpackage}(Controller):
     """Basic ${modelname} admin interface"""
     modelname    = '${modelname}'
-    tablename    = '${tablename}'
+    tablename    = '${modelnameLower}'
     
     @expose()
     def index(self):

@@ -36,9 +36,6 @@ class CrudCommand(command.Command):
     parser.add_option("-m", "--model",
             help="class name in the model",
             dest="modelname")
-    parser.add_option("-t", "--table",
-            help="table name in the model",
-            dest="tablename")    
     parser.add_option("-p", "--package",
             help="package name for the code",
             dest="modelpackage")
@@ -54,7 +51,6 @@ class CrudCommand(command.Command):
 
     def command(self):
         self.modelname = self.options.modelname
-        self.tablename = self.options.tablename
         self.modelpackage = self.options.modelpackage
         self.modelform = self.options.modelform
         self.primary_key = self.options.primary_key
@@ -92,8 +88,6 @@ class CrudCommand(command.Command):
         while not self.modelname:
             print "Note: Make sure you have created your models first"
             self.modelname = raw_input("Enter the model name: ")
-        while not self.tablename:
-            self.tablename = raw_input("Enter the table name: ")
         while not self.primary_key:
             self.primary_key = raw_input("Enter the primary key [id]: ")
             if not self.primary_key:
@@ -118,7 +112,6 @@ class CrudCommand(command.Command):
                 {'package': self.base_package,
                  'modelname': self.modelname,
                  'modelnameLower': self.modelnameLower,
-                 'tablename': self.tablename,
                  'modelpackage': self.modelpackage,
                  'modelpackageLower': self.modelpackageLower,
                  'id': self.primary_key})
