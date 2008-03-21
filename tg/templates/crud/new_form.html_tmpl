@@ -13,6 +13,6 @@
 
 <body>
     <h1>New $${modelname}</h1>
-    $${tmpl_context.w.form()}
+    $${tmpl_context.w.form(submit_text = "Create")}
 </body>
 </html>

@@ -14,7 +14,7 @@
 <body>
 
 <h1>Editing $${modelname}</h1>
-$${tmpl_context.w.form(value=value)}<br/>
+$${tmpl_context.w.form(value=value, action='update?${id}=%s'%value.${id}, submit_text = "Update")}<br/>
 
 <div id="footbar" class="footbar">
 <a href="$${tg.url('show?${id}=%s'%value.${id})}">Show</a> | <a href="$${tg.url('list')}">Back</a>

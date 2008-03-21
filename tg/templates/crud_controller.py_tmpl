@@ -4,6 +4,7 @@ from ${package}.model import DBSession, ${modelname}, metadata
 from ${modelnameLower}form import new_form, edit_form
 import pylons
 
+#dbsprockets
 from dbsprockets.primitives import makeForm, makeTable, getTableValue
 from dbsprockets.saprovider import SAProvider
 from cStringIO import StringIO
@@ -11,7 +12,7 @@ from genshi import HTML
 
 provider = SAProvider(metadata)
 
-def myMakeLinks(viewConfig, row):
+def MakeLinks(viewConfig, row):
     pks = viewConfig.metadata.primaryKeys()
     links = StringIO()
     links.write('<a href="show')
@@ -25,8 +26,8 @@ def myMakeLinks(viewConfig, row):
     links.write('">delete</a>')
     return HTML(links.getvalue())
 
-listing = makeTable(${modelname}, '${modelnameLower}', makeLinks=myMakeLinks)
-
+${modelnameLower}_list = makeTable(${modelname}, '${modelnameLower}', makeLinks=MakeLinks)
+#dbsprockets end
 
 class ${modelpackage}(Controller):
     """Basic ${modelname} admin interface"""
@@ -41,14 +42,24 @@ class ${modelpackage}(Controller):
     @expose("genshi:${package}.templates.${modelpackageLower}.list")
     def list(self, **kw):
         """List records in model"""
+        #raw sqlalchemy
+        #records = DBSession.query(${modelname}).all()
+        #return dict(records = records, modelname = self.modelname)
+
+        #dbsprockets
         value = provider.select(tableName=self.tablename,values=kw)
-        pylons.c.w.table = listing
+        pylons.c.w.table = ${modelnameLower}_list
         return dict(value=value, modelname=self.modelname)
 
     @expose("genshi:${package}.templates.${modelpackageLower}.show")
     def show(self, **kw):
         """Show record in model"""
+        #raw sqlalchemy
+        #record = DBSession.query(${modelname}).get(int(kw['${id}']))
+
+        #dbsprockets
         record = provider.selectOnPks(tableName=self.tablename,values=kw)[0]
+
         return dict(record = record)
 
     @expose("genshi:${package}.templates.${modelpackageLower}.new_form")
@@ -61,13 +72,34 @@ class ${modelpackage}(Controller):
     @expose()
     def create(self, **kw):
         """Create record to model"""
+        #raw sqlalchemy
+        #try:
+        #     entry = ${modelname}(**kw)
+        #except:
+        #    entry = ${modelname}() #if not mapped
+        #    for attr in kw:
+        #        setattr(entry, attr, kw[attr])
+        #DBSession.save(entry)
+        #DBSession.commit()
+
+        #dbsprockets
         provider.add(tableName=self.tablename, values=kw)
+
         flash("${modelname} was successfully created.")
         raise redirect("list")
 
     @expose("genshi:${package}.templates.${modelpackageLower}.edit_form")
     def edit(self, **kw):
         pylons.c.w.form = edit_form
+
+        #raw sqlalchemy
+        #try:
+        #    value = DBSession.query(${modelname}).get(int(kw['${id}']))
+        #except:
+        #    flash("Not valid edit")
+        #    raise redirect("list")
+        
+        #dbsprockets     
         value = {}
         pks = sorted(provider.getPrimaryKeys(self.tablename))
         if pks == sorted(kw.keys()):
@@ -80,13 +112,28 @@ class ${modelpackage}(Controller):
     @expose()
     def update(self, **kw):
         """Update record to model"""
+        #raw sqlalchemy
+        #record = DBSession.query(${modelname}).get(int(kw['${id}']))
+        #for attr in kw:
+        #    setattr(record, attr, kw[attr])
+        #DBSession.commit()
+
+        #dbsprockets
         provider.edit(tableName=self.tablename, values=kw)
+
         flash("${modelname} was successfully updated.")
         raise redirect("list")
 
     @expose()
     def destroy(self, **kw):
         """Destroy record in model"""
+        #raw sqlalchemy
+        #record = DBSession.query(${modelname}).get(int(kw['${id}']))
+        #DBSession.delete(record)
+        #DBSession.commit()
+
+        #dbsprockets
         provider.delete(tableName=self.tablename, values=kw)
+
         flash("${modelname} was successfully destroyed.")
         raise redirect("list")
