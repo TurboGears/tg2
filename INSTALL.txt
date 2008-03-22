@@ -94,4 +94,9 @@ Enter the tutorial folder and type::
 
     $ paster serve development.ini
 
+or if you want to use the autoreloader mechanism::
+
+    $ paster serve --reload development.ini
+
 Browse http://127.0.0.1:8080 for demo.
+
