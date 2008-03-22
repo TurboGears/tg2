@@ -49,12 +49,17 @@ class ${modelpackage}(Controller):
 
         #dbsprockets
         value = provider.select(tableName=self.tablename,values=kw)
+
         pylons.c.w.table = ${modelnameLower}_list
         return dict(value=value, modelname=self.modelname)
 
     @expose("genshi:${package}.templates.${modelpackageLower}.show")
     def show(self, **kw):
         """Show record in model"""
+        #raw sqlalchemy
+        #value = DBSession.query(${modelname}).get(int(kw['${id}']))
+
+        #dbsprockets
         pylons.c.w.widget = recordView
         value = provider.selectOnPks(tableName=self.tablename,values=kw)[0]
         return dict(value=value)
@@ -103,6 +108,7 @@ class ${modelpackage}(Controller):
             value = dict(provider.selectOnPks(self.tablename, values=kw)[0])
         else:
             value.update(kw)
+
         return dict(modelname = self.modelname, value=value)
 
     @validate(edit_form, error_handler=edit)
