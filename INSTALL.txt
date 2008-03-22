@@ -44,14 +44,17 @@ Install mercurial via easy_install [1]_::
 .. [1] Or go to http://www.selenic.com/mercurial/wiki/index.cgi/Download and
 download & install a binary package for your system.
 
-Check out the Pylons and TurboGears 2 source::
+Check out the Pylons, webhelpers and TurboGears 2 source::
 
-    $ hg clone http://pylonshq.com/hg/pylons-dev pylons
+    $ hg clone https://www.knowledgetap.com/hg/pylons-dev pylons
+    $ hg clone https://https://www.knowledgetap.com/hg/webhelpers/ webhelpers
     $ svn co http://svn.turbogears.org/trunk tg2
 
 and install TurboGears 2 in development mode::
 
-    $ cd pylons
+    $ cd webhelpers
+    $ python setup.py develop
+    $ cd ../pylons
     $ python setup.py develop
     $ cd ../tg2
     $ python setup.py develop
