@@ -43,6 +43,8 @@ app_instance_uuid = $${app_instance_uuid}
 set debug = false
 
 # Logging configuration
+# Uses python's logging config file format
+# http://docs.python.org/lib/logging-config-fileformat.html
 [loggers]
 keys = root
 
