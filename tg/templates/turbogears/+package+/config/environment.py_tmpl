@@ -39,6 +39,15 @@ def load_environment(global_conf, app_conf):
     config['pylons.g'] = app_globals.Globals()
     config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
     
+    # If you'd like to change the default template engine used to render 
+    # text/html content, edit these options. 
+    template_engine = 'genshi' 
+    template_engine_options = {} 
+    
+    config['buffet.template_engines'].pop() 
+    config.add_template_engine(template_engine, '${package}.templates', 
+                               template_engine_options)
+    
     # Pass the engine to initmodel, to be able to introspect tables 
     engine = engine_from_config(config, 'sqlalchemy.') 
     init_model(engine) 

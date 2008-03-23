@@ -177,8 +177,9 @@ class expose(object):
         elif ':' in template:
             engine, template = template.split(':', 1)
         elif template:
-            #TODO: lookup the default template engine from the config.
-            engine, template = 'genshi', template
+            # Use the default templating engine from the config 
+            from pylons import config 
+            engine = config['buffet.template_engines'][0]['engine']
         else:
             engine, template = None, None
         if content_type is None:

@@ -17,7 +17,6 @@ from toscawidgets.mods.pylonshf import PylonsHostFramework
 
 
 from  ${package}.config.environment import load_environment
-from  ${package}.controllers.root import RootController
 
 def make_app(global_conf, full_stack=True, **app_conf):
     """Create a Pylons WSGI application and return it
@@ -39,6 +38,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
     """
     # Configure the Pylons environment
     load_environment(global_conf, app_conf)
+    from  ${package}.controllers.root import RootController
     
     # Create the TurboGears WSGI app stack
     app = PylonsApp()

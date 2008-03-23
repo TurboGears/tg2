@@ -3,6 +3,10 @@
 #
 # The %(here)s variable will be replaced with the parent directory of this file
 #
+# This file is for deployment specific config options -- other configuration
+# that is always required for the app is done in the config directory, 
+# and generally should not be modified by end users. 
+
 [DEFAULT]
 debug = true
 # Uncomment and replace with the address which should receive any error reports
@@ -42,10 +46,6 @@ sqlalchemy.url = sqlite:///%(here)s/devdata.db
 sqlalchemy.echo = true
 sqlalchemy.echo_pool = false
 sqlalchemy.pool_recycle = 3600
-
-# If you'd like to change the default template engine used to render text/html
-# content, edit this line. 
-template_engine.default = genshi
 
 # WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
 # Debug mode will enable the interactive debugging tool, allowing ANYONE to
