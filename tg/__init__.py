@@ -77,7 +77,7 @@ class TurboGearsApplication(PylonsApp):
         return self.root
 
     def __call__(self, environ, start_response):
-        warn("TurboGearsApplication is depricated UsePylonsApp",
+        warn("TurboGearsApplication is deprecated use pylons.wsgiapp.PylonsApp",
                 DeprecationWarning)
         environ['pylons.routes_dict'] = {}
         self.setup_app_env(environ, start_response)
