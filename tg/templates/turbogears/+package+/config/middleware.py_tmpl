@@ -11,7 +11,6 @@ from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
     StaticJavascripts, StatusCodeRedirect
 from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
-from tg import TurboGearsApplication
 from toscawidgets.middleware import TGWidgetsMiddleware
 from toscawidgets.mods.pylonshf import PylonsHostFramework
 
