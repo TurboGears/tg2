@@ -1,14 +1,8 @@
-""" TurboGears offline docs generator
+""" TurboGears offline docs fetcher
 
 TODO:
-  
+
   * replace links to proper link
-  * make the tarball
-  * make the PDF
- 
-Fixed:
-  * create folders automatically
-  * get css and pic
 
 """
 import urllib2
@@ -20,11 +14,7 @@ acquire_site = "http://docs.turbogears.org/"
 doclist = "TitleIndex?action=titleindex"
 
 # pattern
-acquire_version = "2.0"
 comment = "PageCommentData"
-#"<2.0/"
-verp = "<"+acquire_version+"/"
-verr = "<"
 
 # retrive_docs
 raw = "?action=raw"
@@ -32,11 +22,11 @@ ext = ".rst"
 
 brokenlink = []
 
-def get_doclist(acquire_version):
+def get_doclist(version):
     docs  = urllib2.urlopen(acquire_site + doclist)
     targets = []
     for link in docs.readlines(): 
-        if re.match(acquire_version, link) and (not re.match(comment, link)):
+        if re.match(version, link) and (not re.match(comment, link)):
             targets.append(link)
     return targets
         
@@ -94,7 +84,7 @@ def save_doc(filepath, doc):
     print "saved to " + filepath
     open(filepath,'w').write(doc)
 
-def proc_doc(link, doc, targets):
+def proc_doc(link, doc, targets, version):
     """
     process doc, and save the doc to proper destination    
     """
@@ -103,8 +93,8 @@ def proc_doc(link, doc, targets):
 
     #prepare_dest()
     link = link.strip()
-    if link == acquire_version:
-        link = acquire_version+"/index"
+    if link == version:
+        link = version+"/index"
 
     # file path
     place = os.getcwd()
@@ -115,11 +105,11 @@ def proc_doc(link, doc, targets):
     doc = doc.read()
 
     #replace '<2.0/' to '<'
-    doc = doc.replace(verp, verr)
+    doc = doc.replace("<"+version+"/", "<")
 
     # replace links to proper link
     """for urllink in targets:
-        if urllink == acquire_version:
+        if urllink == version:
             #urllink="1.0/index.html"
             pass
         else:
@@ -127,14 +117,14 @@ def proc_doc(link, doc, targets):
 
     save_doc(filepath, doc)
 
-def process_docs(targets):
+def process_docs(targets, version):
     # get css and pic
 
     # retrive docs
     for link in targets:
         doc = retrive_docs(link, "rst")
         if doc is not None:
-            proc_doc(link, doc, targets)
+            proc_doc(link, doc, targets, version)
 
     print "done, brokenlink=%s"%brokenlink
 
@@ -142,6 +132,6 @@ def process_docs(targets):
 
 
 if __name__ == '__main__':
-
-    targets = get_doclist(acquire_version = "2.0")
-    process_docs(targets)
+    acquire_version = "2.0"
+    targets = get_doclist(version = acquire_version)
+    process_docs(targets, version = acquire_version)
