@@ -46,8 +46,6 @@ TODO:
 
 * write load/stress test for simple TG2 application
 
-* Port the tg.url function to tg2
-
 * Create a TG2 custom Google search engine for TG2 subproject docs/mailing lists:
 
   * See: http://www.google.com/coop/manage/cse/create/1?Get+Started=Customize+Your+Own+Search+Engine
