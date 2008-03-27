@@ -107,6 +107,9 @@ def proc_doc(link, doc, targets, version):
     #replace '<2.0/' to '<'
     doc = doc.replace("<"+version+"/", "<")
 
+    #get rid of comments macro
+    doc = re.sub(r"\.\. macro:: .*\]\]", "", doc)
+
     # replace links to proper link
     """for urllink in targets:
         if urllink == version:
