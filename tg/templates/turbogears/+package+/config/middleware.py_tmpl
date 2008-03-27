@@ -42,12 +42,12 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # Create the TurboGears WSGI app stack
     app = PylonsApp()
 
-    # Add Routes, Session and Cashing support 
+    # Add Routes, Session and Cashing support
     app = RoutesMiddleware(app, config['routes.map'])
     app = SessionMiddleware(app, config)
     app = CacheMiddleware(app, config)
-    
-    # Configure and add ToscaWidgets support 
+
+    # Configure and add ToscaWidgets support
     host_framework = PylonsHostFramework(default_view="genshi")
     app = TGWidgetsMiddleware(app, host_framework)
 
@@ -67,7 +67,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # Establish the Registry for this application
     app = RegistryManager(app)
 
-    # Static files (If running in production, and Apache or another web 
+    # Static files (If running in production, and Apache or another web
     # server is handling this static content, remove the following 3 lines)
     javascripts_app = StaticJavascripts()
     static_app = StaticURLParser(config['pylons.paths']['static_files'])
