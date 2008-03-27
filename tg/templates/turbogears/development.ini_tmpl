@@ -56,9 +56,6 @@ sqlalchemy.pool_recycle = 3600
 # Add additional loggers, handlers, formatters here
 # Uses python's logging config file format
 # http://docs.python.org/lib/logging-config-fileformat.html
-# "level = INFO" logs SQL queries.
-# "level = DEBUG" logs SQL queries and results.
-# "level = WARN" logs neither.  (Recommended for production systems.)
 
 [loggers]
 keys = root
@@ -78,6 +75,9 @@ handlers = console
 level = INFO
 handlers =
 qualname = sqlalchemy.engine
+# "level = INFO" logs SQL queries.
+# "level = DEBUG" logs SQL queries and results.
+# "level = WARN" logs neither.  (Recommended for production systems.)
 
 # If you create additional handlers, add them as a key to [handlers]
 [handler_console]

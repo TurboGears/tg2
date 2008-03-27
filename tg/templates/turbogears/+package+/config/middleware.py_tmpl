@@ -38,10 +38,10 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # Configure the Pylons environment
     load_environment(global_conf, app_conf)
     from  ${package}.controllers.root import RootController
-    
+
     # Create the TurboGears WSGI app stack
     app = PylonsApp()
-    
+
     # Add Routes, Session and Cashing support 
     app = RoutesMiddleware(app, config['routes.map'])
     app = SessionMiddleware(app, config)

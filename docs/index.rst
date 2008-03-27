@@ -10,8 +10,19 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   2.0/index
-   2.0/RoughDocs
+   2.0/RoughDocs/ConceptTG
+   2.0/RoughDocs/DownloadInstall
+   2.0/RoughDocs/QuickStart
+   2.0/RoughDocs/HelloWorld
+   2.0/RoughDocs/CodeModel
+   2.0/RoughDocs/CreateDatabase
+   2.0/RoughDocs/BootStrap
+   
+   2.0/RoughDocs/ObjectDispatch
+   2.0/RoughDocs/ProgramController
+   2.0/RoughDocs/DesignTemplate
+   2.0/RoughDocs/StaticFile
+   2.0/RoughDocs/I18N
 
 Indices and tables
 ==================
