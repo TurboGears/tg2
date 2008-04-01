@@ -2,12 +2,14 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS   =
-SPHINXBUILD  = sphinx-build.py
-PAPER        =
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+PAPER         =
 
-ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
-                $(SPHINXOPTS) .
+# Internal variables.
+PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 .PHONY: help clean html web htmlhelp latex changes linkcheck
 
