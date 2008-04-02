@@ -36,8 +36,6 @@ class DecoratedController(WSGIController):
         new_params = None
         errors = {}
         if isinstance(validation.validators, dict):
-            print validation.validators
-            #new_params = {}
             for field, validator in validation.validators.iteritems():
                 try:
                     validator.to_python(params.get(field))

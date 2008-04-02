@@ -34,7 +34,7 @@ def teardown_session_dir():
 
 
 default_environ = {
-    'pylons.use_webob' : False,
+    'pylons.use_webob' : True,
     'pylons.routes_dict': dict(action='index'),
     'paste.config': dict(global_conf=dict(debug=True))
 }

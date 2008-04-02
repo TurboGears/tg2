@@ -104,11 +104,10 @@ class BasicTGController(TGController):
         tg.flash("Wow, flash!")
         return tg.get_flash() 
 
-    @expose()
+    @expose('json')
     @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
-        assert isinstance(some_int, int)
-        return str(int)
+        return dict(response=some_int)
         
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -198,6 +197,8 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/flash_status')
         self.failUnless('status_ok'in resp, resp)
 
-    def test_flash_status(self):
-        resp = self.app.get('/validated_int/22')
-        self.failUnless('22'in resp, resp)
+    def test_basic_validation_and_jsonification(self):
+        form_values = {"some_int":22}
+        resp = self.app.post('/validated_int', form_values)
+        assert '{"response": 22}'in resp
+
