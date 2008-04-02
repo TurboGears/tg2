@@ -33,6 +33,7 @@ setup(
         'ToscaWidgets>=0.2rc2',
         'twforms>=0.2dev-r4241',
         'DBSprockets',
+        'sqlalchemy-migrate >= 0.4.3',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
@@ -45,6 +46,7 @@ setup(
         quickstart = tg.commands.quickstart:QuickstartCommand
         [paste.paster_command]
         crud = tg.commands.crud:CrudCommand
+        migrate = tg.commands.migration:MigrateCommand
         [turbogears2.template]
         turbogears2=tg.pastetemplate:TurboGearsTemplate
         [turbogears2.command]

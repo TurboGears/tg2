@@ -12,15 +12,11 @@ Contents:
 
    2.0/TG2Philosophy
    2.0/DownloadInstall
-   2.0/RoughDocs/QuickStart
-   2.0/HelloWorld+MVC
+   2.0/QuickStart
+   2.0/BasicMoves
    2.0/RoughDocs/CodeModel
    2.0/RoughDocs/CreateDatabase
    2.0/RoughDocs/BootStrap
-   2.0/RoughDocs/ObjectDispatch
-   2.0/RoughDocs/ProgramController
-   2.0/RoughDocs/DesignTemplate
-   2.0/RoughDocs/StaticFile
    2.0/RoughDocs/I18N
 
 Indices and tables
