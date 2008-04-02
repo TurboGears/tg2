@@ -30,24 +30,38 @@ class DecoratedController(WSGIController):
         if validation is None:
             return params
         
+        #Provide a hook to do stuff before validation 
         if hasattr(validation, '_before_validate'):
             validation._before_validate(controller, params)
         
+        #Initialize new_params -- if it never gets updated just return params
         new_params = None
         errors = {}
+        
+        #TG developers can pass in a dict of param names and validators
+        #this applies them one by one and builds up a new set of validated params.
         if isinstance(validation.validators, dict):
             new_params = {}
             for field, validator in validation.validators.iteritems():
                 try:
                     validator.to_python(params.get(field))
                     new_params[field] = validator.to_python(params.get(field))
+                #catch individual validation errors    
                 except formencode.api.Invalid, inv:
                     errors[field] = inv
-
+                    
+            #re-raise a compound validation error, with the full error dict      
             if errors:
                 raise formencode.api.Invalid(
                     formencode.schema.format_compound_error(errors),
                     params, None, error_dict=errors)
+                    
+            #Make sure unvalidated params get added back in
+            for param, param_value in params.items():
+                if not param in new_params:
+                    new_params[param] = param_value
+                
+            
         elif isinstance(validation.validators, formencode.Schema):
             new_params = validation.validators.to_python(params)
         elif hasattr(validation.validators, 'validate'):

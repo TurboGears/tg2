@@ -107,7 +107,15 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
+        assert isinstance(some_int, int)
         return dict(response=some_int)
+    
+    @expose('json')
+    @validate(validators={"a":validators.Int()})
+    def validated_and_unvalidated(self, a, b):
+        assert isinstance(a, int)
+        assert isinstance(b, unicode)
+        return dict(int=a,str=b)
         
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -201,4 +209,9 @@ class TestTGController(TestWSGIController):
         form_values = {"some_int":22}
         resp = self.app.post('/validated_int', form_values)
         assert '{"response": 22}'in resp
-
+        
+    def test_for_other_params_after_validation(self):
+        form_values = {'a':1, 'b':"string"}
+        resp = self.app.post('/validated_and_unvalidated', form_values)
+        assert '"int": 1' in resp
+        assert '"str": "string"' in resp
