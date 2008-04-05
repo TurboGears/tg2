@@ -205,13 +205,3 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/flash_status')
         self.failUnless('status_ok'in resp, resp)
 
-    def test_basic_validation_and_jsonification(self):
-        form_values = {"some_int":22}
-        resp = self.app.post('/validated_int', form_values)
-        assert '{"response": 22}'in resp
-        
-    def test_for_other_params_after_validation(self):
-        form_values = {'a':1, 'b':"string"}
-        resp = self.app.post('/validated_and_unvalidated', form_values)
-        assert '"int": 1' in resp
-        assert '"str": "string"' in resp

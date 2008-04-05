@@ -48,7 +48,7 @@ class DecoratedController(WSGIController):
                     new_params[field] = validator.to_python(params.get(field))
                 #catch individual validation errors    
                 except formencode.api.Invalid, inv:
-                    errors[field] = inv
+                    errors[field] = inv.msg
                     
             #re-raise a compound validation error, with the full error dict      
             if errors:
@@ -70,10 +70,13 @@ class DecoratedController(WSGIController):
                 new_params = validation.validators.validate(params)
             except  formencode.api.Invalid, inv:
                 error_list = inv.__str__().split('\n')
-                #most invalids come back with a list of fields which are in error in the format: "fieldname1: error\nfieldname2: error"
+                #most invalids come back with a list of fields which 
+                #are in error in the format: 
+                #"fieldname1: error\nfieldname2: error"
                 for error in error_list:
                     field_value = error.split(':')
-                    #if the error has no field associated with it, return the error as a global form error
+                    #if the error has no field associated with it, 
+                    #return the error as a global form error
                     if len(field_value) == 1:
                         errors['_the_form'] = field_value[0].strip()
                         continue
@@ -144,7 +147,7 @@ class DecoratedController(WSGIController):
                                       namespace=namespace)
         return result
 
-    def _handle_validation_errors(self, controller, params, exception):
+    def _handle_validation_errors(self, controller, remainder, params, exception):
         pylons.c.form_errors = exception.error_dict
         pylons.c.form_values = exception.value
 
@@ -152,7 +155,7 @@ class DecoratedController(WSGIController):
         if error_handler is None:
             error_handler = controller
 
-        output = error_handler(controller.im_self, **dict(params))
+        output = error_handler(**dict(params))
 
         return error_handler, output
 
@@ -174,8 +177,9 @@ class DecoratedController(WSGIController):
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller, params,
-                                                                inv)
+            controller, output = self._handle_validation_errors(controller, 
+                                                                remainder,
+                                                                params, inv)
 
         # Render template
         controller.decoration.run_hooks('before_render', remainder, params,
