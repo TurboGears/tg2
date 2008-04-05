@@ -37,7 +37,7 @@ class DecoratedController(WSGIController):
         #Initialize new_params -- if it never gets updated just return params
         new_params = None
         errors = {}
-        
+
         #TG developers can pass in a dict of param names and validators
         #this applies them one by one and builds up a new set of validated params.
         if isinstance(validation.validators, dict):
@@ -155,7 +155,7 @@ class DecoratedController(WSGIController):
         if error_handler is None:
             error_handler = controller
 
-        output = error_handler(**dict(params))
+        output = error_handler(controller, **dict(params))
 
         return error_handler, output
 
