@@ -15,6 +15,18 @@ def setup():
 def teardown():
     teardown_session_dir()
 
+from toscawidgets.widgets.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
+from toscawidgets.api import WidgetsList
+
+class MyForm(TableForm):
+    # This WidgetsList is just a container
+    class fields(WidgetsList):
+        title=TextField(validator=validators.NotEmpty())
+        year = TextField(size=4, validator=validators.Int())
+        
+#then, we create an instance of this form
+myform = MyForm("my_form", action='create')
+
 class BasicTGController(TGController):
 
     @expose('json')
@@ -36,6 +48,16 @@ class BasicTGController(TGController):
         errors = pylons.c.form_errors
         values =  pylons.c.form_values
         return dict(a=a, b=b, errors=str(errors), values=str(values))
+
+    @expose()
+    def display_form(self):
+        return str(myform.render())
+
+    @expose('json')
+    @validate(form=myform, error_handler=display_form)
+    def process_form(self, **kwargs):
+        assert isinstance(kwargs['year'], int)
+        return dict(kwargs)
         
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -68,5 +90,18 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/two_validators', form_values)
         print resp
         assert 'An email address must contain a single @' in resp
-        
-        
+    
+    def test_form_validation(self):
+        "Check @validate's handing of ToscaWidget forms instances"
+        form_values = {'title':'Razer', 'year':"2007"}
+        resp = self.app.post('/process_form', form_values)
+        print resp
+        values = loads(resp.body)
+        assert values['year'] == 2007
+    
+    def test_form_render(self):
+        resp = self.app.post('/display_form')
+        print resp
+        assert 'id="my_form_title.label"' in resp
+        assert 'class="fieldlabel required"' in resp
+        assert "Title" in resp
