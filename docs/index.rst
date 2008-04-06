@@ -12,8 +12,13 @@ Contents:
 
    2.0/TG2Philosophy
    2.0/DownloadInstall
+   2.0/Wiki20/All
    2.0/QuickStart
-   2.0/BasicMoves
+   2.0/Caching
+   2.0/ToscaWidgets/Using
+   2.0/ToscaWidgets/forms
+   2.0/SimpleWidgetForm
+   2.0/LogSetup
    2.0/RoughDocs/CodeModel
    2.0/RoughDocs/CreateDatabase
    2.0/RoughDocs/BootStrap

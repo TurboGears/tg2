@@ -50,13 +50,19 @@ class BasicTGController(TGController):
         return dict(a=a, b=b, errors=str(errors), values=str(values))
 
     @expose()
-    def display_form(self):
-        return str(myform.render())
+    def display_form(self, **kwargs):
+        return str(myform.render(values=kwargs))
 
     @expose('json')
-    @validate(form=myform, error_handler=display_form)
+    @validate(form=myform)
     def process_form(self, **kwargs):
-        assert isinstance(kwargs['year'], int)
+        kwargs['errors'] = pylons.c.form_errors
+        return dict(kwargs)
+    
+    @expose('json')
+    @validate(form=myform, error_handler=process_form)
+    def send_to_error_handler(self, **kwargs):
+        kwargs['errors'] = pylons.c.form_errors
         return dict(kwargs)
         
 class TestTGController(TestWSGIController):
@@ -100,8 +106,26 @@ class TestTGController(TestWSGIController):
         assert values['year'] == 2007
     
     def test_form_render(self):
+        'Test that myform renders properly'
         resp = self.app.post('/display_form')
         print resp
         assert 'id="my_form_title.label"' in resp
         assert 'class="fieldlabel required"' in resp
         assert "Title" in resp
+    
+    def test_form_validation_error(self):
+        "Test validation form vaidation (with errors)"
+        form_values = {'title':'Razer', 'year':"t007"}
+        resp = self.app.post('/process_form', form_values)
+        values = loads(resp.body)
+        print values['errors']
+        assert  "Please enter an integer value" in values['errors']['year']
+
+    def test_form_validation_error(self):
+        "Test validation form vaidation (with errors)"
+        form_values = {'title':'Razer', 'year':"t007"}
+        resp = self.app.post('/send_to_error_handler', form_values)
+        values = loads(resp.body)
+        print values['errors']
+        assert  "Please enter an integer value" in values['errors']['year']
+        
