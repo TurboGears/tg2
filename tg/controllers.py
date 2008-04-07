@@ -159,6 +159,8 @@ class DecoratedController(WSGIController):
         if error_handler is None:
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
+        elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
+            output = error_handler(*remainder, **dict(params))
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
 
