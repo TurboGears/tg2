@@ -109,7 +109,7 @@ def proc_doc(link, doc, targets, version):
 
     #get rid of comments
     doc = re.sub(r"\.\. macro:: .*\]\]", "", doc) # macro
-    doc = re.sub(r"## .*", "", doc) # ##
+    doc = re.sub(r"## page.*", "", doc) # ## page
     doc = re.sub(r"#format .*", "", doc) # format
 
     # replace links to proper link
