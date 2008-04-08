@@ -33,7 +33,7 @@ setup(
         'ToscaWidgets>=0.2rc2',
         'tw.forms',
         'DBSprockets',
-        'sqlalchemy-migrate >= 0.4.3',
+        'sqlalchemy-migrate >= 0.4.4',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]

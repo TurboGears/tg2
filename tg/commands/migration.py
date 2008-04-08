@@ -34,5 +34,5 @@ class MigrateCommand(command.Command):
         except:
             print "you shold set sqlalchemy.url in development.ini first"
 
-        print "The repository is %s\nThe dburi is in %s"%(self.name, self.dburi)
+        print "The repository is '%s'\nThe url is '%s'"%(self.name, self.dburi)
         main(argv=self.args, url=self.dburi,repository=self.name, name=self.name)
