@@ -1,6 +1,41 @@
 """
 TurboGears migration
 
+paster migrate command integrate sqlalchemy-migrate into TurboGears 2.
+
+To start a migration, run command::
+
+    $ paster migrate create
+
+And migrate command will create a 'migration' directory for you.
+With migrate command you don't need use 'manage.py' in 'migration' directory anymore.
+
+Then you could bind the database with migration with command::
+
+    $ paster migrate version_control
+
+Usage:
+
+.. parsed-literal::
+
+   paster migrate help
+   paster migrate create
+   paster migrate vc|version_control
+   paster migrate dbv|db_version
+   paster migrate v|version
+   paster migrate manage [script.py]
+   paster migrate test [script.py]
+   paster migrate ci|commit [script.py]
+   paster migrate up|upgrade [--version]
+   paster migrate downgrade [--version]
+
+.. container:: paster-usage
+
+  --version
+      database's version number
+
+check http://code.google.com/p/sqlalchemy-migrate/wiki/MigrateVersioning for detail.
+
 """
 
 from paste.script import command

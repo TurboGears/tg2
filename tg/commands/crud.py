@@ -1,6 +1,31 @@
 """
 TurboGears CRUD interface generator
 
+Once you have created a model, (let's take model object named 
+"Movie" for example), you could create a new crud controller
+package with this command::
+
+    $ paster crud Movie
+
+Usage:
+
+.. parsed-literal::
+
+    paster crud [-m|--model][-p|--package]
+            [-f|--form][-i|--id][--dry-run]
+
+.. container:: paster-usage
+
+  -m, --model
+      model name
+  -p, --package
+      package name
+  -f, --form
+      form name
+  -i, --id
+      primary key
+  --dry-run
+      dry run (don't actually do anything)
 """
 
 from paste.script import command
@@ -65,9 +90,12 @@ class CrudCommand(command.Command):
                         if l.strip() and not l.strip().startswith('#')]
                 f.close()
                 #upper 2 levels
-                baselink = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                file_op = FileOp(source_dir=os.path.join(baselink, 'templates'))
-                self.base_package, directory = file_op.find_dir('controllers', True)
+                baselink = os.path.dirname(
+                            os.path.dirname(os.path.abspath(__file__)))
+                file_op = FileOp(
+                            source_dir=os.path.join(baselink, 'templates'))
+                self.base_package, directory = \
+                            file_op.find_dir('controllers', True)
             except:
                 raise command.BadCommand('No egg_info directory was found')
 
@@ -96,7 +124,8 @@ class CrudCommand(command.Command):
             self.modelpackage = raw_input("Enter the package name [%s]: "
                             % (str(self.modelname.capitalize())+'Controller'))
             if not self.modelpackage:
-                self.modelpackage = str(self.modelname.capitalize())+'Controller'
+                self.modelpackage = str(self.modelname.capitalize())+\
+                                    'Controller'
         while not self.modelform:
             self.modelform = raw_input("Enter the model form name [%s]: "
                                 % (str(self.modelname.capitalize())+'Form'))
@@ -124,28 +153,35 @@ class CrudCommand(command.Command):
         #setup templates
         templatepath = file_op.find_dir('templates', True)[1]
         #print templatepath
-        #print "create dir:", os.path.join(templatepath, self.modelpackageLower)
-        if not os.path.exists(os.path.join(templatepath, self.modelpackageLower)):
+        #print "create dir:",
+        #    os.path.join(templatepath, self.modelpackageLower)
+        if not os.path.exists(os.path.join(templatepath,
+                                self.modelpackageLower)):
             #print "create dir:", self.modelpackageLower
             os.mkdir(os.path.join(templatepath, self.modelpackageLower))
 
         #print os.path.join(templatepath, self.modelpackage)
         file_op.copy_file(template='crud/__init__.py_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         dest=os.path.join(templatepath,
+                                            self.modelpackageLower),
                          filename='__init__')
         file_op.copy_file(template='crud/list.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         dest=os.path.join(templatepath,
+                                            self.modelpackageLower),
                          filename='list.html',
                          add_py=False)
         file_op.copy_file(template='crud/show.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         dest=os.path.join(templatepath,
+                                            self.modelpackageLower),
                          filename='show.html',
                          add_py=False)
         file_op.copy_file(template='crud/new_form.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         dest=os.path.join(templatepath,
+                                            self.modelpackageLower),
                          filename='new_form.html',
                          add_py=False)
         file_op.copy_file(template='crud/edit_form.html_tmpl',
-                         dest=os.path.join(templatepath, self.modelpackageLower),
+                         dest=os.path.join(templatepath,
+                                            self.modelpackageLower),
                          filename='edit_form.html',
                          add_py=False)

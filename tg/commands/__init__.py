@@ -17,7 +17,7 @@ To create a new project named helloworld, you could start with quickstart comman
 
     $ paster quickstart helloworld
 
-Test the quickstart project with this command::
+Then, you could run the created project with these commands::
 
     $ cd helloworld
     $ paster serve --reload development.ini
@@ -27,10 +27,11 @@ serves the TurboGears 2 application.
 
 The --reload option ensures that the server is automatically reloaded if you
 make any changes to Python files or the development.ini config file.
-This is very useful during development. To stop the server you can press
-Ctrl+c or your platform's equivalent.
+This is very useful during development.
 
-If you visit http://127.0.0.1:8080/ when the server is running you will see the
-welcome page (127.0.0.1 is a special IP address that references your own computer
+To stop the server, you can press Ctrl+c or your platform's equivalent.
+
+If you visit http://127.0.0.1:8080/ when the server is running, you will see the
+welcome page (127.0.0.1 is a special IP address that references your own computer,
 but you can change the hostname by editing the development.ini file).
 """

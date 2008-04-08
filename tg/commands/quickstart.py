@@ -19,7 +19,7 @@ Usage:
 
     paster quickstart [--version][-h|--help]
             [-p *PACKAGE*][--dry-run][-t|--templates *TEMPLATES*]
-            [-s|--sqlalchemy][-o|--sqlobject][-i|--identity]
+            [-s|--sqlalchemy][-o|--sqlobject][-e|--elixir][-i|--identity]
 
 .. container:: paster-usage
 
@@ -37,6 +37,8 @@ Usage:
       use SQLAlchemy instead of SQLObject
   -o, --sqlobject
       use SQLObject instead of SQLAlchemy
+  -e, --elixir
+      use Elixir instead of SQLAlchemy
   -i, --identity
       provide Identity support
 """
