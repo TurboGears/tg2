@@ -2,10 +2,14 @@
 TurboGears 2 Documentation
 ==========================
 
+TurboGears 2 is a reinvention of the TurboGears project to take advantage of new components, and to provide a fully custmizable WSGI (Web Server Gateway Interface) stack.  From the begining TurboGears was designed to be a Full Stack framework built from best of breed components.   As time has gone on new components have been released which improved on the ones in the origornal TG stack, and the Python web world has been increasingly designed around WSGI.  This has enabled a whole new world of component reuse, and TG2 is designed to take advantage of that in order to make framework which is both flexible, and productive. 
+
+TurboGears 2 is still in rapid development, and should only be used by those who are willing to put up with a little bit of API instability, but because it is well tested, and based on know stable components it is already being used by some people in production environments. 
+
 Getting Started with TurboGears
 ==================================
 
-Get TurboGears 2 installed, learn how to create a new TurboGears project in a single command, and of course explore the obligitory "Hello World" example, with a few fun treats thrown in. . 
+Get TurboGears 2 installed, learn how to create a new TurboGears project in a single command, and of course explore the obligatory "Hello World" example, with a few fun treats thrown in. 
 
 .. toctree::
    :maxdepth: 1
@@ -26,23 +30,18 @@ Are you the type who learns by doing?   If so this section is for you.   Our ult
    2.0/RoughDocs/ToscaWidgets/Forms
       
 
-Reference
-=========
+General Reference
+===================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   2.0/RoughDocs/DesignTemplate
-   2.0/RoughDocs/ObjectDispatch
-   2.0/RoughDocs/ProgramController
-   2.0/RoughDocs/CodeModel
-   2.0/RoughDocs/CreateDatabase
-   2.0/RoughDocs/BootStrap
-   2.0/ToscaWidgets/Using
-   2.0/RoughDocs/ToscaWidgets/Forms
-   2.0/SimpleWidgetForm
-   2.0/RoughDocs/StaticFile
-
+   2.0/Genshi
+   2.0/SQLAlchemy
+   2.0/Controllers
+   
+   
+   2.0/RoughDocs/ToscaWidgets
 
 
 TurboGears plugins
@@ -55,9 +54,19 @@ TurboGears plugins
    2.0/RoughDocs/ToscaWidgets
    2.0/RoughDocs/FormEncode
    2.0/ToolBox
+   2.0/RoughDocs/ObjectDispatch
+   2.0/RoughDocs/ProgramController
+   2.0/RoughDocs/CodeModel
+   2.0/RoughDocs/CreateDatabase
+   2.0/RoughDocs/BootStrap
+   2.0/ToscaWidgets/Using
+   2.0/RoughDocs/ToscaWidgets/Forms
+   2.0/SimpleWidgetForm
+   2.0/RoughDocs/StaticFile
 
-Install and Deployment
-----------------------
+
+Recipes for Installation and Deployment
+-----------------------------------------
 
 .. toctree::
    :maxdepth: 1
@@ -67,8 +76,32 @@ Install and Deployment
    2.0/Deployment/ModProxy
    2.0/Deployment/modwsgi+virtualenv
 
-Solving specific problems
+
+Development Tools
 -------------------------
+
+.. toctree::
+   :maxdepth: 1
+   
+   2.0/ToolBox
+   2.0/CommandLine
+   2.0/Profile
+   
+   2.0/RoughDocs/ToscaWidgets
+   2.0/RoughDocs/FormEncode
+
+   2.0/RoughDocs/ObjectDispatch
+   2.0/RoughDocs/ProgramController
+   2.0/RoughDocs/CodeModel
+   2.0/RoughDocs/CreateDatabase
+   2.0/RoughDocs/BootStrap
+   2.0/ToscaWidgets/Using
+   2.0/RoughDocs/ToscaWidgets/Forms
+   2.0/SimpleWidgetForm
+   2.0/RoughDocs/StaticFile
+
+General TG tools
+------------------------
 
 .. toctree::
    :maxdepth: 1
@@ -76,12 +109,18 @@ Solving specific problems
    2.0/Caching
    2.0/LogSetup
    2.0/RoughDocs/I18N
-   2.0/RoutesIntegration
-   2.0/RoughDocs/BuildDistro
-   2.0/RoughDocs/TestDriven
+
+
+
+Integration Recipes
+------------------------
+
+.. toctree::
+   :maxdepth: 1
+
    2.0/TGandPyAMF
-   2.0/Profile
-   2.0/MigratingTo2
+   2.0/RoutesIntegration
+
 
 Et cetera
 ---------
@@ -92,7 +131,6 @@ Et cetera
    2.0/TG2Philosophy
    2.0/DevStatus
    2.0/Contributing
-   2.0/API
    2.0/License
    2.0/TGandPylons
 

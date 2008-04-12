@@ -1,8 +1,3 @@
-
-
-.. contents::
-   :depth: 2
-
 The TurboGears 2 Wiki Tutorial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1050,9 +1045,12 @@ Further Exploration
 
 Now that you have a working Wiki, there are a number of further places to explore:
 
-#. You can add `JSON support via MochiKit <http://docs.turbogears.org/http%3A/docs.turbogears.org/2.0/Wiki20/JSONMochiKit>`_.
+#. You can add `JSON support via MochiKit <./Wiki20/JSONMochiKit>`_.
 
 #. You can learn more about the `Genshi templating engine <http://genshi.edgewall.org/wiki/Documentation/templates.html>`_.
+
+# You can learn more about the `SQLAlchemy ORM 
+<http://www.sqlalchemy.org.
 
 If you had any problems with this tutorial, or have ideas on how to make it
 better, please let us know on the mailing list! Suggestions are almost always
