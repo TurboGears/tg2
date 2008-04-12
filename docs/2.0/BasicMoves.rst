@@ -185,10 +185,8 @@ If you click on the little + icon, you can see what local variables are set
 at that frame in the call stack, and you can even use the >>> prompt to type 
 in some python code to test what's happening at that level. 
 
-.. image:: ../_static/hello-evalexception.jpg
-
-In this case, we can see that there are some issues with an undefined now 
-variable.  Which is used in the footer of our page.   
+In this case, we can see that there are some issues with an undefined hello 
+variable.  Which we just added in the last step.    
 
 That's easy enough to fix let's just return that variable:
 
@@ -196,17 +194,33 @@ That's easy enough to fix let's just return that variable:
 
   @expose(template="helloworld.templates.index")
   def hello(self):
-      return dict(now=now)
+      return dict(hello='hello')
 
 
 Hello World using flash
 ---------------------------
 
-Edit controller/root.py. Change the 'flash' statement to::
+The master template we've defined provides yet another way to get a message to
+the next template that's rendered. It automatically looks for a "flash" message
+and displays it for you.  
+
+This is particularly useful if you don't know which page will be rendered next
+or you just want to let the user know that some action they performed was 
+successful. 
+
+It's easy enought to use the flash feature.  Just edit controller/root.py and
+change the existing 'flash' statement to::
 
   flash("Hello World")
 
 Browse http://localhost:8080 to see the change.
 
+Well, that's Hello World.   Hopefully we've given you a quick introduction to 
+the TG2 environment, and helped you to understand the MVC archetecture a bit. 
 
+If you have any questions feel free to stop by the IRC channel (#turbogears 
+on freenode) or ask questions on the mailing list (urbogears@googlegroups.com).
+
+Feel free to play around a bit, and then feel free to look into the Wiki 20 
+tutorial which should help you take your TurboGears skills to the next level. 
 

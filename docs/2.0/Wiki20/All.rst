@@ -473,6 +473,13 @@ Using includes lets you easily maintain a cohesive look and feel
 throughout your site by having each page include a common master
 template.
 
+Similarly the lines:: 
+
+  <xi:include href="header.html" />
+  xi:include href="footer.html" />
+
+Tell genshi to suck in the headers and footers for the page. 
+
 Copy ``index.html`` into a file called ``page.html``. Now modify it for
 our purposes::
 
@@ -483,6 +490,9 @@ our purposes::
         xmlns:py="http://genshi.edgewall.org/"
         xmlns:xi="http://www.w3.org/2001/XInclude">
 
+
+    <xi:include href="header.html" />
+    <xi:include href="footer.html" />
     <xi:include href="master.html" />
 
     <head>
@@ -743,6 +753,9 @@ key-value pair we'll need to edit ``wiki20.templates.page``:
         xmlns:py="http://genshi.edgewall.org/"
         xmlns:xi="http://www.w3.org/2001/XInclude">
 
+
+    <xi:include href="header.html" />
+    <xi:include href="footer.html" />
     <xi:include href="master.html" />
 
     <head>
@@ -900,7 +913,9 @@ After editing, our ``pagelist.html`` looks like:
         xmlns:py="http://genshi.edgewall.org/"
         xmlns:xi="http://www.w3.org/2001/XInclude">
 
-    <xi:include href="master.html" />
+        <xi:include href="header.html" />
+        <xi:include href="footer.html" />
+        <xi:include href="master.html" />
 
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
@@ -1001,6 +1016,9 @@ every page:
         xmlns:py="http://genshi.edgewall.org/"
         xmlns:xi="http://www.w3.org/2001/XInclude">
 
+
+    <xi:include href="header.html" />
+    <xi:include href="footer.html" />
     <xi:include href="master.html" />
 
     <head>
