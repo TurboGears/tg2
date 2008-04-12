@@ -71,8 +71,11 @@ class DecoratedController(WSGIController):
                 new_params = validation.validators.validate(params)
             except  formencode.api.Invalid, inv:
                 raise inv
+        
+        #Theoretically this should not happen...
         if new_params is None:
             return params
+            
         return new_params
 
     def _render_response(self, controller, response):
@@ -101,14 +104,16 @@ class DecoratedController(WSGIController):
         if template_name is None:
             return response
 
-        #Prepare the engine, if it's not already been prepared.
+        #Qick hack to raise deprication warnings if people return a widget in the dict
+        #rather than setting it on tmmpl_context.w
         if isinstance(response, dict):
             for key, item in response.iteritems():
                 if isinstance(item, Widget):
-                    msg = "Returning a widget is depricated, set them on pylons.w instead"
+                    msg = "Returning a widget is depricated, set them on pylons.widgets instead"
                     warnings.warn(msg, DeprecationWarning)
                     setattr(pylons.c.w, key, item)
         
+        #Prepare the engine, if it's not already been prepared.
         if engine_name not in _configured_engines():
             from pylons import config
             template_options = dict(config).get('buffet.template_options', {})
@@ -301,7 +306,6 @@ class TGController(ObjectDispatchController):
         self._initialize_validation_context()
         routingArgs = None
         
-        #TODO: Why do this, rather than always using the 
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
             
@@ -347,9 +351,7 @@ def redirect(url, params=None, **kw):
     raise found
 
 def url(tgpath, tgparams=None, **kw):
-    """Broken url() re-implementation from TG1.
-    See #1649 for more info.
-    """
+    """url() re-implementation from TG1"""
 
     if not isinstance(tgpath, basestring):
         tgpath = "/".join(list(tgpath))

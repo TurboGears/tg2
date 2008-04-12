@@ -35,7 +35,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General substitutions.
-project = 'TurboGears2'
+project = 'TurboGears'
 copyright = '2008, TurboGears Doc Team'
 
 # The default replacements for |version| and |release|, also used in various
@@ -67,7 +67,7 @@ today_fmt = '%B %d, %Y'
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'default'
 
 
 # Options for HTML output

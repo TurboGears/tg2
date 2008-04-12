@@ -5,11 +5,13 @@ TurboGears 2 Documentation
 The essential documentation
 ===========================
 
-Contents:
+Learn the basics of TurboGears and build a simple wiki-like application based on the famous 20 min wiki screencast. 
 
 .. toctree::
    :maxdepth: 1
-
+   
+   2.0/DownloadInstall
+   2.0/QuickStart
    2.0/BasicMoves
    2.0/Wiki20/All
 
@@ -19,8 +21,6 @@ Reference
 .. toctree::
    :maxdepth: 1
 
-   2.0/DownloadInstall
-   2.0/QuickStart
    2.0/RoughDocs/DesignTemplate
    2.0/RoughDocs/ObjectDispatch
    2.0/RoughDocs/ProgramController

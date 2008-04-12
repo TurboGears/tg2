@@ -15,7 +15,7 @@ While in Development there are several dependencies:
     + Please keep in mind, that for RPM-based systems you will also need
       ``python-devel`` and ``python-xml`` packages.
 
-    + You may need ``python-dev`` and ``python-setuptools`` in ubuntu.
+    + You will need ``python-dev`` and ``python-setuptools`` in ubuntu.
 
 * Pylons trunk checkout.
 

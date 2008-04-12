@@ -64,40 +64,6 @@ from pylons import session
 
 from warnings import warn
 
-
-class TurboGearsApplication(PylonsApp):
-    """basis TurboGears application class which is derived from PylonsApp"""
-    def __init__(self, root, **kwargs):
-        # see ticket #1687
-        kwargs['use_webob'] = False
-        PylonsApp.__init__(self, **kwargs)
-        self.root = root
-
-    def resolve(self, environ, start_response):
-        return self.root
-
-    def __call__(self, environ, start_response):
-        warn("TurboGearsApplication is deprecated use pylons.wsgiapp.PylonsApp",
-                DeprecationWarning)
-        environ['pylons.routes_dict'] = {}
-        self.setup_app_env(environ, start_response)
-
-        # Initialize config if this is called by "paster shell"
-        # as indicated by the fact that the shell sets a special
-        # PATH_INFO
-        if 'paste.testing_variables' in environ:
-            self.load_test_env(environ)
-            if environ['PATH_INFO'] == '/_test_vars':
-                paste.registry.restorer.save_registry_state(environ)
-                start_response('200 OK', [('Content-type', 'text/plain')])
-                return ['%s' % paste.registry.restorer.get_request_id(environ)]
-        
-        # Pylons expects fresh instances of the controller on every request,
-        # so instantiate a new instance of the root controller, and let it
-        # handle the request.
-        return self.root.__class__()(environ, start_response)
-
-
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
     'request', 'TurboGearsApplication', 'session'
