@@ -2,10 +2,10 @@
 TurboGears 2 Documentation
 ==========================
 
-The essential documentation
-===========================
+Getting Started with TurboGears
+==================================
 
-Learn the basics of TurboGears and build a simple wiki-like application based on the famous 20 min wiki screencast. 
+Get TurboGears 2 installed, learn how to create a new TurboGears project in a single command, and of course explore the obligitory "Hello World" example, with a few fun treats thrown in. . 
 
 .. toctree::
    :maxdepth: 1
@@ -13,7 +13,18 @@ Learn the basics of TurboGears and build a simple wiki-like application based on
    2.0/DownloadInstall
    2.0/QuickStart
    2.0/BasicMoves
-   2.0/Wiki20/All
+
+Tutorials:
+===========
+
+Are you the type who learns by doing?   If so this section is for you.   Our ultimate goal is to provide several tutorials on TG2 inculding everything from the basics, to advanced topics.
+
+.. toctree::
+   :maxdepth: 2
+      
+   2.0/Wiki20/wiki20
+   2.0/RoughDocs/ToscaWidgets/Forms
+      
 
 Reference
 =========

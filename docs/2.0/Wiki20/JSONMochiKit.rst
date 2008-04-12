@@ -38,39 +38,28 @@ reference`_ article for details.
 from MochiKit import *
 ----------------------
 
-For the client side of this tutorial, we'll be using MochiKit, the official
-javascript framework of TurboGears. The two are only loosely coupled, as
-opposed to prototype/Rails, but we find MochiKit to provide a very elegant
-Python-inspired API while avoiding monkeypatches on the JavaScript datatypes.
+For the client side of this tutorial, we'll be using MochiKit. 
 
 To keep this from turning into a javascript tutorial (it's pretty long as-is
 because we don't expect Pythonistas to be javascript masters), we're just going
 to ajaxify one call by changing our "view complete page list" link to pull in
 the pagelist and include it right in the page you're viewing.
 
-The first thing we need to do is have MochiKit included in all of our pages. This can be done by editing the ``master.kid`` file or by having TurboGears add it as a widget. We'll use the latter technique here.
+The first thing we need to do is have MochiKit included in all of our pages. 
+This can be done by editing the ``master.html`` file or by having TurboGears 
+add it as a widget. 
 
-Open the ``wiki20/config/app.cfg``. This file controls environment-independent settings like identity and output encoding. Search through the file for the ``tg.include_widgets`` setting, uncomment it, and modify it like so::
+The first thing you'll need to do is download and install the tw.mochikit 
+package::
 
-    tg.include_widgets = ['turbogears.mochikit']
+  easy_install tw.mochikit
 
-As the name indicates, we actually are using TurboGears' widget infrastructure
-to do the inclusion. Widgets are an advanced feature and are out of scope for
-this tutorial, but they're essentially self-contained bundles of HTML+behavior
-code that make building forms a snap. One of the things they can do is include
-javascript in a page and the ``turbogears.mochikit`` takes advantage of this to
-provide a javascript library. The `cogbin`_ has other javascript libraries
-packed up as widgets that can be used the same way.
-
-.. _cogbin: http://www.turbogears.org/cogbin/
-
-After making this configuration change, **restart the server.** The auto-reload functionality only detects changes to python files.
-
+TODO:  Add the toscawidget stuff here. 
 
 Prep the page
 -------------
 
-Now that we have MochiKit, we're ready to modify our template. We'll practice good style by progressively enhancing our pagelist link in ``master.kid``:
+Now that we have MochiKit, we're ready to modify our template. We'll practice good style by progressively enhancing our pagelist link in ``master.html``:
 
 .. parsed-literal::
 
@@ -86,11 +75,10 @@ to put the results. By doing it this way (instead of setting ``href="#"`` and
 doing an ``onclick`` handler) we keep our page usable in all browsers, whether
 they have JavaScript enabled or not.
 
-
 The main event
 --------------
 
-In the interest of expediency (and because we're substituting URLs with Kid),
+In the interest of expediency (and because we're substituting URLs with gensh),
 we'll add the handler to a ``<script>`` tag in the head rather than in its own
 file.
 
