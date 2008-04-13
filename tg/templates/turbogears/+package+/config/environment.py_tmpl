@@ -30,11 +30,6 @@ def load_environment(global_conf, app_conf):
                  static_files=os.path.join(root, 'public'),
                  templates=[os.path.join(root, 'templates')])
 
-    # If you'd like to change the default template engine used to render
-    # text/html content, edit these options.
-    template_engine = 'genshi'
-    template_engine_options = {}
-
     # Initialize config with the basic options
     config.init_app(global_conf, app_conf, package='${package}', paths=paths)
 
@@ -55,6 +50,10 @@ def load_environment(global_conf, app_conf):
     DBSession.configure(bind=engine)
     metadata.bind = engine
 
+    # If you'd like to change the default template engine used to render
+    # text/html content, edit these options.
+    template_engine = 'genshi'
+    template_engine_options = {}
     config['buffet.template_engines'].pop()
     config.add_template_engine(template_engine, '${package}.templates',
                                template_engine_options)
