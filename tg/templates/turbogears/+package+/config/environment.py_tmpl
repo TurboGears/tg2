@@ -1,6 +1,9 @@
 """Pylons environment configuration"""
 import os
 
+#from mako.lookup import TemplateLookup
+from genshi.template import TemplateLoader
+
 from pylons import config
 
 from pylons.i18n import ugettext
@@ -9,7 +12,8 @@ from tg import defaults
 from sqlalchemy import engine_from_config
 
 import ${package}.lib.app_globals as app_globals
-from ${package}.model import init_model
+#from ${package}.config.routing import make_map
+from ${package}.model import init_model, DBSession, metadata
 
 def template_loaded(template):
     "Plug-in our i18n function to Genshi."
@@ -26,36 +30,45 @@ def load_environment(global_conf, app_conf):
                  static_files=os.path.join(root, 'public'),
                  templates=[os.path.join(root, 'templates')])
 
-    # This setups up a set of default route that enables a standard
-    # TG2 style object dispatch.   Fell free to overide it with
-    # custom routes.  TODO: Link to TG2+routes doc.
-
-    make_map = defaults.make_default_route_map
-
-    # Initialize config with the basic options
-    config.init_app(global_conf, app_conf, package='${package}',
-                    template_engine='genshi', paths=paths)
-    config['routes.map'] = make_map()
-    config['pylons.app_globals'] = app_globals.Globals()
-    config['pylons.app_globals'].sa_engine = engine_from_config(config, 'sqlalchemy.')
-
     # If you'd like to change the default template engine used to render
     # text/html content, edit these options.
     template_engine = 'genshi'
     template_engine_options = {}
 
+    # Initialize config with the basic options
+    config.init_app(global_conf, app_conf, package='${package}', paths=paths)
+
+    # This setups up a set of default route that enables a standard
+    # TG2 style object dispatch.   Fell free to overide it with
+    # custom routes.  TODO: Link to TG2+routes doc.
+    make_map = defaults.make_default_route_map
+
+    config['routes.map'] = make_map()
+    config['pylons.app_globals'] = app_globals.Globals()
+    #config['pylons.h'] = {{package}}.lib.helpers
+    
+    # Setup SQLAlchemy database engine
+    engine = engine_from_config(config, 'sqlalchemy.')
+    config['pylons.app_globals'].sa_engine = engine
+    # Pass the engine to initmodel, to be able to introspect tables
+    init_model(engine)
+    DBSession.configure(bind=engine)
+    metadata.bind = engine
+
     config['buffet.template_engines'].pop()
     config.add_template_engine(template_engine, '${package}.templates',
                                template_engine_options)
 
-    # Pass the engine to initmodel, to be able to introspect tables
-    engine = engine_from_config(config, 'sqlalchemy.')
-    init_model(engine)
+    # Create the Mako TemplateLookup, with the default auto-escaping
+    #config['pylons.app_globals'].mako_lookup = TemplateLookup(
+    #    directories=paths['templates'], input_encoding='utf-8',
+    #    imports=['from webhelpers.html import escape'],
+    #    default_filters=['escape'], output_encoding='utf-8',
+    #    module_directory=os.path.join(app_conf['cache_dir'], 'templates'),
+
+    # Create the Genshi TemplateLoader
+    config['pylons.app_globals'].genshi_loader = TemplateLoader(
+        paths['templates'], auto_reload=True)
 
     # CONFIGURATION OPTIONS HERE (note: all config options will override
     # any Pylons config options)
-
-    from ${package} import model
-    model.DBSession.configure(bind=config['pylons.app_globals'].sa_engine)
-    model.metadata.bind = config['pylons.app_globals'].sa_engine
-
