@@ -1,14 +1,5 @@
-##This is an official page. Only editors and admins can change it.
-
-
-
 Contributing to TurboGears
 ==========================
-
-:status: Official
-
-.. contents::
-    :depth: 2
 
 If you want to help out, we want to help you help out! The goal of this 
 document is to help you get started and answer any questions you might 

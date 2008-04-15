@@ -1,9 +1,6 @@
 
-
-
 Using Existing Widgets
 ======================
-
 
 Finding Existing Widgets
 ------------------------

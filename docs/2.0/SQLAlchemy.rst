@@ -1,57 +1,75 @@
 Working with SQLAlchemy and your data model
-============================================
+===========================================
 
 SQLAlchemy is a modern Object Relational Database, that provides and extremely powerful and flexible system for managing the connection between in-menory python objects and the relational datastore that provides persistence for those objects.  One of the main goals of SQLAlchemy is to allow for the full power of both Object Oriented development and Relational Algebra based datastores to be used together in a way that's natural to your application. 
-
 
 TurboGears Integration
 ------------------------
 
+TurboGears SQLAlchemy integration is entirely pushed into the generated quickstart template, so you are totally free to edit the __init__.py file in your model directory, remove all SQLAlchemy reference, and edit the same references out of environment.cfg. 
 
-Edit model/__init__.py ::
+The main reason for this was not to make it easy to remove SQLAlchemy, it was to make it easier to build applications with multiple datastores, which is a common requirement for large-scale applications that either need to talk to so called `integration databases` which are shared between a large number of applications in an organization, or which need to do some horizontal partitioning of their database in order to scale up to thousands of requests per second. 
 
-  from pylons import config
-  from sqlalchemy import Column, MetaData, Table, types
-  from sqlalchemy.orm import mapper, relation
-  from sqlalchemy.orm import scoped_session, sessionmaker
+Getting Started
+---------------------
 
-  # Global session manager.  Session() returns the session object
-  # appropriate for the current web request.
-  DBSession = scoped_session(sessionmaker(autoflush=True, transactional=True))
+If you don't know how SQLAlchemy works at all, please take a few minutes to read over these excellent tutorials:
 
-  # Global metadata. If you have multiple databases with overlapping table
-  # names, you'll need a metadata for each database.
-  metadata = MetaData()
-  
-  def init_model(engine):
-      """Call me before using any of the tables or classes in the model."""
-      # Reflected tables must be defined and mapped here.
+* http://www.sqlalchemy.org/docs/04/ormtutorial.html -- which covers the ORM parts of SQLAlchemy
+* http://www.sqlalchemy.org/docs/04/sqlexpression.html -- which covers using the SQLAlchemy expression language
 
-  # Normal tables may be defined and mapped at module level, or here:
+Your first step when using SQLAlchemy in TurboGears is to edit your model/__init__.py:
 
-  # Create a table
-  movie_table = Table("movie", metadata,
-      Column("id", types.Integer, primary_key=True),
-      Column("title", types.String(100), nullable=False),
-      Column("year", types.Integer, nullable=False),
-      Column("description", types.String(256), nullable=True),
-      )
+.. code-block:: python
 
+      from pylons import config
+      from sqlalchemy import Column, MetaData, Table, types
+      from sqlalchemy.orm import mapper, relation
+      from sqlalchemy.orm import scoped_session, sessionmaker
+      
+      # Global session manager.  Session() returns the session object
+      # appropriate for the current web request.
+      DBSession = scoped_session(sessionmaker(autoflush=True, transactional=True))
+      
+      # Global metadata. If you have multiple databases with overlapping table
+      # names, you'll need a metadata for each database.
+      metadata = MetaData()
+      
+      def init_model(engine):
+          """Call me before using any of the tables or classes in the model."""
+          # Reflected tables must be defined and mapped here.
+          
+      # Normal tables may be defined and mapped at module level, or here:
+      
+      # Create a table
+      movie_table = Table("movie", metadata,
+          Column("id", types.Integer, primary_key=True),
+          Column("title", types.String(100), nullable=False),
+          Column("year", types.Integer, nullable=False),
+          Column("description", types.String(256), nullable=True),
+          )
+          
+          
+      # Define ORM classes (often called "mapped classes").
+      # attributes will be added by the mapper below
+      class Movie(object):
+          pass
+          
+      # Map each class to its corresponding table.
+      mapper(Movie, movie_table)
 
-  # Define ORM classes (often called "mapped classes").
-  # attributes will be added by the mapper below
-  class Movie(object):
-      pass
+Auto-reflection of tables has to happen after all the configuration is read, and the app is setup, so we provide simple init_model method that is not called until after everything is setup for you.  
 
-  # Map each class to its corresponding table.
-  mapper(Movie, movie_table)
+But if you're createing a new app, and want to define your tables in python, feel free to just create something like the movie_table we show in the code snipit above. 
 
-And save it.
+Choosing data Types
+---------------------
 
-Types
---------
+When you're setting up the column typess for your tables, you don't have to think about your target database and it's type system.   SQLAlchemy provides a flexible underying type system that, along with the table definition syntax above, allows you to database independent table objects. 
 
-You could get all support types with following script::
+SQLAlchemy provides a number of built-in types which it automatically maps to underling database types.  If you want the latest and greatest listing just type:
+
+.. code-block:: python
 
   >>> from sqlalchemy import types
   >>> dir(types)
@@ -83,10 +101,10 @@ Properties
 ============  ==========
 
 
-ORM
----------
+Basic Object Relational Mapping
+---------------------------------
 
-You could edit Movie object to support more object relational methods::
+Once you've got a table, such as the movie_table we're using in this example you can create a Movie class to support a more object oriented way of looking at your data::
 
   class Movie(object):
       def __init__(self, title, year, description, **kw):
@@ -98,24 +116,38 @@ You could edit Movie object to support more object relational methods::
           return "<Movie('%s','%s', '%s')>" % (self.title, self.year, self.description)
 
 
-Please add the __init__ method section thus we'll use in the following tutorial.
-The setting will lead you more easy to play with database.
+If you're following along with the tuturial, you'll want to make sure you custom __init__ method.  We'll use this to creae new Movie instances, and set their data all at once througout the rest of the tutorial. 
 
-For example, if you don't define the __init__ method. The general operating is::
+
+If you don't define the __init__ method. You will need to update the properties of a movie object after it's been created like this::
 
   >>> entry = Movie()
   >>> entry.title = 'Dragula'
   >>> entry.year = '1931'
   >>> entry.description = 'vampire movie'
 
-But if you defined the __init__ method, you could play with database in more pythonic way::
+But if the __init__ method we defined allows you to initialize the properties at the same time you create the object::
 
-  >>> entry = Movie(title='Dragula', year='1931', description='vampire movie')
+  >>> entry = Movie(title='Dracula', year='1931', description='vampire movie')
 
 or ::
 
-  >>> entry = Movie('Dragula', '1931', 'vampire movie')
+  >>> entry = Movie('Dracula', '1931', 'vampire movie')
 
+Quick database creation
+--------------------------
+
+Once you've got your database table objects defined (and imported into __init__.py if you didn't define them there), you can create the tables in the database with one simple command, just run::
+
+  paster setup-app development.ini
+
+from within your project's home directory. 
+
+Pylons defines a setup-app function that paster will connect to the database and create all the tables we've defined. 
+
+There is a default database setup defined in development.ini.  So if you just run this it will create a single-file database in your project directory called devdata.db.  If you change your data model, delete this and rerun the setup-app command.
+
+TurboGears 2 does support database migrations.   But that's another tutorial. 
 
 Reference:
 

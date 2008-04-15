@@ -12,6 +12,14 @@ This can be as simple as running::
 
   paster serve production.ini
 
+Of course that assumes you already have a producton.ini. 
+
+If you don't you can create one with a simple command::
+
+  $ paster make-config wiki production.ini
+
+You can find out how to control what is produced by the 'paster make-config' command by reading Packaging and Deployment.
+
 But it's also likely that you may want to automatically restart your TG2 app if the server reboots, or you may want to set it up as a windows service. Unfortunately these thing can be very operating system specific, but fortunately they aren't TG2 specific. 
 
 
@@ -55,5 +63,8 @@ Reference
 You can also find recipies for mounting a turbogears app behind lots of other servers in the 1.0 docs.  Generally these should "just work" with TG2 as well.   The only exception is that the config file production.ini is slightly different. 
 
  * http://docs.turbogears.org/1.0/Deployment
+ *  Packaging and Deployment http://wiki.pylonshq.com/display/pylonsdocs/Packaging+and+Deployment
+ *  Running Pylons apps with Webservers http://wiki.pylonshq.com/display/pylonsdocs/Running+Pylons+apps+with+Webservers
+ * custom error page http://wiki.pylonshq.com/display/pylonsdocs/Interactive+Application+Debuggi
 
 

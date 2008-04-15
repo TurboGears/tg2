@@ -3,26 +3,23 @@
 ToolBox
 ==========
 
-:Status: Work in progres
-
-.. contents:: Table of Contents
-    :depth: 2
+:Status: Work in progress
 
 Goal
 --------
 
-A platform to share gadgets which helps the development.
+A platform to share "gadgets" designed to aid the development of various TurboGears projects.
 
-Developer could release their own gadgets on pypi.
-The gadgets will auto-plugged in TurboGears 2 toolbox through setuptools.
+The toolbox uses an extensible plugin system, so that TG develoers can easily release their own ToolBox enabled gadgets on pypi.
 
-ToolBox itself is a TurboGears 2 Application. Developers could use the same skill as develop TurboGears 2 application to develop a toolbox Gadget.
+If a few simple steps are taken to register gadgets appropriately, as soon as a gadget is easy_installed it will be automatically plugged in TurboGears 2 toolbox via it's setuptools entry point.
 
+The Toolbox and Toolbox gadgets are themselves  TurboGears 2 Applications. So, anybody who can write a TG2 application, can with a little extra work create toolbox gadgets.
 
 Terminology
 ------------
 
- * Gadget: The application work within toolbox. Some of them may allow you to embed in your application.
+ * Gadget: A TG2 application designed to work within toolbox. Some of them may also be designed to be embedded inside end-user applications.
 
 Features
 -------------

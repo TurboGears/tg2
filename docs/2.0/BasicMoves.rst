@@ -69,8 +69,8 @@ serve up those files directly, without requiring any work from your TurboGears
 app. 
 
 
-Hello World using controller
--------------------------------
+Hello World using just the controller
+-------------------------------------
 
 The controller defines how the server responds to user actions.   In the case 
 of a web framework this almost always means HTTP requests of some kind (
@@ -141,7 +141,7 @@ For each page on your site, you could give each of them the corresponding
 template in your controllers. You could specifying the template argument 
 with``@expose`` decorator.
 
-That means that we've now got a 'hello' variable in our template which 
+That means that we've now got a 'hello' variable in our Genshi template which 
 we can use, and we attach the template 'helloworld.templates.index' to 
 'new_hello' method. So let's edit helloworld/template/index.html to replace 
 the h1 tag we added earlier with:
@@ -152,16 +152,24 @@ the h1 tag we added earlier with:
 
 Browse http://localhost:8080 to see the change.
 
-TurboGears 2 uses the Genshi templating system by default for controlling 
-dynamic content in your markup. The dictionary returned by the controller
-becomes local variables you can use in the template.
+Hello from another controller
+_______________________________________
+
+Perhaps we don't want hello world to happen from the root of our site, 
+and perhaps we want to make a lot of modifications to the template
+that renders our view.  In that case, let's create and publish 
+a new controller method, with a new template. 
 
 For now let's just create a new skeleton for our template, by copying 
 the default index.html template that was generated when our project
 was created.
 
-Not every template has dynamic content and therefore may not need arguments. 
-In that case, just return an empty dictionary, like this:
+Let's call the new template hello.html, and put it in the templates
+directory with index.html. 
+
+Of course, not every template has dynamic content and therefore 
+may not need arguments passed in by the controller. In that case, 
+we can just return an empty dictionary, like this:
 
 .. code-block:: python
 
