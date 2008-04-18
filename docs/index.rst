@@ -24,7 +24,7 @@ Tutorials
 Are you the type who learns by doing?   If so this section is for you.   Our ultimate goal is to provide several tutorials on TG2 inculding everything from the basics, to advanced topics.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
       
    2.0/Wiki20/wiki20
    2.0/ToscaWidgets/forms
@@ -36,25 +36,17 @@ General Reference for MVC Components
 .. toctree::
    :maxdepth: 2
 
+   2.0/Controllers
    2.0/Genshi
    2.0/SQLAlchemy
-   2.0/Controllers
 
 Validation, Form handling and form widgets
 ===========================================
 
-You can always handle forms without using any of these tools, forms can be hand
-coded in your templates, and the values can be processed in your controller,
-but TG2 provides several tools to help you make forms with complex javascript
-enabled features quickly and easily.   
-
-Validation is handled by FormEncode, form generation by ToscaWidgets, and 
-model introspection+automatic form and validator generation can be provided 
-by DBSprockets. 
-
 .. toctree::
    :maxdepth: 2
    
+   2.0/FormBasics
    2.0/Validation
    2.0/ToscaWidgets/forms
    2.0/ToscaWidgets/ToscaWidgets
@@ -67,8 +59,6 @@ TurboGears plugins
 
    2.0/CommandLine
    2.0/RoughDocs/FormEncode
-
-   2.0/RoughDocs/CodeModel
    2.0/RoughDocs/CreateDatabase
    2.0/RoughDocs/BootStrap
    2.0/SimpleWidgetForm
