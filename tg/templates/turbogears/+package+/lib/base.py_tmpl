@@ -39,5 +39,5 @@ class BaseController(TGController):
             return TGController.__call__(self, environ, start_response)
         finally:
             #after everything is done clear out the Database Session
-            #so to eliminate possible cross request DBSession polution.
+            #to eliminate possible cross request DBSession polution.
             model.DBSession.remove()

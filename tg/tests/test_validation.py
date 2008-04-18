@@ -5,7 +5,7 @@ from tg.controllers import TGController
 from tg.decorators import expose, validate
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
-from formencode import validators
+from formencode import validators, Schema
 from simplejson import loads
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
@@ -26,6 +26,11 @@ class MyForm(TableForm):
         
 #then, we create an instance of this form
 myform = MyForm("my_form", action='create')
+
+class Pwd(Schema):
+    pwd1 = validators.String(not_empty=True)
+    pwd2 = validators.String(not_empty=True)
+    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
 class BasicTGController(TGController):
 
@@ -64,6 +69,14 @@ class BasicTGController(TGController):
     def send_to_error_handler(self, **kwargs):
         kwargs['errors'] = pylons.c.form_errors
         return dict(kwargs)
+
+    @expose()    
+    @validate(validators=Pwd())
+    def password(self, pwd1, pwd2):
+        if pylons.c.form_errors:
+            return "There was an error"
+        else:
+            return "Password ok!"
         
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -128,4 +141,13 @@ class TestTGController(TestWSGIController):
         values = loads(resp.body)
         print values['errors']
         assert  "Please enter an integer value" in values['errors']['year']
-        
+
+    def test_form_validation_error(self):
+        "Test schema vaidation"
+        form_values = {'pwd1':'me', 'pwd2':"you"}
+        resp = self.app.post('/password', form_values)
+        assert "There was an error" in resp
+        form_values = {'pwd1':'you', 'pwd2':"you"}
+        resp = self.app.post('/password', form_values)
+        assert "Password ok!" in resp
+
