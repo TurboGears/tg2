@@ -163,18 +163,11 @@ class DecoratedController(WSGIController):
         elif isinstance(validation.validators, formencode.Schema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
-
-            try:
-                new_params = validation.validators.to_python(params)
-            except formencode.api.Invalid, inv:
-                raise inv
+            new_params = validation.validators.to_python(params)
             
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
-            try:
-                new_params = validation.validators.validate(params)
-            except  formencode.api.Invalid, inv:
-                raise inv
+            new_params = validation.validators.validate(params)
         
         # Theoretically this should not happen...
         if new_params is None:
