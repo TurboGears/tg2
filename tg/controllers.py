@@ -341,7 +341,7 @@ class ObjectDispatchController(DecoratedController):
         else:
             url_path = url.split('/')
 
-        controller, remainder = object_dispatch(self, url_path)
+        controller, remainder = _object_dispatch(self, url_path)
         # XXX Place controller url at context temporarily... we should be
         #    really using SCRIPT_NAME for this.
         if remainder:
@@ -366,13 +366,13 @@ class ObjectDispatchController(DecoratedController):
         pass
 
 
-def object_dispatch(obj, url_path):
+def _object_dispatch(obj, url_path):
     remainder = url_path
 
     notfound_handlers = []
     while True:
         try:
-            obj, remainder = find_object(obj, remainder, notfound_handlers)
+            obj, remainder = _find_object(obj, remainder, notfound_handlers)
             return obj, remainder
         except HTTPException:
             if not notfound_handlers:
@@ -385,24 +385,24 @@ def object_dispatch(obj, url_path):
                 continue
 
 
-def find_object(obj, remainder, notfound_handlers):
+def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
-        if iscontroller(obj):
+        if _iscontroller(obj):
             return obj, remainder
 
         if not remainder or remainder == ['']:
             index = getattr(obj, 'index', None)
-            if iscontroller(index):
+            if _iscontroller(index):
                 return index, remainder
 
         default = getattr(obj, 'default', None)
-        if iscontroller(default):
+        if _iscontroller(default):
             notfound_handlers.append(('default', default, remainder))
 
         lookup = getattr(obj, 'lookup', None)
-        if iscontroller(lookup):
+        if _iscontroller(lookup):
             notfound_handlers.append(('lookup', lookup, remainder))
 
         if not remainder:
@@ -411,7 +411,7 @@ def find_object(obj, remainder, notfound_handlers):
         remainder = remainder[1:]
 
 
-def iscontroller(obj):
+def _iscontroller(obj):
     if not hasattr(obj, '__call__'):
         return False
     if not hasattr(obj, 'decoration'):
@@ -536,4 +536,7 @@ def setup_i18n():
         if languages:
             set_lang(languages[0])
             log.info("Set request language to %s", languages[0])
-
+__all__ = [ 
+    "DecoratedController", "ObjectDispatchController", "TGController", 
+    "url", "redirect"
+    ]
