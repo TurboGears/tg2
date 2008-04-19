@@ -13,8 +13,6 @@ from toscawidgets.api import Widget
 
 log = logging.getLogger(__name__)
 
-log = logging.getLogger(__name__)
-
 def _configured_engines():
     """Returns set with the currently configured template engine's names
     from the active application's globals"""
