@@ -11,8 +11,8 @@ from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
     StaticJavascripts, StatusCodeRedirect
 from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
-from toscawidgets.middleware import TGWidgetsMiddleware
-from toscawidgets.mods.pylonshf import PylonsHostFramework
+from tw.core.middleware import TGWidgetsMiddleware
+from tw.mods.pylonshf import PylonsHostFramework
 
 
 from  ${package}.config.environment import load_environment
