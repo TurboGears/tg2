@@ -18,7 +18,7 @@ import pylons
 from pylons.controllers import WSGIController
 
 from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException
-from toscawidgets.api import Widget
+from tw.api import Widget
 
 log = logging.getLogger(__name__)
 
