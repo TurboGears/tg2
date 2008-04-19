@@ -1,4 +1,13 @@
-"""Basic controller classes for turbogears"""
+"""
+Basic controller classes for turbogears
+
+. DecoratedController allows the decorators in tg.decorators to work
+. ObjectDispatchController is a specialised form of DecoratedController that
+  converts URL portions into traversing Python objects.
+. TGController is a specialised form of ObjectDispatchController that forms the
+  basis of standard TurboGears controllers.  The "Root" controller must be of
+  this type.
+"""
 
 import logging
 import warnings
@@ -14,16 +23,104 @@ from toscawidgets.api import Widget
 log = logging.getLogger(__name__)
 
 def _configured_engines():
-    """Returns set with the currently configured template engine's names
-    from the active application's globals"""
+    """
+    Returns a set containing the names of the currently configured template
+    engines from the active application's globals
+    """
     g = pylons.app_globals._current_obj()
     if not hasattr(g, 'tg_configured_engines'):
         g.tg_configured_engines = set()
     return g.tg_configured_engines
 
 class DecoratedController(WSGIController):
+    """
+    DecoratedController takes action on the decorated controller methods
+    created by the decorators in tg.decorators.
+
+    The decorators in tg.decorators create an attribute named 'decoration' on
+    the controller method, creating rules as to:
+    
+    1) how to validate the request,
+    2) how to render the response,
+    3) allowing hooks to be registered to happen:
+        a) before validation
+        b) before the controller method is called
+        c) before the rendering takes place, and
+        d) after the rendering has happened.
+    """
+
+
+    def _perform_call(self, controller, params, remainder=None):
+        """
+        _perform_call is called by _inspect_call in Pylons' WSGIController.
+
+        Any of the before_validate hook, the validation, the before_call hook,
+        and the controller method can return a FormEncode Invalid exception,
+        which will give the validation error handler the opportunity to provide
+        a replacement decorated controller method and output that will
+        subsequently be rendered.
+
+        This allows for validation to display the original page or an
+        abbreviated form with validation errors shown on validation failure.
+
+        The before_render hook can, for example, add and remove from the
+        dictionary returned by the controller method, before it is passed to
+        rendering.
+
+        The after_render hook can act upon and modify the response out of
+        rendering.
+        """
+
+        if remainder is None:
+            remainder = []
+        try:
+            pylons.request.headers['tg_format'] = params.get('tg_format', None)
+
+            controller.decoration.run_hooks('before_validate', remainder,
+                                            params)
+
+            # Validate user input
+            params = self._perform_validate(controller, params)
+            pylons.c.form_values = params
+
+            controller.decoration.run_hooks('before_call', remainder, params)
+
+            # call controller method
+            output = controller(*remainder, **dict(params))
+
+        except formencode.api.Invalid, inv:
+            controller, output = self._handle_validation_errors(controller, 
+                                                                remainder,
+                                                                params, inv)
+
+        # Render template
+        controller.decoration.run_hooks('before_render', remainder, params,
+                                        output)
+        response = self._render_response(controller, output)
+        controller.decoration.run_hooks('after_render', response)
+        return response
+
 
     def _perform_validate(self, controller, params):
+        """
+        Validation is stored on the "validation" attribute of the controller's
+        decoration.
+
+        If can be in three forms:
+
+        1) A dictionary, with key being the request parameter name, and value a
+           FormEncode validator.
+
+        2) A FormEncode Schema object
+
+        3) Any object with a "validate" method that takes a dictionary of the
+           request variables.
+
+        Validation can "clean" or otherwise modify the parameters that were
+        passed in, not just raise an exception.  Validation exceptions should
+        be FormEncode Invalid objets.
+        """
+
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
@@ -34,53 +131,60 @@ class DecoratedController(WSGIController):
         
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
-        errors = {}
         
-
-        #TG developers can pass in a dict of param names and validators
-        #this applies them one by one and builds up a new set of validated params.
+        # The validator may be a dictionary, a FormEncode Schema object, or any
+        # object with a "validate" method.
         if isinstance(validation.validators, dict):
+            # TG developers can pass in a dict of param names and FormEncode
+            # validators.  They are applied one by one and builds up a new set
+            # of validated params.
+
+            errors = {}
             for field, validator in validation.validators.iteritems():
                 try:
                     validator.to_python(params.get(field))
                     new_params[field] = validator.to_python(params.get(field))
-                #catch individual validation errors    
+                # catch individual validation errors into the errors dictionary
                 except formencode.api.Invalid, inv:
                     errors[field] = inv
 
-            #Make sure unvalidated params get added back in
+            # Parameters that don't have validators are returned verbatim
             for param, param_value in params.items():
                 if not param in new_params:
                     new_params[param] = param_value        
 
-            #re-raise a compound validation error, with the full error dict      
+            # If there are errors, create a compound validation error based on
+            # the errors dictionary, and raise it as an exception
             if errors:
                 raise formencode.api.Invalid(
                     formencode.schema.format_compound_error(errors),
                     params, None, error_dict=errors)
             
         elif isinstance(validation.validators, formencode.Schema):
+            # A FormEncode Schema object - to_python converts the incoming
+            # parameters to sanitized Python values
+
             try:
                 new_params = validation.validators.to_python(params)
-            #add unvalidated params back in
             except formencode.api.Invalid, inv:
                 raise inv
             
         elif hasattr(validation.validators, 'validate'):
-            #the object validates itself
+            # An object with a "validate" method - call it with the parameters
             try:
                 new_params = validation.validators.validate(params)
             except  formencode.api.Invalid, inv:
                 raise inv
         
-        #Theoretically this should not happen...
+        # Theoretically this should not happen...
         if new_params is None:
             return params
             
         return new_params
 
     def _render_response(self, controller, response):
-        """Render response takes the dictionary returned by the
+        """
+        Render response takes the dictionary returned by the
         controller calls the appropriate template engine. It uses
         information off of the decoration object to decide which engine
         and template to use, and removes anything in the exclude_names
@@ -95,6 +199,7 @@ class DecoratedController(WSGIController):
         All of these values are populated into the context object by the
         expose decorator.
         """
+
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
@@ -105,16 +210,16 @@ class DecoratedController(WSGIController):
         if template_name is None:
             return response
 
-        #Qick hack to raise deprication warnings if people return a widget 
-        # in the dict rather than setting it on tmpl_context.w
+        # Deprecation warnings if people return a widget in the dict rather
+        # than setting it on tmpl_context.w
         if isinstance(response, dict):
             for key, item in response.iteritems():
                 if isinstance(item, Widget):
-                    msg = "Returning a widget is depricated, set them on pylons.widgets instead"
+                    msg = "Returning a widget is deprecated, set them on pylons.widgets instead"
                     warnings.warn(msg, DeprecationWarning)
                     setattr(pylons.c.w, key, item)
         
-        #Prepare the engine, if it's not already been prepared.
+        # Prepare the engine, if it's not already been prepared.
         if engine_name not in _configured_engines():
             from pylons import config
             template_options = dict(config).get('buffet.template_options', {})
@@ -143,20 +248,33 @@ class DecoratedController(WSGIController):
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):
+        """
+        Sets up pylons.c.form_values and pylons.c.form_errors to assist
+        generating a form with given values and the validation failure
+        messages.
+
+        The error handler in decoration.validation.error_handler is called. If
+        an error_handler isn't given, the original controller is used as the
+        error handler instead.
+        """
+
         pylons.c.validation_exception = exception
         pylons.c.form_errors = {} 
         
-        error_list = exception.__str__().split('\n')
-        #most invalids come back with a list of fields which 
-        #are in error in the format: 
+        # Most Invalid objects come back with a list of errors in the format:
         #"fieldname1: error\nfieldname2: error"
+
+        error_list = exception.__str__().split('\n')
+
         for error in error_list:
             field_value = error.split(':')
+
             #if the error has no field associated with it, 
             #return the error as a global form error
             if len(field_value) == 1:
                 pylons.c.form_errors['_the_form'] = field_value[0].strip()
                 continue
+
             pylons.c.form_errors[field_value[0]] = field_value[1].strip()
             
         pylons.c.form_values = exception.value
@@ -172,43 +290,53 @@ class DecoratedController(WSGIController):
 
         return error_handler, output
 
-    def _perform_call(self, func, args, remainder=None):
-        if remainder is None:
-            remainder = []
-        try:
-            controller, params = func, args
-            pylons.request.headers['tg_format'] = params.get('tg_format', None)
-
-            # Validate user input
-            controller.decoration.run_hooks('before_validate', remainder,
-                                            params)
-            params = self._perform_validate(controller, params)
-            pylons.c.form_values = params
-
-            # call controller method
-            controller.decoration.run_hooks('before_call', remainder, params)
-            output = controller(*remainder, **dict(params))
-
-        except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller, 
-                                                                remainder,
-                                                                params, inv)
-
-        # Render template
-        controller.decoration.run_hooks('before_render', remainder, params,
-                                        output)
-        response = self._render_response(controller, output)
-        controller.decoration.run_hooks('after_render', response)
-        return response
 
 class ObjectDispatchController(DecoratedController):
+    """
+    Object dispatch (also "object publishing") means that each portion of the
+    URL becomes a lookup on an object.  The next part of the URL applies to the
+    next object, until you run out of URL.  Processing starts on a "Root"
+    object.
+
+    Thus, /foo/bar/baz become URL portion "foo", "bar", and "baz".  The
+    dispatch looks for the "foo" attribute on the Root URL, which returns
+    another object.  The "bar" attribute is looked for on the new object, which
+    returns another object.  The "baz" attribute is similarly looked for on
+    this object.
+
+    Dispatch does not have to be directly on attribute lookup, objects can also
+    have other methods to explain how to dispatch from them.  The search ends
+    when a decorated controller method is found.
+
+    The rules work as follows:
+
+    1) If the current object under consideration is a decorated controller
+       method, the search is ended.
+
+    2) If the current object under consideration has a "default" method, keep a
+       record of that method.  If we fail in our search, and the most recent
+       method recorded is a "default" method, then the search is ended with
+       that method returned.
+
+    3) If the current object under consideration has a "lookup" method, keep a
+       record of that method.  If we fail in our search, and the most recent
+       method recorded is a "lookup" method, then execute the "lookup" method,
+       and start the search again on the return value of that method.
+
+    4) If the URL portion exists as an attribute on the object in question,
+       start searching again on that attribute.
+
+    5) If we fail our search, try the most recent recorded methods as per 2 and
+       3.
+    """
 
     def _initialize_validation_context(self):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
 
     def _get_routing_info(self, url=None):
-        """Returns a tuple (controller, remainder, params)
+        """
+        Returns a tuple (controller, remainder, params)
 
         :Parameters:
           url
@@ -238,6 +366,10 @@ class ObjectDispatchController(DecoratedController):
                                                  remainder=remainder)
 
     def route(self, url='/', start_response=None, **kwargs):
+        """
+        This function does not do anything.  It is a placeholder that allows
+        Routes to accept this controller as a target for its routing.
+        """
         pass
 
 
@@ -294,13 +426,15 @@ def iscontroller(obj):
     return obj.decoration.exposed
 
 class TGController(ObjectDispatchController):
-    """Basis TurboGears controller class which is derived from
-    pylons ObjectDispatchController
+    """
+    An ObjectDispatchController-derived class for stock-standard TurboGears
+    controllers.
     
     This controller can be used as a baseclass for anything in the 
     object dispatch tree, but it MUST be used in the Root controller
     ad any controller which you intend to do object dispatch from
-    using Routes."""
+    using Routes.
+    """
     
     def _perform_call(self, func, args):
         setup_i18n()
@@ -323,7 +457,8 @@ class TGController(ObjectDispatchController):
         return result
 
 def redirect(url, params=None, **kw):
-    """Generate an HTTP redirect. The function raises an exception internally,
+    """
+    Generate an HTTP redirect. The function raises an exception internally,
     which is handled by the framework. The URL may be either absolute (e.g.
     http://example.com or /myfile.html) or relative. Relative URLs are
     automatically converted to absolute URLs. Parameters may be specified,
@@ -352,7 +487,9 @@ def redirect(url, params=None, **kw):
     raise found
 
 def url(tgpath, tgparams=None, **kw):
-    """url() re-implementation from TG1"""
+    """
+    url() re-implementation from TG1
+    """
 
     if not isinstance(tgpath, basestring):
         tgpath = "/".join(list(tgpath))

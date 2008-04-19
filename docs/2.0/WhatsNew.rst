@@ -17,14 +17,22 @@ Why not just merge with Pylons?
 
 Well, pylons is committed to being officially template engine agnostic, ORM agnostic, etc.  On the other hand TurboGears is committed to providing a "Full-Stack" for web development.  So, the two communities have different, but compatible priorities.  If you think about it Pylons provides a great set of tools for building a full stack framework, and people had been asking for a full-stack pylons implementation for a long time.   And TurboGears 2 will provide that. 
 
-There are a lot of benifits to having a full-stack.  You can build form helpers which do all sorts of interesting things (introspect model objects to make web-based forms, automatically display form errors, etc) because you can make some assumptions about what tools will be available and what will be used.    In particular, you can start building plugable website components much more easily, because you are building on a known set of tools. 
+There are a lot of benefits to having a full-stack.  You can build form helpers which do all sorts of interesting things (introspect model objects to make web-based forms, automatically display form errors, etc) because you can make some assumptions about what tools will be available and what will be used.    In particular, you can start building plugable website components much more easily, because you are building on a known set of tools. 
 
 Why not use CherryPy 3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is something we really struggled with.  CherryPy 3 is a huge improvement over CherryPy 2, providing a much richer programming experience, and huge performance gains.  But TurboGears 1 was very tightly coupled to the config system of CherryPy 2, which was entirely rewritten in CherrPy 3.   We tried to make a backwards compatible TG based on CherryPy 3, but discovered that it was significantly more difficult than we had expected.   
 
-At the same time there was a push to make TurboGears 2 more WSGI based, and to take adval
+At the same time there was a push to make TurboGears 2 more WSGI based, and to take advantage of things like Routes middleware, and to generally take advantage of the Pylon WSGI revolution.   And we discovered that Pylons had a lot of the same code as TurboGears (both of us had buffet implementations both of us had SQLObject wrappers that did the same thing, etc)
+
+Why Genshi?
+~~~~~~~~~~~~~~~~~~~
+
+Why SQLAlchemy?
+~~~~~~~~~~~~~~~~~~~
+
+
 
 New Features to TurboGears 2:
 ------------------------------
