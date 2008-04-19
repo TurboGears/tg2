@@ -70,6 +70,8 @@ class DecoratedController(WSGIController):
         The after_render hook can act upon and modify the response out of
         rendering.
         """
+        
+        self._initialize_validation_context()
 
         if remainder is None:
             remainder = []
@@ -282,6 +284,10 @@ class DecoratedController(WSGIController):
             output = error_handler(controller.im_self, *remainder, **dict(params))
 
         return error_handler, output
+        
+    def _initialize_validation_context(self):
+        pylons.c.form_errors = {}
+        pylons.c.form_values = {}
 
 
 class ObjectDispatchController(DecoratedController):
@@ -323,10 +329,6 @@ class ObjectDispatchController(DecoratedController):
        3.
     """
 
-    def _initialize_validation_context(self):
-        pylons.c.form_errors = {}
-        pylons.c.form_values = {}
-
     def _get_routing_info(self, url=None):
         """
         Returns a tuple (controller, remainder, params)
@@ -353,7 +355,6 @@ class ObjectDispatchController(DecoratedController):
         return controller, remainder, pylons.request.params
 
     def _perform_call(self, func, args):
-        self._initialize_validation_context()
         controller, remainder, params = self._get_routing_info(args.get('url'))
         return DecoratedController._perform_call(self, controller, params,
                                                  remainder=remainder)
@@ -431,7 +432,6 @@ class TGController(ObjectDispatchController):
     
     def _perform_call(self, func, args):
         setup_i18n()
-        self._initialize_validation_context()
         routingArgs = None
         
         if isinstance(args, dict) and 'url' in args:
