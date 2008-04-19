@@ -1,27 +1,30 @@
+The most significant change in TurboGears 2 is the decision to work very, very closely with Pylons.   We've basically built a copy of the TG 1.x API on top of pylons/paste which allows our two communities to work together on everything from internationalization to database connection pooling.     
 
+Another significant change is that we've removed the tg-admin wrapper and started explicitly using paster for administrative commands to match what Pylons was doing.   We've re-implemented the old tg-admin commands as  paster commands; for example, "tg-admin quickstart" is replaced by "paster quickstart". 
 
+The "why" of TurboGears 2
+------------------------------
 
-:Status: Work in progress
+Lots of questions have been asked about why we've decided to create TurboGears 2 the way we did,  so let's try to answer them as best we can.   
 
-.. contents:: Table of Contents
-    :depth: 2
+Why so many changes?
+~~~~~~~~~~~~~~~~~~~~~~
 
+Well, there are a lot of changes, but perhaps not as many as it looks like from the description.  We were able to keep the controller API very similar to TG1, and Genshi copied the Kid API, so while we chose new components, we didn't really change the way Controllers and Templates look very much at all.  Sure, there are some minor changes here and there, but one member of the TG2 training class at PyCon said "I didn't notice a lot that was new in terms of how you put a TurboGears application together." 
 
-What's new in TurboGears 2:
-===============================
+Why not just merge with Pylons?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The most significant change in TurboGears 2 is the decision to work very, very closely with Pylons.   We've basically built a copy of the TG 1.x API on top of pylons/paste  which allows our two communities to work together on everything from internationalization to database connection pooling and threading strategies.     
+Well, pylons is committed to being officially template engine agnostic, ORM agnostic, etc.  On the other hand TurboGears is committed to providing a "Full-Stack" for web development.  So, the two communities have different, but compatible priorities.  If you think about it Pylons provides a great set of tools for building a full stack framework, and people had been asking for a full-stack pylons implementation for a long time.   And TurboGears 2 will provide that. 
 
-Another significant change is that we've removed the tg-admin wrapper and started explicitly using paster for administrative commands to match what Pylons was doing.   We've reimplemented the old tg-admin commands as  paster commands; for example, "tg-admin quickstart" is replaced by "paster quickstart". 
+There are a lot of benifits to having a full-stack.  You can build form helpers which do all sorts of interesting things (introspect model objects to make web-based forms, automatically display form errors, etc) because you can make some assumptions about what tools will be available and what will be used.    In particular, you can start building plugable website components much more easily, because you are building on a known set of tools. 
 
-Main decisions
----------------
+Why not use CherryPy 3?
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  * Based on Pylons instead of based on CherryPy
-  * Use SQLAlchemy as default ORM, but provide for SQLObject
-  * Use genshi as the default template engine, but provide support for Kid, Mako and others
+This is something we really struggled with.  CherryPy 3 is a huge improvement over CherryPy 2, providing a much richer programming experience, and huge performance gains.  But TurboGears 1 was very tightly coupled to the config system of CherryPy 2, which was entirely rewritten in CherrPy 3.   We tried to make a backwards compatible TG based on CherryPy 3, but discovered that it was significantly more difficult than we had expected.   
 
-NOTE: SQLObject support is not yet completed. 
+At the same time there was a push to make TurboGears 2 more WSGI based, and to take adval
 
 New Features to TurboGears 2:
 ------------------------------
