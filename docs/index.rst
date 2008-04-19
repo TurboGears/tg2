@@ -28,7 +28,14 @@ Are you the type who learns by doing?   If so this section is for you.   Our ult
       
    2.0/Wiki20/wiki20
    2.0/ToscaWidgets/forms
-      
+
+What's new
+===============
+
+.. toctree::
+   :maxdepth: 2
+   
+   2.0/WhatsNew      
 
 General Reference for MVC Components
 ======================================
@@ -50,19 +57,6 @@ Validation, Form handling and form widgets
    2.0/Validation
    2.0/ToscaWidgets/forms
    2.0/ToscaWidgets/ToscaWidgets
-
-TurboGears plugins
-===================
-
-.. toctree::
-   :maxdepth: 1
-
-   2.0/CommandLine
-   2.0/RoughDocs/FormEncode
-   2.0/RoughDocs/CreateDatabase
-   2.0/RoughDocs/BootStrap
-   2.0/SimpleWidgetForm
-   2.0/RoughDocs/StaticFile
 
 
 Recipes for Installation and Deployment
@@ -104,7 +98,6 @@ General TG tools
    2.0/RoughDocs/I18N
 
 
-
 Integration Recipes
 ======================
 
@@ -115,7 +108,7 @@ Integration Recipes
    2.0/RoutesIntegration
 
 
-Et cetera
+Project Information
 =======================
 
 .. toctree::
@@ -126,13 +119,6 @@ Et cetera
    2.0/Contributing
    2.0/License
    2.0/TGandPylons
-
-Release notes
--------------
-
-.. toctree::
-   :maxdepth: 1
-
    2.0/RoughDocs/WhatsNew
 
 Indices and tables
