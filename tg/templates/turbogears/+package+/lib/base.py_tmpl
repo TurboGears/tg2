@@ -7,7 +7,7 @@ from pylons.controllers.util import abort, etag_cache, redirect_to
 from pylons.decorators import jsonify
 from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
-from toscawidgets.api import WidgetBunch
+from tw.api import WidgetBunch
 
 import ${package}.model as model
 
