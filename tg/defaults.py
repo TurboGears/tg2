@@ -21,6 +21,6 @@ def make_default_route_map():
     
     # This route connects your root controller, it should be after
     # more specific routes since the wildcard will pick up everything...
-    map.connect('*url', controller='root', action='route')
+    map.connect('*url', controller='root', action='routes_placeholder')
 
     return map

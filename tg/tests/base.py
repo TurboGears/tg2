@@ -44,7 +44,7 @@ def make_app(controller_klass=None, environ=None):
     if environ is None:
         environ = {}
     environ['pylons.routes_dict'] = {}
-    environ['pylons.routes_dict']['action'] = "route"
+    environ['pylons.routes_dict']['action'] = "routes_placeholder"
 
     if controller_klass is None:
         controller_klass = TGController

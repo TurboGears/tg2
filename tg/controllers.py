@@ -365,7 +365,7 @@ class ObjectDispatchController(DecoratedController):
         return DecoratedController._perform_call(self, controller, params,
                                                  remainder=remainder)
 
-    def route(self, url='/', start_response=None, **kwargs):
+    def routes_placeholder(self, url='/', start_response=None, **kwargs):        
         """
         This function does not do anything.  It is a placeholder that allows
         Routes to accept this controller as a target for its routing.
