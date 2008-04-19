@@ -7,14 +7,6 @@ needed to support these decorators."""
 import formencode
 from paste.util.mimeparse import best_match
 
-def _schema(d=None, **kw):
-    dd = {}
-    if d:
-        dd.update(d)
-    dd.update(**kw)
-    return formencode.Schema.__metaclass__('schema', (formencode.Schema,), dd)
-
-
 class Decoration(object):
 
     def __init__(self):

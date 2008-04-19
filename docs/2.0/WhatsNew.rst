@@ -15,7 +15,7 @@ Well, there are a lot of changes, but perhaps not as many as it looks like from 
 Why not just merge with Pylons?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Well, pylons is committed to being officially template engine agnostic, ORM agnostic, etc.  On the other hand TurboGears is committed to providing a "Full-Stack" for web development.  So, the two communities have different, but compatible priorities.  If you think about it Pylons provides a great set of tools for building a full stack framework, and people had been asking for a full-stack pylons implementation for a long time.   And TurboGears 2 will provide that. 
+Well, pylons is committed to being officially template engine agnostic, ORM agnostic, etc.  On the other hand TurboGears is committed to providing a "Full-Stack" for web development.  So, the two communities have different, but compatible priorities.  If you think about it Pylons provides a great set of tools for building a full stack framework, and people had been asking for a full-stack pylons implementation for a long time.   And TurboGears 2 will provide that.
 
 There are a lot of benefits to having a full-stack.  You can build form helpers which do all sorts of interesting things (introspect model objects to make web-based forms, automatically display form errors, etc) because you can make some assumptions about what tools will be available and what will be used.    In particular, you can start building plugable website components much more easily, because you are building on a known set of tools. 
 
@@ -29,9 +29,12 @@ At the same time there was a push to make TurboGears 2 more WSGI based, and to t
 Why Genshi?
 ~~~~~~~~~~~~~~~~~~~
 
+Well, Genshi is an intentional re-implementation of Kid, with a almost identical API.   But internally it's simpler, faster, and provides better error messages.   The inclusion of a couple of new features -- includes and full x-path support -- also make it significantly more flexible.   
+
+Genshi has also developed a larger, more active community than Kid, and is being used in lots of places outside of TurboGears so, unlike Kid, it's not at all likely to have to be taken over and maintained by the TG core developers. 
+
 Why SQLAlchemy?
 ~~~~~~~~~~~~~~~~~~~
-
 
 
 New Features to TurboGears 2:
