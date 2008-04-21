@@ -32,9 +32,9 @@ setup(
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
         'tw.forms',
-        'DBSprockets',
         'sqlalchemy-migrate >= 0.4.4',
         'tg.quickstart',
+        'tg.crud',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
@@ -43,11 +43,9 @@ setup(
         [paste.global_paster_command]
         tginfo = tg.commands.info:InfoCommand
         [paste.paster_command]
-        crud = tg.commands.crud:CrudCommand
         migrate = tg.commands.migration:MigrateCommand
         [turbogears2.command]
         tginfo = tg.commands.info:InfoCommand
-        crud = tg.commands.crud:CrudCommand
         serve = paste.script.serve:ServeCommand [Config]
         shell = pylons.commands:ShellCommand
     ''',
