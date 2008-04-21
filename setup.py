@@ -31,10 +31,9 @@ setup(
         'Genshi>=0.4',
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
-        'tw.forms',
-        'sqlalchemy-migrate >= 0.4.4',
         'tg.quickstart',
         'tg.crud',
+        'tg.migrate'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
@@ -42,8 +41,6 @@ setup(
     entry_points='''
         [paste.global_paster_command]
         tginfo = tg.commands.info:InfoCommand
-        [paste.paster_command]
-        migrate = tg.commands.migration:MigrateCommand
         [turbogears2.command]
         tginfo = tg.commands.info:InfoCommand
         serve = paste.script.serve:ServeCommand [Config]
