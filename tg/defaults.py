@@ -1,7 +1,7 @@
 """TurboGears2 helpers for setting up your application enviroment
 
 The intention of this module is to provie some helpers that setup sane defaults 
-for TG2 applications.  The gaoal is to make the config files smaller, simpler and easier to read. 
+for TG2 applications.  The goal is to make the config files smaller, simpler and easier to read. 
 """
 
 from pylons import config

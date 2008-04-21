@@ -34,24 +34,19 @@ setup(
         'tw.forms',
         'DBSprockets',
         'sqlalchemy-migrate >= 0.4.4',
+        'tg.quickstart',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
     },
     entry_points='''
-        [paste.paster_create_template]
-        turbogears2=tg.pastetemplate:TurboGearsTemplate
         [paste.global_paster_command]
         tginfo = tg.commands.info:InfoCommand
-        quickstart = tg.commands.quickstart:QuickstartCommand
         [paste.paster_command]
         crud = tg.commands.crud:CrudCommand
         migrate = tg.commands.migration:MigrateCommand
-        [turbogears2.template]
-        turbogears2=tg.pastetemplate:TurboGearsTemplate
         [turbogears2.command]
         tginfo = tg.commands.info:InfoCommand
-        quickstart = tg.commands.quickstart:QuickstartCommand
         crud = tg.commands.crud:CrudCommand
         serve = paste.script.serve:ServeCommand [Config]
         shell = pylons.commands:ShellCommand
