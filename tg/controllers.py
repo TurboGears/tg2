@@ -1,10 +1,10 @@
 """
 Basic controller classes for turbogears
 
-. DecoratedController allows the decorators in tg.decorators to work
-. ObjectDispatchController is a specialised form of DecoratedController that
+  DecoratedController allows the decorators in tg.decorators to work
+  ObjectDispatchController is a specialised form of DecoratedController that
   converts URL portions into traversing Python objects.
-. TGController is a specialised form of ObjectDispatchController that forms the
+  TGController is a specialised form of ObjectDispatchController that forms the
   basis of standard TurboGears controllers.  The "Root" controller must be of
   this type.
 """
