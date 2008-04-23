@@ -1,3 +1,6 @@
+What's new in 2
+===================
+
 The most significant change in TurboGears 2 is the decision to work very, very closely with Pylons.   We've basically built a copy of the TG 1.x API on top of pylons/paste which allows our two communities to work together on everything from internationalization to database connection pooling.     
 
 Another significant change is that we've removed the tg-admin wrapper and started explicitly using paster for administrative commands to match what Pylons was doing.   We've re-implemented the old tg-admin commands as  paster commands; for example, "tg-admin quickstart" is replaced by "paster quickstart". 
@@ -49,52 +52,61 @@ New Features to TurboGears 2:
 Compatibility
 ---------------
 
-  * Possibly deprecate the python 2.3 support?
-  * TurboGears 1.x and TurboGears 2.x could be installed in the same machine. They are different packages with different namespaces.
-  * Object dispatch is implemented in TurboGears 2.x, so you can use arguments and keywords in function as in TurboGears 1.x.
-  * Expose and error handling decorators are implemented in TurboGears 2.x, you can use decorators just like TurboGears 1.x.
-  * CherryPy filters will not work in TurboGears 2.x.  You can easily write middleware to do what filters did in CherryPy2
-  * The @expose decorator has a slightly updated syntax for content type declaration 
-  * All template engines now have search paths to find the templates.  The default template directory is on the search path so using dotted notation in @expose decorators has been deprecated.
-  * Rather than raise a redirect error, you now call the redirect_to()  function
+Areas of compatibility:
+ 
+  * Like TurboGears 1.1, TG2 supports python 2.4 and above.   
+  * TurboGears 1.x and TurboGears 2.x can both be installed in the same machine. 
+    They are different packages with different namespaces.  Right now there are 
+    no dependency conflicts.  But using virtualenv to is highly recommended to eliminate
+    the possibility of future dependency conflicts. 
+  * Object dispatch is implemented in TurboGears 2.x, so you can use arguments and 
+    keywords in function the same way you did in TurboGears 1.x.
+  * Expose and error handling decorators are implemented in TurboGears 2.x, 
+    you can use decorators just like TurboGears 1.x.
+    
 
+Differences:    
+  * CherryPy filters will not work in TurboGears 2.x.  You can write 
+    middleware to do what filters did in CherryPy2
+  * The @expose decorator has a slightly updated syntax for content type declaration 
+  * All template engines now have search paths to find the templates.  
+    The default template directory is on the search path so using dotted 
+    notation in @expose decorators has been deprecated.
+  * Rather than raise a redirect error, you now call the redirect() function.
+  * Object dispatch does not support dots in URL's the way TG1 did. 
+  * CherryPy request and response objects replaces with WebOb request and response objects. 
+  
 Command changes
 ----------------
 
-Use paster command instead of tg-admin command.
+Use paster command instead of the old tg-admin command.
 
-  * tg-admin quickstart -> paster quickstart
-  * tg-admin info -> paster tginfo
-  * tg-admin toolbox -> paster toolbox
+For exampel you now type ``paster quickstart`` rather than ``tg-admin quickstart`` to start a project. 
+
+Here's a full list of the old command line tools and their new equivalents
+
+  * ``tg-admin quickstart`` ---> ``paster quickstart``
+  * ``tg-admin info`` ---> ``paster tginfo``
+  * ``tg-admin toolbox`` --> ``paster toolbox``
+  * ``tg-admin shell`` --> ``paster shell``
 
 Project layout changes 
 ------------------------
 
-Both controllers.py and model.py are now folders, as they have been changed to be Python packages.
+Both controllers.py and model.py have been replaced by the controllers and model folders.  In other words thery are now Python packages, in just the way they were in TG1 if you used the tg big option with quickstart. 
 
-  * controllers.py -> move to controllers/root.py
-  * model.py -> model/model.py
-    * SQLObject -> Elixir over SQLAlchemy, check for 1.0->1.1 guide
-  * templates/ -> templates/
-    * kid -> genshi, check for 1.0->1.1 guide
-  * dev.ini -> development.ini
-    config/config.ini -> config/environments.py and middleware.py
+  * your root controller is not in ``controllers.py`` -> it has moved to ``controllers/root.py``
+  * ``model.py`` -> ``model/__init__.py``
+  * ``myproject_dev.cfg`` -> ``development.ini`` **With a whole new structure based on paste.deploy**
+  * ``app.cfg`` -->  ``config/environment.py`` and to a lesser extent ``config/middleware.py``
 
 
-Function changes 
---------------------
-
-  * different name space: import turbogears -> import tg
-  * turbogears.config.get('sqlalchemy.dburi') -> pylons.config['sqlalchemy.default.dburi']
-
-In progress
+New imports 
 -------------
 
-  * static -> public
-        static file urls: /static -> /
-  * tg-admin sql create -> paster setup.py make-app development.ini
-  * model transcations
-  * toscawidget integration
-   
-
+  * import turbogears -> import tg
+  * turbogears.config.get('sqlalchemy.dburi') -> pylons.config['sqlalchemy.default.dburi']
+  * pylons.tmpl_context provides a request local place to stick stuff
+  * pylons.request  provides the rough equivelent of cherrypy.request
+  * pylons.response provides the equivelent of cherrypy.response
 

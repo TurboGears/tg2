@@ -1,14 +1,19 @@
 """Decorators use by the TurboGears controllers
 
-These decorators are not 'real' wrappers, they just regester attributes on 
-the functions they wrap, and the DecoratedController provides the hooks 
+These decorators are not traditonal wrappers.  They  are much simplified from the 
+turbogears 1 decorators, because all they do is regester attributes on 
+the functions they wrap, and then the DecoratedController provides the hooks 
 needed to support these decorators."""
 
 import formencode
 from paste.util.mimeparse import best_match
 
 class Decoration(object):
-
+    """ Simple class to support 'simple registration' type decorators
+    
+    The decoration object can be 
+    
+    """
     def __init__(self):
         self.engines = {}
         self.validation = None
@@ -86,7 +91,8 @@ class Decoration(object):
 
 
 class _hook_decorator(object):
-
+    """SuperClass for all the specific TG2 hook validators. 
+    """
     # must be overridden by a particular hook
     hook_name = None
 
@@ -100,22 +106,25 @@ class _hook_decorator(object):
 
 
 class before_validate(_hook_decorator):
-
+    """A list of callables to be run before validation is performed"""
     hook_name = 'before_validate'
 
 
 class before_call(_hook_decorator):
-
+    """A list of callables to be run before the controller method is called"""
     hook_name = 'before_call'
 
 
 class before_render(_hook_decorator):
-
+    """A list of callables to be run before the template is rendered"""
     hook_name = 'before_render'
 
 
 class after_render(_hook_decorator):
-
+    """A list of callables to be run after the template is rendered.
+    
+    Will be run before it is returned returned up the WSGI stack"""
+    
     hook_name = 'after_render'
 
 
@@ -194,11 +203,31 @@ class expose(object):
 
 
 class validate(object):
-
+    """Regesters which validators ought to be applied
+    
+    If you want to validate the contents of your form, 
+    you can use the ``@validate()`` decorator to regester
+    the validators that ought to be called.   
+    
+    :Parameters:
+      validators
+        Pass in a dictionary of FormEncode validators. 
+        The keys should match the form field names. 
+      error_handler
+        Pass in the controller method which shoudl be used
+        to handle any form errors
+      form
+        Pass in a ToscaWidget based form with validators
+        
+    The first positional parameter can either be a dictonary of validators, 
+    a FormEncode schema validator, or a callable which acts like a FormEncode
+    validator. 
+    
+    """
     def __init__(self, validators=None, error_handler=None, form=None):
         if form:
             self.validators = form
-        if validators:    
+        if validators:
             self.validators = validators
         self.error_handler = error_handler
 
