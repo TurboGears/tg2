@@ -15,8 +15,8 @@ def setup():
 def teardown():
     teardown_session_dir()
 
-from toscawidgets.widgets.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
-from toscawidgets.api import WidgetsList
+from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
+from tw.api import WidgetsList
 
 class MyForm(TableForm):
     # This WidgetsList is just a container
