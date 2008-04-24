@@ -31,9 +31,6 @@ setup(
         'Genshi>=0.4',
         'SQLAlchemy>=0.4',
         'ToscaWidgets>=0.2rc2',
-        'tg.quickstart',
-        'tg.crud',
-        'tg.migrate'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
