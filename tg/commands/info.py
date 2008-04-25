@@ -14,7 +14,6 @@ entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
     "TurboGears2 Extensions" : "turbogears2.extensions",
     "Identity Providers" : "turbogears2.identity.provider",
     "Visit Managers" : "turbogears2.visit.manager",
-
 """
 
 
@@ -22,9 +21,12 @@ def retrieve_info():
     packages=['%s' % i for i in pkg_resources.require("TurboGears2")]
     plugins = {}
     for name, pointname in entrypoints.items():
-        plugins[name] = ["%s (%s)" % (entrypoint.name, str(entrypoint.dist))
+        if name in "samples":
+            pass
+        else:
+            plugins[name] = ["%s (%s)" % (entrypoint.name, str(entrypoint.dist))
             for entrypoint in pkg_resources.iter_entry_points(pointname)
-        ]
+            ]
     return packages, plugins
 
 class InfoCommand(command.Command):
@@ -38,19 +40,34 @@ class InfoCommand(command.Command):
     parser = command.Command.standard_parser(verbose=True)
 
     def command(self):
-        print """TurboGears2 Complete Version Information
-
-TurboGears2 requires:
-"""
+        print """TurboGears2 Complete Version Information"""
+        print """========================================"""
+        print "\nTurboGears2 requires:\n"
         li = []
         packages, plugins = retrieve_info()
         for p in packages:
             li.append(p)
         # print dependent modules
         for p in list(set(li)):
-            print '*', p
+            print '  *', p
         # print plugins
         for name, pluginlist in plugins.items():
             print "\n", name, "\n"
             for plugin in pluginlist:
-                print '*', plugin
+                print '  *', plugin
+
+        # print widgets
+        print "\nAvailable Widgets:\n"
+        for entrypoint in pkg_resources.iter_entry_points('toscawidgets.widgets'):
+            if entrypoint.name in "samples":
+                pass
+            else:
+                tool = entrypoint.load()
+                temp = dir(tool)
+                print "\n  * "+str(entrypoint.dist)+":"
+                for t in temp:
+                    if not t.startswith('__'):
+                        print '    -', t 
+
+            
+        
