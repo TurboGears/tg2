@@ -54,13 +54,10 @@ Compatibility
 
 Areas of compatibility:
  
-  * Like TurboGears 1.1, TG2 supports python 2.4 and above.   
+  * Like TurboGears 1.1, TurboGears 2 supports python 2.4 and above.   
   * TurboGears 1.x and TurboGears 2.x can both be installed in the same machine. 
-    They are different packages with different namespaces.  Right now there are 
-    no dependency conflicts.  But using virtualenv to is highly recommended to eliminate
-    the possibility of future dependency conflicts. 
-  * Object dispatch is implemented in TurboGears 2.x, so you can use arguments and 
-    keywords in function the same way you did in TurboGears 1.x.
+    They are different packages with different namespaces.  Right now there are no dependency conflicts.  But using virtualenv to is highly recommended to eliminate the possibility of future dependency conflicts. 
+  * Object dispatch is implemented in TurboGears 2.x, so you can use arguments and keywords in function the same way you did in TurboGears 1.x.
   * Expose and error handling decorators are implemented in TurboGears 2.x, 
     you can use decorators just like TurboGears 1.x.
     
@@ -73,7 +70,7 @@ Differences:
     The default template directory is on the search path so using dotted 
     notation in @expose decorators has been deprecated.
   * Rather than raise a redirect error, you now call the redirect() function.
-  * Object dispatch does not support dots in URL's the way TG1 did. 
+  * Object dispatch does not support dots in URL's the way TurboGears 1 did. 
   * CherryPy request and response objects replaces with WebOb request and response objects. 
   
 Command changes

@@ -46,6 +46,10 @@ like this:
 You can now point your browser at http://localhost:8080 to see the change. 
 You should see "Hello, world!" text in h1 size.
 
+.. note :: Beware to keep the declare description at the top of template file, they will be used in the default template engine (genshi)::
+
+  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
 
 Hello World using static file
 --------------------------------
@@ -54,7 +58,7 @@ Open a new file, edit the content as a simple html file:
 
 .. code-block:: html
 
-    <html>
+    <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
       <body>
         <h1>Hello World</h1>
       </body>
