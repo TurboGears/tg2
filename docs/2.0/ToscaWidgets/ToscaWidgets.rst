@@ -7,7 +7,7 @@ ToscaWidgets are reusable web components. The idea is that a component with some
    :maxdepth: 3
    
    Using
-   Forms
+   forms
    Creation
    ExistingLibraries
    Library

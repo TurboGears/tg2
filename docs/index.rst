@@ -17,6 +17,7 @@ Get TurboGears 2 installed, learn how to create a new TurboGears project in a si
    2.0/DownloadInstall
    2.0/QuickStart
    2.0/BasicMoves
+   2.0/WhatsNew
 
 Tutorials
 ===========
@@ -85,7 +86,7 @@ Development Tools
    2.0/RoughDocs/BootStrap
    2.0/ToscaWidgets/Using
    2.0/SimpleWidgetForm
-   2.0/RoughDocs/StaticFile
+
 
 General TG tools
 =====================
@@ -106,6 +107,7 @@ Integration Recipes
 
    2.0/TGandPyAMF
    2.0/RoutesIntegration
+   2.0/StaticFile
 
 
 Project Information
@@ -119,7 +121,6 @@ Project Information
    2.0/Contributing
    2.0/License
    2.0/TGandPylons
-   2.0/RoughDocs/WhatsNew
 
 Indices and tables
 ==================

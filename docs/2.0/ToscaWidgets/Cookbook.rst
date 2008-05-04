@@ -1,30 +1,56 @@
-
+#format rst
 
 ToscaWidgets Cookbook
 =====================
+  
+  Here you will find information about how to do common tasks involving ToscaWidgets.
 
-Here you will find information about how to do common tasks involving ToscaWidgets.
+Javascript Library Specific Widgets
+-----------------------------------------
 
-Ajax Widgets
-------------
+ExtJS
+~~~~~~~~
 
-Ajax Forms
-~~~~~~~~~~~~~~~~~~
- How to use ActiveForm to create a dynamic forms using JSON. 
+TreeView
+`````````
+ Learn how to use the ext widget library to create a dynamically loading TreeView.
 
- `(ActiveForm Tutorial) <./Cookbook/ActiveForm.html.html>`_
+ `(ExtTreeView Tutorial) </ExtTreeView>`_
 
+
+ .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/ExtItemSelector?action=AttachFile&do=get&target=itemselector1.png
+
+   :height: 140
+
+ItemSelector
+````````````
+ How to use the ext ItemSelector which allows multiple selection by shuttling items between source and destination lists. It supports full drag and drop and ordering of items.
+
+ `(ItemSelector Tutorial) </ExtItemSelector>`_
+
+
+ .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/ExtSingleSelectCombo?action=AttachFile&do=get&target=singleselectcombo-small.png
+   :height: 120
+
+SingleSelectCombo
+`````````````````
+ Create a ComboBox using Ext which also does autocompletion.
+
+ `(SingleSelectCombo Tutorial) </ExtSingleSelectCombo>`_
+
+jQuery
+~~~~~~~
 
  .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/AutoComplete?action=AttachFile&do=get&target=autocomplete_small.png
     :align: right
     :alt: example AutoComplete Field
 
 AutoComplete Field
-~~~~~~~~~~~~~~~~~~
+``````````````````
  Create a field which automatically completes the user entry as they type.  Based on tw.jquery AutoComplete widget.
 
 
- `(AutoComplete Tutorial) <./AutoComplete.html>`_
+ `(AutoComplete Tutorial) </AutoComplete>`_
 
 
  .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/FlexiGrid?action=AttachFile&do=get&target=flexigrid.png
@@ -32,95 +58,146 @@ AutoComplete Field
    :height: 120
 
 FlexiGrid
-~~~~~~~~~
+`````````
  How to create an Ajax Data Grid with support for pagination, sorting, searching and column resizing. This widget is based on the jQuery FlexiGrid Plugin.
 
- `(FlexiGrid Tutorial) <./Cookbook/FlexiGrid.html>`_
+ `(FlexiGrid Tutorial) </FlexiGrid>`_
+
+Ajax Form
+````````````
+ How to use AjaxForm to create a dynamic form. 
+
+ `(jQueryAjaxForm Tutorial) </JQueryAjaxForm>`_
+
+Flot
+````````````
+ How to create dynamic graphs using the powerful Flot library.
+
+ `(Flot Tutorial) </Flot>`_
+
+
+ .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/TreeView?action=AttachFile&do=get&target=treeview.png
+   :align: right
+   :height: 120
+
+
+Tree View
+```````````
+ How to create a simple tree view of an unordered list where the branches can be expanded or collapsed to present a good view of a document tree structure. This widget is based on the jQuery Treeview Plugin.
+
+`(TreeView Tutorial) </TreeView>`_
+
 
 Ajax Graphs
-~~~~~~~~~~~~~~~~~~~
+`````````````
  How to add an ajax graph to your system using tw.jquery and flot.
 
- `(FlotWidget Tutorial) <./Cookbook/FlotWidget.html>`_
+ `(FlotWidget Tutorial) </FlotWidget>`_
+
+ 
+ .. image :: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Using?action=AttachFile&do=get&target=stars.png
+    :align: right
 
 Ajax Star Rating
-~~~~~~~~~~~~~~~~
+````````````````
  How to a simple star rating widget to your application.
 
- `(StarRating Tutorial) <../Using.html>`_
+ `(StarRating Tutorial) <../Using>`_
 
-Ajax Select Shuttle
-~~~~~~~~~~~~~~~~~~~
- How to create a select shuttle field in your code and make it work with ajax in the back end.
+Prototype
+~~~~~~~~~
 
- `(SelectShuttle Tutorial) <./Cookbook/AjaxSelectShuttle.html>`_
+Ajax Form
+````````````
+ How to use AjaxForm to create a dynamic form. 
 
+ `(ActiveForm Tutorial) </ActiveForm>`_
+
+
+Dojo
+~~~~~
+
+Need some basic widgets here.
+
+JSUnit
+~~~~~~
+
+ .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/JSUnit?action=AttachFile&do=get&target=jsunit.png
+    :align: right
+    :height: 120
+    :alt: example JSUnit Widget
+
+JSUnit and Runner Widget
+````````````````````````
+ Create a widget for in-browser testing of javascript code using the `JSUnit Javascript Unit Testing Framework <http://www.jsunit.net/>`_.
+
+
+ `(JSUnit Tutorial) </JSUnit>`_
+
+
+To Be Done
+~~~~~~~~~~~~
 
 Ajax Related Select Fields
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``````````````````````````````
  How to create select fields which change based on the choices made on other select fields. 
 
- `(Related SelectShuttle Tutorial) <./Cookbook/RelatedSelectShuttle.html>`_
+ `(Related SelectShuttle Tutorial) </RelatedSelectShuttle>`_
 
 Ajax Progress Bar
-~~~~~~~~~~~~~~~~~
+`````````````````
   How to create a progress bar with server-side progress indicator
 
- `(ProgressBar Tutorial) <./Cookbook/ProgressBar.html>`_
+ `(ProgressBar Tutorial) </ProgressBar>`_
 
 Ajax File Upload with Progress Bar
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`````````````````````````````````````
  
  How to create a file upload with a progress bar.
 
- `(FileProgressBar Tutorial) <./Cookbook/FileProgressBar.html>`_
+ `(FileProgressBar Tutorial) </FileProgressBar>`_
 
 tw.forms
 --------
+
+Basic Form usage (no ajax)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
  .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/PasswordValidation?action=AttachFile&do=get&target=passwordverify.png
    :align: right
    :height: 80
 
 Password Validation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+````````````````````
  How to create a simple registration form with that makes sure the user typed the correct password 
 
- `(Password Validation Tutorial) <./Cookbook/PasswordValidation.html>`_
+ `(Password Validation Tutorial) </PasswordValidation>`_
 
  .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/ReCaptcha?action=AttachFile&do=get&target=recaptcha_field.jpg
    :align: right
    :height: 80
 
 ReCaptcha
-~~~~~~~~~~
+``````````
  A Description on how to add a tw.recaptcha field to your public forms an keep spammers at bay.
 
- `(Recaptcha Tutorial) <./Cookbook/ReCaptcha.html>`_
+ `(Recaptcha Tutorial) </ReCaptcha>`_
 
 
 Database-driven  Select Fields
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  How to create a select field which changes based on the entry in a database table. 
  
- `(Dynamic Select Field Tutorial) <./Cookbook/DynamicSelect.html>`_
+ `(Dynamic Select Field Tutorial) </DynamicSelect>`_
 
-Other Valuable Widgets
-----------------------
+Other Valuable Widgets (no JS library)
+----------------------------------------
 
+Css based
+~~~~~~~~~~
 Tabber
-~~~~~~~
+``````````
 
  How to easily add Tabbed Browsing to your website.
  
- `(Tabber Tutorial) <./Cookbook/TabbedBrowsing.html>`_
-
- .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/TreeView?action=AttachFile&do=get&target=treeview.png
-   :align: right
-   :height: 120
-
-Tree View
-~~~~~~~~~
- How to create a simple tree view of an unordered list where the branches can be expanded or collapsed to present a good view of a document tree structure. This widget is based on the jQuery Treeview Plugin.
-
- `(TreeView Tutorial) <./Cookbook/TreeView.html>`_
+ `(Tabber Tutorial) </TabbedBrowsing>`_

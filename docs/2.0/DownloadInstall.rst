@@ -77,10 +77,7 @@ Install TurboGears 2 developer tools::
 
 Then you have installed TurboGears 2.
 
- .. note:: if you have installed old dependency packages, you could remove them from::
-
- {python_path}/site-packages/easy_install.pth
-
+ .. note:: if you have installed old dependency packages, you could remove them from ``{python_path}/site-packages/easy_install.pth``
 
 Validate the installation:
 ----------------------------
@@ -103,9 +100,11 @@ If you get an error about ``ObjectDispatchController`` this means your Pylons in
 When installing on Mac OSX, if you get an error mentioning "No local packages or download links found for RuleDispatch", you can try the solution posted to the `ToscaWidgets discussion list <http://groups.google.com/group/toscawidgets-discuss/browse_thread/thread/cb6778810e96585d>`_, which advises downloading it directly::
 
  . $ sudo easy_install -U -f http://toscawidgets.org/download/wo_speedups/ RuleDispatch
+ 
 If you get the following error when starting a project with ``paster serve``::
 
  . AttributeError: 'WSGIRequest' object has no attribute 'accept_language'
+ 
 update your Pylons checkout with ``hg update`` and try again.
 
 If ``python setup.py develop`` gives you::
