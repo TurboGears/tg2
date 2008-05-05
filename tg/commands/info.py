@@ -67,7 +67,5 @@ class InfoCommand(command.Command):
                 print "\n  * "+str(entrypoint.dist)+":"
                 for t in temp:
                     if not t.startswith('__'):
-                        print '    -', t 
+                        print '    -', t
 
-            
-        

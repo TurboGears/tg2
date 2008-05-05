@@ -1,7 +1,7 @@
-What's new in 2
-===================
+What's new in TurboGears 2
+===========================
 
-The most significant change in TurboGears 2 is the decision to work very, very closely with Pylons.   We've basically built a copy of the TG 1.x API on top of pylons/paste which allows our two communities to work together on everything from internationalization to database connection pooling.     
+The most significant change in TurboGears 2 is the decision to work very, very closely with Pylons.   We've basically built a copy of the TurboGears 1.x API on top of pylons/paste which allows our two communities to work together on everything from internationalization to database connection pooling.     
 
 Another significant change is that we've removed the tg-admin wrapper and started explicitly using paster for administrative commands to match what Pylons was doing.   We've re-implemented the old tg-admin commands as  paster commands; for example, "tg-admin quickstart" is replaced by "paster quickstart". 
 
@@ -13,7 +13,7 @@ Lots of questions have been asked about why we've decided to create TurboGears 2
 Why so many changes?
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Well, there are a lot of changes, but perhaps not as many as it looks like from the description.  We were able to keep the controller API very similar to TG1, and Genshi copied the Kid API, so while we chose new components, we didn't really change the way Controllers and Templates look very much at all.  Sure, there are some minor changes here and there, but one member of the TG2 training class at PyCon said "I didn't notice a lot that was new in terms of how you put a TurboGears application together." 
+Well, there are a lot of changes, but perhaps not as many as it looks like from the description.  We were able to keep the controller API very similar to TurboGears 1, and Genshi copied the Kid API, so while we chose new components, we didn't really change the way Controllers and Templates look very much at all.  Sure, there are some minor changes here and there, but one member of the TurboGears 2 training class at PyCon said "I didn't notice a lot that was new in terms of how you put a TurboGears application together." 
 
 Why not just merge with Pylons?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,7 +27,7 @@ Why not use CherryPy 3?
 
 This is something we really struggled with.  CherryPy 3 is a huge improvement over CherryPy 2, providing a much richer programming experience, and huge performance gains.  But TurboGears 1 was very tightly coupled to the config system of CherryPy 2, which was entirely rewritten in CherrPy 3.   We tried to make a backwards compatible TG based on CherryPy 3, but discovered that it was significantly more difficult than we had expected.   
 
-At the same time there was a push to make TurboGears 2 more WSGI based, and to take advantage of things like Routes middleware, and to generally take advantage of the Pylon WSGI revolution.   And we discovered that Pylons had a lot of the same code as TurboGears (both of us had buffet implementations both of us had SQLObject wrappers that did the same thing, etc)
+At the same time there was a push to make TurboGears 2 more WSGI based, and to take advantage of things like Routes middleware, and to generally take advantage of the Pylon WSGI revolution.   We discovered that Pylons had a lot of the same code as TurboGears (both of us had buffet implementations both of us had SQLObject wrappers that did the same thing, etc)
 
 Why Genshi?
 ~~~~~~~~~~~~~~~~~~~
@@ -90,7 +90,7 @@ Here's a full list of the old command line tools and their new equivalents
 Project layout changes 
 ------------------------
 
-Both controllers.py and model.py have been replaced by the controllers and model folders.  In other words thery are now Python packages, in just the way they were in TG1 if you used the tg big option with quickstart. 
+Both controllers.py and model.py have been replaced by the controllers and model folders.  In other words thery are now Python packages, in just the way they were in TurboGears 1 if you used the '--template tgbig' option with quickstart. 
 
   * your root controller is not in ``controllers.py`` -> it has moved to ``controllers/root.py``
   * ``model.py`` -> ``model/__init__.py``
@@ -102,7 +102,7 @@ New imports
 -------------
 
   * import turbogears -> import tg
-  * turbogears.config.get('sqlalchemy.dburi') -> pylons.config['sqlalchemy.default.dburi']
+  * turbogears.config.get('sqlalchemy.dburi') -> pylons.config['sqlalchemy.url']
   * pylons.tmpl_context provides a request local place to stick stuff
   * pylons.request  provides the rough equivelent of cherrypy.request
   * pylons.response provides the equivelent of cherrypy.response
