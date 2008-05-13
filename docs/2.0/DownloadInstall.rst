@@ -54,6 +54,10 @@ Check out the latest code from subversion::
  $ svn co http://svn.turbogears.org/trunk tg2 
  $ svn co http://svn.turbogears.org/projects/tgrepozewho/trunk tgrepozewho
 
+And then install Paver which manages TG2's build::
+
+ easy_install Paver
+
 tg2 package is TurboGears 2 core. Others are paster command plugins to create default template, admin interface, and migrations.
 
 Then you repeat the same steps to tell setuptools/python to use the new tg2 installation.
@@ -67,7 +71,7 @@ Install TurboGears 2 server::
 
  $ cd .. 
  $ cd tg2  
- $ python setup.py develop
+ $ paver develop
 
 Install TurboGears 2 developer tools::
 

@@ -18,3 +18,17 @@ should have been released as independent projects that integrate with TurboGears
 TurboGears is licensed under an MIT-style license (see LICENSE.txt).
 Other incorporated projects may be licensed under different licenses.
 All licenses allow for non-commercial and commercial use.
+
+Working on TG2
+--------------
+
+To be able to build TG2 packages or install it for development, you
+need Paver::
+
+  easy_install Paver
+
+You can then run::
+
+  paver develop
+
+to start working with the development version of TG2.

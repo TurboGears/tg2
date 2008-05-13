@@ -1,0 +1,3 @@
+include pavement.py
+include paver-minilib.zip
+include setup.py
