@@ -2,18 +2,18 @@
 TurboGears 2 Documentation
 ==========================
 
-TurboGears 2 is a reinvention of the TurboGears project to take advantage of new components, and to provide a fully custmizable WSGI (Web Server Gateway Interface) stack.  From the begining TurboGears was designed to be a Full Stack framework built from best of breed components.   As time has gone on new components have been released which improved on the ones in the origornal TG stack, and the Python web world has been increasingly designed around WSGI.  This has enabled a whole new world of component reuse, and TG2 is designed to take advantage of that in order to make framework which is both flexible, and productive. 
+TurboGears 2 is a reinvention of the TurboGears project to take advantage of new components, and to provide a fully customizable WSGI (Web Server Gateway Interface) stack.  From the begining TurboGears was designed to be a Full Stack framework built from best of breed components.   As time has gone on new components have been released which improved on the ones in the original TG stack, and the Python web world has been increasingly designed around WSGI.  This has enabled a whole new world of component reuse, and TG2 is designed to take advantage of this fact in order to make a framework which is both flexible, and productive.
 
-TurboGears 2 is still in rapid development, and should only be used by those who are willing to put up with a little bit of API instability, but because it is well tested, and based on well tested, and known stable components it is already being used by some people in production environments. 
+TurboGears 2 is still in rapid development, and should only be used by those who are willing to put up with a little bit of API instability, but because it is well tested, and based on well tested, and known stable components it is already being used by some people in production environments.
 
 Getting Started with TurboGears
 ==================================
 
-Get TurboGears 2 installed, learn how to create a new TurboGears project in a single command, and of course explore the obligatory "Hello World" example, with a few fun treats thrown in. 
+Get TurboGears 2 installed, learn how to create a new TurboGears project in a single command, and of course explore the obligatory "Hello World" example, with a few fun treats thrown in.
 
 .. toctree::
    :maxdepth: 2
-   
+
    2.0/DownloadInstall
    2.0/QuickStart
    2.0/BasicMoves
@@ -26,7 +26,7 @@ Are you the type who learns by doing?   If so this section is for you.   Our ult
 
 .. toctree::
    :maxdepth: 1
-      
+
    2.0/Wiki20/wiki20
    2.0/ToscaWidgets/forms
 
@@ -35,8 +35,8 @@ What's new
 
 .. toctree::
    :maxdepth: 2
-   
-   2.0/WhatsNew      
+
+   2.0/WhatsNew
 
 General Reference for MVC Components
 ======================================
@@ -53,7 +53,7 @@ Validation, Form handling and form widgets
 
 .. toctree::
    :maxdepth: 2
-   
+
    2.0/FormBasics
    2.0/Validation
    2.0/ToscaWidgets/forms
@@ -77,11 +77,11 @@ Development Tools
 
 .. toctree::
    :maxdepth: 1
-   
+
    2.0/ToolBox
    2.0/CommandLine
    2.0/Profile
-   
+
    2.0/RoughDocs/CreateDatabase
    2.0/RoughDocs/BootStrap
    2.0/ToscaWidgets/Using
@@ -115,7 +115,7 @@ Project Information
 
 .. toctree::
    :maxdepth: 1
-   
+
    2.0/TG2Philosophy
    2.0/DevStatus
    2.0/Contributing
