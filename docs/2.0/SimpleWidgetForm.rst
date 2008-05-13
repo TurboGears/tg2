@@ -1,3 +1,6 @@
+## This is a contributed page. You must be logged in to change it.
+#acl EditorGroup:read,write Known:read,write All:read
+
 
 
 Simple Widget Form Tutorial
@@ -7,6 +10,7 @@ Simple Widget Form Tutorial
 
 .. contents:: Table of Contents
    :depth: 2
+
 
 This tutorial introduces you to the widget form system by building a simple
 application that accepts and displays comments.

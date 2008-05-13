@@ -47,7 +47,7 @@ download & install a binary package for your system.
 Check out the Pylons, webhelpers and TurboGears 2 source::
 
     $ hg clone https://www.knowledgetap.com/hg/pylons-dev pylons
-    $ hg clone https://https://www.knowledgetap.com/hg/webhelpers/ webhelpers
+    $ hg clone https://www.knowledgetap.com/hg/webhelpers/ webhelpers
     $ svn co http://svn.turbogears.org/trunk tg2
 
 and install TurboGears 2 in development mode::
@@ -68,6 +68,13 @@ and type the command::
 
     $ svn update
     $ python setup.py develop
+
+To update the Pylons and webhelpers sources:
+
+    $ cd ../webhelpers
+    $ hg pull; hg update
+    $ cd ../pylons
+    $ hg pull; hg update
 
 
 Creating a Quickstart Project

@@ -55,8 +55,6 @@ Edit template/index.html and add::
 Use CRUD tool
 --------------
 
-.. note:: the crud command should only work **inside** a project directory
-
 You could use paster command to create a customizable interface to Create, Read, Update, Delete records 
 (CRUD) based on model ::
 
@@ -71,15 +69,13 @@ or use short command without prompt::
 
   $ paster crud -i id Movie MovieController
 
-The command Create several files for you:
+The command Create several files
 
- * controllers/moviecontroller.py
- * controllers/movieform.py
- * templates/moviecontroller/list.html
- * templates/moviecontroller/show.html
- * templates/moviecontroller/new_form.html
- * templates/moviecontroller/edit_form.html
- * templates/moviecontroller/master.html
+ * controllers/MovieController.py
+ * controllers/MovieForm.py
+ * templates/MovieController/list.html
+ * templates/MovieController/show.html
+ * templates/MovieController/form.html
 
 Edit controllers/root.py::
 
@@ -111,9 +107,6 @@ Reference
 
   >>> from toscawidgets.widgets import forms
   >>> dir(forms)
-  
-  or runs paster tginfo command to browse all available widgets::
 
-  $ paster tginfo
 
 

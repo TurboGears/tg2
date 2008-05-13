@@ -1,9 +1,17 @@
-How to install TurboGears 2 
+
+
+How to install TurboGears 2
 =============================
 
 Installing TurboGears 2 currently requires some developer skills. You are willing to checkout both the Pylons and TurboGears 2 code from their respective version control systems.  TurboGears 2 is working well, and there is at least one large project built upon it already, but it's not yet documented and ready for users who aren't ready to deal with the current rate of change in the project.
 
 We do expect to have a technology preview release sometime soon, and that should provide a clear picture of the TurboGears 2 stack, and a slightly more stable API.   However, if you want API stability and good documentation, you may want to consider building your application on TurboGears 1 and porting it to TG2 after it is officially released.
+
+Prerequisites:
+-----------------------
+* gcc
+* python
+* appropriate python development package (python*-devel python*-dev)
 
 Installing Pylons:
 -----------------------
@@ -32,7 +40,7 @@ Now you can check out the latest code::
 
 To tell setuptools to use the version you are editing in the Pylons directory::
 
-  $ cd Pylons  
+  $ cd Pylons
   $ python setup.py develop
 
 
@@ -50,13 +58,9 @@ TurboGears 2 are constructed by a bunch of packages.
 Check out the latest code from subversion::
 
  $ cd ..
- $ svn co http://svn.turbogears.org/projects/tg.devtools/trunk tgdev 
- $ svn co http://svn.turbogears.org/trunk tg2 
+ $ svn co http://svn.turbogears.org/projects/tg.devtools/trunk tgdev
+ $ svn co http://svn.turbogears.org/trunk tg2
  $ svn co http://svn.turbogears.org/projects/tgrepozewho/trunk tgrepozewho
-
-And then install Paver which manages TG2's build::
-
- easy_install Paver
 
 tg2 package is TurboGears 2 core. Others are paster command plugins to create default template, admin interface, and migrations.
 
@@ -64,24 +68,27 @@ Then you repeat the same steps to tell setuptools/python to use the new tg2 inst
 
 Install tgrepozewho::
 
- $ cd tgrepozewho 
+ $ cd tgrepozewho
  $ python setup.py develop
 
 Install TurboGears 2 server::
 
- $ cd .. 
- $ cd tg2  
- $ paver develop
+ $ cd ..
+ $ cd tg2
+ $ python setup.py develop
 
 Install TurboGears 2 developer tools::
 
- $ cd .. 
- $ cd tgdev 
+ $ cd ..
+ $ cd tgdev
  $ python setup.py develop
 
 Then you have installed TurboGears 2.
 
- .. note:: if you have installed old dependency packages, you could remove them from ``{python_path}/site-packages/easy_install.pth``
+ .. note:: if you have installed old dependency packages, you could remove them from::
+
+ {python_path}/site-packages/easy_install.pth
+
 
 Validate the installation:
 ----------------------------
@@ -94,7 +101,7 @@ and you'll see a new "TurboGears2" command section in paster help.
 
 Paster has replaced the old tg-admin command, and most of the tg-admin commands have now been reimplemented as paster commands. For example, "tg-admin quickstart" command has changed to "paster quickstart" command, and "tg-admin info" command has changed to "paster tginfo" command.
 
-Be sure to check out our `What's new in TurboGears 2.0 <2.0/RoughDocs/WhatsNew>`_ page to get a picture of what's changed in TurboGears2 so far.
+Be sure to check out our `What's new in TurboGears 2.0 <RoughDocs/WhatsNew>`_ page to get a picture of what's changed in TurboGears2 so far.
 
 Troubleshooting
 ----------------
@@ -104,11 +111,9 @@ If you get an error about ``ObjectDispatchController`` this means your Pylons in
 When installing on Mac OSX, if you get an error mentioning "No local packages or download links found for RuleDispatch", you can try the solution posted to the `ToscaWidgets discussion list <http://groups.google.com/group/toscawidgets-discuss/browse_thread/thread/cb6778810e96585d>`_, which advises downloading it directly::
 
  . $ sudo easy_install -U -f http://toscawidgets.org/download/wo_speedups/ RuleDispatch
- 
 If you get the following error when starting a project with ``paster serve``::
 
  . AttributeError: 'WSGIRequest' object has no attribute 'accept_language'
- 
 update your Pylons checkout with ``hg update`` and try again.
 
 If ``python setup.py develop`` gives you::
@@ -145,4 +150,9 @@ Then you need to do the following::
   $ tar xzf RuleDispatch-0.5a0.dev-r2306.tar.gz
   $ cd RuleDispatch-0.5a0.dev-r2306
   $ python setup.py develop
-  
+
+If you get this error about webhelpers, you need the latest version from mercurial::
+
+  $ hg clone https://www.knowledgetap.com/hg/webhelpers
+  $ cd webhelpers
+  $ python setup.py develop
