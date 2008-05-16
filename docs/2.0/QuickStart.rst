@@ -29,7 +29,7 @@ This will create a new directory which contains a few files in a directory tree,
 
 Let's go in there and you can take a look around::
 
-  $ cd helloworld
+  $ cd HelloWorld
 
 
 Run the server

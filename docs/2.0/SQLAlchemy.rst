@@ -74,6 +74,9 @@ SQLAlchemy provides a number of built-in types which it automatically maps to un
   >>> from sqlalchemy import types
   >>> dir(types)
 
+Data Types
+~~~~~~~~~~~
+
 main types are:
 
 ================ ========
@@ -91,7 +94,9 @@ main types are:
 
 
 Properties
------------
+~~~~~~~~~~~
+
+While you define the Columns, you could specify several properties to control the column's behaviors.
 
 ============  ==========
  property     value      
@@ -104,29 +109,28 @@ Properties
 Basic Object Relational Mapping
 ---------------------------------
 
-Once you've got a table, such as the movie_table we're using in this example you can create a Movie class to support a more object oriented way of looking at your data::
+Once you've got a table, such as the movie_table we're using in this example, you can create a Movie class to support a more object oriented way of manipulating your data::
 
   class Movie(object):
       def __init__(self, title, year, description, **kw):
           self.title = title
           self.year = year
           self.description = description
-    
+
       def __repr__(self):
           return "<Movie('%s','%s', '%s')>" % (self.title, self.year, self.description)
 
 
-If you're following along with the tuturial, you'll want to make sure you custom __init__ method.  We'll use this to creae new Movie instances, and set their data all at once througout the rest of the tutorial. 
-
-
-If you don't define the __init__ method. You will need to update the properties of a movie object after it's been created like this::
+If you don't define the __init__ method. You will need to update the properties of a movie object after it's been created. like this::
 
   >>> entry = Movie()
   >>> entry.title = 'Dragula'
   >>> entry.year = '1931'
   >>> entry.description = 'vampire movie'
 
-But if the __init__ method we defined allows you to initialize the properties at the same time you create the object::
+If you're following along with the tuturial, you'll want to make sure that you've defined the __init__ method.  We'll use the Movie class to creae new Movie instances, and set their data all at once througout the rest of the tutorial.
+
+If you defined the __init__ method, it allows you to initialize the properties at the same time while you create the object::
 
   >>> entry = Movie(title='Dracula', year='1931', description='vampire movie')
 
@@ -134,20 +138,23 @@ or ::
 
   >>> entry = Movie('Dracula', '1931', 'vampire movie')
 
+It looks better.
+
+
 Quick database creation
 --------------------------
 
-Once you've got your database table objects defined (and imported into __init__.py if you didn't define them there), you can create the tables in the database with one simple command, just run::
+Once you've got your database table objects defined (and imported into __init__.py if you didn't define your model in __init__.py), you can create the tables in the database with one simple command, just run::
 
   paster setup-app development.ini
 
 from within your project's home directory. 
 
-Pylons defines a setup-app function that paster will connect to the database and create all the tables we've defined. 
+Pylons (The TurboGears 2 underground framework) defines a setup-app function that paster will connect to the database and create all the tables we've defined. 
 
-There is a default database setup defined in development.ini.  So if you just run this it will create a single-file database in your project directory called devdata.db.  If you change your data model, delete this and rerun the setup-app command.
+The default database setup configurations are defined in development.ini. So if you just run the script without modification of development.ini, the script will create a single-file database, which called 'devdata.db', in your project directory. If you change your data model and want to apply the new database, go delete 'devdata.db' and run the 'paster setup-app' command again.
 
-TurboGears 2 does support database migrations.   But that's another tutorial. 
+TurboGears 2 does support database migrations. But that's another tutorial. 
 
 Reference:
 

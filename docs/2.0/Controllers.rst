@@ -24,19 +24,19 @@ Quick Example
 -------------
 
 Suppose using ``tg-admin quickstart`` you generate a TurboGears project named
-"gs". Your default controller code would be created in the file
-``gs/gs/controllers/root.py``.
+"HelloWorld". Your default controller code would be created in the file
+``HelloWorld/helloworld/controllers/root.py``.
 
 Modify the default ``controllers.py`` to read as follows:
 
 .. code-block:: python
     
     """Main Controller"""
-    from gs.lib.base import BaseController
+    from helloworld.lib.base import BaseController
     from tg import expose, flash
     from pylons.i18n import ugettext as _
     #from tg import redirect, validate
-    #from gs.model import DBSession
+    #from helloworld.model import DBSession
 
     class RootController(BaseController):
 
@@ -58,7 +58,7 @@ Implementing a Catch-All URL via the ``default()`` Method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 URLs not explicitly mapped to other methods of the controller will generally be 
-directed to the method named ``default()`` . With the above example, requesting
+directed to the method named ``default()``. With the above example, requesting
 any URL besides ``/index``, for example ``http://localhost:8080/hello``, will 
 return the message "This page is not ready". 
 
@@ -87,11 +87,11 @@ Line by Line Explanation
 .. code-block:: python
 
     """Main Controller"""
-    from gs.lib.base import BaseController
+    from helloworld.lib.base import BaseController
     from tg import expose, flash
     from pylons.i18n import ugettext as _
     #from tg import redirect, validate
-    #from gs.model import DBSession
+    #from helloworld.model import DBSession
 
 First you need to import the required modules. 
 
@@ -101,26 +101,26 @@ that you are importing a BaseController, which your RootController must inherit
 from.   If you're particularly astute, you'll have notice that you import this 
 BaseController from the lib module of your own project, and not from TurboGears. 
 
-TurboGears provides a base TGController, but it's imported in lib so that you 
-can modify it to suit the needs of your appication. For example you
+TurboGears provides a base TGController, but it's imported in lib folder of current project (HelloWorld/helloworld/lib). 
+So that you can modify it to suit the needs of your appication. For example you
 can define actions which will happen on every request, add parameters
 to every template call, and otherwise do what you need to the request on the way
 in, and on the way out. 
 
 The next thing to notice is that we are importing `expose` from `tg`.  
 `BaseController`` classes and the expose decorator are the basis of TurboGears 
-controllers.   The @expose decorator declarairs that your method should be 
+controllers.   The `@expose` decorator declairs that your method should be 
 *exposed to the web*, and provides you with the ability to say how the results 
-of the controller should be rendered. 
+of the controller should be rendered.
 
-The other imports are there incase you do internationalization, or use the 
+The other imports are there incase you do the internationalization,
+or use the http redirect function, validate inputs/outputs, or use the models.
 
 ::
 
     class RootController(BaseController):
 
-The required standard name for the RootController class of a TurboGears 
-application is ``RootController`` and it should be inherited from 
+``RootController`` is the required standard name for the RootController class of a TurboGears application and it should be inherited from 
 ``BaseController`` class. It is thereby specified as the request handler class 
 for the website's root. 
 
@@ -128,7 +128,7 @@ In TurboGears 2 the web site is represented by a tree of controller objects
 and their methods, and a TurboGears website always grows out from the ``Root`` 
 class.
 
-We look at the methods of the ``Root`` class next::
+::
 
     def index(self): 
         return "<h1>Hello World</h1>"
@@ -136,8 +136,10 @@ We look at the methods of the ``Root`` class next::
 .. _these urls: 
 .. _three urls:
 
-The ``index`` method is the start point of any TurboGears/CherryPy class. When
-you access a URL like 
+We look at the methods of the ``Root`` class next.
+
+The ``index`` method is the start point of any TurboGears controller class. When
+you access a URL like
 
 * http://localhost:8080 
 * http://localhost:8080/ 
@@ -145,7 +147,7 @@ you access a URL like
 
 they are all mapped to the ``RootController.index()`` method.
 
-If a URL is requested that does not map to a specific method, the
+If a URL is requested and does not map to a specific method, the
 ``default()`` method of the controller class is called::
 
     def default(self):  
@@ -156,13 +158,13 @@ In this example, all pages except the `three URLs`_ listed above will map to the
 default method. 
 
 As you can see from the examples, the response to a given URL is determined by
-the method it maps to.	
+the method it maps to.
 
 ::
 
     @expose()
 
-The ``@expose()`` seen before each controller method directs TurboGears to make
+The ``@expose()`` seen before each controller method directs TurboGears controllers to make
 the method accessible through the web server. Methods in the controller class
 that are *not* "exposed" can not be called directly by requesting a URL from the
 server.
@@ -170,12 +172,12 @@ server.
 There is much more to @expose(). It will be our access to TurboGears'
 sophisticated rendering features that we will explore shortly.
 
-Are you sure you wanted to ``expose`` that?
----------------------------------------------
+Are you sure you wanted to ``expose`` strings all the time?
+------------------------------------------------------------
 
 As shown above, controller methods return the data of your website. So far, we
 have returned this data as literal strings. You could produce a whole site by
-returning only strings containing raw HTML from your controller methods but it
+returning only strings containing raw HTML from your controller methods, but it
 would be difficult to maintain, since Python code and HTML code would not be
 cleanly separated.
 
@@ -206,11 +208,13 @@ this::
       </body>
     </html>
 
-By adding a method to the controller like this ...
+The ``${param}`` syntax in template means there's some undetermined values need to be filled.
+
+We did that by adding a method to the controller like this ...
 
 ::
 
-    @expose(template="gs.templates.sample")
+    @expose(template="helloworld.templates.sample")
     def example(self): 
         mydata = {'person':'Tony Blair','office':'President'}
         return mydata
@@ -225,20 +229,12 @@ By adding a method to the controller like this ...
 * The dict values are substituted into the final web response.
 * The web user sees a marked up page saying:
 
-**I just want to say that Tony Blair should be the next President 
-of the United States.**
+The result is::
+
+  **I just want to say that Tony Blair should be the next President of the United States.**
 
 Template files can thus house all markup information, maintaining clean
 separation from controller code.
-
-Passing Arguments to the Controller 
----------------------------------------
-
-HTTP get request will have the query parameters turned into a dictionary, 
-which is then turned into keyword arguments passed into your controller
-methods. Likewise HTTP POST requests will have the form arguments turned 
-into a dictionary which is similarly turned into parameter values 
-passed into your controller. 
 
 SubControllers and the URL Hierarcy
 -----------------------------------
@@ -249,24 +245,25 @@ TurboGears provides for this by traversing the object hierarchy, to find
 a method that can handle your request. 
 
 To make a sub-controller, all you need to do is make your sub-controller 
-inherit from the object class.  However there's a SubController class in 
-lib.base for you to use if you want a central place to add helper methods
-or other functionality to your SubControllers::
+inherit from the object class.  However there's a SubController class ``Controller`` in 
+your project's lib.base (HelloWorld/helloworld/lib/base.py) for you to use if you want a central place to add helper methods or other functionality to your SubControllers::
 
-    from lib.base import BaseController, SubController
+    from lib.base import BaseController, Controller
     from tg import redirect
 
-    class MovieController(SubController):
+    class MovieController(Controller):
+        @expose()
         def index(self):
             redirect('list/')
 
+        @expose()
         def list(self):
             return 'hello'
 
     class RootController(BaseController):
         movie = MovieController()
 
-Once you've done this you can go to: 
+Once you've done, you can follow the link: 
 
 * http://localhost:8080/movie/ 
 * http://localhost:8080/movie/index
@@ -275,7 +272,7 @@ and you will be redirected to:
 
 * http://localhost:8080/movie/list/
 
-Unlike turbogears 1 going to http://localhost:8080/movie **will not** redirect 
+Unlike turbogears 1, going to http://localhost:8080/movie **will not** redirect 
 you to http://localhost:8080/movie/list.  This is due to some interesting bit 
 about the way WSGI works.   But it's also the right thing to do from the 
 perspective of URL joins.  Because you didn't have a trailing slash, there's no 
@@ -290,12 +287,25 @@ like this::
 Which provides the redirect method with an absolute path, and takes you 
 exactly where you wanted to go, no matter where you came from. 
 
+Passing Arguments to the Controller 
+---------------------------------------
+
+HTTP GET request will have the query parameters turned into a dictionary, 
+which is then turned into keyword arguments passed into your controller
+methods. Likewise HTTP POST requests will have the form arguments turned 
+into a dictionary which is similarly turned into parameter values 
+passed into your controller. 
+
+When you got the parameters, those parameters are in plain string format.
+You should translate those plain strings to some useful format(type) for further process.
+TurboGears helps you to translate and validate those parameters by ``validate`` module and  widget framework. But it's the another topic.
+
 
 What's new in TG2
 --------------------
 
 Here are the major differences in dispatch between CherryPy/Turbogears1 
-and  TurboGears 2.
+and TurboGears 2.
 
 * We have not yet implemented cherrypy's mechanism that replaces dots in the 
   URL with underscores when looking up a method name.  If this feature is 
@@ -306,12 +316,12 @@ and  TurboGears 2.
 
 * Redirect does not know "where you are" in the object tree and move you on 
   from there, it just joins the URL the user requested, with the absolute
-  or relative URL you provide.   Using abosolute URLs is recomended. 
+  or relative URL you provide.   Using abosolute URLs is recommended. 
 
 The new TG2 Lookup Method
 --------------------------
 
-Lookup and default are called in identical situations: when "normal"
+``Lookup`` and ``default`` are called in identical situations: when "normal"
 object traversal is not able to find an exposed method, it begins
 popping the stack of "not found" handlers.  If the handler is a
 "default" method, it is called with the rest of the path as positional
@@ -362,8 +372,8 @@ In other situations,
 you might have a several-layers-deep "lookup" chain, e.g. for 
 editing hierarchical data (/client/1/project/2/task/3/edit).  
 
-The benefit over "default" handlers is that you _return_ an object that acts 
-as a sub-controller and continue traversing rather than _being_ a controller 
+The benefit over "default" handlers is that you *return* an object that acts 
+as a sub-controller and continue traversing rather than *being* a controller 
 and stopping traversal altogether.  This allows you to use actual objects with 
 datain your controllers. 
 
