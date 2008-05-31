@@ -14,10 +14,10 @@ Get TurboGears 2 installed, learn how to create a new TurboGears project in a si
 .. toctree::
    :maxdepth: 2
 
-   2.0/DownloadInstall
-   2.0/QuickStart
-   2.0/BasicMoves
-   2.0/WhatsNew
+   main/DownloadInstall
+   main/QuickStart
+   main/BasicMoves
+   main/WhatsNew
 
 Tutorials
 ===========
@@ -27,8 +27,8 @@ Are you the type who learns by doing?   If so this section is for you.   Our ult
 .. toctree::
    :maxdepth: 1
 
-   2.0/Wiki20/wiki20
-   2.0/ToscaWidgets/forms
+   main/Wiki20/wiki20
+   main/ToscaWidgets/forms
 
 What's new
 ===============
@@ -36,7 +36,7 @@ What's new
 .. toctree::
    :maxdepth: 2
 
-   2.0/WhatsNew
+   main/WhatsNew
 
 General Reference for MVC Components
 ======================================
@@ -44,9 +44,9 @@ General Reference for MVC Components
 .. toctree::
    :maxdepth: 2
 
-   2.0/Controllers
-   2.0/Genshi
-   2.0/SQLAlchemy
+   main/Controllers
+   main/Genshi
+   main/SQLAlchemy
 
 Validation, Form handling and form widgets
 ===========================================
@@ -54,10 +54,10 @@ Validation, Form handling and form widgets
 .. toctree::
    :maxdepth: 2
 
-   2.0/FormBasics
-   2.0/Validation
-   2.0/ToscaWidgets/forms
-   2.0/ToscaWidgets/ToscaWidgets
+   main/FormBasics
+   main/Validation
+   main/ToscaWidgets/forms
+   main/ToscaWidgets/ToscaWidgets
 
 
 Recipes for Installation and Deployment
@@ -66,10 +66,10 @@ Recipes for Installation and Deployment
 .. toctree::
    :maxdepth: 1
 
-   2.0/OfflineInstall
-   2.0/Deployment
-   2.0/Deployment/ModProxy
-   2.0/Deployment/modwsgi+virtualenv
+   main/OfflineInstall
+   main/Deployment
+   main/Deployment/ModProxy
+   main/Deployment/modwsgi+virtualenv
 
 
 Development Tools
@@ -78,14 +78,14 @@ Development Tools
 .. toctree::
    :maxdepth: 1
 
-   2.0/ToolBox
-   2.0/CommandLine
-   2.0/Profile
+   main/ToolBox
+   main/CommandLine
+   main/Profile
 
-   2.0/RoughDocs/CreateDatabase
-   2.0/RoughDocs/BootStrap
-   2.0/ToscaWidgets/Using
-   2.0/SimpleWidgetForm
+   main/RoughDocs/CreateDatabase
+   main/RoughDocs/BootStrap
+   main/ToscaWidgets/Using
+   main/SimpleWidgetForm
 
 
 General TG tools
@@ -94,9 +94,9 @@ General TG tools
 .. toctree::
    :maxdepth: 1
 
-   2.0/Caching
-   2.0/LogSetup
-   2.0/RoughDocs/I18N
+   main/Caching
+   main/LogSetup
+   main/RoughDocs/I18N
 
 
 Integration Recipes
@@ -105,9 +105,9 @@ Integration Recipes
 .. toctree::
    :maxdepth: 1
 
-   2.0/TGandPyAMF
-   2.0/RoutesIntegration
-   2.0/StaticFile
+   main/TGandPyAMF
+   main/RoutesIntegration
+   main/StaticFile
 
 
 Project Information
@@ -116,11 +116,11 @@ Project Information
 .. toctree::
    :maxdepth: 1
 
-   2.0/TG2Philosophy
-   2.0/DevStatus
-   2.0/Contributing
-   2.0/License
-   2.0/TGandPylons
+   main/TG2Philosophy
+   main/DevStatus
+   main/Contributing
+   main/License
+   main/TGandPylons
 
 Indices and tables
 ==================

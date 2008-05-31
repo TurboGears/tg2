@@ -39,7 +39,7 @@ code along with the tutorial.  For a detailed explanation on how to create a
 new project, please read `20 Minute Wiki Tutorial`_.
 
 .. _pre-built project: attachment:FormsTutorial-2.0.tgz
-.. _20 Minute Wiki tutorial: 2.0/Wiki20/All
+.. _20 Minute Wiki tutorial: main/Wiki20/All
 
 If you're not already familiar with the basics of what widgets are, and how they work, you'll probably wan to take a look at `the widgets overview page <WidgetsOverview>`_
 
@@ -81,7 +81,7 @@ custom widgets, but this is a simple widgets tutorial, so we're keeping it
 simple. For more information about the widgets framework, you can start
 reading at the general `widgets overview`_.
 
-.. _widgets overview: 2.0/WidgetsOverview
+.. _widgets overview: main/WidgetsOverview
 
 Defining the form
 -----------------
@@ -241,7 +241,7 @@ declarations and setting the appropriate decorators on your form handling
 method. You can get super-fancy and do it `other ways`_ if necessary,
 but we'll take the simple solutions for simple problems approach here.
 
-.. _other ways: 2.0/FormValidationWithSchemas
+.. _other ways: main/FormValidationWithSchemas
 
 ::
 
@@ -339,7 +339,7 @@ The ``@validate()`` decorator extracts the various validators from the form,
 loops through them, and throws an error if problems are found. We're `glossing
 over details`_, but that's the basic idea.
 
-.. _glossing over details: 2.0/ValidateDecorator
+.. _glossing over details: main/ValidateDecorator
 
 If ``@validate()`` does throw an error, the ``error_handler`` method takes
 care of them.  If a validation error occurs, TurboGears will store a dictionary
@@ -388,4 +388,4 @@ Download the example project
 
 .. note:: The comment feature has been disabled on this page due to heavy spamming. If you want to comment on the contents of this page, if you have questions, or want to report an error, please write to the TurboGears `mailing list`_.
 
-.. _mailing list: 2.0/GettingHelp
+.. _mailing list: main/GettingHelp
