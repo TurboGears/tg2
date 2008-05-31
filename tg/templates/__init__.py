@@ -1,5 +1,5 @@
 """
-Place to hold TurboGears build-in templates
+Place to hold TurboGears built-in templates
 
 With 'paster quickstart' or 'paster create' command you can creates a new
 TurboGears project which you can use as a basis for your own project.

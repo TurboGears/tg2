@@ -10,9 +10,6 @@ from paste.util.mimeparse import best_match
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
-    
-    The decoration object can be 
-    
     """
     def __init__(self):
         self.engines = {}

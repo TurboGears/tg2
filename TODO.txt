@@ -9,19 +9,11 @@ TODO:
 
 * Create TG2 Docs on the Wiki
 
-  * Port getting started code/docs to tg2 (partially complete already)
-  * Document the new expose decorator
   * Explain the context and global objects 
   * Document paster commands (shell, quickstart) etc. 
-  * Document paste.fixture tests
-  * Document babel based internationalization -- possibly write some helpers
-  * Write a basic TG2 + SQLAlchemy tutorial -- possibly "borrowing lots" from the pylons version ;) 
+  * Document WebTest tests
+  * Document babel based internationalization
 
 * Work on authorization/authentication
  
-  * update quickstart template to add nessisary models for SA (this can easily come from TG1)
-  * Replace the visit tracking stuff with beaker sessions. 
-
-* User account registration/authentication support library (like turbogears.identity), but with support for user registration, etc. 
-
-* write load/stress test for simple TG2 application
+  * update quickstart template to add necessary models for SA (this can easily come from TG1)

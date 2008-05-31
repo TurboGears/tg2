@@ -2,11 +2,14 @@
 Basic controller classes for turbogears
 
   DecoratedController allows the decorators in tg.decorators to work
+  
   ObjectDispatchController is a specialised form of DecoratedController that
-  converts URL portions into traversing Python objects.
+  converts URL portions into traversing Python objects.  This controller is
+  usable in plain pylons if you route to it's "routes_placeholder" method
+  
   TGController is a specialised form of ObjectDispatchController that forms the
-  basis of standard TurboGears controllers.  The "Root" controller must be of
-  this type.
+  basis of standard TurboGears controllers.  The "Root" controller of a standard
+  tg project must be a TGController.
 """
 
 import logging
@@ -43,6 +46,7 @@ class DecoratedController(WSGIController):
     1) how to validate the request,
     2) how to render the response,
     3) allowing hooks to be registered to happen:
+        
         a) before validation
         b) before the controller method is called
         c) before the rendering takes place, and
@@ -63,9 +67,10 @@ class DecoratedController(WSGIController):
         This allows for validation to display the original page or an
         abbreviated form with validation errors shown on validation failure.
 
-        The before_render hook can, for example, add and remove from the
-        dictionary returned by the controller method, before it is passed to
-        rendering.
+        The before_render hook provides a place for functions that are called
+        before the template is rendered. For example, you could use it to 
+        add and remove from the dictionary returned by the controller method,
+        before it is passed to rendering.
 
         The after_render hook can act upon and modify the response out of
         rendering.
@@ -189,7 +194,7 @@ class DecoratedController(WSGIController):
         some template rendering engines, but not others. This behavior
         is particularly useful for rendering engines like JSON or other
         "web service" style engines which don't use and explicit
-        template.
+        template, or use a totally generic template.
 
         All of these values are populated into the context object by the
         expose decorator.
