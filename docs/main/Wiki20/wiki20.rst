@@ -132,7 +132,7 @@ The ``--reload`` flag means that changes that you make in the project
 will automatically cause the server to restart itself. This way you
 immediately see the results.
 
-Point your browser at `http://localhost:8080/`_, and you'll see a nice
+Point your browser at http://localhost:8080/, and you'll see a nice
 welcome page. You now have a working project!
 
 Controller and View
@@ -710,7 +710,7 @@ Here's the new version of ``root.py``, which will be explained afterwards:
     **import re**
     **from docutils.core import publish_parts**
 
-    **wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")**
+    **wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")**
 
     class RootController(BaseController):
         #admin = DBMechanic(SAProvider(metadata), '/admin')
@@ -721,7 +721,7 @@ Here's the new version of ``root.py``, which will be explained afterwards:
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             **content = publish_parts(page.data, writer_name="html")["html_body"]**
             **root = tg.url('/')**
-            **content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)**
+            **content = wikiwords.sub(r'<a href="%s\\1">\\1</a>' % root, content)**
             **return dict(content=content, wikipage=page)**
 
         @expose('wiki20.templates.about')
@@ -844,7 +844,7 @@ the controller:
     from docutils.core import publish_parts
     **from sqlalchemy.exceptions import InvalidRequestError**
 
-    wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")
+    wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")
 
     class RootController(BaseController):
         #admin = DBMechanic(SAProvider(metadata), '/admin')
@@ -859,7 +859,7 @@ the controller:
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             content = publish_parts(page.data, writer_name="html")["html_body"]
             root = tg.url('/')
-            content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)
+            content = wikiwords.sub(r'<a href="%s\\1">\\1</a>' % root, content)
             return dict(content=content, wikipage=page)
 
         @expose('wiki20.templates.about')
@@ -1004,7 +1004,7 @@ pass ``pages`` to our template:
     from docutils.core import publish_parts
     from sqlalchemy.exceptions import InvalidRequestError
 
-    wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")
+    wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")
 
     class RootController(BaseController):
         #admin = DBMechanic(SAProvider(metadata), '/admin')
@@ -1019,7 +1019,7 @@ pass ``pages`` to our template:
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             content = publish_parts(page.data, writer_name="html")["html_body"]
             root = tg.url('/')
-            content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)
+            content = wikiwords.sub(r'<a href="%s\\1">\\1</a>' % root, content)
             return dict(content=content, wikipage=page)
 
         @expose('wiki20.templates.about')
