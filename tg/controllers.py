@@ -132,10 +132,6 @@ class DecoratedController(WSGIController):
         if validation is None:
             return params
         
-        #Provide a hook to do stuff before validation 
-        if hasattr(validation, '_before_validate'):
-            validation._before_validate(controller, params)
-        
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
         
