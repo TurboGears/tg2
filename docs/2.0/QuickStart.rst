@@ -15,7 +15,7 @@ Now that you've got TurboGears installed. TurboGears 2 extends the 'paster' comm
 The very first tool you'll need is 'paster quickstart', which initializes a TurboGears 2 project.
 You can go to whatever directory you want and start a new turbogears 2 project by typing::
 
-  $ paster quickstart Helloworld
+  $ paster quickstart
 
 So 'paster quickstart' command will create a basic project directory for you to use to get started on your TurboGears 2 application. You'll be prompted for the name of the project (this is the pretty name that human beings would appreciate), and the name of the package (this is the less-pretty name that Python will like).
 
