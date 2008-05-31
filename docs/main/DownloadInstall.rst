@@ -1,5 +1,3 @@
-
-
 How to install TurboGears 2
 =============================
 
@@ -55,7 +53,7 @@ Installing Paver:
 
 To install paver::
 
- $ easy_install paver
+ $ easy_install Paver
 
 
 Installing TurboGears 2 from Source:
