@@ -50,6 +50,14 @@ To tell setuptools to use the version you are editing in the Pylons directory::
 
 Now you can make changes to the files in the Pylons directory and the code will run exactly as if you had installed a version of the egg with the changes you have made.
 
+Installing Paver:
+-----------------------
+
+To install paver::
+
+ $ easy_install paver
+
+
 Installing TurboGears 2 from Source:
 --------------------------------------
 
