@@ -262,7 +262,9 @@ Since a wiki is basically a linked collection of pages, we'll define a
 
     # Python class definition
     class Page(object):
-        pass
+        def __init__(pagename, data): 
+           self.pagename = pagename
+           self.data = data
 
     # Mapper
     # See: http://www.sqlalchemy.org/docs/04/mappers.html
