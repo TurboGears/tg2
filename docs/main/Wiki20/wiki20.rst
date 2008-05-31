@@ -99,6 +99,7 @@ for this tutorial look like::
     $ paster quickstart
     Enter project name: Wiki 20
     Enter package name [wiki20]: wiki20
+    Do you need Identity (usernames/passwords) in this project? [no] no
 
 Now **paster** will spit out a bunch of stuff::
 
@@ -132,8 +133,7 @@ will automatically cause the server to restart itself. This way you
 immediately see the results.
 
 Point your browser at `http://localhost:8080/`_, and you'll see a nice
-little welcome page with the current time. You now have a working
-project!
+welcome page. You now have a working project!
 
 Controller and View
 =================================
@@ -159,8 +159,8 @@ as do most modern web frameworks like Rails, Cake, Struts, etc.
     engine can substitute information provided by your web application.
     TurboGears 2's default templating engine is `Genshi`_.  If you really
     love another templating engine, there are `plugins available`_ for most
-    popular Python templating engines. See the `using alternate templating
-    engines`_ article for details.
+    popular Python templating engines. See the
+    `using alternate templating engines`_ article for details.
 
 *   **Controller**: The controller is the way that you tell your web
     application how to respond to events that arrive on the server. In a web
@@ -186,7 +186,7 @@ this name is not accidental; this becomes the default page you'll get if
 you go to this URL without specifying a particular destination, just
 like you'll end up at ``index.html`` on an ordinary web server if you
 don't give a specific file name. You'll also go to this page if you explicitly name it,
-with `http://localhost:8080/index`_. (We'll see other controller methods
+with http://localhost:8080/index. (We'll see other controller methods
 later in the tutorial so this naming system will become clear).
 
 The ``@expose()`` decorator tells TurboGears which
@@ -221,8 +221,8 @@ file to see the Genshi directives.
 
 .. _Model-View-Controller paradigm: http://en.wikipedia.org/wiki/Model-view-controller
 .. _plugins available: http://www.turbogears.org/cogbin/
-.. _Gensh: http://genshi.edgewall.org/wiki/Documentation/xml-templates.html
-.. _using alternate templating engines: 1.0/AlternativeTemplating
+.. _Genshi: http://genshi.edgewall.org/wiki/Documentation/xml-templates.html
+.. _using alternate templating engines: http://docs.turbogears.org/1.0/AlternativeTemplating
 
 Next, we'll set up our data model, and create a database.
 
@@ -231,7 +231,7 @@ Wiki Model and Database
 ============================================
 
 ``quickstart`` produced a directory for our model in
-``Wiki-20/wiki20/model/``. This directory is empty except for the
+``Wiki-20/wiki20/model/``. This directory contains an
 ``__init__.py`` file, which makes that directory name into a python
 module (so you can say ``import model``).
 
@@ -256,8 +256,8 @@ Since a wiki is basically a linked collection of pages, we'll define a
 
     pages_table = Table("pages", metadata,
         Column("id", Integer, primary_key=True),
-        Column("pagename", String, unique=True),
-        Column("data", String)
+        Column("pagename", Text, unique=True),
+        Column("data", Text)
     )
 
     # Python class definition
@@ -276,7 +276,7 @@ are in that database. When you pass the metadata object to the various
 objects in your project they initialize themselves using that metadata.
 
 In this case, the metadata object configures itself using the
-``Wiki-20\development.ini`` file, which we'll look at in the next
+``development.ini`` file, which we'll look at in the next
 section.
 
 The SQLAlchemy ``Table`` object defines what a single table looks like
@@ -375,15 +375,21 @@ that processed data to a template.
     from tg import expose, flash
     from pylons.i18n import ugettext as _
     #from tg import redirect, validate
-    #from wiki20.model import DBSession
+    #from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.index')
         def index(self):
-            from datetime import datetime
-            flash(_("Your application is now running"))
-            return dict(now=datetime.now())
+            flash(_("You're running TG2! (change me in root.py)"))
+            return dict(page='index')
+
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
 The first thing we need to do is uncomment the line that imports ``DBSession``.
 
@@ -422,7 +428,7 @@ one page, so we use ``.one()``.
 Finally, we need to return a dictionary containing the ``page`` we just looked up.
 When we say::
 
-   return dict(page=page)
+   return dict(wikipage=page)
 
 The returned ``dict`` contains a single key called ``page`` and a single value
 containing the page that we looked up.
@@ -434,19 +440,30 @@ Here's the whole file after incorporating the above modifications::
     from tg import expose, flash
     from pylons.i18n import ugettext as _
     #from tg import redirect, validate
-    from wiki20.model import DBSession
+    from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
     from wiki20.model.page import Page
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.page')
         def index(self, pagename="FrontPage"):
+            flash(_("You're running TG2! (change me in root.py)"))
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(page='index', wikipage=page)
+
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
 Now our ``index()`` method fetches a record from the database (creating
 an instance of our mapped ``Page`` class along the way), and returns it
 to the template within a dictionary.
+
+Feel free to comment out (or remove) the ``flash()`` call too, to
+tidy the output up a bit.
 
 
 Adding Views (Templates)
@@ -492,19 +509,19 @@ our purposes::
 
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-        <title>${page.pagename} - The TurboGears 2 Wiki</title>
+        <title>${wikipage.pagename} - The TurboGears 2 Wiki</title>
     </head>
 
     <body>
 
     <div class="main_content">
     <div style="float:right; width: 10em;"> Viewing
-    <span py:replace="page.pagename">Page Name Goes Here</span> <br/>
+    <span py:replace="wikipage.pagename">Page Name Goes Here</span> <br/>
     You can return to the <a href="/">FrontPage</a>.
     </div>
 
-    <div py:replace="page.data">Page text goes here.</div>
-    <a href="/edit/${page.pagename}">Edit this page</a>
+    <div py:replace="wikipage.data">Page text goes here.</div>
+    <a href="/edit/${wikipage.pagename}">Edit this page</a>
     </div>
 
     </body></html>
@@ -517,12 +534,13 @@ This is a basic XHTML page with three substitutions:
     controller.)
 
 2.  In the second ``<div>`` element, we substitute the page
-    name again with Genshi's ``py:replace``: ``<span
-    py:replace="page.pagename">Page Name Goes Here</span>``
+    name again with Genshi's ``py:replace``::
+    
+        <span py:replace="wikipage.pagename">Page Name Goes Here</span>
 
 3.  In the third ``<div>``, we put in the contents of our ``page``::
 
-        <div py:replace="page.data">Page text goes here.</div>
+        <div py:replace="wikipage.data">Page text goes here.</div>
 
 When you refresh the output web page you should see "initial data" displayed on the page.
 
@@ -544,21 +562,21 @@ is an editing page. Here are the changes for ``edit.html``.
 
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-        <title>Editing: ${page.pagename}</title>
+        <title>Editing: ${wikipage.pagename}</title>
     </head>
 
     <body>
 
 #. Change the div that displays the page::
 
-    <div py:replace="page.data">Page text goes here.</div>
+    <div py:replace="wikipage.data">Page text goes here.</div>
 
    with a div that contains a standard HTML form::
 
     <div>
       <form action="/save" method="post">
-        <input type="hidden" name="pagename" value="${page.pagename}"/>
-        <textarea name="data" py:content="page.data" rows="10" cols="60"/>
+        <input type="hidden" name="pagename" value="${wikipage.pagename}"/>
+        <textarea name="data" py:content="wikipage.data" rows="10" cols="60"/>
         <input type="submit" name="submit" value="Save"/>
       </form>
     </div>
@@ -583,16 +601,16 @@ new ``root.py`` file looks like this, with the changes in bold:
         @expose('wiki20.templates.page')
         def index(self, pagename="FrontPage"):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(wikipage=page)
 
         **@expose(template="wiki20.templates.edit")**
         **def edit(self, pagename):**
             **page = DBSession.query(Page).filter_by(pagename=pagename).one()**
-            **return dict(page=page)**
+            **return dict(wikipage=page)**
 
 For now, the new method is identical to the ``index`` method; the only difference is that
 the resulting dictionary is handed to the ``edit`` template. To see it work, go to
-`http://localhost:8080/edit/FrontPage`_. However, this only works because FrontPage already
+http://localhost:8080/edit/FrontPage. However, this only works because FrontPage already
 exists in our database; if you try to edit a new page with a different name it will fail, which we'll
 fix in a later section.
 
@@ -620,20 +638,28 @@ Here's our new version of ``root.py`` which includes both ``default`` and ``save
     from tg import expose, flash
     from pylons.i18n import ugettext as _
     **from tg import redirect, validate**
-    from wiki20.model import DBSession
+    from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
     from wiki20.model.page import Page
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.page')
         **def default(self, pagename="FrontPage"):**
+            # flash(_("You're running TG2! (change me in root.py)"))
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(page='index', wikipage=page)
+
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
         @expose(template="wiki20.templates.edit")
         def edit(self, pagename):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(wikipage=page)
 
         **@expose()**
         **def save(self, pagename, data, submit):**
@@ -675,34 +701,42 @@ Here's the new version of ``root.py``, which will be explained afterwards:
     from pylons.i18n import ugettext as _
     **import tg**
     from tg import redirect, validate
-    from wiki20.model import DBSession
+    from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
     from wiki20.model.page import Page
     **import re**
     **from docutils.core import publish_parts**
 
-    **wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")**
+    **wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")**
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.page')
         def default(self, pagename="FrontPage"):
+            # flash(_("You're running TG2! (change me in root.py)"))
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            **content = publish_parts(page.data, writer_name="html")['html_body']**
+            **content = publish_parts(page.data, writer_name="html")["html_body"]**
             **root = tg.url('/')**
-            **content = wikiwords.sub(r'<a href="%s\\1">\\1</a>' % root, content)**
-            **return dict(content=content, page=page)**
+            **content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)**
+            **return dict(content=content, wikipage=page)**
+
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
         @expose(template="wiki20.templates.edit")
         def edit(self, pagename):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(wikipage=page)
 
         @expose()
         def save(self, pagename, data, submit):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             page.data = data
             DBSession.commit() # Tells database to commit changes permanently
-            redirect("/"+pagename)
+            redirect("/" + pagename)
 
 We need some additional imports, including ``re`` for regular expressions and
 a method called ``publish_parts`` from ``docutils``.
@@ -755,18 +789,18 @@ key-value pair we'll need to edit ``wiki20.templates.page``:
 
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-        <title>${page.pagename} - TurboGears 2 Wiki</title>
+        <title>${wikipage.pagename} - TurboGears 2 Wiki</title>
     </head>
 
     <body>
 
     <div class="main_content">
     <div style="float:right; width: 10em;"> Viewing
-    <span py:replace="page.pagename">Page Name Goes Here</span> <br/>
+    <span py:replace="wikipage.pagename">Page Name Goes Here</span> <br/>
     You can return to the <a href="/">FrontPage</a>.
     </div>
     **<div py:replace="XML(content)">Formatted content goes here.</div>**
-    <a href="/edit/${page.pagename}">Edit this page</a>
+    <a href="/edit/${wikipage.pagename}">Edit this page</a>
     </div>
 
     </body></html>
@@ -800,7 +834,9 @@ the controller:
     from pylons.i18n import ugettext as _
     import tg
     from tg import redirect, validate
-    from wiki20.model import DBSession
+    from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
     from wiki20.model.page import Page
     import re
     from docutils.core import publish_parts
@@ -809,36 +845,43 @@ the controller:
     wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.page')
         def default(self, pagename="FrontPage"):
+            # flash(_("You're running TG2! (change me in root.py)"))
             **try:**
                 **page = DBSession.query(Page).filter_by(pagename=pagename).one()**
             **except InvalidRequestError:**
                 **raise tg.redirect("notfound", pagename = pagename)**
-            content = publish_parts(page.data, writer_name="html")['fragment']
+            page = DBSession.query(Page).filter_by(pagename=pagename).one()
+            content = publish_parts(page.data, writer_name="html")["html_body"]
             root = tg.url('/')
             content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)
-            return dict(content=content, page=page)
+            return dict(content=content, wikipage=page)
 
-        **@expose("wiki20.templates.edit")**
-        **def notfound(self, pagename):**
-            **page = Page(pagename=pagename, data="")**
-            **DBSession.save(page)**
-            **DBSession.commit()**
-            **return dict(page=page)**
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
         @expose(template="wiki20.templates.edit")
         def edit(self, pagename):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(wikipage=page)
 
         @expose()
         def save(self, pagename, data, submit):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             page.data = data
             DBSession.commit() # Tells database to commit changes permanently
-            redirect("/"+pagename)
+            redirect("/" + pagename)
+
+        **@expose("wiki20.templates.edit")**
+        **def notfound(self, pagename):**
+            **page = Page(pagename=pagename, data="")**
+            **DBSession.save(page)**
+            **DBSession.commit()**
+            **return dict(wikipage=page)**
 
 The ``default`` code changes illustrate the "better to beg forgiveness than ask
 permission" pattern which is favored by most Pythonistas -- we first try to get
@@ -850,7 +893,7 @@ we might create a facade in the model, but here we'll favor simplicity. Notice
 that we can use the ``redirect()`` to pass parameters into the destination
 method.
 
-As for the ``notfound`` method, the first 3 lines of the method adds a row to
+As for the ``notfound`` method, the first 5 lines of the method adds a row to
 the page table. From there, the path is exactly the same it would be
 for our ``edit`` method.
 
@@ -951,45 +994,54 @@ pass ``pages`` to our template:
     from pylons.i18n import ugettext as _
     import tg
     from tg import redirect, validate
-    from wiki20.model import DBSession
+    from wiki20.model import DBSession, metadata
+    #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
+    #from dbsprockets.saprovider import SAProvider
     from wiki20.model.page import Page
     import re
     from docutils.core import publish_parts
-    from sqlalchemy.exceptions import InvalidRequestError ######################
+    from sqlalchemy.exceptions import InvalidRequestError
 
     wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")
 
     class RootController(BaseController):
+        #admin = DBMechanic(SAProvider(metadata), '/admin')
 
         @expose('wiki20.templates.page')
         def default(self, pagename="FrontPage"):
+            # flash(_("You're running TG2! (change me in root.py)"))
             try:
                 page = DBSession.query(Page).filter_by(pagename=pagename).one()
             except InvalidRequestError:
                 raise tg.redirect("notfound", pagename = pagename)
-            content = publish_parts(page.data, writer_name="html")['fragment']
+            page = DBSession.query(Page).filter_by(pagename=pagename).one()
+            content = publish_parts(page.data, writer_name="html")["html_body"]
             root = tg.url('/')
             content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)
-            return dict(content=content, page=page)
+            return dict(content=content, wikipage=page)
 
-        @expose("wiki20.templates.edit")
-        def notfound(self, pagename):
-            page = Page(pagename=pagename, data="")
-            DBSession.save(page)
-            DBSession.commit()
-            return dict(page=page)
+        @expose('wiki20.templates.about')
+        def about(self):
+            return dict(page='about')
 
         @expose(template="wiki20.templates.edit")
         def edit(self, pagename):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
-            return dict(page=page)
+            return dict(wikipage=page)
 
         @expose()
         def save(self, pagename, data, submit):
             page = DBSession.query(Page).filter_by(pagename=pagename).one()
             page.data = data
             DBSession.commit() # Tells database to commit changes permanently
-            redirect("/"+pagename)
+            redirect("/" + pagename)
+
+        @expose("wiki20.templates.edit")
+        def notfound(self, pagename):
+            page = Page(pagename=pagename, data="")
+            DBSession.save(page)
+            DBSession.commit()
+            return dict(wikipage=page)
 
         **@expose("wiki20.templates.pagelist")**
         **def pagelist(self):**
@@ -1018,18 +1070,18 @@ every page:
 
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-        <title>${page.pagename} - 20-Minute Wiki</title>
+        <title>${wikipage.pagename} - 20-Minute Wiki</title>
     </head>
 
     <body>
 
     <div class="main_content">
     <div style="float:right; width: 10em;"> Viewing
-    <span py:replace="page.pagename">Page Name Goes Here</span> <br/>
+    <span py:replace="wikipage.pagename">Page Name Goes Here</span> <br/>
     Return to the <a href="/">FrontPage</a>.
     </div>
     <div py:replace="XML(content)">Formatted content goes here.</div>
-    <a href="/edit/${page.pagename}">Edit this page</a><br/>
+    <a href="/edit/${wikipage.pagename}">Edit this page</a><br/>
     **<a href="/pagelist">View the page list</a>**
 
     </div>
@@ -1045,7 +1097,7 @@ Further Exploration
 
 Now that you have a working Wiki, there are a number of further places to explore:
 
-#. You can add `JSON support via MochiKit <./Wiki20/JSONMochiKit>`_.
+#. You can add `JSON support via MochiKit <JSONMochiKit.html>`_.
 
 #. You can learn more about the `Genshi templating engine <http://genshi.edgewall.org/wiki/Documentation/templates.html>`_.
 
