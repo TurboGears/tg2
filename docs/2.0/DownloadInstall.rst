@@ -109,7 +109,7 @@ and you'll see a new "TurboGears2" command section in paster help.
 
 Paster has replaced the old tg-admin command, and most of the tg-admin commands have now been reimplemented as paster commands. For example, "tg-admin quickstart" command has changed to "paster quickstart" command, and "tg-admin info" command has changed to "paster tginfo" command.
 
-Be sure to check out our `What's new in TurboGears 2.0 <RoughDocs/WhatsNew>`_ page to get a picture of what's changed in TurboGears2 so far.
+Be sure to check out our `What's new in TurboGears 2.0 <WhatsNew.html>`_ page to get a picture of what's changed in TurboGears2 so far.
 
 Troubleshooting
 ----------------
