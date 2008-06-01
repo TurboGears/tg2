@@ -31,9 +31,7 @@ Validating arguments (without form widgets)
 When not using forms, the story gets a bit more complex. Basically, you need to
 specify which validator goes with which argument using the ``validators``
 keyword argument. Here's a simple example::
-
-.. code-block: python
-
+    
     @expose('json')
     @validate(validators={"a":validators.Int(), "b":validators.Email})
     def two_validators(self, a=None, b=None, *args):
@@ -187,18 +185,14 @@ schema by inheriting from ``turbogears.validators.Schema`` and pass the newly
 created ``Schema`` as the ``validators`` argument instead of passing a
 dictionary.  
 
-Create a schema
-
-.. code-block: python
+Create a schema::
 
     class PwdSchema(validators.Schema):
         pwd1 = validators.String(not_empty=True)
         pwd2 = validators.String(not_empty=True)
         chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
-Then you can use that schema in @validate rather than a dictionary of validators:
-
-.. code-block: python
+Then you can use that schema in @validate rather than a dictionary of validators::
 
     @expose()    
     @validate(validators=PwdSchema())

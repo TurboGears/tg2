@@ -359,7 +359,6 @@ have controllers that look something like this::
      def update(self):
         ....
 
-
 So a URL request to .../2007/6/28/0/edit would map first to the 
 BlogController's lookup method, which would lookup the date, instantiate 
 a new BlogEntryController object (blog_entry), and pass that blog_entry object 

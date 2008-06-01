@@ -78,13 +78,13 @@ There are examples of how each of these template directives work on the Genshi w
 
 http://genshi.edgewall.org/wiki/Documentation/xml-templates.html
 
-Genshi gothcas
---------------
+Genshi gotchas
+------------------
 
 DO NOT USE 'data' as a key in the return dictionary of your controller. This can provide a somewhat confusing AttributeError on the Context object.   Currently the error message provides no mention of 'data' being a reserved word.
 
 Further Reading
----------------
+-------------------
 
 http://genshi.edgewall.org/wiki/Documentation/xml-templates.html
 

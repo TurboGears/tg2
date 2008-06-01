@@ -1,7 +1,7 @@
 How to install TurboGears 2
 =============================
 
-Installing TurboGears 2 currently requires some developer skills. You are willing to checkout both the Pylons and TurboGears 2 code from their respective version control systems.  TurboGears 2 is working well, and there is at least one large project built upon it already, but it's not yet documented and ready for users who aren't ready to deal with the current rate of change in the project.
+Installing TurboGears 2 currently requires you to be willing to checkout both the Pylons and TurboGears 2 code from their respective version control systems.  TurboGears 2 is working well, and there is at least one large project built upon it already, but it's not yet documented and ready for users who aren't ready to deal with the current rate of change in the project.
 
 We do expect to have a technology preview release sometime soon, and that should provide a clear picture of the TurboGears 2 stack, and a slightly more stable API.   However, if you want API stability and good documentation, you may want to consider building your application on TurboGears 1 and porting it to TG2 after it is officially released.
 
