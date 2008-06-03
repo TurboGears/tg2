@@ -198,6 +198,21 @@ class expose(object):
             self.content_type, self.engine, self.template, self.exclude_names)
         return func
 
+def override_template(controller, template):
+    if hasattr(controller, 'decoration'):
+        decoration = controller.decoration
+    else:
+        return
+    if hasattr(decoration, 'engines'):
+        engines = decoration.engines
+    else:
+        return
+    
+    text_engine = engines.get('text/html')
+    template = template.split(':')
+    template.extend(text_engine[2:])
+    engines['text/html'] = template
+
 
 class validate(object):
     """Regesters which validators ought to be applied

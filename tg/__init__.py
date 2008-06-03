@@ -51,7 +51,7 @@ they make it possible for a group of TurboGears components to share assumptions
 about how things will work.
 """
 from tg.controllers import TGController, redirect, url
-from tg.decorators import validate, expose
+from tg.decorators import validate, expose, override_template
 from tg.flash import flash, get_flash, get_status
 
 import paste

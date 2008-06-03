@@ -154,7 +154,7 @@ class DecoratedController(WSGIController):
             # Parameters that don't have validators are returned verbatim
             for param, param_value in params.items():
                 if not param in new_params:
-                    new_params[param] = param_value        
+                    new_params[param] = param_value
 
             # If there are errors, create a compound validation error based on
             # the errors dictionary, and raise it as an exception
@@ -521,6 +521,7 @@ def url(tgpath, tgparams=None, **kw):
         result += "?" + "&".join(args)
     return result
     
+
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
     languages = pylons.request.accept_language.best_matches()
