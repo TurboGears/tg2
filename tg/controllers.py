@@ -20,6 +20,8 @@ import formencode
 import pylons
 from pylons.controllers import WSGIController
 
+from pylons.controllers.util import abort
+
 from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException
 from tw.api import Widget
 
@@ -222,6 +224,9 @@ class DecoratedController(WSGIController):
             pylons.buffet.prepare(engine_name, **template_options)
             _configured_engines().add(engine_name)
 
+        #if there is an identity, push it to the pylons template context
+        pylons.tmpl_context.identity = pylons.request.environ.get('repoze.who.identity')
+            
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = dict(tmpl_context=pylons.tmpl_context)
