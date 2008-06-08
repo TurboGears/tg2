@@ -66,9 +66,12 @@ Check out the latest code from subversion::
  $ cd ..
  $ svn co http://svn.turbogears.org/projects/tg.devtools/trunk tgdev
  $ svn co http://svn.turbogears.org/trunk tg2
- $ svn co http://svn.turbogears.org/projects/tgrepozewho/trunk tgrepozewho
+ $ svn co https://tgtools.googlecode.com/svn/projects/tg.ext.repoze.who/trunk tg.ext.repoze.who
 
-tg2 package is TurboGears 2 core. Others are paster command plugins to create default template, admin interface, and migrations.
+- tgdev is a set of tools, paster command plugins to create default template, admin interface, and migrations.
+- tg2 package is TurboGears 2 core.
+- tg.ext.repoze.who is an extension for tg2 that aims to provide an API compliant implementation of the old tg1 identity framework.
+
 
 Then you repeat the same steps to tell setuptools/python to use the new tg2 installation.
 
@@ -91,9 +94,7 @@ Install TurboGears 2 developer tools::
 
 Then you have installed TurboGears 2.
 
- .. note:: if you have installed old dependency packages, you could remove them from::
-
- {python_path}/site-packages/easy_install.pth
+ .. note:: if you have installed old dependency packages, you could remove them from {python_path}/site-packages/easy_install.pth
 
 
 Validate the installation:
