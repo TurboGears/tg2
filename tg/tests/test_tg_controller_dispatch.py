@@ -116,6 +116,11 @@ class BasicTGController(TGController):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
         return dict(int=a,str=b)
+    
+    @expose()
+    @expose('json')
+    def stacked_expose(self, tg_format=None):
+        return dict(got_json=True)
         
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -204,4 +209,8 @@ class TestTGController(TestWSGIController):
     def test_flash_status(self):
         resp = self.app.get('/flash_status')
         self.failUnless('status_ok'in resp, resp)
+    
+    def test_tg_format_param(self):
+        resp = self.app.get('/stacked_expose/?tg_format=application/json')
+        assert '{"got_json' in resp.body
 

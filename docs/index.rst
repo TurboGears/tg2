@@ -2,7 +2,7 @@
 TurboGears 2 Documentation
 ==========================
 
-TurboGears 2 is a reinvention of the TurboGears project to take advantage of new components, and to provide a fully customizable WSGI (Web Server Gateway Interface) stack.  From the begining TurboGears was designed to be a Full Stack framework built from best of breed components.   As time has gone on new components have been released which improved on the ones in the original TG stack, and the Python web world has been increasingly designed around WSGI.  This has enabled a whole new world of component reuse, and TG2 is designed to take advantage of this fact in order to make a framework which is both flexible, and productive.
+TurboGears 2 is a reinvention of the TurboGears project to take advantage of new components, and to provide a fully customizable WSGI (Web Server Gateway Interface) stack.  From the beginning TurboGears was designed to be a Full Stack framework built from best of breed components.   As time has gone on new components have been released which improved on the ones in the original TG stack, and the Python web world has been increasingly designed around WSGI.  This has enabled a whole new world of component reuse, and TG2 is designed to take advantage of this fact in order to make a framework which is both flexible, and productive.
 
 TurboGears 2 is still in rapid development, and should only be used by those who are willing to put up with a little bit of API instability, but because it is well tested, and based on well tested, and known stable components it is already being used by some people in production environments.
 

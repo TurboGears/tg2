@@ -90,6 +90,7 @@ class DecoratedController(WSGIController):
 
             # Validate user input
             params = self._perform_validate(controller, params)
+
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
@@ -347,8 +348,8 @@ class ObjectDispatchController(DecoratedController):
         if url is None:
             url_path = pylons.request.path.split('/')[1:]
         else:
-            url_path = url.split('/')
-
+            url_path = url.split('/') 
+        
         controller, remainder = _object_dispatch(self, url_path)
         # XXX Place controller url at context temporarily... we should be
         #    really using SCRIPT_NAME for this.
