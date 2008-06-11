@@ -134,10 +134,9 @@ widgets-based form::
 
 The widgets system will take care of building a schema to handle the data
 conversions and you'll wind up with the ``int`` or ``datetime`` objects you
-specified when building the form. When paired with the `error handling`_
-decorators, you can handle the common case of building a form, validating it,
-redisplaying the form if there are errors, and converting a valid form into the
-proper arguments in only a few lines of Python.
+specified when building the form. When paired with the `validate`
+decorator, you can handle the common case of building a form, validating it,
+redisplaying the form if there are errors, and converting a valid form into the proper arguments in only a few lines of Python.
 
 You can also pass the form using a keyword augment:
 

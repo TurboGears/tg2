@@ -161,35 +161,34 @@ Use ORM
 
 Edit controllers/root.py::
 
-from movies.lib.base import BaseController
-from tg import expose, flash
-from movies.model import DBSession, Movie
+    from movies.lib.base import BaseController
+    from tg import expose, flash
+    from movies.model import DBSession, Movie
 
-class RootController(BaseController):
+    class RootController(BaseController):
 
-    ### Removed code for brevity
+        ### Removed code for brevity
 
-    @expose('movies.templates.index')
-    def show(self):
-        flash("create model")
+        @expose('movies.templates.index')
+        def show(self):
+            flash("create model")
 
-        # create entry
-        entry = Movie("Transformer", 2007, "Cars and robots")          
-        # create entry if not define model object __init__ method
-        #entry = Movie()
-        #entry.title="Transformer"
-        #entry.year=2007
-        #entry.description ="Cars and robots"
+            # create entry
+            entry = Movie("Transformer", 2007, "Cars and robots")          
+            # create entry if not define model object __init__ method
+            #entry = Movie()
+            #entry.title="Transformer"
+            #entry.year=2007
+            #entry.description ="Cars and robots"
 
 
-        # save entry
-        DBSession.save(entry)
-        DBSession.commit()
+            # save entry
+            DBSession.save(entry)
+            DBSession.commit()
 
-        # query record from Movie object
-        record = DBSession.query(Movie).filter(Movie.title=='Transformer').one()
+            # query record from Movie object record = DBSession.query(Movie).filter(Movie.title=='Transformer').one()
 
-        return dict(record=record.title)
+            return dict(record=record.title)
 
 
 Edit template/index.html and add::
@@ -205,12 +204,14 @@ Read, Update, Delete records
 
 (CRUD) based on model ::
 
-$ paster crud
+    $ paster crud
+    
 Note: Make sure you have created your models first
-Enter the model name: Movie
-Enter the primary key [id]: 
-Enter the package name [MovieController]:
-Enter the model form name [MovieForm]: 
+
+    Enter the model name: Movie
+    Enter the primary key [id]: 
+    Enter the package name [MovieController]:
+    Enter the model form name [MovieForm]: 
 
 or use short command without prompt::
 
@@ -226,18 +227,18 @@ The command Create several files
 
 Edit controllers/root.py::
 
-### Other code goes here
+    ### Other code goes here
  
-from MovieController import MovieController
+    from MovieController import MovieController
 
-class RootController(BaseController):
-    movie = MovieController()
+    class RootController(BaseController):
+        movie = MovieController()
 
-    @expose('www.templates.index')
-    def index(self):
-        from datetime import datetime
-        flash("Your application is now running")
-        return dict(now=datetime.now())
+        @expose('www.templates.index')
+        def index(self):
+            from datetime import datetime
+            flash("Your application is now running")
+            return dict(now=datetime.now())
 
 Browse http://localhost:8080/movie/ and you got an Movie model admin interface. Note that the trailing '/' is important here.
 
