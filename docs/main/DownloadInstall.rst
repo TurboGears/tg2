@@ -53,7 +53,7 @@ Installing Paver:
 
 To install paver::
 
- $ easy_install Paver
+ $ easy_install -U Paver
 
 
 Installing TurboGears 2 from Source:
@@ -66,7 +66,7 @@ Check out the latest code from subversion::
  $ cd ..
  $ svn co http://svn.turbogears.org/projects/tg.devtools/trunk tgdev
  $ svn co http://svn.turbogears.org/trunk tg2
- $ svn co https://tgtools.googlecode.com/svn/projects/tg.ext.repoze.who/trunk tg.ext.repoze.who
+ $ svn co http://tgtools.googlecode.com/svn/projects/tg.ext.repoze.who/trunk tg.ext.repoze.who
 
 - tgdev is a set of tools, paster command plugins to create default template, admin interface, and migrations.
 - tg2 package is TurboGears 2 core.
