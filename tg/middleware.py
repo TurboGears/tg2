@@ -12,21 +12,16 @@ from routes.middleware import RoutesMiddleware
 
 from tw.api import make_middleware as tw_middleware
 
-def setup_tg_wsgi_app(load_environment, default_renderer='genshi', 
-                      project_model=None, identity=None):
+def setup_tg_wsgi_app(load_environment, setup_vars):
     """Create a base TG app, with all the standard middleware
     
     ``load_environment``
         A required callable, which sets up the basic application
         evironment.
-    ``default_renderer``
-        The name of the default rendering function to be used
-        to turn the returned dictionary into the final response string.
-    ``project_model``
-        The user's project model file.  This is only required if 
-        using identity and SQLAlchemy.
-    ``identity``
-       The type of authenticator used for user authentication. 
+    ``setup_vars``
+        A dictionary any special values nessisary for setting up
+        the base wsgi app.
+. 
     """                  
 
     def make_base_app(global_conf, full_stack=True, **app_conf):
@@ -60,14 +55,18 @@ def setup_tg_wsgi_app(load_environment, default_renderer='genshi',
 
         # ToscaWidgets Middleware
         app = tw_middleware(app, {
-            'toscawidgets.framework.default_view': default_renderer,
+            'toscawidgets.framework.default_view': 
+            setup_vars.get('default_renderer', 'genshi')
             })
 
-        if identity == "sqlalchemy":
-            # Identity Middleware
-            user_criterion = project_model.User.user_name
-            user_id_col = 'user_id'
-            app = make_who_middleware(app, config, project_model.User, 
+        if setup_vars.get('identity', None) == "sqlalchemy":
+            # configure identity Middleware
+            from tg.ext.repoze.who.middleware import make_who_middleware
+            DBSession = setup_vars['identity.dbsession'] 
+            User = setup_vars['identity.user'] 
+            user_criterion = setup_vars['identity.user_criterion'] 
+            user_id_col = setup_vars['identity.user_id_col'] 
+            app = make_who_middleware(app, config, User, 
                                       user_criterion, 
                                       user_id_col, 
                                       DBSession)
