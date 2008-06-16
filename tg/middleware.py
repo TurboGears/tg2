@@ -12,8 +12,8 @@ from routes.middleware import RoutesMiddleware
 
 from tw.api import make_middleware as tw_middleware
 
-def setup_tg_wsgi_app(load_environement, default_renderer='genshi' 
-                      project_model=None, identity='sqlalchemy'):
+def setup_tg_wsgi_app(load_environment, default_renderer='genshi', 
+                      project_model=None, identity=None):
     """Create a base TG app, with all the standard middleware
     
     ``load_environment``
@@ -63,7 +63,7 @@ def setup_tg_wsgi_app(load_environement, default_renderer='genshi'
             'toscawidgets.framework.default_view': default_renderer,
             })
 
-        if identity == "sqlalchemy"
+        if identity == "sqlalchemy":
             # Identity Middleware
             user_criterion = project_model.User.user_name
             user_id_col = 'user_id'
@@ -93,4 +93,4 @@ def setup_tg_wsgi_app(load_environement, default_renderer='genshi'
         app = Cascade([static_app, javascripts_app, app])
         return app
         
-    return make_app
+    return make_base_app
