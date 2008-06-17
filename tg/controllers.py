@@ -392,7 +392,6 @@ def _object_dispatch(obj, url_path):
                 obj, remainder = obj(*remainder)
                 continue
 
-
 def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
@@ -417,7 +416,6 @@ def _find_object(obj, remainder, notfound_handlers):
             raise HTTPNotFound().exception
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
-
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):

@@ -54,4 +54,4 @@ def render_genshi(template_name, tmplate_vars):
     # Grab a template reference
     template = app_globals.genshi_loader.load(template_name)
     # Render the template
-    return template.generate(**tmpl_vars)
+    return template.render(**tmpl_vars)

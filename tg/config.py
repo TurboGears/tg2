@@ -23,7 +23,7 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(name)
 
-class AppSetup(Bunch):
+class AppConfig(Bunch):
     """Class to store application configuration
     
     This class should have configuration/setup information 
@@ -34,5 +34,7 @@ class AppSetup(Bunch):
     
     def __init__(self):
         self.stand_alone = True
+        self.default_renderer = 'genshi'
+        self.auth_backend = None 
     
     pass

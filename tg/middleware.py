@@ -12,7 +12,7 @@ from routes.middleware import RoutesMiddleware
 
 from tw.api import make_middleware as tw_middleware
 
-def setup_tg_wsgi_app(load_environment, setup_vars):
+def setup_tg_wsgi_app(load_environment, base_config):
     """Create a base TG app, with all the standard middleware
     
     ``load_environment``
@@ -21,9 +21,8 @@ def setup_tg_wsgi_app(load_environment, setup_vars):
     ``setup_vars``
         A dictionary any special values nessisary for setting up
         the base wsgi app.
-. 
     """                  
-
+    
     def make_base_app(global_conf, full_stack=True, **app_conf):
         """Create a tg WSGI application and return it
 
@@ -56,20 +55,18 @@ def setup_tg_wsgi_app(load_environment, setup_vars):
         # ToscaWidgets Middleware
         app = tw_middleware(app, {
             'toscawidgets.framework.default_view': 
-            setup_vars.get('default_renderer', 'genshi')
+            base_config.default_renderer
             })
 
-        if setup_vars.get('identity', None) == "sqlalchemy":
+        if base_config.auth_backend == "sqlalchemy":
             # configure identity Middleware
             from tg.ext.repoze.who.middleware import make_who_middleware
-            DBSession = setup_vars['identity.dbsession'] 
-            User = setup_vars['identity.user'] 
-            user_criterion = setup_vars['identity.user_criterion'] 
-            user_id_col = setup_vars['identity.user_id_col'] 
-            app = make_who_middleware(app, config, User, 
-                                      user_criterion, 
-                                      user_id_col, 
-                                      DBSession)
+            
+            auth = base_config.sa_auth
+            
+            app = make_who_middleware(app, config, auth.User, 
+                                      auth.user_criterion, auth.user_id_col, 
+                                      auth.DBSession)
 
         if asbool(full_stack):
             # Handle Python exceptions
