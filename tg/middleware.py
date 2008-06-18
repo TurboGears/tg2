@@ -64,9 +64,10 @@ def setup_tg_wsgi_app(load_environment, base_config):
             
             auth = base_config.sa_auth
             
-            app = make_who_middleware(app, config, auth.User, 
-                                      auth.user_criterion, auth.user_id_col, 
-                                      auth.DBSession)
+            app = make_who_middleware(app, config, auth.user, 
+                                      auth.user_criterion, 
+                                      auth.user_id_col, 
+                                      auth.dbsession)
 
         if asbool(full_stack):
             # Handle Python exceptions
