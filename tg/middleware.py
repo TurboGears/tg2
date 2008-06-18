@@ -66,7 +66,7 @@ def setup_tg_wsgi_app(load_environment, base_config):
             
             app = make_who_middleware(app, config, auth.user, 
                                       auth.user_criterion, 
-                                      auth.user_id_col, 
+                                      auth.user_id_column, 
                                       auth.dbsession)
 
         if asbool(full_stack):
