@@ -1,4 +1,5 @@
 """Simple AppSetup helper class"""
+from pylons import config
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""

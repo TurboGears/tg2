@@ -1,57 +1,152 @@
-from pylons import tmpl_context, config, app_globals
-from pylons.templating import pylons_globals
+from pylons import app_globals, config, session, tmpl_context
+import pylons.templating as templating
+import tg
+from tg.config import Bunch
+from tg.controllers import url
+from genshi import XML
+from urllib import quote_plus
+
+class cycle:
+    """
+    Loops forever over an iterator. Wraps the itertools.cycle method
+    but provides a way to get the current value via the 'value' attribute
+
+    >>> from turbogears.view.base import cycle
+    >>> oe = cycle(('odd','even'))
+    >>> oe
+    None
+    >>> oe.next()
+    'odd'
+    >>> oe
+    'odd'
+    >>> oe.next()
+    'even'
+    >>> oe.next()
+    'odd'
+    >>> oe.value
+    'odd'
+    """
+    value = None
+    def __init__(self, iterable):
+        self._cycle = icycle(iterable)
+    def __str__(self):
+        return self.value.__str__()
+    def __repr__(self):
+        return self.value.__repr__()
+    def next(self):
+        self.value = self._cycle.next()
+        return self.value
+
+def selector(expression):
+    """If the expression is true, return the string 'selected'. Useful for
+    HTML <option>s."""
+    if expression:
+        return "selected"
+    else:
+        return None
+
+def checker(expression):
+    """If the expression is true, return the string "checked". This is useful
+    for checkbox inputs.
+    """
+    if expression:
+        return "checked"
+    else:
+        return None
+
+def ipeek(it):
+    """Lets you look at the first item in an iterator. This is a good way
+    to verify that the iterator actually contains something. This is useful
+    for cases where you will choose not to display a list or table if there
+    is no data present.
+    """
+    it = iter(it)
+    try:
+        item = it.next()
+        return chain([item], it)
+    except StopIteration:
+        return None
 
 def get_tg_vars():
-    """Create and return a dictionary of global tg variables
-    
-    Render functions should call this to retrieve a list of global
-    Pylons variables that should be included in the global template
-    namespace if possible.
-    
-    Pylons variables that are returned in the dictionary:
-        c, g, h, _, N_, config, request, response, translator,
-        ungettext
-    
-    If SessionMiddleware is being used, ``session`` will also be
-    available in the template namespace.
-    
+    """Create a Bunch of variables that should be available in all templates.
+
+    These variables are:
+
+    useragent
+        a UserAgent object with information about the browser
+    selector
+        the selector function
+    checker
+        the checker function
+    tg_js
+        the path to the JavaScript libraries
+    ipeek
+        the ipeek function
+    cycle
+        cycle through a set of values
+    quote_plus
+        the urllib quote_plus function
+    url
+        the turbogears.url function for creating flexible URLs
+    identity
+        the current visitor's identity information
+    session
+        the current beaker.session if the session_filter.on it set
+        in the app.cfg configuration file. If it is not set then session
+        will be None.
+    locale
+        the default locale
+    inputs
+        input values from a form
+    errors
+        validation errors
+    request
+        the WebOb Request Object
+    config
+        the app's config object
     """
     
-    conf = pylons.config._current_obj()
-    c = pylons.tmpl_context._current_obj()
-    g=conf.get('pylons.app_globals') or conf['pylons.g']
-    pylons_vars = dict(
-        c=c,
-        tmpl_context=c,
-        config=conf,
-        app_globals=g,
-        g=g,
-        h=conf.get('pylons.h') or pylons.h._current_obj(),
-        request=pylons.request._current_obj(),
-        response=pylons.response._current_obj(),
-        translator=pylons.translator._current_obj(),
-        ungettext=pylons.i18n.ungettext,
-        _=pylons.i18n._,
-        N_=pylons.i18n.N_
-    )
-    
-    # If the session was overriden to be None, don't populate the session
-    # var
-    if pylons.config['pylons.environ_config'].get('session', True):
-        pylons_vars['session'] = pylons.session._current_obj()
-    log.debug("Created render namespace with pylons vars: %s", pylons_vars)
-    return pylons_vars
+    tg_vars = Bunch(
+        useragent=useragent, selector=selector,
+        tg_static="/" + turbogears.startup.webpath + "tg_static",
+        ipeek=ipeek, 
+        cycle=cycle, 
+        quote_plus=quote_plus, 
+        checker=checker,
+        url = turbogears.url, 
+        identity=identity.current,
+        session=session, 
+        config=config,
+        locale = tg.request.accept_language.best_matches(),
+        errors = getattr(tmpl_contex, "form_errors", {}),
+        inputs = getattr(tmpl_contex, "form_values", {}),
+        request = tg.request)
+   
+    root_vars = {}
+    root_vars.update({'tg':'tg_vars'})
+    return root_vars
 
-def render(template_engine=None, template_name=None, template_vars):
-    render_function = app_globals.renderers.get(template_engine, None)
+def render(template_vars, template_engine=None, template_name=None, **kwargs):
+    render_function = app_globals['renderers'].get(template_engine, None)
+    if not template_vars: 
+        template_vars={}
+    tmpl_vars.update(get_tg_vars())
     if not render_function:
         render_function = config['tg.default_renderer']
-        render_function(template_name, template_vars)
+        render_function(template_name, template_vars, **kwargs)
 
-def render_genshi(template_name, tmplate_vars):
-    # Update the passed in vars with the globals
-    tmpl_vars.update(pylons_globals())
-    # Grab a template reference
-    template = app_globals.genshi_loader.load(template_name)
-    # Render the template
-    return template.render(**tmpl_vars)
+def render_genshi(template_name, template_vars, **kwargs):
+    """Render a the template_vars with the Genshi template"""
+    template_vars['XML'] = XML
+    return templating.render_genshi(template_name, extra_vars=templat_vars, 
+                                    **kwargs)
+
+def render_mako(template_name, template_vars, **kwargs):
+    tmpl_vars.update(get_tg_vars())
+    return templating.render_mako(template_name, extra_vars=template_vars,
+                                  **kwargs)
+    
+def render_jinja(template_name, template_vars, **kwargs):
+    tmpl_vars.update(get_tg_vars())
+    return templating.render_jinja(template_name, extra_vars=template_vars,
+                                   **kwargs)

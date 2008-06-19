@@ -35,10 +35,10 @@ def make_load_environment(base_config):
         print dir(base_config.package)
         config['pylons.h'] = base_config.package.lib.helpers
     
-        if base_config == "sqlalchemy":        
-            config['identity'] = {'user_class':User, 
-                                  'group_class':Group, 
-                                  'permission_class':Permission,
+        if base_config.auth_backend == "sqlalchemy":        
+            config['identity'] = {'user_class':base_config.model.User, 
+                                  'group_class':base_config.model.Group, 
+                                  'permission_class':base_config.model.Permission,
                                   'users_table':'tg_user',
                                   'groups_table':'tg_group',
                                   'permissions_table':'tg_permission',
@@ -50,17 +50,21 @@ def make_load_environment(base_config):
         if 'mako' in base_config.renderers:
         # Create the Mako TemplateLookup, with the default auto-escaping
             from mako.lookup import TemplateLookup
+            from tg.render import render_mako
+            
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=paths['templates'],
                 module_directory=os.path.join(app_conf['cache_dir'], 'templates'),
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'])
+            config['pylons.app_globals'].renderer_functions = render_mako
         
         
         if 'genshi' in base_config.renderers:
             # Create the Genshi TemplateLoader
             from genshi.template import TemplateLoader
+            from tg.render import render_genshi
             
             def template_loaded(template):
                 "Plug-in our i18n function to Genshi."
@@ -68,14 +72,20 @@ def make_load_environment(base_config):
                 
             config['pylons.app_globals'].genshi_loader = TemplateLoader(
                 paths['templates'], auto_reload=True)
+            
+            config['pylons.app_globals'].renderer_functions = render_genshi  
                 
         if 'jinja' in base_config.renderers:
             # Create the Jinja Environment
             from jinja import ChoiceLoader, Environment, FileSystemLoader
+            from tg.render import render_jinja
+            
             config['pylons.app_globals'].jinja_env = Environment(loader=ChoiceLoader(
                     [FileSystemLoader(path) for path in paths['templates']]))
             # Jinja's unable to request c's attributes without strict_c
             config['pylons.strict_c'] = True
+            
+            config['pylons.app_globals'].renderer_functions = render_jinja
         
         # If you'd like to change the default template engine used to render
         # text/html content, edit these options.
