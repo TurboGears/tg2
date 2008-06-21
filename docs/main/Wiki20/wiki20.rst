@@ -262,7 +262,7 @@ Since a wiki is basically a linked collection of pages, we'll define a
 
     # Python class definition
     class Page(object):
-        def __init__(pagename, data): 
+        def __init__(self, pagename, data): 
            self.pagename = pagename
            self.data = data
 
@@ -339,9 +339,11 @@ The easiest way to do this is just to run a Python script. Create a file called
 	metadata.create_all(engine)
 
 	# Create a page object and set some data
-	page = Page()
-	page.pagename = "FrontPage"
-	page.data = "initial data"
+	page = Page("FrontPage", "Initial Data")
+	# Equivalent to:
+	# page = Page("", "")
+	# page.pagename = "FrontPage"
+	# page.data = "initial data"
 
 	# Save the page object to the in memory DBSession
 	DBSession.save(page)
@@ -490,7 +492,7 @@ template.
 Similarly the lines:: 
 
   <xi:include href="header.html" />
-  xi:include href="footer.html" />
+  <xi:include href="footer.html" />
 
 Tell genshi to suck in the headers and footers for the page. 
 
@@ -531,7 +533,7 @@ our purposes::
 This is a basic XHTML page with three substitutions:
 
 1.  In the ``<title>`` tag, we substitute the name of the page, using
-    the ``pagename`` value of ``page``.  (Remember, ``page`` is an instance
+    the ``pagename`` value of ``page``.  (Remember, ``wikipage`` is an instance
     of our mapped ``Page`` class, which was passed in a dictionary by our
     controller.)
 
@@ -540,7 +542,7 @@ This is a basic XHTML page with three substitutions:
     
         <span py:replace="wikipage.pagename">Page Name Goes Here</span>
 
-3.  In the third ``<div>``, we put in the contents of our ``page``::
+3.  In the third ``<div>``, we put in the contents of our ``wikipage``::
 
         <div py:replace="wikipage.data">Page text goes here.</div>
 
@@ -1103,7 +1105,7 @@ Now that you have a working Wiki, there are a number of further places to explor
 
 #. You can learn more about the `Genshi templating engine <http://genshi.edgewall.org/wiki/Documentation/templates.html>`_.
 
-#. You can learn more about the `SQLAlchemy ORM <http://www.sqlalchemy.org/>`_/
+#. You can learn more about the `SQLAlchemy ORM <http://www.sqlalchemy.org/>`_.
 
 If you had any problems with this tutorial, or have ideas on how to make it
 better, please let us know on the mailing list! Suggestions are almost always
