@@ -77,13 +77,16 @@ Then you repeat the same steps to tell setuptools/python to use the new tg2 inst
 
 Install tgrepozewho::
 
- $ cd tgrepozewho
+ $ cd tg.ext.repoze.who
+ $ easy_install Paste==dev
+ $ easy_install zope.interface 
  $ python setup.py develop
 
 Install TurboGears 2 server::
 
  $ cd ..
  $ cd tg2
+ $ easy_install PasteScript==dev
  $ python setup.py develop
 
 Install TurboGears 2 developer tools::
