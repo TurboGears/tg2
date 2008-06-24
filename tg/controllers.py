@@ -2,11 +2,11 @@
 Basic controller classes for turbogears
 
   DecoratedController allows the decorators in tg.decorators to work
-  
+
   ObjectDispatchController is a specialised form of DecoratedController that
   converts URL portions into traversing Python objects.  This controller is
   usable in plain pylons if you route to it's "routes_placeholder" method
-  
+
   TGController is a specialised form of ObjectDispatchController that forms the
   basis of standard TurboGears controllers.  The "Root" controller of a standard
   tg project must be a TGController.
@@ -19,11 +19,11 @@ import urlparse, urllib
 import formencode
 import pylons
 from pylons.controllers import WSGIController
-
 from pylons.controllers.util import abort
 
-from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException
+from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException, HTTPClientError
 from tw.api import Widget
+from webob.exc import HTTPForbidden
 
 log = logging.getLogger(__name__)
 
@@ -44,11 +44,11 @@ class DecoratedController(WSGIController):
 
     The decorators in tg.decorators create an attribute named 'decoration' on
     the controller method, creating rules as to:
-    
+
     1) how to validate the request,
     2) how to render the response,
     3) allowing hooks to be registered to happen:
-        
+
         a) before validation
         b) before the controller method is called
         c) before the rendering takes place, and
@@ -70,14 +70,14 @@ class DecoratedController(WSGIController):
         abbreviated form with validation errors shown on validation failure.
 
         The before_render hook provides a place for functions that are called
-        before the template is rendered. For example, you could use it to 
+        before the template is rendered. For example, you could use it to
         add and remove from the dictionary returned by the controller method,
         before it is passed to rendering.
 
         The after_render hook can act upon and modify the response out of
         rendering.
         """
-        
+
         self._initialize_validation_context()
 
         if remainder is None:
@@ -99,7 +99,7 @@ class DecoratedController(WSGIController):
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller, 
+            controller, output = self._handle_validation_errors(controller,
                                                                 remainder,
                                                                 params, inv)
 
@@ -134,10 +134,10 @@ class DecoratedController(WSGIController):
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
-        
+
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
-        
+
         # The validator may be a dictionary, a FormEncode Schema object, or any
         # object with a "validate" method.
         if isinstance(validation.validators, dict):
@@ -165,20 +165,20 @@ class DecoratedController(WSGIController):
                 raise formencode.api.Invalid(
                     formencode.schema.format_compound_error(errors),
                     params, None, error_dict=errors)
-            
+
         elif isinstance(validation.validators, formencode.Schema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
             new_params = validation.validators.to_python(params)
-            
+
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
             new_params = validation.validators.validate(params)
-        
+
         # Theoretically this should not happen...
         if new_params is None:
             return params
-            
+
         return new_params
 
     def _render_response(self, controller, response):
@@ -203,7 +203,7 @@ class DecoratedController(WSGIController):
             controller.decoration.lookup_template_engine(pylons.request)
 
         # Always set content type
-        pylons.response.headers['Content-Type'] = content_type 
+        pylons.response.headers['Content-Type'] = content_type
         req = pylons.request
 
         if template_name is None:
@@ -217,7 +217,7 @@ class DecoratedController(WSGIController):
                     msg = "Returning a widget is deprecated, set them on pylons.widgets instead"
                     warnings.warn(msg, DeprecationWarning)
                     setattr(pylons.c.w, key, item)
-        
+
         # Prepare the engine, if it's not already been prepared.
         if engine_name not in _configured_engines():
             from pylons import config
@@ -227,7 +227,7 @@ class DecoratedController(WSGIController):
 
         #if there is an identity, push it to the pylons template context
         pylons.tmpl_context.identity = pylons.request.environ.get('repoze.who.identity')
-            
+
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = dict(tmpl_context=pylons.tmpl_context)
@@ -261,8 +261,8 @@ class DecoratedController(WSGIController):
         """
 
         pylons.c.validation_exception = exception
-        pylons.c.form_errors = {} 
-        
+        pylons.c.form_errors = {}
+
         # Most Invalid objects come back with a list of errors in the format:
         #"fieldname1: error\nfieldname2: error"
 
@@ -271,14 +271,14 @@ class DecoratedController(WSGIController):
         for error in error_list:
             field_value = error.split(':')
 
-            #if the error has no field associated with it, 
+            #if the error has no field associated with it,
             #return the error as a global form error
             if len(field_value) == 1:
                 pylons.c.form_errors['_the_form'] = field_value[0].strip()
                 continue
 
             pylons.c.form_errors[field_value[0]] = field_value[1].strip()
-            
+
         pylons.c.form_values = exception.value
 
         error_handler = controller.decoration.validation.error_handler
@@ -291,7 +291,7 @@ class DecoratedController(WSGIController):
             output = error_handler(controller.im_self, *remainder, **dict(params))
 
         return error_handler, output
-        
+
     def _initialize_validation_context(self):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
@@ -348,8 +348,8 @@ class ObjectDispatchController(DecoratedController):
         if url is None:
             url_path = pylons.request.path.split('/')[1:]
         else:
-            url_path = url.split('/') 
-        
+            url_path = url.split('/')
+
         controller, remainder = _object_dispatch(self, url_path)
         # XXX Place controller url at context temporarily... we should be
         #    really using SCRIPT_NAME for this.
@@ -363,10 +363,10 @@ class ObjectDispatchController(DecoratedController):
 
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
-        return DecoratedController._perform_call(self, controller, params,
-                                                 remainder=remainder)
+        return DecoratedController._perform_call(
+            self, controller, params, remainder=remainder)
 
-    def routes_placeholder(self, url='/', start_response=None, **kwargs):        
+    def routes_placeholder(self, url='/', start_response=None, **kwargs):
         """
         This function does not do anything.  It is a placeholder that allows
         Routes to accept this controller as a target for its routing.
@@ -382,12 +382,20 @@ def _object_dispatch(obj, url_path):
         try:
             obj, remainder = _find_object(obj, remainder, notfound_handlers)
             return obj, remainder
+
+        # identity error should be treated separatly from "not found" errors
+        except HTTPForbidden, httpe:
+            log.debug("a 403 error occured for obj: %s" % obj)
+            raise
+
         except HTTPException:
             if not notfound_handlers:
                 raise HTTPNotFound().exception
+
             name, obj, remainder = notfound_handlers.pop()
             if name == 'default':
                 return obj, remainder
+
             else:
                 obj, remainder = obj(*remainder)
                 continue
@@ -396,6 +404,9 @@ def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
+
+        _check_security(obj)
+
         if _iscontroller(obj):
             return obj, remainder
 
@@ -414,8 +425,24 @@ def _find_object(obj, remainder, notfound_handlers):
 
         if not remainder:
             raise HTTPNotFound().exception
+
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
+
+def _check_security(obj):
+    """this function checks if a controller has a 'require' attribute and if
+    it is the case, test that this require predicate can be evaled to True.
+    It will raise a Forbidden exception if the predicate is not valid.
+    """
+    if hasattr(obj, "im_self"):
+        klass_instance = obj.im_self
+    else:
+        klass_instance = obj
+
+    if hasattr(klass_instance, "check_security"):
+        if not klass_instance.check_security():
+            raise HTTPForbidden().exception
+            #abort(403)
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):
@@ -428,24 +455,25 @@ class TGController(ObjectDispatchController):
     """
     An ObjectDispatchController-derived class for stock-standard TurboGears
     controllers.
-    
-    This controller can be used as a baseclass for anything in the 
+
+    This controller can be used as a baseclass for anything in the
     object dispatch tree, but it MUST be used in the Root controller
-    ad any controller which you intend to do object dispatch from
+    and any controller which you intend to do object dispatch from
     using Routes.
     """
-    
+
     def _perform_call(self, func, args):
         setup_i18n()
         routingArgs = None
-        
+
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
-            
+
         try:
             controller, remainder, params = self._get_routing_info(routingArgs)
             result = DecoratedController._perform_call(
                 self, controller, params, remainder=remainder)
+
         except HTTPException, httpe:
             result = httpe
             # 304 Not Modified's shouldn't have a content-type set
@@ -466,7 +494,7 @@ def redirect(url, params=None, **kw):
     """
     if not params:
         params = {}
-    
+
     curent_url = pylons.request.url
     url = urlparse.urljoin(curent_url, url)
     params.update(kw)
@@ -475,9 +503,9 @@ def redirect(url, params=None, **kw):
     if isinstance(url, unicode):
         url = url.encode('utf8')
     found = HTTPFound(location=url).exception
-    
+
     #TODO: Make this work with WebOb
-    
+
     ## Merging cookies and headers from global response into redirect
     #for header in pylons.response.headerlist:
         #if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
@@ -494,10 +522,10 @@ def url(tgpath, tgparams=None, **kw):
     if tgpath.startswith("/"):
         app_root = pylons.request.application_url[len(pylons.request.host_url):]
         tgpath = app_root + tgpath
-        tgpath = pylons.config.get("server.webpath", "") + tgpath 
+        tgpath = pylons.config.get("server.webpath", "") + tgpath
         result = tgpath
     else:
-        result = tgpath 
+        result = tgpath
 
     if tgparams is None:
         tgparams = kw
@@ -524,7 +552,7 @@ def url(tgpath, tgparams=None, **kw):
     if args:
         result += "?" + "&".join(args)
     return result
-    
+
 
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
@@ -542,7 +570,7 @@ def setup_i18n():
         if languages:
             set_lang(languages[0])
             log.info("Set request language to %s", languages[0])
-__all__ = [ 
-    "DecoratedController", "ObjectDispatchController", "TGController", 
+__all__ = [
+    "DecoratedController", "ObjectDispatchController", "TGController",
     "url", "redirect"
     ]
