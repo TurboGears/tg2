@@ -90,7 +90,7 @@ class TestTGController(TestWSGIController):
         assert '{"response": 22}'in resp
         
     def test_for_other_params_after_validation(self):
-        "Ensrue that both validated and unvalidated data make it through"
+        "Ensure that both validated and unvalidated data make it through"
         form_values = {'a':1, 'b':"string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp

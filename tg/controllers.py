@@ -128,7 +128,7 @@ class DecoratedController(WSGIController):
 
         Validation can "clean" or otherwise modify the parameters that were
         passed in, not just raise an exception.  Validation exceptions should
-        be FormEncode Invalid objets.
+        be FormEncode Invalid objects.
         """
 
         validation = getattr(controller.decoration, 'validation', None)
@@ -210,13 +210,13 @@ class DecoratedController(WSGIController):
             return response
 
         # Deprecation warnings if people return a widget in the dict rather
-        # than setting it on tmpl_context.w
+        # than setting it on tmpl_context
         if isinstance(response, dict):
             for key, item in response.iteritems():
                 if isinstance(item, Widget):
                     msg = "Returning a widget is deprecated, set them on pylons.widgets instead"
                     warnings.warn(msg, DeprecationWarning)
-                    setattr(pylons.c.w, key, item)
+                    setattr(pylons.tmpl_context, key, item)
 
         # Prepare the engine, if it's not already been prepared.
         if engine_name not in _configured_engines():
