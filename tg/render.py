@@ -2,7 +2,6 @@ from pylons import app_globals, config, session, tmpl_context
 import pylons.templating as templating
 import tg
 from tg.config import Bunch
-from tg.controllers import url
 from genshi import XML
 from urllib import quote_plus
 
@@ -72,8 +71,6 @@ def get_tg_vars():
 
     These variables are:
 
-    useragent
-        a UserAgent object with information about the browser
     selector
         the selector function
     checker
@@ -105,21 +102,19 @@ def get_tg_vars():
     config
         the app's config object
     """
-    
+    # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
-        useragent=useragent, selector=selector,
-        tg_static="/" + turbogears.startup.webpath + "tg_static",
+        selector=selector,
         ipeek=ipeek, 
         cycle=cycle, 
         quote_plus=quote_plus, 
         checker=checker,
-        url = turbogears.url, 
-        identity=identity.current,
+        url = tg.controllers.url, 
         session=session, 
         config=config,
         locale = tg.request.accept_language.best_matches(),
-        errors = getattr(tmpl_contex, "form_errors", {}),
-        inputs = getattr(tmpl_contex, "form_values", {}),
+        errors = getattr(tmpl_context, "form_errors", {}),
+        inputs = getattr(tmpl_context, "form_values", {}),
         request = tg.request)
    
     root_vars = {}

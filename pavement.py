@@ -29,7 +29,7 @@ options(
             'Pylons',
             'Genshi>=0.4',
             'SQLAlchemy>=0.4',
-            'ToscaWidgets>=0.2rc2',
+            'ToscaWidgets>=0.9.2',
         ],
         extras_require={
             'core-testing':["nose", "TurboKid", "TurboJson"]

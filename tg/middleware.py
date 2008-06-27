@@ -23,7 +23,7 @@ def setup_tg_wsgi_app(load_environment, base_config):
         the base wsgi app.
     """                  
     
-    def make_base_app(global_conf, full_stack=True, **app_conf):
+    def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
         """Create a tg WSGI application and return it
 
         ``global_conf``
@@ -43,9 +43,13 @@ def setup_tg_wsgi_app(load_environment, base_config):
         """
         # Configure the Pylons environment
         load_environment(global_conf, app_conf)
-
+        
+        
         # The Pylons WSGI app
         app = PylonsApp()
+
+        if wrap_app: 
+            wrap_app(app)
 
         # Routing/Session/Cache Middleware
         app = RoutesMiddleware(app, config['routes.map'])

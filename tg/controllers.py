@@ -21,7 +21,9 @@ import pylons
 from pylons.controllers import WSGIController
 from pylons.controllers.util import abort
 
-from tg.exceptions import HTTPFound, HTTPNotFound, HTTPException, HTTPClientError
+from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException, 
+    HTTPClientError)
+from tg.render import get_tg_vars
 from tw.api import Widget
 from webob.exc import HTTPForbidden
 
@@ -214,7 +216,7 @@ class DecoratedController(WSGIController):
         if isinstance(response, dict):
             for key, item in response.iteritems():
                 if isinstance(item, Widget):
-                    msg = "Returning a widget is deprecated, set them on pylons.widgets instead"
+                    msg = "Returning a widget is deprecated, set them on pylons.tmpl_context instead"
                     warnings.warn(msg, DeprecationWarning)
                     setattr(pylons.tmpl_context, key, item)
 
@@ -232,6 +234,8 @@ class DecoratedController(WSGIController):
         # has marked to be excluded.
         namespace = dict(tmpl_context=pylons.tmpl_context)
         namespace.update(response)
+        if not engine_name in ['json']:
+            namespace.update(get_tg_vars())
 
         for name in exclude_names:
             namespace.pop(name)

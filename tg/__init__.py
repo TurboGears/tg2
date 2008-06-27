@@ -66,5 +66,5 @@ from warnings import warn
 
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
-    'request', 'TurboGearsApplication', 'session'
+    'overide_template', 'request', 'session','TurboGearsApplication'
 ]

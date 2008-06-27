@@ -85,7 +85,7 @@ def make_load_environment(base_config):
             # Jinja's unable to request c's attributes without strict_c
             config['pylons.strict_c'] = True
             
-            config['pylons.app_globals'].renderer_functions = render_jinja
+            config['pylons.app_globals'].renderer_functionsloa = render_jinja
         
         # If you'd like to change the default template engine used to render
         # text/html content, edit these options.
