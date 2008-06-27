@@ -48,12 +48,12 @@ This form is of course served up to the user via a controller method like this::
   
    @expose('mypackage.templates.myformtemplate')
    def entry(self, **kw):
-       pylons.c.w.form = myForm
+       pylons.c.form = myForm
        return dict(value=kw)
 
 And your template form would display your form like this::
 
-   ${tmpl_context.w.form(value=value)}
+   ${tmpl_context.form(value=value)}
 
 And here is the resulting field when viewed from a browser:
 

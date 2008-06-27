@@ -94,7 +94,7 @@ Create a new template in your templates directory, lets call it new_form.html.  
  
  <body>
  <h1>New ${modelname}</h1>
- ${tmpl_context.w.form()}
+ ${tmpl_context.form()}
  
  </body>
  </html>
@@ -112,9 +112,9 @@ To show your form on the screen, we need to add a new controller method that loo
      def new(self, **kw):
          """Form to add new record"""
          # Passing the form in the return dict is no longer kosher, you can 
-         # set pylons.c.w.form instead and use c.w.form in your template
+         # set pylons.c.form instead and use c.form in your template
          # (remember to 'import pylons' too)
-         pylons.c.w.form = model_form
+         pylons.c.form = model_form
          return dict(modelname='Movie')
 
 Run the application, surf to `http://localhost:8080/new_form/ <http://localhost:8080/new_form/>`_ You will see a form that looks like this:
@@ -137,7 +137,7 @@ Then in the template:
 
 ::
 
-    ${tmpl_context.w.form(child_args={'genera': {'options': generaOptions}})}
+    ${tmpl_context.form(child_args={'genera': {'options': generaOptions}})}
 
 This is left as an exercise for the reader.
 

@@ -37,7 +37,7 @@ Usage
 
     @expose('toscawidgets.widgets.prototype.examples.tg2.templates.index')
     def form(self, **kw):
-        pylons.c.w.widget = activeForm
+        pylons.c.widget = activeForm
         return dict()
 
     def submitSuccess(self, **kw):

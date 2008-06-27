@@ -39,14 +39,14 @@ Finally, we pass the registration form to the controller in the normal way::
 
     @expose('genshi:mypackage.templates.register')
     def registration(self, **kw):
-        pylons.c.w.form = registrationForm
+        pylons.c.form = registrationForm
         return dict(value=kw)
 
 Notice that \*\*kw are sent into the controller method.  This is so that the user's results can be passed back to the form when the validation fails.
 
 You need to display your widget in your template like this::
 
- ${tmpl_context.w.form(value=value)}
+ ${tmpl_context.form(value=value)}
 
 Finally, we direct the form to a "register" method so that you can add the user entry to the database, or do other things associated with registration::
 

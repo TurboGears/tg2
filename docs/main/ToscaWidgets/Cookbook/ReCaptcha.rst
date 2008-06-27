@@ -79,7 +79,7 @@ That takes care of the creation process.  It should now load and work on your pa
 
     @expose("genshi:my.page.with.form.def")
     def showForm(self, **kw):
-        pylons.c.w.form = captchaForm
+        pylons.c.form = captchaForm
         return dict(values=kw)
 
     @validate(captchaForm, error_handler=showForm)

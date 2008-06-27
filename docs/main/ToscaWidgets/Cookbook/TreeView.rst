@@ -31,12 +31,12 @@ This tree is served up to the user via a controller method like this::
   
    @expose('mypackage.templates.navtree')
    def navtree(self, **kw):
-       pylons.c.w.tree = myTree
+       pylons.c.tree = myTree
        return dict()
 
 And your template would display the tree like this::
 
-   ${tmpl_context.w.tree()}
+   ${tmpl_context.tree()}
 
 The template should have a div with id navTree containing an unordered list as::
 

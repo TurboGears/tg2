@@ -47,14 +47,14 @@ Create a new controller method to share our widget
   
   @expose('genshi:myproject.templates.widget')
   def testing(self, **kw):
-      pylons.c.w.widget = rating
+      pylons.c.widget = rating
       return dict()
 
 In the template, call the widget to display it.
 
 ::
 
-  ${tmpl_context.w.widget(value)}
+  ${tmpl_context.widget(value)}
 
 Here is what the resulting widget looks like:
 

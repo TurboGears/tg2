@@ -80,12 +80,12 @@ Once the Widget is instantiated it can be served up to the user from the control
 
     @expose('samplegrid.templates.index')
     def index(self):
-        pylons.c.w.grid = grid
+        pylons.c.grid = grid
         return dict()
 
 The widget can be displayed in the template by::
 
-   ${tmpl_context.w.grid(value=value)}
+   ${tmpl_context.grid(value=value)}
 
 Before displaying the grid it is necessary to setup the controller method for serving the data using JSON as the data is fetched by the grid before it is rendered. The parameters passed to the FlexiGrid widget while instantiation are in turn passed to the controller method by the javascript code of the widget. The controller method for handling the JSON request would be::
 
