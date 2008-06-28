@@ -16,6 +16,11 @@ class RootController(BaseController):
         page = DBSession.query(Page).filter_by(pagename=pagename).one()
         return dict(wikipage=page)
 
+    @expose(template="wiki20.templates.edit")
+    def edit(self, pagename):
+        page = DBSession.query(Page).filter_by(pagename=pagename).one()
+        return dict(wikipage=page)
+
     @expose('wiki20.templates.about')
     def about(self):
         return dict()
