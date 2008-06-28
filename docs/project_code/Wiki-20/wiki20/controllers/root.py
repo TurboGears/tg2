@@ -10,6 +10,7 @@ from wiki20.model import DBSession, metadata
 from wiki20.model.page import Page
 import re
 from docutils.core import publish_parts
+from sqlalchemy.exceptions import InvalidRequestError
 
 wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")
 
@@ -18,6 +19,10 @@ class RootController(BaseController):
 
     @expose('wiki20.templates.page')
     def default(self, pagename="FrontPage"):
+        try:
+            page = DBSession.query(Page).filter_by(pagename=pagename).one()
+        except InvalidRequestError:
+            raise tg.redirect("notfound", pagename = pagename)
         page = DBSession.query(Page).filter_by(pagename=pagename).one()
         content = publish_parts(page.data, writer_name="html")["html_body"]
         root = tg.url('/')
@@ -39,3 +44,10 @@ class RootController(BaseController):
         page.data = data
         DBSession.commit() # Tells database to commit changes permanently
         redirect("/" + pagename)
+        
+    @expose("wiki20.templates.edit")
+    def notfound(self, pagename):
+        page = Page(pagename=pagename, data="")
+        DBSession.save(page)
+        DBSession.commit()
+        return dict(wikipage=page)
