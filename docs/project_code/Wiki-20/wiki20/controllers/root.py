@@ -51,3 +51,8 @@ class RootController(BaseController):
         DBSession.save(page)
         DBSession.commit()
         return dict(wikipage=page)
+        
+    @expose("wiki20.templates.pagelist")
+    def pagelist(self):
+        pages = [page.pagename for page in DBSession.query(Page)]
+        return dict(pages=pages)
