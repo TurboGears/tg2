@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 beginmarker_re = re.compile(r'##\{(?P<section>.+)}')
-endmarker_re = re.compile(r'##$')
+endmarker_re = re.compile(r'##')
 
 def format_block(block):
     """Format the given block of text, trimming leading/trailing
@@ -62,7 +62,7 @@ def search(source, section):
     if not end:
         end = len(source)
 
-    return ''.join([source[line] for line in xrange(begin, end) \
+    return '\n'.join([source[line] for line in xrange(begin, end) \
                     if not (beginmarker_re.search(source[line]) \
                             or endmarker_re.search(source[line])) ])
 
@@ -103,10 +103,10 @@ def code_directive(name, arguments, options, content, lineno,
                 scm = SVNClient()
             elif environment.config.code_scm == 'hg':
                 scm = HgClient(environment.config.code_path)
-            data = scm.get_file(fpath, revision).splitlines(True)
+            data = scm.get_file(fpath, revision).splitlines()
         else:
             fp = open(fpath)
-            data = fp.readlines()
+            data = fp.read().splitlines()
             fp.close()
         section_name = options.get('section', '')
         source = format_block(search(data, section_name))
