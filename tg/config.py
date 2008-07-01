@@ -5,10 +5,7 @@ class Bunch(dict):
     """A dictionary that provides attribute-style access."""
 
     def __getitem__(self, key):
-        item = dict.__getitem__(self, key)
-        if callable(item):
-            return item()
-        return item
+        return  dict.__getitem__(self, key)
 
     def __getattr__(self, name):
         try:
