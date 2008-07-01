@@ -32,7 +32,6 @@ def make_load_environment(base_config):
         make_map = defaults.make_default_route_map
         config['routes.map'] = make_map()
         config['pylons.app_globals'] = base_config.package.lib.app_globals.Globals()
-        print dir(base_config.package)
         config['pylons.h'] = base_config.package.lib.helpers
     
         if base_config.auth_backend == "sqlalchemy":        
@@ -103,6 +102,7 @@ def make_load_environment(base_config):
             base_config.package.model.init_model(engine)
             base_config.package.model.DBSession.configure(bind=engine)
             base_config.package.model.metadata.bind = engine
+
     
         # CONFIGURATION OPTIONS HERE (note: all config options will override
         # any Pylons config options)
