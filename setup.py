@@ -1,8 +1,7 @@
 import os
 here = os.path.abspath(os.path.dirname(__file__))
 execfile(os.path.join(here, 'tg', 'release.py'))
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
     name='TurboGears2',
@@ -20,10 +19,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'Babel',
-        'Pylons',
-        'Genshi>=0.4',
-        'SQLAlchemy>=0.4',
-        'ToscaWidgets>=0.9.2',
+        'Pylons>==0.9.7beta3'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
