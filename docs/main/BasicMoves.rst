@@ -1,28 +1,26 @@
-
-
-
-
 TurboGears 2 at a glance
-===========================
+========================
 
-:Status: Work in progres
+:Status: Work in progress
 
 TurboGears 2, like TurboGears 1 and many other modern web frameworks, uses a pattern called "Model View Controller", or "MVC" pattern.  Basically the MVC pattern is an attempt to separate the code which handles what the user sees (the view) from the code that responds to user actions (the controller) and code that changes the state of data (the model). 
 
 The goal of the MVC pattern is to help you create more flexible software, and since web-applications tend to have more user-interface changes than anything else, it's particularly designed so that you can change the `view` code without necessarily having to change anything else. 
 
-You have to follow the tutorial `quickstart a project <QuickStart>`_ and serve the project first.
+You have to follow the tutorial `Quickstart a TurboGears 2 Project <QuickStart.html>`_ and serve the project first.
 Then we could exam some basic moves the you could do with TurboGears 2.
 
 
 Hello World using template
--------------------------------
+--------------------------
 
 Let's take advantage of that fact and make update our view with a Hello World headline. 
 
 To keep the tutorial small and simple, we make a assumption that you already have some knowledge about html tags.
 
-Edit helloworld/templates/index.html, add a <h1> tag like this::
+Edit helloworld/templates/index.html, add a <h1> tag like this:
+
+.. code-block:: html
 
   ...
   <body>
@@ -38,7 +36,9 @@ You can now point your browser at http://localhost:8080 to see the change. You s
 Hello World using static file
 --------------------------------
 
-Open a new file, edit the content as a simple html file::
+Open a new file, edit the content as a simple html file:
+
+.. code-block:: html
 
     <html>
     <body>
@@ -60,7 +60,9 @@ TurboGears 2 uses an `Object Publishing` system to determine what controller met
 
 In this case we will add a new method called hello, which just returns a string.   TG2 allows us to bypass the template process and return a string directly to the http response, which will be returned to the browser directly.  
 
-Edit controller/root.py::
+Edit controller/root.py:
+
+.. code-block:: python
 
   from my-project-name.lib.base import BaseController
   from tg import expose
@@ -81,7 +83,9 @@ Hello World combines template with controller
 
 So far we're getting somewhere, we've been returning plaintext for every incoming request. But you might have noticed how the default welcome page work. 
 
-We can edit index template, use controllers to define new url's. But let's take it one step further and create yet another new URL, plug plug real templates into the controllers, and this time rather than returning a string, we'll return a dictionary::
+We can edit index template, use controllers to define new url's. But let's take it one step further and create yet another new URL, plug plug real templates into the controllers, and this time rather than returning a string, we'll return a dictionary:
+
+.. code-block:: python
 
   from helloworld.lib.base import BaseController
   from tg import expose
@@ -100,7 +104,9 @@ TurboGears sees that the controller returned a dict, and that there's an templat
 For each page on your site, you could give each of them the corresponding template in your controllers. You could specifying the template argument with``@expose`` decorator.
 
 That means that we've now got a 'hello' variable in our template which we can use, and we attach the template 'helloworld.templates.index' to 'new_hello' method. So let's edit helloworld/template/index.html to replace the h1 tag we 
-added earlier with::
+added earlier with:
+
+.. code-block:: html
 
   <h1 py:replace="hello">hello</h1>
 
@@ -112,7 +118,9 @@ Template arguments are used to pass variables and other dynamic content to the t
 To create more skeletons for your templates, just copy the default index.html template that was generated when your project was created.
 
 
-Not every template has dynamic content and therefore may not need arguments. In that case, just return an empty dictionary::
+Not every template has dynamic content and therefore may not need arguments. In that case, just return an empty dictionary:
+
+.. code-block:: python
 
   @expose(template="helloworld.templates.index")
   def index(self):

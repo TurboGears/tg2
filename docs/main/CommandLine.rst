@@ -1,6 +1,4 @@
 
-
-
 Use TurboGears Command Line Tools
 ==================================
 

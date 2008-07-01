@@ -1,8 +1,3 @@
-
-## Please see the page "DocHelp" for guidelines on contributing TurboGears documentation!
-
-
-
 Deployment options
 ====================
 

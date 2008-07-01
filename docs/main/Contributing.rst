@@ -1,7 +1,3 @@
-##This is an official page. Only editors and admins can change it.
-
-
-
 Contributing to TurboGears
 ==========================
 

@@ -1,86 +1,102 @@
-How to install TurboGears 2
-=============================
+.. highlight:: bash
 
-Installing Turbogears2 has been made simple with the advent of the package index.  We recommend installing Turbogears2 into a virtual environment
+How to install TurboGears 2
+===========================
+
+Installing TurboGears 2 has been made simple with the advent of the package index.  We recommend installing TurboGears 2 into a virtual environment
 so that any existing packages will not interfere.  The basic installation goes as follows:
 
-1. Install setuptools
+1. Install ``setuptools``
 
-2. Install virtualenv
+2. Install ``virtualenv``
 
-3. Create a virtualenv for your project
+3. Create a ``virtualenv`` for your project
 
-4. switch to the virtualenv
+4. Switch to the ``virtualenv``
 
-5. easy_install turbogears development package
+5. ``easy_install`` TurboGears development package
 
-6. profit.
+6. Profit
 
 
 Prerequisites:
------------------------
-* python 2.4 or 2.5
-* appropriate python development package (python*-devel python*-dev)
+--------------
+
+* Python 2.4 or 2.5
+* Appropriate python development package (python*-devel python*-dev)
 
 Setting up setuptools:
------------------------
+----------------------
 
- $ curl http://peak.telecommunity.com/dist/ez_setup.py | sudo python
+.. code-block:: bash
 
+	$ curl http://peak.telecommunity.com/dist/ez_setup.py | sudo python
 
 Setting up a Virtual Environment:
------------------------------------
+---------------------------------
 
- $ sudo easy_install virtualenv
+First, install ``virtualenv`` using this command:
 
-  produces:
-  ::
+.. code-block:: bash
+	
+	$ sudo easy_install virtualenv
+
+will output something like:
+
+.. code-block:: text
 
     Searching for virtualenv
     Reading http://pypi.python.org/simple/virtualenv/
     Best match: virtualenv 1.1
     Downloading http://pypi.python.org/packages/2.5/v/virtualenv/virtualenv-1.1-py2.5.egg#md5=1db8cdd823739c79330a138327239551
     Processing virtualenv-1.1-py2.5.egg
-    creating /Users/percious/oss/tgdev/lib/python2.5/site-packages/virtualenv-1.1-py2.5.egg
-    Extracting virtualenv-1.1-py2.5.egg to /Users/percious/oss/tgdev/lib/python2.5/site-packages
-    Adding virtualenv 1.1 to easy-install.pth file
-    Installing virtualenv script to /Users/percious/oss/tgdev/bin
-
-    Installed /Users/percious/oss/tgdev/lib/python2.5/site-packages/virtualenv-1.1-py2.5.egg
+    .....
     Processing dependencies for virtualenv
     Finished processing dependencies for virtualenv
 
- $ virtualenv tg2env --no-site-packages
-  produces:
-  ::
+Create a virtual environment:
+
+.. code-block:: bash
+	
+	$ virtualenv --no-site-packages tg2env
+
+that produces::
 
      Using real prefix '/usr/local'
-     New python executable in tgdev/bin/python
+     New python executable in tg2env/bin/python
      Installing setuptools............done.
 
- $ cd tg2env
+.. code-block:: bash
 
- $ source bin/activate
-  and now your prompt should look something like:
-  ::
+	$ cd tg2env
 
-    (tg2dev)usrname@host:tgdev $
+.. code-block:: bash
+	
+	$ source bin/activate
 
-Install Turbogears2:
+and now your prompt should look something like::
+
+	(tg2env)usrname@host:tgenv$
+
+Install Turbogears 2
 ---------------------
- $ easy_install -i http://www.turbogears.org/2.0/downloads/1.9.7a1/index tg.devtools
 
-  a whole bunch of packages should download.  (this will take a little while)
+.. code-block:: bash
+
+	$ easy_install -i http://www.turbogears.org/2.0/downloads/1.9.7a1/index tg.devtools
+
+A whole bunch of packages should download.  (this will take a little while)
 
 Validate the installation:
-----------------------------
+--------------------------
 
 To check if you installed TurboGears 2 correctly, type
 
- $ paster --help
+.. code-block:: bash
+	
+	$ paster --help
 
-  should look something like:
-  ::
+should look something like::
 
     Usage: paster [paster_options] COMMAND [command_options]
 
@@ -117,9 +133,8 @@ Special Considerations:
 **Cygwin** does not include the necessary binary file **sqlite3.dll**; if you want to run cygwin you'll need to install a different database. If you have cygwin installed and you want to use the default setup described here, you must perform all operations, including setup operations, within DOS command windows, not cygwin command windows.
 
 
-Installing the development version of Turbogears2 (from source)
+Installing the development version of Turbogears 2 (from source)
 ================================================================
-
 
 Installing Pylons from Source:
 --------------------------------
@@ -145,7 +160,7 @@ To tell setuptools to use the version you are editing in the Pylons directory::
   $ python setup.py develop
 
 Installing TurboGears 2 from Source:
-------------------------------------------------
+------------------------------------
 
 TurboGears 2 are constructed by a bunch of packages.
 
@@ -198,19 +213,19 @@ If you get an error about ``ObjectDispatchController`` this means your Pylons in
 
 When installing on Mac OSX, if you get an error mentioning "No local packages or download links found for RuleDispatch", you can try the solution posted to the `ToscaWidgets discussion list <http://groups.google.com/group/toscawidgets-discuss/browse_thread/thread/cb6778810e96585d>`_, which advises downloading it directly::
 
- . $ sudo easy_install -U -f http://toscawidgets.org/download/wo_speedups/ RuleDispatch
+ $ sudo easy_install -U -f http://toscawidgets.org/download/wo_speedups/ RuleDispatch
 
 If you get the following error when starting a project with ``paster serve``::
 
- . AttributeError: 'WSGIRequest' object has no attribute 'accept_language'
+ AttributeError: 'WSGIRequest' object has no attribute 'accept_language'
 
 update your Pylons checkout with ``hg update`` and try again.
 
 If ``python setup.py develop`` gives you::
 
- . Traceback (most recent call last):
-  . File "setup.py", line 3, in <module>
-   . from ez_setup import use_setuptools
+ Traceback (most recent call last):
+   File "setup.py", line 3, in <module>
+     from ez_setup import use_setuptools
 
 
 ... commenting out the first two lines in setup.py seems to work.  See `this discussion <http://groups.google.com/group/pylons-discuss/browse_thread/thread/1ccf9366004c8e11>`_

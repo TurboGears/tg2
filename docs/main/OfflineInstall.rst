@@ -1,6 +1,3 @@
-## Please see the page "DocHelp" for guidelines on contributing TurboGears documentation!
-
-
 :status: Unofficial
 
 An offline install of TG2 is not yet supported. 

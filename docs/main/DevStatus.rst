@@ -1,7 +1,3 @@
-## Please see the page "DocHelp" for guidelines on contributing TurboGears documentation!
-
-
-
 TurboGears 2 Project Status
 ===========================
 

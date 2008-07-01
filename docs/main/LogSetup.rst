@@ -1,5 +1,3 @@
-
-
 Configuring and using the Logging System
 =========================================
 

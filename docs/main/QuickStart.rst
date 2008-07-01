@@ -1,14 +1,12 @@
-
-
+.. highlight:: bash
 
 Quickstarting a TurboGears 2 project
 ====================================
 
-:Status: Work in progres
+:Status: Work in progress
 
 .. contents:: Table of Contents
     :depth: 2
-
 
 Now that you've got TurboGears installed. TurboGears 2 extends the 'paster' command line tool to provide a suite of tools for working with TurboGears 2 projects. A few will be touched upon in this tutorial, check the 'paster --help' command for a full listing.
 

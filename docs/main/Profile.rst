@@ -1,6 +1,3 @@
-## Please see the page "DocHelp" for guidelines on contributing TurboGears documentation!
-
-
 
 Profiling your app
 ==================

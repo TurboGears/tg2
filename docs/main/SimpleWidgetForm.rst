@@ -1,8 +1,3 @@
-## This is a contributed page. You must be logged in to change it.
-#acl EditorGroup:read,write Known:read,write All:read
-
-
-
 Simple Widget Form Tutorial
 ===========================
 
