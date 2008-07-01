@@ -12,7 +12,7 @@ import re
 from docutils.core import publish_parts
 from sqlalchemy.exceptions import InvalidRequestError
 
-wikiwords = re.compile(r"\\b([A-Z]\\w+[A-Z]+\\w+)")
+wikiwords = re.compile(r"\b([A-Z]\w+[A-Z]+\w+)")
 
 class RootController(BaseController):
     #admin = DBMechanic(SAProvider(metadata), '/admin')
@@ -26,7 +26,7 @@ class RootController(BaseController):
         page = DBSession.query(Page).filter_by(pagename=pagename).one()
         content = publish_parts(page.data, writer_name="html")["html_body"]
         root = tg.url('/')
-        content = wikiwords.sub(r'<a href="%s\\1">\\1</a>' % root, content)
+        content = wikiwords.sub(r'<a href="%s\1">\1</a>' % root, content)
         return dict(content=content, wikipage=page)
 
     @expose(template="wiki20.templates.edit")
