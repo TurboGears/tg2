@@ -19,7 +19,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'Babel',
-        'Pylons>==0.9.7beta3'
+        'Pylons>=0.9.7beta3'
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
