@@ -229,7 +229,7 @@ class DecoratedController(WSGIController):
 
         #if there is an identity, push it to the pylons template context
         pylons.tmpl_context.identity = pylons.request.environ.get('repoze.who.identity')
-
+        
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = dict(tmpl_context=pylons.tmpl_context)
