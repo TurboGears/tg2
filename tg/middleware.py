@@ -59,7 +59,8 @@ def setup_tg_wsgi_app(load_environment, base_config):
         # ToscaWidgets Middleware
         app = tw_middleware(app, {
             'toscawidgets.framework.default_view': 
-            base_config.default_renderer
+            base_config.default_renderer,
+            'toscawidgets.middleware.inject_resources': True,
             })
 
         if base_config.auth_backend == "sqlalchemy":
@@ -71,7 +72,9 @@ def setup_tg_wsgi_app(load_environment, base_config):
             app = make_who_middleware(app, config, auth.user, 
                                       auth.user_criterion, 
                                       auth.user_id_column, 
-                                      auth.dbsession)
+                                      auth.dbsession,
+                                      form_plugin=auth.form_plugin
+                                      )
 
         if asbool(full_stack):
             # Handle Python exceptions
