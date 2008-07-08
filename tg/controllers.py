@@ -363,7 +363,7 @@ class ObjectDispatchController(DecoratedController):
             pylons.c.controller_url = url
         if remainder and remainder[-1] == '':
             remainder.pop()
-        return controller, remainder, pylons.request.params
+        return controller, remainder, pylons.request.params.mixed()
 
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
