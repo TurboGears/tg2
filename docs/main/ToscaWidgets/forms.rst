@@ -30,7 +30,7 @@ Let's start with a simple SQLAlchemy model that has a Movie object like this ``m
      Column("title", types.String(100), nullable=False),
      Column("description", types.Text, nullable=True),
      Column("year", types.Integer, nullable=True),    
-     Column("genera", types.String(100), nullable=True),
+     Column("genre", types.String(100), nullable=True),
      Column("release_date", types.Date, nullable=True)    
      )
      
@@ -58,13 +58,13 @@ To create a form for the model add the following code in your root.py (this does
           title = TextField()
           year = TextField(size=4)
           release_date = CalendarDatePicker()
-          generachoices = ((1,"Action & Adventure"),
+          genrechoices = ((1,"Action & Adventure"),
                            (2,"Animation"),
                            (3,"Comedy"),
                            (4,"Documentary"),
                            (5,"Drama"),
                            (6,"Sci-Fi & Fantasy"))
-          genera = SingleSelectField(options=generachoices)
+          genre = SingleSelectField(options=genrechoices)
           description = TextArea()
 
   #then, we create an instance of this form
@@ -125,19 +125,19 @@ Run the application, surf to `http://localhost:8080/new_form/ <http://localhost:
 Advanced Exercise
 -----------------
 
-Suppose we wanted to change the 'genera' options on the fly, for example look them up from a DB; you could return this info from the controller (not sure if this should be in form dict?):
+Suppose we wanted to change the 'genre' options on the fly, for example look them up from a DB; you could return this info from the controller (not sure if this should be in form dict?):
 
 ::
 
         ...
-        generaOptions = [(rec.id, rec.name) for rec in ImaginaryGeneraModel.query.all()]
-        return dict(generaOptions=generaOptions, modelname='Movie')
+        genreOptions = [(rec.id, rec.name) for rec in ImaginaryGeneraModel.query.all()]
+        return dict(genreOptions=genreOptions, modelname='Movie')
 
 Then in the template:
 
 ::
 
-    ${tmpl_context.form(child_args={'genera': {'options': generaOptions}})}
+    ${tmpl_context.form(child_args={'genre': {'options': genreOptions}})}
 
 This is left as an exercise for the reader.
 
@@ -244,13 +244,13 @@ The first thing we need to do is add a validator to each of the fields which we 
           title = TextField(validator=NotEmpty)
           year = TextField(size=4, validator=Int(min=1900, max=2100))
           release_date = CalendarDatePicker(validator=DateConverter())
-          generachoices = ((1,"Action & Adventure"),
+          genrechoices = ((1,"Action & Adventure"),
                            (2,"Animation"),
                            (3,"Comedy"),
                            (4,"Documentary"),
                            (5,"Drama"),
                            (6,"Sci-Fi & Fantasy"))
-          genera = SingleSelectField(options=generachoices)
+          genre = SingleSelectField(options=genrechoices)
           description = TextArea(attrs=dict(rows=3, cols=25))
 
 Note that we removed the date format from the CalendarDatePicker.  This is because the DateConverter will take whatever date is entered in the box and convert it to a datetime object, which is much better understood by the orm than a date string.
@@ -268,7 +268,7 @@ Our controller gets a new validator decorator for the creation of the movie entr
         movie.year = kw['year']
         movie.release_date = kw['release_date']
         movie.descrpition = kw['description']
-        movie.genera = kw['genera']
+        movie.genre = kw['genre']
         DBSession.save(movie)
         DBSession.commit()
         flash("Movie was successfully created.")
