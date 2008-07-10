@@ -118,7 +118,7 @@ def get_tg_vars():
         request = tg.request)
    
     root_vars = {}
-    root_vars.update({'tg':'tg_vars'})
+    root_vars.update({'tg':tg_vars})
     return root_vars
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
