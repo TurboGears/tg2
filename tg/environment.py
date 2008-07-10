@@ -41,7 +41,7 @@ def make_load_environment(base_config):
                                   'users_table':'tg_user',
                                   'groups_table':'tg_group',
                                   'permissions_table':'tg_permission',
-                                  'password_encryption_method':'sha',
+                                  'password_encryption_method':'sha1',
                           }
     
 
