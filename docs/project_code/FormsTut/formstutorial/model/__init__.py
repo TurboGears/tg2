@@ -1,7 +1,7 @@
 """The application's model objects"""
 
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import MetaData
+from sqlalchemy.orm import scoped_session, sessionmaker, mapper
+from sqlalchemy import MetaData, Table, Column, types
 
 
 # Global session manager.  DBSession() returns the session object
@@ -39,4 +39,18 @@ def init_model(engine):
     #mapper(Reflected, t_reflected)
 
 # Import your model modules here. 
+
+movie_table = Table("movie", metadata,
+    Column("id", types.Integer, primary_key=True),
+    Column("title", types.String(100), nullable=False),
+    Column("description", types.Text, nullable=True),
+    Column("year", types.Integer, nullable=True),
+    Column("genera", types.String(100), nullable=True),
+    Column("release_date", types.Date, nullable=True)
+    )
+
+class Movie(object):
+    pass
+
+mapper(Movie, movie_table)
 
