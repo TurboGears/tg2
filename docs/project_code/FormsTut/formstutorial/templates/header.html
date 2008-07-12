@@ -1,0 +1,17 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
+<py:def function="header">
+  <div id="header">
+    <div class="alogo">
+      <img src="/images/logo.png" alt="TG2!"/>
+    </div>
+    <div class="headtext">
+        Welcome to TurboGears 2
+    </div>
+    <div class="currentpage">
+     Now Viewing: <span py:replace="page"/>
+     </div>
+  </div>
+</py:def>    
+</html>
