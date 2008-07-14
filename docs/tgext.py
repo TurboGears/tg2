@@ -16,14 +16,16 @@ import sys
 from docutils import nodes
 from docutils.parsers.rst import directives
 
-try:
-    from pysvn import Client, ClientError, Revision, opt_revision_kind
-except ImportError:
-    pass
+import pysvn
+import nose
+from mercurial import hg, ui
 
+ 
 beginmarker_re = re.compile(r'##\{(?P<section>.+)}')
 endmarker_re = re.compile(r'##')
 
+# This is based on 'Multi-line string block formatting' recipe by Brett Levin
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/145672
 def format_block(block):
     """Format the given block of text, trimming leading/trailing
     empty lines and any leading whitespace that is common to all lines.
@@ -38,10 +40,6 @@ def format_block(block):
     ws = re.match(r'\s*',lines[0]).group(0)
     if ws:
         lines = map( lambda x: x.replace(ws,'',1), lines )
-    # remove leading/trailing blank lines (after leading ws removal)
-    # we do this again in case there were pure-whitespace lines
-    while lines and not lines[0]:  del lines[0]
-    while lines and not lines[-1]: del lines[-1]
     return '\n'.join(lines)+'\n'
 
 def search(source, section):
@@ -68,62 +66,99 @@ def search(source, section):
 
 
 class HgClient:
+    """ Class that represents a Mercurial client """
     def __init__(self, path):
-        from mercurial import hg, ui
         self.repo = hg.repository(ui.ui(interactive=False), path=path)
 
     def get_file(self, path, revision='tip'):
-        return self.repo.changectx(rev).filectx(path).data()
+        return self.repo.changectx(revision).filectx(path).data()
 
     
 class SVNClient:
+    """ Class that represents a Subversion client """
     def __init__(self):
-        self.client = Client()
+        self.client = pysvn.Client()
 
     def get_file(self, path, revision='HEAD'):
         if revision == 'HEAD':
-            return self.client.cat(path, Revision(opt_revision_kind.head))
+            return self.client.cat(path,
+                                   pysvn.Revision(pysvn.opt_revision_kind.head))
         else:
-            return self.client.cat(path, Revision(opt_revision_kind.number, str(revision)))
+            return self.client.cat(path,
+                                   pysvn.Revision(pysvn.opt_revision_kind.number,
+                                                  str(revision)))
 
 
+def get_file(path, revision = None, type = None, repository = None):
+    """ Read file from local filesystem of from a SCM repository. """
+    if revision:
+        if type == 'svn':
+            scm = SVNClient()
+        elif type == 'hg':
+            scm = HgClient(repository)
+        else:
+            raise Exception, "SCM tool not correctly specified"
+        data = scm.get_file(path, revision).splitlines()
+    else:
+        fp = open(path)
+        data = fp.read().splitlines()
+        fp.close()
+    return data
 
+
+# code directive
 def code_directive(name, arguments, options, content, lineno,
                         content_offset, block_text, state, state_machine):
     if not state.document.settings.file_insertion_enabled:
-        return [state.document.reporter.warning('File insertion disabled', line=lineno)]
+        return [state.document.reporter.warning('File insertion disabled',
+                                                line=lineno)]
     environment = state.document.settings.env
-    fname = arguments[0]
-    fpath = os.path.normpath(os.path.join(environment.config.code_path, fname))
+    file_name = arguments[0]
+    if file_name.startswith('/'):
+        file_path = file_name
+    else:
+        file_path = os.path.normpath(os.path.join(environment.config.code_path,
+                                                  file_name))
     
-    revision = options.get('revision', '')
     try:
-        if revision:
-            if environment.config.code_scm == 'svn':
-                scm = SVNClient()
-            elif environment.config.code_scm == 'hg':
-                scm = HgClient(environment.config.code_path)
-            data = scm.get_file(fpath, revision).splitlines()
+        if options.has_key('revision'):
+            data = get_file(file_path, options['revision'],
+                            environment.config.code_scm,
+                            environment.config.code_path)
         else:
-            fp = open(fpath)
-            data = fp.read().splitlines()
-            fp.close()
-        section_name = options.get('section', '')
-        source = format_block(search(data, section_name))
+            data = get_file(file_path)
+        if options.has_key('section'):
+            section = options['section']
+            source = format_block(search(data, section))
+        else:
+            source = format_block('\n'.join(data))
         retnode = nodes.literal_block(source, source)
+        retnode.line = 1   
     except Exception, e:
         retnode = state.document.reporter.warning(
             'Reading file %r failed: %r' % (arguments[0], str(e)), line=lineno)
     else:
-        retnode.line = 1   
-        if options.get('language', ''):
+        if options.has_key('test'):
+            test = options['test']
+            if test.startswith('/'):
+                result = nose.run(argv = [__file__, options['test']])
+            else:
+                result = nose.run(argv = [__file__, environment.config.test_path
+                                          + options['test']])
+            if not result:
+                retnode = state.document.reporter.warning(
+                    'Test(s) associated to %r failed' % (arguments[0],),
+                    line=lineno)
+        if options.has_key('language'):
             retnode['language'] = options['language']
     return [retnode]
 
 def setup(app):
     code_options = {'section': directives.unchanged, 
                     'language': directives.unchanged,
+                    'test': directives.unchanged,
                     'revision': directives.unchanged}
     app.add_config_value('code_path', '', True)
     app.add_config_value('code_scm', '', True)
+    app.add_config_value('test_path', '', True)
     app.add_directive('code', code_directive, 1, (1, 0, 1),  **code_options)

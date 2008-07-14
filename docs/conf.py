@@ -148,5 +148,6 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_use_modindex = True
 
-code_path = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + 'project_code' + os.path.sep
 code_scm = 'svn'
+code_path = test_path = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + 'project_code' + os.path.sep
+
