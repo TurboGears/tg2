@@ -19,7 +19,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'Babel',
-        'Pylons>=0.9.7beta3'
+        'Genshi',
+        'Pylons>=0.9.7beta3',
+        'ToscaWidgets>=0.9', 
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
