@@ -9,6 +9,10 @@ from routes import Mapper
 
 def make_default_route_map():
     """Create, configure and return the routes Mapper"""
+    
+    import warnings
+    warnings.warn("tg.defaults is depricated overide setup_routes on base_config object instead")
+    
     map = Mapper(directory=config['pylons.paths']['controllers'],
                 always_scan=config['debug'])
     

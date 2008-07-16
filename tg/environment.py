@@ -5,8 +5,11 @@ from pylons.i18n import ugettext
 from genshi.filters import Translator
 from tg import defaults
 
+import warnings
+
 
 def make_load_environment(base_config):
+    warnings.warn("tg.environment is depricated use make_load_environment on the base_config object instead")
 
     def load_environment(global_conf, app_conf):
         """Configure the Pylons environment via the ``pylons.config``
@@ -42,6 +45,7 @@ def make_load_environment(base_config):
                                   'groups_table':'tg_group',
                                   'permissions_table':'tg_permission',
                                   'password_encryption_method':'sha1',
+                                  'form_plugin': None
                           }
     
 

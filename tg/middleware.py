@@ -23,6 +23,8 @@ def setup_tg_wsgi_app(load_environment, base_config):
         the base wsgi app.
     """                  
     
+    warnings.warn("tg.middleware is depricated use make_load_environment on the base_config object instead")
+    
     def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
         """Create a tg WSGI application and return it
 
