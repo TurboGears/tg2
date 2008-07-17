@@ -1,4 +1,5 @@
 """tg middleware initialization"""
+import warnings
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
