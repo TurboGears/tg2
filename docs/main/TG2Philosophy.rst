@@ -1,14 +1,3 @@
-
-
-
-TurboGears Concept
-===================
-
-:Status: Work in progress
-
-.. contents:: Table of Contents
-    :depth: 2
-
 TurboGears 2 is a reinvention of TurboGears and a return to TurboGears' roots.
 
 TurboGears is a project that is built upon a foundation of library development
@@ -26,14 +15,14 @@ on thousands of lines of code in other libraries.  Those libraries had alreay
 been deployed, used, and tested, and were known to be "production ready." 
 
 TurboGears2 returns to that philosophy.  It is built on Pylons, but it brings
-a best-of-breed approach to Pylons.   TurboGears 2 is commited to the following 
-Python components and libraries, which are backwards compatable with TurboGears 1.1:
+a more full-stack approach to pylons.   TurboGears 2 is committed to creating
+reusable components, and to achieving a long-term stable API based on the 
+following  Python components and libraries:
 
     * Models: SQLAlchemy
-    * Template engines: Genshi
+    * Template engines: Genshi and Mako
     * URL Dispatching: Object dispatch
     * Form Handling: ToscaWidgets
-
 
 The zen of TurboGears is::
 
@@ -44,12 +33,19 @@ The zen of TurboGears is::
     But when there's no "one right way," don't pretend there is. 
     
 
-Mark Ramm described the relationship between TurboGears and Pylons this way "TurboGears 2 is to Pylons as Ubuntu is to Debian."
+Mark Ramm described the relationship between TurboGears and Pylons this 
+way "TurboGears 2 is to Pylons as Ubuntu is to Debian."
 
-In other words we're focused on user experience, and creating a novice-friendly environment.  We ship a smaller subset of components, and thus are better able to focus, test, and document things so that new users have the best possible experience.
+In other words we're focused on user experience, and creating a 
+novice-friendly environment.  We ship a smaller subset of components, 
+and thus are better able to focus, test, and document things so that new users
+have the best possible experience.
 
 Meanwhile Pylons provides the power and flexibility of the underlying core. 
 
-And like Ubuntu, we don't intend to hide that power and flexibility from advanced users, but we know that they want things set up to just work too.  
+And like Ubuntu, we don't intend to hide that power and flexibility from 
+advanced users, but we know that they want things set up to just work too.  
 
-Sensible defaults actually encourage code re-use within TurboGears because they make it possible for a group of TurboGears components to share assumptions about how things will work. 
+Sensible defaults actually encourage code re-use within TurboGears because 
+they make it possible for a group of TurboGears components to share 
+assumptions about how things will work. 

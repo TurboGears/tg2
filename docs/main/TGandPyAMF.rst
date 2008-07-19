@@ -79,12 +79,13 @@ Setup a controller that uses the GatewayController WSGI app:
 In root.py just add a method that delegates to the wsgi app: 
 
 @expose()
-def simple(self, **kwargs):
+def gateway(self, *args, **kwargs):
     return use_wsgi_app(GatewayController)
 
-
-You'll need to import use_wsgi_app from tg, and your GatewayController from 
-wherever you put it. 
+Of course, you'll need to import use_wsgi_app from tg, and your 
+GatewayController from wherever you put it. But once you've done those 
+things you'll have a AMF Gateway mounted at /gateway which you can use from 
+flex. 
 
    
 Create a Flex Client
