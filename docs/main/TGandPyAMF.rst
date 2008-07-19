@@ -43,7 +43,8 @@ Your project should now be started, and you should be able to browse to it at ht
 Creating the PyAMF gateway:
 ----------------------------
 
-Now, you're ready to start creating a PyAMF gateway for your Flex app.  The first thing to do is to create a new gateway.py file in pyamftest/pyamftest/controllers When you've got that file created, add the following contents::
+Now, you're ready to start creating a PyAMF gateway for your Flex app.  The 
+first thing to do is to create a new gateway.py file wherever you want it::
 
  from pyamf.remoting.gateway.wsgi import WSGIGateway
 
@@ -68,90 +69,23 @@ Now, you're ready to start creating a PyAMF gateway for your Flex app.  The firs
 
  GatewayController = WSGIGateway(services)
 
-This sets up a GatewayController WSGI app that has three services that can be called from flex: echo, sum, and scramble, which each do exactly what they say they do. 
+This sets up a GatewayController WSGI app that has three services that 
+can be called from flex: echo, sum, and scramble, which each do exactly what 
+they say they do. 
 
-Setup a Route to your services:
------------------------------------
+Setup a controller that uses the GatewayController WSGI app:
+---------------------------------------------------------------
 
-Now that we have a service, we can modify pyamftest/pyamftest/config/environment.py to have a route to the GatewayController. 
+In root.py just add a method that delegates to the wsgi app: 
 
-This requires creating a custom overide for the standard TG2 object dispatch.  See http://docs.turbogears.org/2.0/RoutesIntegration for more information. 
+@expose()
+def simple(self, **kwargs):
+    return use_wsgi_app(GatewayController)
 
-Basically you need to set up custom route_map function, that has a map.connect() function which sets a link up the URL you want to use for your service, and  and the WSGI controller you want to call for that URL::
 
-  map.connect('gateway', controller = 'gateway')
+You'll need to import use_wsgi_app from tg, and your GatewayController from 
+wherever you put it. 
 
-If you want to you can just copy and paste this in as a replacement for your environment.py file::
-
-    """TurboGears environment configuration"""
-    import os
-
-    from pylons import config
-
-    from pylons.i18n import ugettext
-    from genshi.filters import Translator
-    from tg import setup
-    from sqlalchemy import engine_from_config
-
-    import pyamftest.lib.app_globals as app_globals
-
-    from routes import Mapper  ##### Add this line #########
-
-    def make_map():
-        """Create, configure and return the routes Mapper"""
-        map = Mapper(directory=config['pylons.paths']['controllers'],
-                     always_scan=config['debug'])
-   
-        # This route connects your root controller
-        map.connect('gateway', controller = 'gateway')  ####### Add this line ########
-        map.connect('*url', controller='root', action='route')
-   
-        # The ErrorController route (handles 404/500 error pages); it should
-        # likely stay at the top, ensuring it can always be resolved
-        map.connect('error/:action/:id', controller='error')
-
-        # CUSTOM ROUTES HERE
-        # map.connect(':controller/:action/:id')
-        map.connect('*url', controller='template', action='view')
-
-        return map
-
-    def template_loaded(template):
-        "Plug-in our i18n function to Genshi."
-        template.filters.insert(0, Translator(ugettext))
-
-    def load_environment(global_conf, app_conf):
-        """Configure the Pylons environment via the ``pylons.config``
-        object
-        """
-        # Pylons paths
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        paths = dict(root=root,
-                     controllers=os.path.join(root, 'controllers'),
-                     static_files=os.path.join(root, 'public'),
-                     templates=[os.path.join(root, 'templates')])
-   
-        # This setups up a set of default route that enables a standard
-        # TG2 style object dispatch.   Fell free to overide it with
-        # custom routes.  TODO: Link to TG2+routes doc.
-       
-        # Initialize config with the basic options
-        config.init_app(global_conf, app_conf, package='pyamftest',
-                        template_engine='genshi', paths=paths)
-        config['routes.map'] = make_map()               
-        config['pylons.g'] = app_globals.Globals()
-        config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
-
-        # Customize templating options via this variable
-        tmpl_options = config['buffet.template_options']
-        tmpl_options['genshi.loader_callback'] = template_loaded
-
-        # CONFIGURATION OPTIONS HERE (note: all config options will override
-        # any Pylons config options)
-
-        from pyamftest import model
-        model.DBSession.configure(bind=config['pylons.g'].sa_engine)
-        model.metadata.bind = config['pylons.g'].sa_engine
    
 Create a Flex Client
 ----------------------
