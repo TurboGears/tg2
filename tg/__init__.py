@@ -50,7 +50,7 @@ Sensible defaults actually encourage code re-use within TurboGears because
 they make it possible for a group of TurboGears components to share assumptions
 about how things will work.
 """
-from tg.controllers import TGController, redirect, url
+from tg.controllers import TGController, redirect, url, use_wsgi_app
 from tg.decorators import validate, expose, override_template
 from tg.flash import flash, get_flash, get_status
 
@@ -66,5 +66,6 @@ from warnings import warn
 
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
-    'overide_template', 'request', 'session','TurboGearsApplication'
+    'overide_template', 'request', 'session','TurboGearsApplication', 
+    'use_wsgi_app'
 ]

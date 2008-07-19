@@ -81,6 +81,7 @@ class DecoratedController(WSGIController):
         """
 
         self._initialize_validation_context()
+        pylons.request.start_response = self.start_response
 
         if remainder is None:
             remainder = []
@@ -571,6 +572,9 @@ def url(tgpath, tgparams=None, **kw):
         result += "?" + "&".join(args)
     return result
 
+def use_wsgi_app(wsgi_app):
+    return wsgi_app(pylons.request.environ, pylons.request.start_response)
+    
 
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
