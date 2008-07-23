@@ -210,7 +210,7 @@ def archive_directive(name, arguments, options, content, lineno,
                         + '%s%s%s' % (os.sep, static_path, os.sep)
                         + filename, "w")
     
-    if directory.startswith('/'):
+    if directory.startswith(os.sep):
         dir = directory
     else:
         dir = os.path.normpath(os.path.join(environment.config.code_path,
@@ -220,7 +220,7 @@ def archive_directive(name, arguments, options, content, lineno,
         for name in files:
             file = os.path.join(root, name)
             zipfilename = string.replace(file, dir, '')
-            if zipfilename[0] == '/':
+            if zipfilename[0] == os.sep:
                 zipfilename = zipfilename[1:]
             archive_file.write(file, str(zipfilename), zipfile.ZIP_DEFLATED)
 
