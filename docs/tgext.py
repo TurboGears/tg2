@@ -12,9 +12,14 @@
 import re
 import os
 import sys
+import zipfile
+import string
 
-from docutils import nodes
-from docutils.parsers.rst import directives
+from docutils import nodes, utils
+from docutils.parsers.rst import directives, roles, states
+from docutils.statemachine import ViewList
+
+from sphinx import util
 
 import pysvn
 import nose
@@ -105,16 +110,15 @@ def get_file(path, revision = None, type = None, repository = None):
         fp.close()
     return data
 
-
-# code directive
 def code_directive(name, arguments, options, content, lineno,
                         content_offset, block_text, state, state_machine):
+    """ Directive to handle code sample related stuf   """
     if not state.document.settings.file_insertion_enabled:
         return [state.document.reporter.warning('File insertion disabled',
                                                 line=lineno)]
     environment = state.document.settings.env
     file_name = arguments[0]
-    if file_name.startswith('/'):
+    if file_name.startswith(os.sep):
         file_path = file_name
     else:
         file_path = os.path.normpath(os.path.join(environment.config.code_path,
@@ -140,25 +144,114 @@ def code_directive(name, arguments, options, content, lineno,
     else:
         if options.has_key('test'):
             test = options['test']
-            if test.startswith('/'):
-                result = nose.run(argv = [__file__, options['test']])
+            if test.startswith(os.sep):
+                result = nose.run(argv = [__file__, test])
             else:
-                result = nose.run(argv = [__file__, environment.config.test_path
-                                          + options['test']])
+                result = nose.run(argv = [__file__
+                                          , os.path.join(environment.config.test_path
+                                          , test)])
             if not result:
                 retnode = state.document.reporter.warning(
-                    'Test(s) associated to %r failed' % (arguments[0],),
+                    'Test associated to %r failed' % (file_name,),
                     line=lineno)
         if options.has_key('language'):
             retnode['language'] = options['language']
     return [retnode]
+
+
+def test_directive(name, arguments, options, content, lineno,
+                        content_offset, block_text, state, state_machine):
+    """ Directive to test code from external files """
+    environment = state.document.settings.env
+    
+    test = arguments[0]
+    if not test.startswith(os.sep):
+        test = os.path.join(environment.config.test_path, test)
+        
+    if options.has_key('options'):
+        opts = options['options'].split(',')
+        # adjust the options to nose
+        opts = map(lambda s: "--%s" % s.strip(), opts)
+        
+        opts.append(test)
+    else:
+        opts = [test]
+    
+    opts.insert(0, __file__)
+    result = nose.run(argv = opts)
+    if not result:
+        retnode = state.document.reporter.warning(
+                'Test %r failed' % (test,),
+                line=lineno)
+        return retnode
+    return
+
+def archive_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
+    archive = options['archive']
+    return [nodes.reference(rawtext, utils.unescape(text), refuri=archive,
+                            **options)], []
+
+role_name = 'arch'
+
+def archive_directive(name, arguments, options, content, lineno,
+         content_offset, block_text, state, state_machine):
+    """ Directive to create a archive (zip) from a sample project """
+    environment = state.document.settings.env
+    static_path = environment.config.html_static_path[0]
+    
+    directory = arguments[0]
+    
+    if options.has_key('file'):
+        filename = options['file']
+    else:
+        filename = os.path.basename(directory.rstrip(os.sep)) + '.zip'
+        
+    archive_file = zipfile.ZipFile(os.path.dirname(os.path.abspath(__file__))
+                        + '%s%s%s' % (os.sep, static_path, os.sep)
+                        + filename, "w")
+    
+    if directory.startswith('/'):
+        dir = directory
+    else:
+        dir = os.path.normpath(os.path.join(environment.config.code_path,
+                    directory))
+        
+    for root, dirs, files in os.walk(dir,topdown=False):
+        for name in files:
+            file = os.path.join(root, name)
+            zipfilename = string.replace(file, dir, '')
+            if zipfilename[0] == '/':
+                zipfilename = zipfilename[1:]
+            archive_file.write(file, str(zipfilename), zipfile.ZIP_DEFLATED)
+
+    archive_file.close()
+
+    archive = util.relative_uri(state_machine.document.current_source,
+                                os.path.dirname(os.path.abspath(__file__))
+                        + '%s%s%s' % (os.sep, static_path, os.sep)) \
+                        + filename
+
+    role = roles.CustomRole(role_name, archive_role,
+                            {'archive' : archive},
+                            content)
+    roles.register_local_role(role_name, role)
+    return
+
 
 def setup(app):
     code_options = {'section': directives.unchanged, 
                     'language': directives.unchanged,
                     'test': directives.unchanged,
                     'revision': directives.unchanged}
+    test_options = {'options': directives.unchanged}
+    archive_options = {'file': directives.unchanged}
+    
     app.add_config_value('code_path', '', True)
     app.add_config_value('code_scm', '', True)
-    app.add_config_value('test_path', '', True)
     app.add_directive('code', code_directive, 1, (1, 0, 1),  **code_options)
+    
+    app.add_directive('test', test_directive, 1, (1, 0, 1),  **test_options)
+    app.add_config_value('test_path', '', True)
+
+    app.add_directive('archive', archive_directive, 1, (1, 0, 1), **archive_options)
+    
