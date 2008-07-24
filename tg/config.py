@@ -67,6 +67,7 @@ class AppConfig(Bunch):
         config.init_app(global_conf, app_conf, 
                         package=self.package.__name__,
                         paths=self.paths)
+        config.update(self)
                         
     def setup_routes(self):
         """Setup the default TG2 routes
@@ -97,7 +98,7 @@ class AppConfig(Bunch):
                               'password_encryption_method':'sha1',
                               'form_plugin': None
                       }
-        if config['sa_auth']:
+        if config.get('sa_auth'):
             config['sa_auth'] = defaults.update(config['sa_auth'])
         if not config['sa_auth']:
             config['sa_auth'] = defaults
