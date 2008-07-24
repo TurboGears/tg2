@@ -66,7 +66,7 @@ class AppConfig(Bunch):
         # Initialize config with the basic options
         config.init_app(global_conf, app_conf, 
                         package=self.package.__name__,
-                        paths=self.paths
+                        paths=self.paths)
                         
     def setup_routes(self):
         """Setup the default TG2 routes
