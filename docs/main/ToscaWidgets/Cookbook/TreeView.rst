@@ -23,7 +23,7 @@ Parameters:
 
 For example the widget is instantiated as::
 
-    from toscawidgets.widgets.jquery import TreeView
+    from tw.jquery import TreeView
 
     myTree = TreeView(treeDiv='navTree')
 

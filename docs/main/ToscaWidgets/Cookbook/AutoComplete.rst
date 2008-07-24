@@ -29,7 +29,7 @@ Optional Parameters:
 
 For example the widget is instantiated as::
 
-    from toscawidgets.widgets.jquery.autocomplete import AutoCompleteField
+    from tw.jquery.autocomplete import AutoCompleteField
 
     autoField = AutoCompleteField(
                        id='myFieldName',

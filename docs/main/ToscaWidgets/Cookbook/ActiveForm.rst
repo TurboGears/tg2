@@ -18,8 +18,8 @@ Usage
  from tg import expose, flash, redirect, TGController
  import pylons
 
- from toscawidgets.widgets.forms.fields import *
- from toscawidgets.widgets.prototype.activeform import ActiveForm
+ from tw.forms.fields import *
+ from tw.prototype.activeform import ActiveForm
  from twtools.frameworks.tg2.activeform import ActiveFormResponseHandler
 
  from formencode.validators import Int, String
@@ -35,7 +35,7 @@ Usage
 
  class ExampleController(TGController):
 
-    @expose('toscawidgets.widgets.prototype.examples.tg2.templates.index')
+    @expose('tw.prototype.examples.tg2.templates.index')
     def form(self, **kw):
         pylons.c.widget = activeForm
         return dict()

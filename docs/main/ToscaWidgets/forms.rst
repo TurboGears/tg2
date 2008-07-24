@@ -49,7 +49,7 @@ To create a form for the model add the following code in your root.py (this does
 
 ::
 
-  from toscawidgets.widgets.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
+  from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
   from toscawidgets.api import WidgetsList
 
   class MovieForm(TableForm):

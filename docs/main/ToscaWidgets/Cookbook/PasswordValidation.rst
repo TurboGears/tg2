@@ -5,7 +5,7 @@ Creating a password verification field
 
 First lets take into consideration a very simple registration form::
 
- from toscawidgets.widgets.forms import TableForm, PasswordField, TextField
+ from tw.forms import TableForm, PasswordField, TextField
  from toscawidgets.api import WidgetsList
 
  class RegistrationForm(TableForm):

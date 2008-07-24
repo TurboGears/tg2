@@ -64,7 +64,7 @@ The onpress key takes a javascript callback function as value which is called wh
 
 For example the widget could be instantiated as::
 
-    from toscawidgets.widgets.jquery import FlexiGrid
+    from tw.jquery import FlexiGrid
 
     grid = FlexiGrid(id='flex', fetchURL='fetch', title='Movies',
                 colModel=colModel, useRp=True, rp=10,

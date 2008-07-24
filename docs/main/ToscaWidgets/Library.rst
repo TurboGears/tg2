@@ -61,7 +61,7 @@ widget(s).
 
 your imports will look something like::
 
-  from toscawidgets.widgets.mypackagename import mywidgetname
+  from tw.mypackagename import mywidgetname
 
 testing your widget
 -------------------

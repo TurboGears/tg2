@@ -33,7 +33,7 @@ import the widget into your project
 
 ::
 
-  from toscawidgets.widgets.twRating import Ratings
+  from tw.twRating import Ratings
 
 Create the widget inside your controllers definitions.
 

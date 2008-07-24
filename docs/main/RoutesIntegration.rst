@@ -16,25 +16,25 @@ dispatch in the same way that TurboGears 1 did.
 
 But if you want to create special routes that overide Object Dispatch, 
 you can easily do that, just by providing your own function to setup the 
-routes map. YOu can update the routes defaults by overriding the setup_routes
+routes map. You can update the routes defaults by overriding the setup_routes
 method of the base_config object in app_cfg.py.  
 
 The standard setup_routes method looks like this::
 
-def setup_routes(self):
-    """Setup the default TG2 routes
+    def setup_routes(self):
+        """Setup the default TG2 routes
     
-    Overide this and setup your own routes maps if you want to use routes.
-    """
-    map = Mapper(directory=config['pylons.paths']['controllers'],
-                always_scan=config['debug'])
+        Overide this and setup your own routes maps if you want to use routes.
+        """
+        map = Mapper(directory=config['pylons.paths']['controllers'],
+                    always_scan=config['debug'])
 
-    # Setup a default route for the error controller:
-    map.connect('error/:action/:id', controller='error')
-    # Setup a default route for the root of object dispatch
-    map.connect('*url', controller='root', action='routes_placeholder')
+        # Setup a default route for the error controller:
+        map.connect('error/:action/:id', controller='error')
+        # Setup a default route for the root of object dispatch
+        map.connect('*url', controller='root', action='routes_placeholder')
     
-    config['routes.map'] = map
+        config['routes.map'] = map
     
 
 There's a single map.connect() call which sets up all urls (via the * 

@@ -32,7 +32,8 @@ The creation function is unparameterized, and cannot be a closure within your co
 Using the cache decorator
 -------------------------------
 
-This caches the output of controllers - effectively a form of Memoization.  The cache is keyed on the arguments passed, or optionally on the request itself::
+This caches the output of controllers - effectively a form of Memoization.  
+The cache is keyed on the arguments passed, or optionally on the request itself::
 
     from pylons.decorators.cache import beaker_cache
     from tg.controllers import TurboGearsController
@@ -55,7 +56,8 @@ This caches the output of controllers - effectively a form of Memoization.  The 
 Using the ETag cache
 ===========================
 
-This is just a shorthand for setting the ETag header, and testing if the appropriate '''If-None-Match''' HTTP Header has been set::
+This is just a shorthand for setting the ETag header, and testing if the 
+appropriate '''If-None-Match''' HTTP Header has been set::
 
 
     from pylons.controllers.util import etag_cache

@@ -26,7 +26,7 @@ The trick here is to override the update_params mdethod of SingleSelectField to 
 ::
  
  from mypackage.model import Genera
- from toscawidgets.widgets.forms import SingleSelectField
+ from tw.forms import SingleSelectField
  from tg2 import DBSession
  
  class MySelect(SingleSelectField):
@@ -42,7 +42,7 @@ A more intelligent solution would be to cache the rows and then refresh them eve
 ::
  
  from mypackage.model import Genera
- from toscawidgets.widgets.forms import SingleSelectField
+ from tw.forms import SingleSelectField
  from tg2 import DBSession
  import time
 
