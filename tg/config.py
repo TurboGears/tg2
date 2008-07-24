@@ -66,24 +66,19 @@ class AppConfig(Bunch):
         # Initialize config with the basic options
         config.init_app(global_conf, app_conf, 
                         package=self.package.__name__,
-                        paths=self.paths)
+                        paths=self.paths
                         
     def setup_routes(self):
-        # This setups up a set of default route that enables a standard
-        # TG2 style object dispatch.   Fell free to overide it with
-        # custom routes.  
+        """Setup the default TG2 routes
+        
+        Overide this and setup your own routes maps if you want to use routes.
+        """
         map = Mapper(directory=config['pylons.paths']['controllers'],
                     always_scan=config['debug'])
 
         # Setup a default route for the error controller:
         map.connect('error/:action/:id', controller='error')
-
-        ## Replace the next line with your overides.   Overides should generally come
-        ## bevore the default route defined below
-        # map.connect('overide/url/here', controller='mycontrller', action='send_stuff')
-
-        # This route connects your root controller, it should be after
-        # more specific routes since the wildcard will pick up everything...
+        # Setup a default route for the root of object dispatch
         map.connect('*url', controller='root', action='routes_placeholder')
         
         config['routes.map'] = map
@@ -181,7 +176,7 @@ class AppConfig(Bunch):
             self.setup_routes()
             self.setup_helpers_and_globals()
             if self.auth_backend == "sqlalchemy": 
-                self.setup_sa_auth_backend
+                self.setup_sa_auth_backend()
 
             if 'mako' in self.renderers:
                 self.setup_mako_renderer()
