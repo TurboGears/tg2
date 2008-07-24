@@ -87,7 +87,7 @@ class AppConfig(Bunch):
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
         config['pylons.h'] = self.package.lib.helpers
     
-    def setup_sa_auth_backend():
+    def setup_sa_auth_backend(self):
         defaults = {'user_class':self.model.User, 
                               'group_class':self.model.Group, 
                               'permission_class':self.model.Permission,
