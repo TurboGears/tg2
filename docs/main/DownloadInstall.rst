@@ -178,10 +178,9 @@ Check out the latest code from subversion::
 
 Then you repeat the same steps to tell setuptools/python to use the new tg2 installation.
 
-Install tgrepozewho::
+Install tg.ext.repoze.who::
 
  $ cd tg.ext.repoze.who
- $ easy_install Paste==dev
  $ easy_install zope.interface
  $ python setup.py develop
 
@@ -190,6 +189,7 @@ Install TurboGears 2 server::
  $ cd ..
  $ cd tg2
  $ easy_install PasteScript==dev
+ $ easy_install genshi
  $ python setup.py develop
 
 Install TurboGears 2 developer tools::
