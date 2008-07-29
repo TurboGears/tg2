@@ -201,7 +201,7 @@ class expose(object):
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the 
     template that will be used to render the response dictionary 
-    dinamically."""
+    dynamically."""
     if hasattr(controller, 'decoration'):
         decoration = controller.decoration
     else:

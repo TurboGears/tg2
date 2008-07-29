@@ -39,9 +39,12 @@ div.sphinxsidebar {
     float: left;
     width: 230px;
     margin-left: -100%;
-    font-size: 90%;
+    font-size: 85%;
 }
 
+div.sphinxsidebar ul {
+    color: #FFFFFF;
+}
 div.clearer {
     clear: both;
 }
@@ -74,7 +77,7 @@ div.related h3 {
 
 div.related ul {
     margin: 0;
-    padding: 0 0 0 10px;
+    padding: 0 0 0 5px;
     list-style: none;
 }
 
@@ -84,7 +87,7 @@ div.related li {
 
 div.related li.right {
     float: right;
-    margin-right: 5px;
+    margin-right: 2px;
 }
 
 div.related a {
@@ -95,7 +98,7 @@ div.related a {
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;
     color: #5AAECF;
-    font-size: 1.4em;
+    font-size: 1.8em;
     font-weight: normal;
     margin: 0;
     padding: 0;
@@ -104,7 +107,7 @@ div.sphinxsidebar h3 {
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
     color: #5AAECF;
-    font-size: 1.3em;
+    font-size: 1.5em;
     font-weight: normal;
     margin: 5px 0 0 0;
     padding: 0;
@@ -119,7 +122,7 @@ div.sphinxsidebar p.topless {
 }
 
 div.sphinssidebar ul {
-    margin: 10px;
+    margin: 2px;
     padding: 0;
     list-style: none;
     color: white;
@@ -127,8 +130,8 @@ div.sphinssidebar ul {
 
 div.sphinxsidebar ul ul,
 div.sphinxsidebar ul.want-points {
-    margin-left: 20px;
-    list-style: square;
+    margin-left: -18px;
+    list-style: circle;
 }
 
 div.sphinxsidebar ul ul {

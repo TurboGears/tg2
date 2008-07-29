@@ -69,7 +69,7 @@ Validation, Form handling and form widgets
 ===========================================
 
 .. toctree::
-       :maxdepth: 2
+   :maxdepth: 2
 
    main/FormBasics
    main/Validation

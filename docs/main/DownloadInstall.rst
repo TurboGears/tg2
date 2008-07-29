@@ -3,8 +3,12 @@
 How to install TurboGears 2
 ===========================
 
-Installing TurboGears 2 has been made simple with the advent of the package index.  We recommend installing TurboGears 2 into a virtual environment
-so that any existing packages will not interfere.  The basic installation goes as follows:
+Installing TurboGears 2 has been made simple with the advent of the package 
+index.  We recommend installing TurboGears 2 into a virtual environment
+so that any existing packages will not interfere with your installation, and 
+so that you don't upgrade any python libraries that your system needs.  
+
+So, with a virtual environment the basic installation goes as follows:
 
 1. Install ``setuptools``
 
@@ -19,26 +23,44 @@ so that any existing packages will not interfere.  The basic installation goes a
 6. Profit
 
 
-Prerequisites:
+Prerequisites
 --------------
 
 * Python 2.4 or 2.5
 * Appropriate python development package (python*-devel python*-dev)
 
 Setting up setuptools:
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On windows: 
+
+download http://peak.telecommunity.com/dist/ez_setup.py and then run it from 
+the command line.
+
+On unix: 
+
+If you have curl or  wget installed you can do this with a single command: 
 
 .. code-block:: bash
 
 	$ curl http://peak.telecommunity.com/dist/ez_setup.py | sudo python
 
-Setting up a Virtual Environment:
+Setting up a Virtual Environment
 ---------------------------------
 
 First, install ``virtualenv`` using this command:
 
+On Windows::
+
+    easy_install virtualenv
+
+On Unix: 
+
+You will likely need root permissions to install virtualenv in you your system's  
+site-packages directory: 
+
 .. code-block:: bash
-	
+
 	$ sudo easy_install virtualenv
 
 will output something like:
@@ -55,12 +77,13 @@ will output something like:
     Finished processing dependencies for virtualenv
 
 Create a virtual environment:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 	
 	$ virtualenv --no-site-packages tg2env
 
-that produces::
+that produces something like this::
 
      Using real prefix '/usr/local'
      New python executable in tg2env/bin/python
@@ -74,21 +97,31 @@ that produces::
 	
 	$ source bin/activate
 
-and now your prompt should look something like::
+and now your prompt should look something like this (if you're on unix)::
 
 	(tg2env)usrname@host:tgenv$
 
 Install Turbogears 2
 ---------------------
 
+We've included pre-compiled binaries for windows users, but if you're on unix
+you'll need a working version of the GCC compiler installed, as well as the 
+python headers.   On OSX this means installing Xcode (available on the OS X cd
+or at http://developer.apple.com/tools/xcode/), and on Debian derived linux 
+versions this requires python-devel (available via ``apt-get python-devel``), 
+fedora users will need the python-devel rpm, etc. 
+
+If you've got the compilers and python header files, you'll be able to install 
+the latest version of turbogears via:  
+
 .. code-block:: bash
 
-	$ easy_install -i http://www.turbogears.org/2.0/downloads/1.9.7a1/index tg.devtools
+	$ easy_install -i http://www.turbogears.org/2.0/downloads/current/index tg.devtools
 
-A whole bunch of packages should download.  (this will take a little while)
+A whole bunch of packages should download.  (This may take a several min.)
 
 Validate the installation:
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To check if you installed TurboGears 2 correctly, type
 
@@ -128,16 +161,16 @@ Paster has replaced the old tg-admin command, and most of the tg-admin commands 
 Be sure to check out our `What's new in TurboGears 2.0 <WhatsNew.html>`_ page to get a picture of what's changed in TurboGears2 so far.
 
 Special Considerations:
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Cygwin** does not include the necessary binary file **sqlite3.dll**; if you want to run cygwin you'll need to install a different database. If you have cygwin installed and you want to use the default setup described here, you must perform all operations, including setup operations, within DOS command windows, not cygwin command windows.
 
 
 Installing the development version of Turbogears 2 (from source)
-================================================================
+-------------------------------------------------------------------
 
 Installing Pylons from Source:
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note:: If you've installed pylons in previous section, you could skip to next section.
 
@@ -160,7 +193,7 @@ To tell setuptools to use the version you are editing in the Pylons directory::
   $ python setup.py develop
 
 Installing TurboGears 2 from Source:
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TurboGears 2 are constructed by a bunch of packages.
 
@@ -181,6 +214,7 @@ Then you repeat the same steps to tell setuptools/python to use the new tg2 inst
 Install tg.ext.repoze.who::
 
  $ cd tg.ext.repoze.who
+ $ easy_install Paste
  $ easy_install zope.interface
  $ python setup.py develop
 
@@ -200,18 +234,28 @@ Install TurboGears 2 developer tools::
 
 Then you have installed TurboGears 2.
 
- .. note:: if you have installed old dependency packages, you could remove them from {python_path}/site-packages/easy-install.pth
+ .. note:: if you have installed old dependency packages, you could remove 
+ them from {python_path}/site-packages/easy-install.pth
 
 
 
 Troubleshooting
 ----------------
 
-It is possible (but not likely) you might see a few other error messages.  Here are the correct way to fix the dependency problems so things will install properly.
+It is possible (but not likely) you might see a few other error messages.  
+Here are the correct way to fix the dependency problems so things will install 
+properly.
 
-If you get an error about ``ObjectDispatchController`` this means your Pylons installation is out-of-date. Make sure it's fresh ("hg pull -u" or "hg pull" followed by hg update -- alternatively you can create a brand new Pylons branch in a new directory with "hg clone").
+If you get an error about ``ObjectDispatchController`` this means your Pylons 
+installation is out-of-date. Make sure it's fresh ("hg pull -u" or "hg pull" 
+followed by hg update -- alternatively you can create a brand new Pylons 
+branch in a new directory with "hg clone").
 
-When installing on Mac OSX, if you get an error mentioning "No local packages or download links found for RuleDispatch", you can try the solution posted to the `ToscaWidgets discussion list <http://groups.google.com/group/toscawidgets-discuss/browse_thread/thread/cb6778810e96585d>`_, which advises downloading it directly::
+When installing on Mac OSX, if you get an error mentioning "No local packages 
+or download links found for RuleDispatch", you can try the solution posted to 
+the `ToscaWidgets discussion list 
+<http://groups.google.com/group/toscawidgets-discuss/browse_thread/thread/cb6778810e96585d>`_, 
+which advises downloading it directly::
 
  $ sudo easy_install -U -f http://toscawidgets.org/download/wo_speedups/ RuleDispatch
 
@@ -228,10 +272,12 @@ If ``python setup.py develop`` gives you::
      from ez_setup import use_setuptools
 
 
-... commenting out the first two lines in setup.py seems to work.  See `this discussion <http://groups.google.com/group/pylons-discuss/browse_thread/thread/1ccf9366004c8e11>`_
+... commenting out the first two lines in setup.py seems to work.  See 
+`this discussion <http://groups.google.com/group/pylons-discuss/browse_thread/thread/1ccf9366004c8e11>`_
 
 
-If you get this error about webhelpers, you need the latest version from mercurial::
+If you get this error about webhelpers, you need the latest version from 
+mercurial::
 
   $ hg clone https://www.knowledgetap.com/hg/webhelpers
   $ cd webhelpers

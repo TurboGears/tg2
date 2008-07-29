@@ -13,11 +13,14 @@ as declarative as possible, and to move some of the code into the framework
 to make end-user updates easier to process. 
 
 The config module
-____________________________________
-
+----------------------
 .. tip::
-    A good indicator of whether an option should be set in the ``config`` directory code vs. the configuration file is whether or not the option is necessary for the functioning of the application. If the application won't function without the setting, it belongs in the appropriate :file:`config/` directory file. If the option should be changed depending on deployment, it belongs in the :ref:`run-config`.
-
+    A good indicator of whether an option should be set in the ``config`` 
+    directory code vs. the configuration file is whether or not the option is 
+    necessary for the functioning of the application. If the application won't 
+    function without the setting, it belongs in the appropriate `config/` 
+    directory file. If the option should be changed depending on deployment, 
+    it belongs in the ini files.
 
 Our hope is that 90% of applications don't need to edit any of the config module
 files, but for those who do, the most common file to change is 
@@ -28,18 +31,25 @@ files, but for those who do, the most common file to change is
     :language: python
     
 app_cfg.py exists primarily so that middleware.py and environment'py can import 
-and use the base_config object.  The base_config object 
-is special in that it transparently maps all attribute access to an underlying 
-dictionary.  AppConfig() is a simple class in the tg framework that provides
-a set of sane default values for the base_config object.   
+and use the ``base_config`` object.  
 
-Any attributes you add or update will be automatically changed in the 
-underlying dictionary.  If you'd prefer not t use this feature, you can just 
-treat it like a dictionary.   Ultimately, This base_config
-object will be merged in with the config values from the .ini file you're using
-to launch your app, and stuck in pylons.config. 
+The ``base_config`` object is an ``AppConfig()`` instance which acts either like a 
+normal object, or like a dictorary.  ``AppConfig()`` profides some sane defaults
+in it's ``__init__``, but more than that it provides us with several methods that 
+work on the config values to produce the two functions that setup your 
+TurboGears app.   Since this is all done in your code, you can subclass or 
+overide ``AppConfig`` to get exactly the setup you want.  
 
-In addition to the attributes on the base_config object there are a number of 
+The ``base_config`` object is special in that it transparently maps all 
+attribute access to an underlying dictionary. So, any attributes you add or 
+update will be automatically changed in the underlying dictionary.  
+
+If you'd prefer not t use this feature, you can just 
+treat it like a dictionary.   As part of the app loading process the 
+``base_config`` object will be merged in with the config values from the .ini file you're using
+to launch your app, and placed in in ``pylons.config``. 
+
+In addition to the attributes on the ``base_config`` object there are a number of 
 methods which are used to setup the environment for you application, and to 
 create the actual turbogears WSGI application, and all the middleware you need.
 
@@ -62,10 +72,10 @@ renderer's list here in app_config.
 To change the default renderer to something other than Genshi, just set the 
 default_renderer to the name of the rendering engine.  So, to add Mako to list
 of renderers to prepare, and set it to be the default, this is all you'd have
-to do: 
+to do::  
 
-base_config.default_renderer = 'mako'
-base_config.renderers.append('mako')
+  base_config.default_renderer = 'mako'
+  base_config.renderers.append('mako')
 
 Configuration in the INI files
 -------------------------------------------------
@@ -82,16 +92,16 @@ Let's take a closer look at the development.ini file:
 
 .. code:: Wiki-20/development.ini
     :revision: 4842
-    :language: python
+    :language: ini
 
-These files are standard INI files, as used by Paste Deploy.   This means that      
+These files are standard INI files, as used by Paste Deploy.  The individual 
+sections are marked of with ``[]``'s.  
+
 
 .. seealso::
         Configuration file format **and options** are described in great 
         detail in the `Paste Deploy documentation 
         <http://pythonpaste.org/deploy/>`_.
-
-
 
 
 Embedding a TG app inside another TG app
@@ -100,10 +110,10 @@ Embedding a TG app inside another TG app
 One place where you'll have to be aware of how all of this works is when 
 you programatically setup one TurboGears app inside another. 
 
-In that case, you'll need to create your own base_config like object to use
+In that case, you'll need to create your own ``base_config`` like object to use
  when configuring the inside wsgi application instance. 
  
-Fortunately, this can be as simple as creating your own base_config object 
+Fortunately, this can be as simple as creating your own ``base_config`` object 
 from AppConfig(), creating your own app_conf and global dictionaries, and 
 calling m
 
