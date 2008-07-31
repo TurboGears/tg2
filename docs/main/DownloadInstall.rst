@@ -108,8 +108,8 @@ We've included pre-compiled binaries for windows users, but if you're on unix
 you'll need a working version of the GCC compiler installed, as well as the 
 python headers.   On OSX this means installing Xcode (available on the OS X cd
 or at http://developer.apple.com/tools/xcode/), and on Debian derived linux 
-versions this requires python-devel (available via ``apt-get python-devel``), 
-fedora users will need the python-devel rpm, etc. 
+versions this requires python-dev (available via ``apt-get install python-dev``), 
+Fedora users will need the python-devel rpm, etc. 
 
 If you've got the compilers and python header files, you'll be able to install 
 the latest version of turbogears via:  
