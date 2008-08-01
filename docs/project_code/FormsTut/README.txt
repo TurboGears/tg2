@@ -1,19 +1,12 @@
-This file is for you to describe the FormsTut application. Typically
-you would include information such as the information below:
+Running the Forms Tutorial
+==========================
 
-Installation and Setup
-======================
+Create the database::
 
-Install ``FormsTut`` using easy_install::
+    paster setup-app development.ini
 
-    easy_install FormsTut
+Start the server::
 
-Make a config file as follows::
+    paster serve --reload development.ini
 
-    paster make-config FormsTut config.ini
-
-Tweak the config file as appropriate and then setup the application::
-
-    paster setup-app config.ini
-
-Then you are ready to go.
+Point your browser to http://localhost:8080/new_form.
