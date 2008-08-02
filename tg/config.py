@@ -43,7 +43,7 @@ class AppConfig(Bunch):
     """Class to store application configuration
     
     This class should have configuration/setup information 
-    that is NESSISARY for proper application function.  
+    that is NECESSARY for proper application function.  
     Deployment specific configuration information should go in 
     the config files (eg: development.ini or production.ini)" 
     """
