@@ -25,7 +25,7 @@ setup(
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9', 
-        'repoze.tm',
+        'repoze.tm2',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
