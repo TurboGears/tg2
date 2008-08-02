@@ -1,5 +1,6 @@
 """Simple AppSetup helper class"""
 import os
+import logging
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 from tg import defaults
@@ -18,6 +19,8 @@ from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
 from tw.api import make_middleware as tw_middleware
+
+log = logging.getLogger(__name__)
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
@@ -241,6 +244,30 @@ class AppConfig(Bunch):
         app = Cascade([static_app, javascripts_app, app])
         return app
 
+    def commit_veto(self, environ, status, headers):
+        """
+        This hook is called by repoze.tm in case we want to veto a commit
+        for some reason. Return True to force a rollback.
+
+        By default we veto if the response's status code is an error code.
+        Override this method, or monkey patch the instancemethod, to fine
+        tune this behaviour.
+        """
+        return not (200 <= int(status.split()[0]) < 400)
+
+    def add_tm_middleware(self, app):
+        from repoze.tm import make_tm
+        return make_tm(app, self.commit_veto)
+
+    def add_dbsession_remover_middleware(self, app):
+        def remover(environ, start_response):
+            try:
+                return app(environ, start_response)
+            finally:
+                log.debug("Removing DBSession from current thread")
+                self.DBSession.remove()
+        return remover
+
     def setup_tg_wsgi_app(self, load_environment):
         """Create a base TG app, with all the standard middleware
 
@@ -280,6 +307,10 @@ class AppConfig(Bunch):
 
             if self.auth_backend == "sqlalchemy":
                 app = self.add_auth_middleware(app)
+
+            app = self.add_tm_middleware(app)
+            if self.use_sqlalchemy:
+                app = self.add_dbsession_remover_middleware(app)
 
             if asbool(full_stack):
                 # This should nevery be true for internal nested apps

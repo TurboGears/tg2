@@ -17,11 +17,15 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
+    dependency_links=[
+        'http://turbogears.org/2.0/downloads/current',
+    ],
     install_requires=[
         'Babel',
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9', 
+        'repoze.tm',
     ],
     extras_require={
         'core-testing':["nose", "TurboKid", "TurboJson"]
