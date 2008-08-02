@@ -1,12 +1,12 @@
 Working with SQLAlchemy and your data model
 ===========================================
 
-SQLAlchemy is a modern Object Relational Database, that provides and extremely powerful and flexible system for managing the connection between in-menory python objects and the relational datastore that provides persistence for those objects.  One of the main goals of SQLAlchemy is to allow for the full power of both Object Oriented development and Relational Algebra based datastores to be used together in a way that's natural to your application. 
+SQLAlchemy is a modern Object Relational Database, that provides and extremely powerful and flexible system for managing the connection between in-memory Python objects and the relational datastore that provides persistence for those objects.  One of the main goals of SQLAlchemy is to allow for the full power of both Object Oriented development and Relational Algebra based datastores to be used together in a way that's natural to your application. 
 
 TurboGears Integration
 ------------------------
 
-TurboGears SQLAlchemy integration is entirely pushed into the generated quickstart template, so you are totally free to edit the __init__.py file in your model directory, remove all SQLAlchemy reference, and edit the same references out of environment.cfg. 
+TurboGears SQLAlchemy integration is entirely pushed into the generated quickstart template, so you are totally free to edit the __init__.py file in your model directory, remove all SQLAlchemy reference, and edit the same references out of environment.py. 
 
 The main reason for this was not to make it easy to remove SQLAlchemy, it was to make it easier to build applications with multiple datastores, which is a common requirement for large-scale applications that either need to talk to so called `integration databases` which are shared between a large number of applications in an organization, or which need to do some horizontal partitioning of their database in order to scale up to thousands of requests per second. 
 
@@ -60,12 +60,12 @@ Your first step when using SQLAlchemy in TurboGears is to edit your model/__init
 
 Auto-reflection of tables has to happen after all the configuration is read, and the app is setup, so we provide simple init_model method that is not called until after everything is setup for you.  
 
-But if you're createing a new app, and want to define your tables in python, feel free to just create something like the movie_table we show in the code snipit above. 
+But if you're creating a new app, and want to define your tables in python, feel free to just create something like the movie_table we show in the code snippet above. 
 
 Choosing data Types
 ---------------------
 
-When you're setting up the column typess for your tables, you don't have to think about your target database and it's type system.   SQLAlchemy provides a flexible underying type system that, along with the table definition syntax above, allows you to database independent table objects. 
+When you're setting up the column types for your tables, you don't have to think about your target database and it's type system.   SQLAlchemy provides a flexible underlying type system that, along with the table definition syntax above, allows you to database independent table objects. 
 
 SQLAlchemy provides a number of built-in types which it automatically maps to underling database types.  If you want the latest and greatest listing just type:
 
@@ -128,7 +128,7 @@ If you don't define the __init__ method. You will need to update the properties 
   >>> entry.year = '1931'
   >>> entry.description = 'vampire movie'
 
-If you're following along with the tuturial, you'll want to make sure that you've defined the __init__ method.  We'll use the Movie class to creae new Movie instances, and set their data all at once througout the rest of the tutorial.
+If you're following along with the tutorial, you'll want to make sure that you've defined the __init__ method.  We'll use the Movie class to create new Movie instances, and set their data all at once throughout the rest of the tutorial.
 
 If you defined the __init__ method, it allows you to initialize the properties at the same time while you create the object::
 
