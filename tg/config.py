@@ -159,8 +159,6 @@ class AppConfig(Bunch):
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
-        self.package.model.DBSession.configure(bind=engine)
-        self.package.model.metadata.bind = engine
         
     def make_load_environment(self):
         """Returns a load_environment function 
