@@ -234,8 +234,8 @@ Install TurboGears 2 developer tools::
 
 Then you have installed TurboGears 2.
 
- .. note:: if you have installed old dependency packages, you could remove 
- them from {python_path}/site-packages/easy-install.pth
+.. note:: if you have installed old dependency packages, you could remove 
+   them from {python_path}/site-packages/easy-install.pth
 
 
 
