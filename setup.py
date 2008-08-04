@@ -3,6 +3,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 execfile(os.path.join(here, 'tg', 'release.py'))
 from setuptools import find_packages, setup
 
+test_requirements = ["nose", "TurboKid", "TurboJson", "coverage"]
+
 setup(
     name='TurboGears2',
     version=version,
@@ -28,8 +30,14 @@ setup(
         'repoze.tm2',
     ],
     extras_require={
-        'core-testing':["nose", "TurboKid", "TurboJson"]
+        #XXX: Perhaps this 'core-testing' extras_require can be removed
+        #     since tests_require takes care of that as long as TG is tested 
+        #     with 'python setup.py test' (which we should IMHO so setuptools
+        #     can take care of these details for us)
+        'core-testing':test_requirements,
     },
+    test_suite='nose.collector',
+    tests_require = test_requirements,
     entry_points='''
         [paste.global_paster_command]
         tginfo = tg.commands.info:InfoCommand
