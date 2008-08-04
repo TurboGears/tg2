@@ -308,6 +308,10 @@ class AppConfig(Bunch):
 
             app = self.add_tm_middleware(app)
             if self.use_sqlalchemy:
+                if not hasattr(self, 'DBSession'):
+                    # If the user hasn't specified a scoped_session, assume
+                    # he/she uses the default DBSession in model
+                    self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
 
             if asbool(full_stack):
