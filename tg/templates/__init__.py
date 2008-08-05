@@ -1,9 +1,9 @@
 """
 Place to hold TurboGears built-in templates
 
-With 'paster quickstart' or 'paster create' command you can creates a new
+With 'paster quickstart' or 'paster create' command you can create a new
 TurboGears project which you can use as a basis for your own project.
-Let's take 'paster quickstart hellow world' command for exxample.
+Let's take the command 'paster quickstart helloworld' for example.
 The generated directory structure is as follows::
 
     - helloworld/
