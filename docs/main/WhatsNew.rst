@@ -86,7 +86,7 @@ Here's a full list of the old command line tools and their new equivalents
   * ``tg-admin info`` ---> ``paster tginfo``
   * ``tg-admin toolbox`` --> ``paster toolbox``
   * ``tg-admin shell`` --> ``paster shell``
-  * ``tg-admin sql create`` --> ``paster setup_app development.ini``
+  * ``tg-admin sql create`` --> ``paster setup-app development.ini``
 
 Project layout changes 
 ------------------------
