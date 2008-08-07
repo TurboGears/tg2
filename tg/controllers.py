@@ -184,6 +184,7 @@ class DecoratedController(WSGIController):
 
         return new_params
 
+    #XXX: Perhaps rename to _render_output to avoid confusion with Response obj?
     def _render_response(self, controller, response):
         """
         Render response takes the dictionary returned by the
@@ -207,7 +208,10 @@ class DecoratedController(WSGIController):
 
         # Always set content type
         pylons.response.headers['Content-Type'] = content_type
-        req = pylons.request
+        # Save these objeccts as locals from the SOP to avoid expensive lookups
+        req = pylons.request._current_obj()
+        tmpl_context = pylons.tmpl_context._current_obj()
+        buffet = pylons.buffet._current_obj()
 
         if template_name is None:
             return response
@@ -219,21 +223,21 @@ class DecoratedController(WSGIController):
                 if isinstance(item, Widget):
                     msg = "Returning a widget is deprecated, set them on pylons.tmpl_context instead"
                     warnings.warn(msg, DeprecationWarning)
-                    setattr(pylons.tmpl_context, key, item)
+                    setattr(tmpl_context, key, item)
 
         # Prepare the engine, if it's not already been prepared.
         if engine_name not in _configured_engines():
             from pylons import config
             template_options = dict(config).get('buffet.template_options', {})
-            pylons.buffet.prepare(engine_name, **template_options)
+            buffet.prepare(engine_name, **template_options)
             _configured_engines().add(engine_name)
 
         #if there is an identity, push it to the pylons template context
-        pylons.tmpl_context.identity = pylons.request.environ.get('repoze.who.identity')
+        tmpl_context.identity = req.environ.get('repoze.who.identity')
         
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
-        namespace = dict(tmpl_context=pylons.tmpl_context)
+        namespace = dict(tmpl_context=tmpl_context)
         namespace.update(response)
         if not engine_name in ['json']:
             namespace.update(get_tg_vars())
@@ -241,17 +245,20 @@ class DecoratedController(WSGIController):
         for name in exclude_names:
             namespace.pop(name)
 
-        # If we are in a test request put the namespace where it can be accessed directly
+        # If we are in a test request put the namespace where it can be
+        # accessed directly
         if req.environ.get('paste.testing'):
-            req.environ['paste.testing_variables']['namespace'] = namespace
-            req.environ['paste.testing_variables']['template_name'] = template_name
-            req.environ['paste.testing_variables']['exclude_names'] = exclude_names
+            testing_variables = req.environ['paste.testing_variables']
+            testing_variables['namespace'] = namespace
+            testing_variables['template_name'] = template_name
+            testing_variables['exclude_names'] = exclude_names
+            testing_variables['controller_output'] = response
 
         # Render the result.
-        result = pylons.buffet.render(engine_name=engine_name,
-                                      template_name=template_name,
-                                      include_pylons_variables=False,
-                                      namespace=namespace)
+        result = buffet.render(engine_name=engine_name,
+                               template_name=template_name,
+                               include_pylons_variables=False,
+                               namespace=namespace)
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):

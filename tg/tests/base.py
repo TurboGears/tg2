@@ -57,7 +57,6 @@ def make_app(controller_klass=None, environ=None):
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
-
 def create_request(path, environ=None):
     """Helper used in test cases to quickly setup a request obj.
 
@@ -87,10 +86,19 @@ def create_request(path, environ=None):
 
 class TestWSGIController(TestCase):
     def setUp(self):
-        tmpl_context._push_object(ContextObj())
+        tmpl_options = {}
+        tmpl_options['genshi.search_path'] = ['tests']
+        self._ctx = ContextObj()
+        tmpl_context._push_object(self._ctx)
+        self._buffet = pylons.templating.Buffet(
+            default_engine='genshi',tmpl_options=tmpl_options
+            )
+        pylons.buffet._push_object(self._buffet)
+
 
     def tearDown(self):
-        tmpl_context._pop_object()
+        tmpl_context._pop_object(self._ctx)
+        pylons.buffet._pop_object(self._buffet)
         
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')

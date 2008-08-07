@@ -10,15 +10,11 @@ from turbojson.jsonify import jsonify
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
+
 def setup():
     setup_session_dir()
 def teardown():
     teardown_session_dir()
-
-tmpl_options = {}
-tmpl_options['genshi.search_path'] = ['tests']
-
-pylons.buffet = pylons.templating.Buffet(default_engine='genshi',tmpl_options=tmpl_options)
 
 class MyClass(object):
     pass
