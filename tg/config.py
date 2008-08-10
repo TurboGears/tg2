@@ -10,9 +10,8 @@ from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
-from pylons import config
 from pylons.middleware import ErrorHandler, StatusCodeRedirect
-from pylons.wsgiapp import PylonsApp
+from tg import TGApp
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
@@ -299,7 +298,7 @@ class AppConfig(Bunch):
             """
             # Configure the Pylons environment
             load_environment(global_conf, app_conf)
-            app = PylonsApp()
+            app = TGApp()
             if wrap_app: 
                 wrap_app(app)
             app = self.add_core_middleware(app)
