@@ -3,7 +3,6 @@ import os
 import logging
 from pylons.i18n import ugettext
 from genshi.filters import Translator
-from tg import defaults
 
 from pylons import config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
