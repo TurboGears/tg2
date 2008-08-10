@@ -118,11 +118,15 @@ def get_tg_vars():
         request = tg.request
         )
         
+    helpers = h=config.get('pylons.h') or pylons.h._current_obj()
+    
     root_vars = Bunch(
         c=tmpl_context,
         tmpl_context = tmpl_context,
         response = response,
         request = request,
+        h = helpers,
+        helpers = helpers,
         tg=tg_vars
         )
     return root_vars
