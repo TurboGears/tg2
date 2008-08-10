@@ -55,14 +55,19 @@ class AppConfig(Bunch):
         self.default_renderer = 'genshi'
         self.auth_backend = None
         self.serve_static = True
+        self.paths = Bunch()
     
     def setup_paths(self):
-        root = os.path.dirname(os.path.abspath(
-                self.package.__file__))
-        self.paths = dict(root=root,
+        root = os.path.dirname(os.path.abspath(self.package.__file__))
+        # The default paths:
+        paths = dict(root=root,
                      controllers=os.path.join(root, 'controllers'),
                      static_files=os.path.join(root, 'public'),
                      templates=[os.path.join(root, 'templates')])
+        # If the user defined custom paths, then use them instead of the
+        # default ones:
+        paths.update(self.paths)
+        self.paths = paths
                      
     def init_config(self, global_conf, app_conf):
         # Initialize config with the basic options
