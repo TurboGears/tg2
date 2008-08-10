@@ -1,3 +1,5 @@
+/* @override http://www.turbogears.org/2.0/docs/_static/tg.css */
+
 /**
  * Sphinx Doc Design
  */
@@ -44,6 +46,9 @@ div.sphinxsidebar {
 
 div.sphinxsidebar ul {
     color: #FFFFFF;
+    list-style-type: none;
+    padding: 0;
+    margin: 10px 0;
 }
 div.clearer {
     clear: both;
@@ -118,7 +123,7 @@ div.sphinxsidebar p {
 }
 
 div.sphinxsidebar p.topless {
-    margin: 5px 10px 10px 10px;
+    margin: 5px 0 10px 0;
 }
 
 div.sphinssidebar ul {
@@ -127,22 +132,28 @@ div.sphinssidebar ul {
     list-style: none;
     color: white;
 }
-
-div.sphinxsidebar ul ul,
 div.sphinxsidebar ul.want-points {
-    margin-left: -18px;
+    margin-left: 15px;
     list-style: circle;
 }
-
+div.sphinxsidebar ul ul ul ul,
+div.sphinxsidebar ul ul ul,
 div.sphinxsidebar ul ul {
     margin-top: 0;
+    margin-left: 15px;
     margin-bottom: 0;
 }
 
 div.sphinxsidebar a {
-    color: #ffffff;
+    color: #f2f2f2;
+    padding: 0.3em 0 0.3em 0.3em;
+    display: block;
 }
-
+div.sphinxsidebar a:hover {
+	background-color: #1368a7;
+	text-decoration: none;
+	color: #fff;
+}
 div.sphinxsidebar form {
     margin-top: 10px;
 }
