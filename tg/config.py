@@ -240,7 +240,6 @@ class AppConfig(Bunch):
         return app
     
     def add_static_file_middleware(self, app):
-        javascripts_app = StaticJavascripts()
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
         app = Cascade([static_app, app])
         return app
