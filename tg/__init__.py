@@ -46,9 +46,9 @@ Meanwhile Pylons provides the power and flexibility of the underlying core.
 And like Ubuntu, we don't intend to hide that power and flexibility from
 advanced users, but we know that they want things set up to just work too.
 
-Sensible defaults actually encourage code re-use within TurboGears because
-they make it possible for a group of TurboGears components to share assumptions
-about how things will work.
+Sensible defaults encourage code re-use within TurboGears because
+they make it possible for a group of TurboGears components to share 
+assumptions about how things will work.
 """
 from tg.controllers import TGController, redirect, url, use_wsgi_app
 from tg.decorators import validate, expose, override_template
@@ -57,15 +57,12 @@ from tg.flash import flash, get_flash, get_status
 import paste
 
 from pylons.wsgiapp import PylonsApp
-from pylons import tmpl_context 
-from pylons import g as app_globals
-from pylons import request
-from pylons import session
+from pylons import app_globals, config, request, response, tmpl_context, session
 
-from warnings import warn
+TGApp = PylonsApp
 
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
-    'overide_template', 'request', 'session','TurboGearsApplication', 
-    'use_wsgi_app'
+    'overide_template', 'request', 'response', 'session','TurboGearsApplication', 
+    'use_wsgi_app', 'TGApp'
 ]
