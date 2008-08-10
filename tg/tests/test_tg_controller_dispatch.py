@@ -164,7 +164,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/sub/redirect_me?target=../hello&name=ghi').follow()
         self.failUnless('Hello ghi' in resp)
     
-    #TODO: Make this test pass
     def _test_redirect_external(self):
         resp = self.app.get('/redirect_me?target=http://example.com')
         assert resp.status == 302 and dict(resp.headers)['location'] == 'http://example.com'

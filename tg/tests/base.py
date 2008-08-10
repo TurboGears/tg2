@@ -23,9 +23,12 @@ from pylons.testutil import ControllerWrap, SetupCacheGlobal
 from beaker.middleware import CacheMiddleware
 
 # TODO:
-# [ ] We need infrastructure to test the whole WSGI stack for internal tests.
+#     We need infrastructure to test the whole WSGI stack for internal tests.
 #     eg: currently we have no way to test repoze.tm integration except from
 #     quickstarted app's tests.
+#     We also need this to test the configuration system, since that is part 
+#     of the tg egg. 
+
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
