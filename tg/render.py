@@ -1,4 +1,4 @@
-from pylons import app_globals, config, session, tmpl_context
+from pylons import app_globals, config, helpers, session, tmpl_context, request, response
 import pylons.templating as templating
 import tg
 from tg.config import Bunch
@@ -119,12 +119,12 @@ def get_tg_vars():
         )
         
     root_vars = Bunch(
-        c=pylons.tmpl_context,
-        tmpl_context = pylons.tmpl_context,
-        response = pylons.response,
-        request = pylons.request,
-        helpers=pylons.helpers,
-        h=pylons.helpers,
+        c=tmpl_context,
+        tmpl_context = tmpl_context,
+        response = response,
+        request = request,
+        helpers=helpers,
+        h=helpers,
         tg=tg_vars
         )
     return root_vars
