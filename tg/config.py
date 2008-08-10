@@ -11,8 +11,7 @@ from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
 from pylons import config
-from pylons.middleware import ErrorHandler, StaticJavascripts, \
-    StatusCodeRedirect
+from pylons.middleware import ErrorHandler, StatusCodeRedirect
 from pylons.wsgiapp import PylonsApp
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -243,7 +242,7 @@ class AppConfig(Bunch):
     def add_static_file_middleware(self, app):
         javascripts_app = StaticJavascripts()
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
-        app = Cascade([static_app, javascripts_app, app])
+        app = Cascade([static_app, app])
         return app
 
     def commit_veto(self, environ, status, headers):
