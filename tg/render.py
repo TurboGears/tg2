@@ -115,10 +115,18 @@ def get_tg_vars():
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
-        request = tg.request)
-   
-    root_vars = {}
-    root_vars.update({'tg':tg_vars})
+        request = tg.request
+        )
+        
+    root_vars = Bunch(
+        c=pylons.tmpl_context,
+        tmpl_context = pylons.tmpl_context,
+        response = pylons.response,
+        request = pylons.request,
+        helpers=pylons.helpers,
+        h=pylons.helpers,
+        tg=tg_vars
+        )
     return root_vars
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
