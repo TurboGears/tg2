@@ -11,7 +11,7 @@ This would have allowed those pieces to grow independently of TurboGears, and
 would have allowed TurboGears to remain smaller and easier to develop and debug.
 
 TurboGears 0.5 release was just a few hundred lines of Python code, but it built
-on thousands of lines of code in other libraries.  Those libraries had alreay
+on thousands of lines of code in other libraries.  Those libraries had already
 been deployed, used, and tested, and were known to be "production ready." 
 
 TurboGears2 returns to that philosophy.  It is built on Pylons, but it brings

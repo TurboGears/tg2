@@ -81,7 +81,7 @@ Browse http://localhost:8080/hello to see the change.
 Hello World combines template with controller
 -----------------------------------------------
 
-So far we're getting somewhere, we've been returning plaintext for every incoming request. But you might have noticed how the default welcome page work. 
+So far we're getting somewhere, we've been returning plain text for every incoming request. But you might have noticed how the default welcome page work. 
 
 We can edit index template, use controllers to define new url's. But let's take it one step further and create yet another new URL, plug plug real templates into the controllers, and this time rather than returning a string, we'll return a dictionary:
 

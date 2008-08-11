@@ -14,7 +14,7 @@ Apache Deployment options:
 ---------------------------
 
 * `mod_wsgi and virtualenv <Deployment/modwsgi%2Bvirtualenv>`_ -- the 
-  mod_wsgi appache extension is a very efficient WSGI server, which provides 
+  mod_wsgi apache extension is a very efficient WSGI server, which provides 
   automatic process monitoring, load balancing for multi-process deployments,  
   as well as strong apache integration. 
 
@@ -30,8 +30,8 @@ Apache Deployment options:
 NGINX deployment
 -----------------
 
-Nginx is a very fast asyncronous web server that can be used in front of 
-turbogears 2 in very hight load envirnoments. 
+Nginx is a very fast asynchronous web server that can be used in front of 
+TurboGears 2 in very high load environments. 
 
 * load balancing proxy
 * NGNX modWSGI
@@ -47,7 +47,7 @@ Reference
 -----------
 
 
-You can also find recipies for mounting a turbogears app behind lots of other servers in the 1.0 docs.  Generally these should "just work" with TG2 as well.   The only exception is that the config file production.ini is slightly different. 
+You can also find recipes for mounting a Turbogears app behind lots of other servers in the 1.0 docs.  Generally these should "just work" with TG2 as well.   The only exception is that the config file production.ini is slightly different. 
 
  * http://docs.turbogears.org/1.0/Deployment
 

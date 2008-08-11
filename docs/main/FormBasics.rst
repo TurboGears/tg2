@@ -2,14 +2,14 @@ TurboGears Form handling overview:
 ===================================
 
 The first thing to say about TurboGears form handling is that we turn form
-submision values in to Controller params, and allow you to do whatever you 
+submission values in to Controller params, and allow you to do whatever you 
 want for form generation/submission in the templates. 
 
 So, you can always handle forms without using any of these tools, forms can be 
 coded up in your templates, and the values can be processed in your controller. 
 
 But creating forms, processing form results, and handling form errors is one of 
-the most common activites TG2 provides several tools to help you make forms 
+the most common activities TG2 provides several tools to help you make forms 
 with complex javascript enabled features quickly and easily, and to make 
 handling validation errors, and requesting updated information from your users 
 easy. 
@@ -21,7 +21,7 @@ There are three basic things that can be done to help manage HTML forms.
 
 #. Make it easy to HTML forms, perhaps with added stuff for fancy calendar 
    fields, etc. 
-#. Make it easy to validate the submited form contents, and transform 
+#. Make it easy to validate the submitted form contents, and transform 
    the strings returned by the browser into useful Python objects. 
 #. Make it easy to re-display form results with associated error messages. 
 
@@ -33,7 +33,7 @@ introspection+automatic form and validator generation can be provided by DBSproc
 
 We've integrated these things together so you easily create form objects, with 
 validators attached, and then use those objects to display the form, validate
-the results and to re-display forms with validation errors if nesssisary. 
+the results and to re-display forms with validation errors if necessary. 
 
 You can make a new form from a database table (using DBSprockets) like this::
 

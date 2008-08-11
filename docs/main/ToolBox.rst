@@ -3,7 +3,7 @@
 ToolBox
 ==========
 
-:Status: Work in progres
+:Status: Work in progress
 
 .. contents:: Table of Contents
     :depth: 2

@@ -53,7 +53,7 @@ The general way that Genshi works it that it allows you to add special attribute
 Available Processing Directives:
 ------------------------------------------
 
-Here's a list of all the Template Directives in genshi, along with a brief description. 
+Here's a list of all the Template Directives in Genshi, along with a brief description. 
 
 ======================= ======================
 Gensh Directive         Definition
@@ -62,11 +62,11 @@ Gensh Directive         Definition
 ``py:choose``           Used with py:when and py:otherwise to select one of several options to be rendered.
 ``py:when``             Used with py:choose -- displays an element and it's children when the condition is true.
 ``py:otherwise``        Used with py:when and py:choose, displays if non of the when clauses are true.
-``py:for``              Repeats the element (and it's children) for each item in some itterable
+``py:for``              Repeats the element (and it's children) for each item in some iterable
 ``py:with``             Lets you assign expressions to variables
 ``py:replace``          Replaces the element with the contents of the expression, stripping out the element itself.
 ``py:def``              Creates a re-usable "template function" that can be used to render template 
-                        snipits based on the arguments passed in. 
+                        snippets based on the arguments passed in. 
 ``py:match``            given an XPath expression, it finds and replaces every element in the 
                         template that matches the expression --  with the content of the element
                         containing the py:match.

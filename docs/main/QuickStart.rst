@@ -11,7 +11,7 @@ Quickstarting a TurboGears 2 project
 Now that you've got TurboGears installed. TurboGears 2 extends the 'paster' command line tool to provide a suite of tools for working with TurboGears 2 projects. A few will be touched upon in this tutorial, check the 'paster --help' command for a full listing.
 
 The very first tool you'll need is 'paster quickstart', which initializes a TurboGears 2 project.
-You can go to whatever directory you want and start a new turbogears 2 project by typing::
+You can go to whatever directory you want and start a new TurboGears 2 project by typing::
 
   $ paster quickstart
 

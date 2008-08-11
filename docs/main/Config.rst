@@ -51,11 +51,11 @@ to launch your app, and placed in in ``pylons.config``.
 
 In addition to the attributes on the ``base_config`` object there are a number of 
 methods which are used to setup the environment for you application, and to 
-create the actual turbogears WSGI application, and all the middleware you need.
+create the actual Turbogears WSGI application, and all the middleware you need.
 
 You can override these methods to further customize you application, for various
 advanced use cases, like adding custom middleware at arbitrary points in the 
-wsgi stack, or doing some unanticipated (by us) application environment 
+WSGI stack, or doing some unanticipated (by us) application environment 
 manipulation. 
 
 Setting up the base configuration for your app
@@ -111,10 +111,14 @@ One place where you'll have to be aware of how all of this works is when
 you programatically setup one TurboGears app inside another. 
 
 In that case, you'll need to create your own ``base_config`` like object to use
- when configuring the inside wsgi application instance. 
+when configuring the inside wsgi application instance. 
  
 Fortunately, this can be as simple as creating your own ``base_config`` object 
 from AppConfig(), creating your own app_conf and global dictionaries, and 
-calling m
+creating an environment loader::
+
+  load_environment = my_conf_object.make_load_environment()
+  make_wsgi_app = my_conf_object.setup_tg_wsgi_app(load_environment)
+  final_app = make_wsgi_app(global_conf, app_conf)
 
 

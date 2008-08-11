@@ -2,7 +2,7 @@ Writing controller methods
 ===========================
 
 The nerve center of your TurboGears application  is **the controller**. It 
-ultimately handles all user actions, because every http requests arrive here 
+ultimately handles all user actions, because every HTTP requests arrive here 
 first. The controller acts on the request and can call upon other TurboGears 
 components (the template engines, database layers, etc.) as its logic directs.
 
@@ -102,7 +102,7 @@ from.   If you're particularly astute, you'll have notice that you import this
 BaseController from the lib module of your own project, and not from TurboGears. 
 
 TurboGears provides a base TGController, but it's imported in lib folder of current project (HelloWorld/helloworld/lib). 
-So that you can modify it to suit the needs of your appication. For example you
+So that you can modify it to suit the needs of your application. For example you
 can define actions which will happen on every request, add parameters
 to every template call, and otherwise do what you need to the request on the way
 in, and on the way out. 
@@ -114,7 +114,7 @@ controllers.   The `@expose` decorator declairs that your method should be
 of the controller should be rendered.
 
 The other imports are there incase you do the internationalization,
-or use the http redirect function, validate inputs/outputs, or use the models.
+or use the HTTP redirect function, validate inputs/outputs, or use the models.
 
 ::
 
@@ -311,12 +311,12 @@ and TurboGears 2.
   URL with underscores when looking up a method name.  If this feature is 
   important to you let us know on the mailing list. 
 
-* TurboGears2 implements a Quxote inspired lookup method which allows you to do 
+* TurboGears2 implements a Quixote inspired lookup method which allows you to do 
   customized dispatch at any time.
 
 * Redirect does not know "where you are" in the object tree and move you on 
   from there, it just joins the URL the user requested, with the absolute
-  or relative URL you provide.   Using abosolute URLs is recommended. 
+  or relative URL you provide.   Using absolute URLs is recommended. 
 
 The new TG2 Lookup Method
 --------------------------
@@ -374,6 +374,6 @@ editing hierarchical data (/client/1/project/2/task/3/edit).
 The benefit over "default" handlers is that you *return* an object that acts 
 as a sub-controller and continue traversing rather than *being* a controller 
 and stopping traversal altogether.  This allows you to use actual objects with 
-datain your controllers. 
+data in your controllers. 
 
 Plus, it makes RESTful URLs much easier than they were in TurboGears 1.

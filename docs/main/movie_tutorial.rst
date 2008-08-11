@@ -126,9 +126,9 @@ at your data::
           return "<Movie('%s','%s', '%s')>" % (self.title, self.year, self.description)
 
 
-If you're following along with the tuturial, you'll want to make sure you 
-custom __init__ method.  We'll use this to creae new Movie instances, and set 
-their data all at once througout the rest of the tutorial. 
+If you're following along with the tutorial, you'll want to make sure you 
+custom __init__ method.  We'll use this to create new Movie instances, and set 
+their data all at once throughout the rest of the tutorial. 
 
 
 If you don't define the __init__ method. You will need to update the properties 

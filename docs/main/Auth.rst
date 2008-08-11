@@ -1,11 +1,11 @@
 tg.ext.repoze.who is a plugable system for authorization/authentication based
-on sqlalchemy, which is backwards compatable with the TG1 Identity auth system.
+on sqlalchemy, which is backwards compatible with the TG1 Identity auth system.
 
 It's based on repoze.who which is designed just for authentication (thus the 
 who monicker). The basic design is that the user's name, groups and 
 permissions are looked up on the way in, and added to the request on the way 
 in to TurboGears.  tg.ext.repoze.who also provides some decorators that 
-check permissions for you, which have the same API as the turbogears one 
+check permissions for you, which have the same API as the Turbogears one 
 identity module. 
 
 To use this just answer `yes` during the `paster quickstart` process when it
@@ -53,7 +53,7 @@ There authorize module contains various predicate checker functions:
 * has_all_permissions -- has all the permissions listed
 * has_any_permission -- has any of the listed permissions
 
-There are also a couple of predicates you can use to agrigate the above permissions. 
+There are also a couple of predicates you can use to aggregate the above permissions. 
 
 * All -- used to combine the above predicate checks requiring that all of them are true. 
 * Any -- same as All, but only requires that one of the checks return true. 

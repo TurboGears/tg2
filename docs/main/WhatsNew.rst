@@ -91,7 +91,7 @@ Here's a full list of the old command line tools and their new equivalents
 Project layout changes 
 ------------------------
 
-Both controllers.py and model.py have been replaced by the controllers and model folders.  In other words thery are now Python packages, in just the way they were in TurboGears 1 if you used the '--template tgbig' option with quickstart. 
+Both controllers.py and model.py have been replaced by the controllers and model folders.  In other words there are now Python packages, in just the way they were in TurboGears 1 if you used the '--template tgbig' option with quickstart. 
 
   * your root controller is not in ``controllers.py`` -> it has moved to ``controllers/root.py``
   * ``model.py`` -> ``model/__init__.py``
