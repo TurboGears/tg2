@@ -94,19 +94,16 @@ class AppConfig(Bunch):
         config['pylons.h'] = self.package.lib.helpers
     
     def setup_sa_auth_backend(self):
-        defaults = {'user_class':self.model.User, 
-                              'group_class':self.model.Group, 
-                              'permission_class':self.model.Permission,
-                              'users_table':'tg_user',
-                              'groups_table':'tg_group',
-                              'permissions_table':'tg_permission',
-                              'password_encryption_method':'sha1',
-                              'form_plugin': None
-                      }
-        if config.get('sa_auth'):
-            config['sa_auth'] = defaults.update(config['sa_auth'])
-        if not config['sa_auth']:
-            config['sa_auth'] = defaults
+        defaults = {'users_table':'tg_user',
+                    'groups_table':'tg_group',
+                    'permissions_table':'tg_permission',
+                    'password_encryption_method':'sha1',
+                    'form_plugin': None
+                   }
+        # The developer must have defined a 'sa_auth' section, because
+        # values such as the User, Group or Permission classes must be
+        # explicitly defined.
+        config['sa_auth'] = defaults.update(config['sa_auth'])
     
     def setup_mako_renderer(self):
         # Create the Mako TemplateLookup, with the default auto-escaping
@@ -217,7 +214,7 @@ class AppConfig(Bunch):
 
         auth = self.sa_auth
 
-        app = make_who_middleware(app, config, auth.user, 
+        app = make_who_middleware(app, config, auth.user_class, 
                                   auth.user_criterion, 
                                   auth.user_id_column, 
                                   auth.dbsession,
