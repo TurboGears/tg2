@@ -70,7 +70,8 @@ class Decoration(object):
         content_type = best_match(self.engines.keys(), accept_types)
         engine, template, exclude_names = self.engines[content_type]
         
-        if 'charset' not in content_type: 
+        if 'charset' not in content_type and (
+           content_type.startswith('text') or content_type  == 'application/json'):
             content_type = '%s; charset=utf-8' % content_type
         
         return content_type, engine, template, exclude_names

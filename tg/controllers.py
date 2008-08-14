@@ -29,6 +29,9 @@ from webob.exc import HTTPForbidden
 
 log = logging.getLogger(__name__)
 
+# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't override pylons.request.content_type
+CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
+
 def _configured_engines():
     """
     Returns a set containing the names of the currently configured template
@@ -206,8 +209,8 @@ class DecoratedController(WSGIController):
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
-        # Always set content type
-        pylons.response.headers['Content-Type'] = content_type
+        if content_type != CUSTOM_CONTENT_TYPE:
+            pylons.response.headers['Content-Type'] = content_type
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()

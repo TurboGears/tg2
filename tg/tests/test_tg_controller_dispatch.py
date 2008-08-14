@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TGController
+from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
 from tg.decorators import expose, validate
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -122,6 +122,12 @@ class BasicTGController(TGController):
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
         
+    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    def custom_content_type(self):
+        pylons.response.headers['content-type'] = 'image/png'
+        return 'PNG'
+
+
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
@@ -212,4 +218,9 @@ class TestTGController(TestWSGIController):
     def test_tg_format_param(self):
         resp = self.app.get('/stacked_expose/?tg_format=application/json')
         assert '{"got_json' in resp.body
+
+    def test_custom_content_type(self):
+        resp = self.app.get('/custom_content_type')
+        self.assertEqual('image/png', dict(resp.headers)['content-type'])
+        assert resp.body == 'PNG'
 
