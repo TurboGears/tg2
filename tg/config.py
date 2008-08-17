@@ -112,7 +112,7 @@ class AppConfig(Bunch):
 
         config['pylons.app_globals'].mako_lookup = TemplateLookup(
             directories=self.paths['templates'],
-            module_directory=os.path.join(app_conf['cache_dir'], 'templates'),
+            module_directory=self.paths['templates'],
             input_encoding='utf-8', output_encoding='utf-8',
             imports=['from webhelpers.html import escape'],
             default_filters=['escape'])
