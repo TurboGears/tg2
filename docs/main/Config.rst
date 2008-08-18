@@ -76,6 +76,7 @@ to do::
 
   base_config.default_renderer = 'mako'
   base_config.renderers.append('mako')
+  
 
 Configuration in the INI files
 -------------------------------------------------

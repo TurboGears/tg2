@@ -24,6 +24,7 @@ from pylons.controllers.util import abort
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException, 
     HTTPClientError)
 from tg.render import get_tg_vars
+from tg.render import render as tg_render
 from tw.api import Widget
 from webob.exc import HTTPForbidden
 
@@ -214,8 +215,11 @@ class DecoratedController(WSGIController):
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
-        buffet = pylons.buffet._current_obj()
-
+        use_legacy_renderer = pylons.config.get("use_legacy_renderer", False)
+        
+        if use_legacy_renderer: 
+            buffet = pylons.buffet._current_obj()
+        
         if template_name is None:
             return response
 
@@ -229,11 +233,12 @@ class DecoratedController(WSGIController):
                     setattr(tmpl_context, key, item)
 
         # Prepare the engine, if it's not already been prepared.
-        if engine_name not in _configured_engines():
-            from pylons import config
-            template_options = dict(config).get('buffet.template_options', {})
-            buffet.prepare(engine_name, **template_options)
-            _configured_engines().add(engine_name)
+        if use_legacy_renderer:
+            if engine_name not in _configured_engines():
+                from pylons import config
+                template_options = dict(config).get('buffet.template_options', {})
+                buffet.prepare(engine_name, **template_options)
+                _configured_engines().add(engine_name)
 
         #if there is an identity, push it to the pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
@@ -258,10 +263,15 @@ class DecoratedController(WSGIController):
             testing_variables['controller_output'] = response
 
         # Render the result.
-        result = buffet.render(engine_name=engine_name,
+        if use_legacy_renderer:
+            result = buffet.render(engine_name=engine_name,
                                template_name=template_name,
                                include_pylons_variables=False,
                                namespace=namespace)
+        else: 
+            result = tg_render(template_vars=namespace,
+                      template_engine=engine_name,
+                      template_name=template_name)
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):

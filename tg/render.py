@@ -132,18 +132,20 @@ def get_tg_vars():
     return root_vars
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
-    render_function = app_globals['renderers'].get(template_engine, None)
+    
+    render_function = config['render_functions'].get(template_engine)
+    
     if not template_vars: 
         template_vars={}
-    tmpl_vars.update(get_tg_vars())
+    template_vars.update(get_tg_vars())
     if not render_function:
-        render_function = config['tg.default_renderer']
-        render_function(template_name, template_vars, **kwargs)
+        render_function = config['render_functions'][config['default_renderer']]
+    return render_function(template_name, template_vars, **kwargs)
 
 def render_genshi(template_name, template_vars, **kwargs):
     """Render a the template_vars with the Genshi template"""
     template_vars['XML'] = XML
-    return templating.render_genshi(template_name, extra_vars=templat_vars, 
+    return templating.render_genshi(template_name, extra_vars=template_vars, 
                                     **kwargs)
 
 def render_mako(template_name, template_vars, **kwargs):

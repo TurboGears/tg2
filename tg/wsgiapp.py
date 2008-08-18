@@ -1,9 +1,9 @@
-from pylons.wsgiapp import PylonsApp
+import sys
+from pylons.wsgiapp import PylonsApp, class_name_from_module_name
 from pylons.util import class_name_from_module_name
 import sys
 
 class TGApp(PylonsApp):
-
     def find_controller(self, controller):
         """Locates a controller by attempting to import it then grab
         the SomeController instance from the imported module.
@@ -25,9 +25,9 @@ class TGApp(PylonsApp):
 
         #attach the package
         pylons_package = self.config['pylons.package']
-        full_module_name = pylons_package+'.'+controller_path.replace('/', '.')+'.'+controller.replace('/', '.')
-
-        print full_module_name
+        full_module_name = (pylons_package+'.' + 
+                            controller_path.replace('/', '.') +
+                            '.' + controller.replace('/', '.'))
 
         # Hide the traceback here if the import fails (bad syntax and such)
         __traceback_hide__ = 'before_and_this'

@@ -54,11 +54,12 @@ class AppConfig(Bunch):
         self.auth_backend = None
         self.serve_static = True
         self.paths = Bunch()
+        self.render_functions = Bunch()
     
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
-        paths = dict(root=root,
+        paths = Bunch(root=root,
                      controllers=os.path.join(root, 'controllers'),
                      static_files=os.path.join(root, 'public'),
                      templates=[os.path.join(root, 'templates')])
@@ -66,7 +67,7 @@ class AppConfig(Bunch):
         # default ones:
         paths.update(self.paths)
         self.paths = paths
-                     
+
     def init_config(self, global_conf, app_conf):
         # Initialize config with the basic options
         config.init_app(global_conf, app_conf, 
@@ -116,7 +117,8 @@ class AppConfig(Bunch):
             input_encoding='utf-8', output_encoding='utf-8',
             imports=['from webhelpers.html import escape'],
             default_filters=['escape'])
-        config['pylons.app_globals'].renderer_functions = render_mako
+        
+        self.renderer_functions.mako = render_mako
         
     def setup_genshi_renderer(self):
         # Create the Genshi TemplateLoader
@@ -126,11 +128,12 @@ class AppConfig(Bunch):
         def template_loaded(template):
             "Plug-in our i18n function to Genshi."
             genshi.template.filters.insert(0, Translator(ugettext))
+        loader = TemplateLoader(search_path=self.paths.templates, 
+                                auto_reload=True)
+                                
+        config['pylons.app_globals'].genshi_loader = loader
 
-        config['pylons.app_globals'].genshi_loader = TemplateLoader(
-            self.paths['templates'], auto_reload=True)
-
-        config['pylons.app_globals'].renderer_functions = render_genshi
+        self.render_functions.genshi = render_genshi
     
     def setup_jinja_renderer(self):
         # Create the Jinja Environment
@@ -142,7 +145,7 @@ class AppConfig(Bunch):
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
 
-        config['pylons.app_globals'].renderer_functionsloa = render_jinja
+        self.renderer_functions.jinja = render_jinja
     
     def setup_default_renderer(self):
         #This is specific to buffet, will not be needed later
@@ -176,14 +179,14 @@ class AppConfig(Bunch):
             self.init_config(global_conf, app_conf)
             self.setup_routes()
             self.setup_helpers_and_globals()
+            
             if self.auth_backend == "sqlalchemy": 
                 self.setup_sa_auth_backend()
 
             if 'mako' in self.renderers:
                 self.setup_mako_renderer()
 
-            if 'genshi' in self.renderers:
-                self.setup_genshi_renderer()
+            self.setup_genshi_renderer()
             
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
