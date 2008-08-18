@@ -215,7 +215,7 @@ class DecoratedController(WSGIController):
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
-        use_legacy_renderer = pylons.config.get("use_legacy_renderer", False)
+        use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
         
         if use_legacy_renderer: 
             buffet = pylons.buffet._current_obj()
