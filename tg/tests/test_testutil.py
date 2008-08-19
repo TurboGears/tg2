@@ -1,7 +1,4 @@
-"""Tests for the testutil module
-
-
-"""
+"""Tests for the testutil module"""
 
 from unittest import TestCase
 
@@ -15,8 +12,8 @@ from tg.tests.fixtures import model
 class BaseDBTest(DBTest):
     """This is the same as DBTest, except that its parent is not called.
     
-    It just sets the call_dad equals to True, so that we can test this class;
-    it'd be impossible to test it otherwise.
+    It just sets the parameter call_dad to False, so that we can test this
+    class; it'd be impossible to test it otherwise.
     
     """
     def __init__(self, *args, **kwargs):
