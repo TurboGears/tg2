@@ -94,7 +94,7 @@ Tree View
 ```````````
  How to create a simple tree view of an unordered list where the branches can be expanded or collapsed to present a good view of a document tree structure. This widget is based on the jQuery Treeview Plugin.
 
-`(TreeView Tutorial) <Cookbook/TreeView.html>`_
+`(TreeView Tutorial) <Cookbook/JQueryTreeView.html>`_
 
 
 Ajax Graphs
