@@ -1,7 +1,7 @@
 from pylons import app_globals, config, session, tmpl_context, request, response
 import pylons.templating as templating
 import tg
-from tg.config import Bunch
+from tg.configuration import Bunch
 from genshi import XML
 from urllib import quote_plus
 
