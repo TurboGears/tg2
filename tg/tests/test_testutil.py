@@ -9,78 +9,38 @@ import transaction
 from tg.testutil import DBTest
 from tg.tests.fixtures import model
 
-class BaseDBTest(DBTest):
-    """This is the same as DBTest, except that its parent is not called.
+
+# Ideally, we would have defined several different descendants of DBTest,
+# in order to test its behavior in different situations, but there seem to be
+# a problem in unittests and grand-grandchildren of TestCase won't work. You
+# may try this code if you want: http://paste.turbogears.org/paste/4721
+# or http://paste.turbogears.org/paste/4724
+
+class BaseModelTest(DBTest):
+    database = create_engine("sqlite:///:memory:")
+    model = model
+
+
+class TestGroup(BaseModelTest):
+    """Test case for the Group model.
     
-    It just sets the parameter call_dad to False, so that we can test this
-    class; it'd be impossible to test it otherwise.
+    This should tell us whether the setUp() and tearDown() of DBTest work as
+    expected.
     
     """
-    def __init__(self, *args, **kwargs):
-        super(BaseDBTest, self).__init__(False, *args, **kwargs)
-
-
-class EmptyTestCase(BaseDBTest):
-    pass
-
-
-class DatabaseYesModelNo(BaseDBTest):
-    database = create_engine("sqlite:///:memory:")
-
-
-class DatabaseNoModelYes(BaseDBTest):
-    model = model
-
-
-class ValidDBTest(BaseDBTest):
-    database = create_engine("sqlite:///:memory:")
-    model = model
-
-
-class TestDatabaseBaseTesting(TestCase):
-    """Test case for DBTest"""
     
-    def _create_row(self, value, test):
-        model.init_model(ValidDBTest.database)
-        test.setUp()
-        
-        grp = model.Group()
-        grp.group_name = value
-    
-        model.DBSession.save(grp)
+    def test_group_creation(self):
+        group = model.Group()
+        group.group_name = u"turbogears"
+        group.display_name = u"The TurboGears Team"
+        model.DBSession.save(group)
         model.DBSession.flush()
         transaction.commit()
     
-    def test_no_database_no_model(self):
-        """The database and model to be tested must be defined"""
-        self.assertRaises(AssertionError, EmptyTestCase)
-    
-    def test_no_database(self):
-        """The database to be tested must be defined"""
-        self.assertRaises(AssertionError, DatabaseYesModelNo)
-    
-    def test_no_model(self):
-        """The model to be tested must be defined"""
-        self.assertRaises(AssertionError, DatabaseNoModelYes)
-    
-    def test_valid_descendant(self):
-        """Everything is OK if and only if both the database and the model
-        are defined"""
-        ValidDBTest()
-    
-    def test_setup(self):
-        """After the setup I must be able to insert rows"""
-        test = ValidDBTest()
-        self._create_row("developers", test)
-    
-    def test_teardown(self):
-        """After the tearDown the tables must not exist"""
-        test = ValidDBTest()
-        self._create_row("directors", test)
-        test.tearDown()
-        
-        self.assertRaises(DBAPIError,
-                          model.DBSession.query(model.Group).filter(
-                                model.Group.group_name=="directors").first
-                          )
-    
+    def test_this_group_was_already_removed(self):
+        group = model.Group()
+        group.group_name = u"turbogears"
+        group.display_name = u"The TurboGears Team"
+        model.DBSession.save(group)
+        model.DBSession.flush()
+        transaction.commit()
