@@ -52,6 +52,7 @@ assumptions about how things will work.
 """
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, use_wsgi_app
+from tg.configuration import config
 from tg.decorators import validate, expose, override_template
 from tg.flash import flash, get_flash, get_status
 
