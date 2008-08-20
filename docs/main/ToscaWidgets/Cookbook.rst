@@ -8,12 +8,18 @@ ToscaWidgets Cookbook
 .. toctree::
    :maxdepth: 2
    
-   Cookbook/ActiveForm
-   Cookbook/DynamicSelect
-   Cookbook/FlexiGrid
+   Cookbook/ExtTreeView
+   Cookbook/ItemSelector
+   Cookbook/SingleSelectCombo
    Cookbook/AutoComplete
+   Cookbook/FlexiGrid
+   Cookbook/JQueryAjaxForm
+   Cookbook/JQueryTreeView
+   Cookbook/JSUnit
+   Cookbook/ActiveForm
    Cookbook/PasswordValidation
    Cookbook/ReCaptcha
+   Cookbook/DynamicSelect
    
 Javascript Library Specific Widgets
 -----------------------------------------
@@ -82,7 +88,7 @@ Flot
 ````````````
  How to create dynamic graphs using the powerful Flot library.
 
- `(Flot Tutorial) <Cookbook/Flot.html>`_
+TODO: Write XXX 
 
 
  .. image:: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Cookbook/TreeView?action=AttachFile&do=get&target=treeview.png
@@ -101,7 +107,7 @@ Ajax Graphs
 `````````````
  How to add an ajax graph to your system using tw.jquery and flot.
 
- `(FlotWidget Tutorial) <Cookbook/FlotWidget.html>`_
+TODO: Write XXX 
 
  
  .. image :: http://docs.turbogears.org/2.0/RoughDocs/ToscaWidgets/Using?action=AttachFile&do=get&target=stars.png
@@ -111,7 +117,7 @@ Ajax Star Rating
 ````````````````
  How to a simple star rating widget to your application.
 
- `(StarRating Tutorial) <../Using.html>`_
+TODO: Write XXX 
 
 Prototype
 ~~~~~~~~~
@@ -151,20 +157,20 @@ Ajax Related Select Fields
 ``````````````````````````````
  How to create select fields which change based on the choices made on other select fields. 
 
- `(Related SelectShuttle Tutorial) <Cookbook/RelatedSelectShuttle.html>`_
+TODO: Write XXX 
 
 Ajax Progress Bar
 `````````````````
   How to create a progress bar with server-side progress indicator
 
- `(ProgressBar Tutorial) <Cookbook/ProgressBar.html>`_
+TODO: Write XXX 
 
 Ajax File Upload with Progress Bar
 `````````````````````````````````````
  
  How to create a file upload with a progress bar.
 
- `(FileProgressBar Tutorial) <Cookbook/FileProgressBar.html>`_
+TODO: Write XXX 
 
 tw.forms
 --------
@@ -209,4 +215,4 @@ Tabber
 
  How to easily add Tabbed Browsing to your website.
  
- `(Tabber Tutorial) <Cookbook/TabbedBrowsing.html>`_
+TODO: Write XXX 
