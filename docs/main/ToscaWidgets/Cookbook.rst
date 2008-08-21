@@ -9,8 +9,8 @@ ToscaWidgets Cookbook
    :maxdepth: 2
    
    Cookbook/ExtTreeView
-   Cookbook/ItemSelector
-   Cookbook/SingleSelectCombo
+   Cookbook/ExtItemSelector
+   Cookbook/ExtSingleSelectCombo
    Cookbook/AutoComplete
    Cookbook/FlexiGrid
    Cookbook/JQueryAjaxForm

@@ -99,10 +99,15 @@ Development Tools
    main/CommandLine
    main/Profile
 
-   main/RoughDocs/CreateDatabase
-   main/RoughDocs/BootStrap
-   main/ToscaWidgets/Using
-   main/SimpleWidgetForm
+
+TG2 Extensions
+==============
+
+.. toctree::
+   :maxdepth: 2
+
+   main/Extensions/SilverPlate/index
+   main/Extensions/Geo/index
 
 
 Other TG Tools
