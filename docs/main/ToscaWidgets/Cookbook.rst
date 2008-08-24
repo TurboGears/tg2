@@ -20,6 +20,7 @@ ToscaWidgets Cookbook
    Cookbook/PasswordValidation
    Cookbook/ReCaptcha
    Cookbook/DynamicSelect
+   Cookbook/OpenLayersMap
    
 Javascript Library Specific Widgets
 -----------------------------------------
@@ -216,3 +217,15 @@ Tabber
  How to easily add Tabbed Browsing to your website.
  
 TODO: Write XXX 
+
+
+OpenLayers
+~~~~~~~~~~
+
+OpenLayers Map
+``````````````
+ How to create a web map using OpenLayers Javascript Toolkit..
+
+ `(OpenLayersMap Tutorial) <Cookbook/OpenLayersMap.html>`_
+
+
