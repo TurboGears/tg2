@@ -25,7 +25,7 @@ TurboGears 1.1:
     * Template engines: Genshi
     * URL Dispatching: Object dispatch
     * Form Handling: ToscaWidgets
-    
+
 The zen of TurboGears is::
 
     Keep simple things simple and complex things possible
@@ -47,19 +47,19 @@ And like Ubuntu, we don't intend to hide that power and flexibility from
 advanced users, but we know that they want things set up to just work too.
 
 Sensible defaults encourage code re-use within TurboGears because
-they make it possible for a group of TurboGears components to share 
+they make it possible for a group of TurboGears components to share
 assumptions about how things will work.
 """
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, use_wsgi_app
 from tg.configuration import config
-from tg.decorators import validate, expose, override_template
+from tg.decorators import validate, expose, override_template, paginate
 from tg.flash import flash, get_flash, get_status
 
 from pylons import g, request, response, tmpl_context, session
 
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
-    'overide_template', 'request', 'response', 'session','TurboGearsApplication', 
+    'overide_template', 'request', 'response', 'session','TurboGearsApplication',
     'use_wsgi_app', 'TGApp', 'app_globals'
 ]

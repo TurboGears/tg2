@@ -1,12 +1,21 @@
 """Decorators use by the TurboGears controllers
 
-These decorators are not traditonal wrappers.  They  are much simplified from the 
-turbogears 1 decorators, because all they do is regester attributes on 
-the functions they wrap, and then the DecoratedController provides the hooks 
+These decorators are not traditonal wrappers.  They  are much simplified from the
+turbogears 1 decorators, because all they do is regester attributes on
+the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators."""
 
 import formencode
 from paste.util.mimeparse import best_match
+
+from webob.multidict import MultiDict
+from webhelpers.paginate import Page
+from tg.config import Bunch
+from functools import partial
+# this can't be tg, as we are circular importing then!
+from pylons import request
+from pylons import tmpl_context as c
+
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -49,7 +58,7 @@ class Decoration(object):
         from JSONification, and other 'automatic' engines which don't
         require a template.
         """
-        
+
         if content_type is None:
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
@@ -69,11 +78,11 @@ class Decoration(object):
             accept_types = request.headers.get('accept', '*/*')
         content_type = best_match(self.engines.keys(), accept_types)
         engine, template, exclude_names = self.engines[content_type]
-        
+
         if 'charset' not in content_type and (
            content_type.startswith('text') or content_type  == 'application/json'):
             content_type = '%s; charset=utf-8' % content_type
-        
+
         return content_type, engine, template, exclude_names
 
     def register_hook(self, hook_name, func):
@@ -89,7 +98,7 @@ class Decoration(object):
 
 
 class _hook_decorator(object):
-    """SuperClass for all the specific TG2 hook validators. 
+    """SuperClass for all the specific TG2 hook validators.
     """
     # must be overridden by a particular hook
     hook_name = None
@@ -120,9 +129,9 @@ class before_render(_hook_decorator):
 
 class after_render(_hook_decorator):
     """A list of callables to be run after the template is rendered.
-    
+
     Will be run before it is returned returned up the WSGI stack"""
-    
+
     hook_name = 'after_render'
 
 
@@ -176,8 +185,8 @@ class expose(object):
         elif ':' in template:
             engine, template = template.split(':', 1)
         elif template:
-            # Use the default templating engine from the config 
-            from pylons import config 
+            # Use the default templating engine from the config
+            from pylons import config
             engine = config['buffet.template_engines'][0]['engine']
         else:
             engine, template = None, None
@@ -200,8 +209,8 @@ class expose(object):
         return func
 
 def override_template(controller, template):
-    """Use overide_template in a controller in order to change the 
-    template that will be used to render the response dictionary 
+    """Use overide_template in a controller in order to change the
+    template that will be used to render the response dictionary
     dynamically."""
     if hasattr(controller, 'decoration'):
         decoration = controller.decoration
@@ -211,7 +220,7 @@ def override_template(controller, template):
         engines = decoration.engines
     else:
         return
-    
+
     text_engine = engines.get('text/html')
     template = template.split(':')
     template.extend(text_engine[2:])
@@ -220,25 +229,25 @@ def override_template(controller, template):
 
 class validate(object):
     """Regesters which validators ought to be applied
-    
-    If you want to validate the contents of your form, 
+
+    If you want to validate the contents of your form,
     you can use the ``@validate()`` decorator to regester
-    the validators that ought to be called.   
-    
+    the validators that ought to be called.
+
     :Parameters:
       validators
-        Pass in a dictionary of FormEncode validators. 
-        The keys should match the form field names. 
+        Pass in a dictionary of FormEncode validators.
+        The keys should match the form field names.
       error_handler
         Pass in the controller method which shoudl be used
         to handle any form errors
       form
         Pass in a ToscaWidget based form with validators
-        
-    The first positional parameter can either be a dictonary of validators, 
+
+    The first positional parameter can either be a dictonary of validators,
     a FormEncode schema validator, or a callable which acts like a FormEncode
-    validator. 
-    
+    validator.
+
     """
     def __init__(self, validators=None, error_handler=None, form=None):
         if form:
@@ -251,3 +260,72 @@ class validate(object):
         deco = Decoration.get_decoration(func)
         deco.validation = self
         return func
+
+
+def paginate(name, items_per_page=10, use_prefix=False):
+    """
+    Paginate a given collection.
+
+    This decorator is mainly exposing the functionality
+    of webhelpers.paginate.
+
+    To render the actual pager, use
+
+      ${c.paginators.<name>.pager()}
+
+    where c is the tmpl_context.
+
+
+    :Parameters:
+      name
+        the collection to be paginated.
+      items_per_page
+        the number of items to be rendered. Defaults to 10
+      use_prefix
+        if True, the parameters the paginate
+        decorator renders and reacts to are prefixed with
+        "name_". This allows for multi-pagination.
+
+    """
+    prefix = ""
+    if use_prefix:
+        prefix = name + "_"
+    own_parameters = dict(
+        page="%spage" % prefix,
+        items_per_page="%sitems_per_page" % prefix
+        )
+    #@decorator
+    def _d(f):
+        def _w(*args, **kwargs):
+            page = int(kwargs.pop(own_parameters["page"], 1))
+            real_items_per_page = int(kwargs.pop(own_parameters['items_per_page'], items_per_page))
+            res = f(*args, **kwargs)
+            if isinstance(res, dict) and name in res:
+                additional_parameters = MultiDict()
+                for key, value in request.str_params.iteritems():
+                    if key not in own_parameters:
+                        additional_parameters.add(key, value)
+                collection = res[name]
+                page = Page(
+                    collection,
+                    page,
+                    items_per_page=real_items_per_page,
+                    **additional_parameters.dict_of_lists()
+                    )
+                # wrap the pager so that it will render
+                # the proper page-parameter
+                page.pager = partial(page.pager, page_param=own_parameters["page"])
+                res[name] = page
+                # this is a bit strange - it appears
+                # as if c returns an empty
+                # string for everything it dosen't know.
+                # I didn't find that documented, so I
+                # just put this in here and hope it works.
+                if type(c.paginators) == str:
+                    c.paginators = Bunch()
+                c.paginators[name] = page
+            return res
+        return _w
+    return _d
+
+
