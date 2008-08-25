@@ -7,7 +7,7 @@ tg.ext.geo MapFish Tutorial
 Introduction
 ------------
 
-MapFish is a Web Application Framework for developing Geographic Applications. It has two components, a server component and a client component. The client component comprises a Javascript mapping toolkit based on ExtJS and OpenLayers, whereas the server component is based on the Pylons web framework. The MapFish server uses a set of paster commands for creating controller and model code that make use of the following components for providing a fully editable GIS vector layer functionality::
+MapFish is a Web Application Framework for developing Geographic Applications. It has two components, a server component and a client component. The client component comprises a Javascript mapping toolkit based on ExtJS and OpenLayers, whereas the server component is based on the Pylons web framework. The MapFish server uses a set of paster commands for creating controller and model code that make use of the following components for providing a fully editable GIS vector layer functionality.
 
     * SQLAlchemyGeom : Introduces a new data type (Geometry) in SQLAlchemy
     * Shapely : A python GIS library for manipulation of 2D geospatial geometries
