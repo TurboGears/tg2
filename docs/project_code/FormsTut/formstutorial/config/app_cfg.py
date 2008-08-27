@@ -1,4 +1,4 @@
-from tg.config import AppConfig, Bunch
+from tg.configuration import AppConfig, Bunch
 from tg.environment import make_load_environment
 import formstutorial
 from formstutorial import model

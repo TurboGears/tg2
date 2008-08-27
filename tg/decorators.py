@@ -10,7 +10,7 @@ from paste.util.mimeparse import best_match
 
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
-from tg.config import Bunch
+from tg.configuration import Bunch
 from functools import partial
 # this can't be tg, as we are circular importing then!
 from pylons import request
