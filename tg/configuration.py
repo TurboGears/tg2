@@ -4,7 +4,7 @@ import logging
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 
-from pylons import config
+from pylons import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
@@ -18,6 +18,59 @@ from routes.middleware import RoutesMiddleware
 from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
+
+def get_partial_dict(prefix, dictionary):
+    new_dict = Bunch([(key.split(".")[1] ,dictionary[key]) 
+                       for key in dictionary.iterkeys() 
+                       if prefix in key])
+    if new_dict:
+        return new_dict
+    else: 
+        return AttributeError
+
+class ConfigWrapper(dict):
+    """Simple wrapper for the pylons config object that provides attribute 
+    style access to the config dictionary."""
+    
+    def __init__(self, dict_to_wrap):
+        print dict_to_wrap
+        self.__dict__['config_proxy'] = dict_to_wrap
+        
+    def __getitem__(self, key):
+        return  self.config_proxy.current_conf()[key]
+        
+    def __setitem__(self, key, value):
+        self.config_proxy.current_conf()[key] = value
+
+    def __getattr__(self, key):
+        try: 
+            return self.config_proxy.__getattribute__(key)
+        except AttributeError:
+            try:
+                return self.config_proxy.current_conf()[key]
+            except KeyError:
+                get_partial_dict(key, self.config_proxy.current_conf())
+    
+    def __setattr__(self, key, value):
+        self.config_proxy.current_conf()[key] = value
+    
+    def __delattr__(self, name):
+           try:
+               del self.config_proxy.current_conf()[name]
+           except KeyError:
+               raise AttributeError(name)
+    
+    def update(self, new_dict):
+        self.config_proxy.current_conf().update(new_dict)
+        
+    def __str__(self):
+        return self.config_proxy.__str__()
+    
+    @property
+    def pylons(self):
+        return get_partial_dict('pylons', self.config_proxy.current_conf())
+
+config = ConfigWrapper(pylons_config)
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
@@ -70,7 +123,7 @@ class AppConfig(Bunch):
 
     def init_config(self, global_conf, app_conf):
         # Initialize config with the basic options
-        config.init_app(global_conf, app_conf, 
+        pylons_config.init_app(global_conf, app_conf, 
                         package=self.package.__name__,
                         paths=self.paths)
         config.update(self)
@@ -157,7 +210,11 @@ class AppConfig(Bunch):
     def setup_sqlalchemy(self):
         # Setup SQLAlchemy database engine
         from sqlalchemy import engine_from_config
-        engine = engine_from_config(config, 'sqlalchemy.')
+        print "*"*80
+        print "config:"
+        print config
+        print "*"*80
+        engine = engine_from_config(pylons_config, 'sqlalchemy.')
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
@@ -183,10 +240,11 @@ class AppConfig(Bunch):
             if self.auth_backend == "sqlalchemy": 
                 self.setup_sa_auth_backend()
 
+            if 'genshi' in self.renderers: 
+                self.setup_genshi_renderer()
+
             if 'mako' in self.renderers:
                 self.setup_mako_renderer()
-
-            self.setup_genshi_renderer()
             
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
