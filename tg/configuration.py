@@ -12,6 +12,7 @@ from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
 from pylons.middleware import ErrorHandler, StatusCodeRedirect
 from tg import TGApp
+from tg.util import Bunch, get_partial_dict
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 
@@ -19,51 +20,29 @@ from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
-def get_partial_dict(prefix, dictionary):
-    """Given a dictionary and a prefix, return a Bunch, with just items
-    that start with prefix
-    
-    The returned dictionary will have 'prefix.' stripped so:
-     
-    get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3})
-    
-    would return: 
-    
-    {'xyz':1,'zyx':2}
-    """
-    
-    match = prefix + "."
-    
-    new_dict = Bunch([(key.lstrip(match) ,dictionary[key]) 
-                       for key in dictionary.iterkeys() 
-                       if key.startswith(match)]) 
-    if new_dict:
-        return new_dict
-    else: 
-        return AttributeError
 
 class PylonsConfigWrapper(dict):
     """Simple wrapper for the pylons config object that provides attribute 
     style access to the pylons config dictionary.
-    
+
     When used in TG, items with keys like "pylons.response_options" will 
     be available via config.pylons.response_options as well as 
     config['pylons.response_options'].
-    
+
     This class works by proxying all attribute and dictionary access to
     the underlying pylons config object, which is a application local 
     proxy that allows for multiple pylons/tg2 applicatoins to live
     in the same process simultaniously, but to always get the right 
     config data for the app that's requesting them. 
     """
-    
+
     def __init__(self, dict_to_wrap):
         """Initialize by passing in a dictionary to be wrapped"""
         self.__dict__['config_proxy'] = dict_to_wrap
-        
+
     def __getitem__(self, key):
         return  self.config_proxy.current_conf()[key]
-        
+
     def __setitem__(self, key, value):
         self.config_proxy.current_conf()[key] = value
 
@@ -79,50 +58,30 @@ class PylonsConfigWrapper(dict):
                 return self.config_proxy.current_conf()[key]
             except KeyError:
                 get_partial_dict(key, self.config_proxy.current_conf())
-    
+
     def __setattr__(self, key, value):
         self.config_proxy.current_conf()[key] = value
-    
+
     def __delattr__(self, name):
            try:
                del self.config_proxy.current_conf()[name]
            except KeyError:
                raise AttributeError(name)
-    
+
     def update(self, new_dict):
         self.config_proxy.current_conf().update(new_dict)
-        
+
     def __str__(self):
         return self.config_proxy.__str__()
-    
+
     @property
     def pylons(self):
         return get_partial_dict('pylons', self.config_proxy.current_conf())
 
+
 #Create a config object that has attribute style lookup built in. 
 config = PylonsConfigWrapper(pylons_config)
 
-class Bunch(dict):
-    """A dictionary that provides attribute-style access."""
-
-    def __getitem__(self, key):
-        return  dict.__getitem__(self, key)
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            return get_partial_dict(name, self)
-            #if both getitem, and partial-dict matches fail we're done
-            raise AttributeError(name)
-
-    __setattr__ = dict.__setitem__
-
-    def __delattr__(self, name):
-        try:
-            del self[name]
-        except KeyError:
-            raise AttributeError(name)
 
 class AppConfig(Bunch):
     """Class to store application configuration
@@ -130,7 +89,7 @@ class AppConfig(Bunch):
     This class should have configuration/setup information 
     that is NECESSARY for proper application function.  
     Deployment specific configuration information should go in 
-    the config files (eg: development.ini or production.ini)
+    the config files (eg: dvelopment.ini or production.ini)
     
     AppConfig instances have a number of methods that are meant to be 
     overridden by users who wish to have finer grained controll over 
