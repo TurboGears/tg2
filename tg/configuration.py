@@ -110,6 +110,8 @@ class Bunch(dict):
         try:
             return self[name]
         except KeyError:
+            return get_partial_dict(name, self)
+            #if both getitem, and partial-dict matches fail we're done
             raise AttributeError(name)
 
     __setattr__ = dict.__setitem__
@@ -255,7 +257,8 @@ class AppConfig(Bunch):
             """Configure the Pylons environment via the ``pylons.config``
             object
             """
-
+            global_conf=Bunch(global_conf)
+            app_conf=Bunch(app_conf)
             self.setup_paths()
             self.init_config(global_conf, app_conf)
             self.setup_routes()
