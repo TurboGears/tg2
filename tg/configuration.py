@@ -33,6 +33,10 @@ def get_partial_dict(prefix, dictionary):
     """
     
     #TODO: Handle keys like "z.y.z"
+    
+    #TODO: Handle partial prefix matching better. 
+    #      ('s1.' and 's2.' when prefix is s)
+    
     new_dict = Bunch([(key.split(".")[1] ,dictionary[key]) 
                        for key in dictionary.iterkeys() 
                        if prefix+'.' in key]) 
