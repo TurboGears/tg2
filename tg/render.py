@@ -1,5 +1,6 @@
-from pylons import app_globals, config, h, session, tmpl_context, request, response
-import pylons.templating as templating
+from pylons import (app_globals, config, session, tmpl_context, request, 
+                    response, templating)
+from pylons import h as pylons_helpers
 import tg
 from tg.configuration import Bunch
 from genshi import XML
@@ -118,7 +119,7 @@ def get_tg_vars():
         request = tg.request
         )
         
-    helpers = h=config.get('pylons.h') or h._current_obj()
+    helpers = config.get('pylons.h') or pylons_helpers._current_obj()
     
     root_vars = Bunch(
         c=tmpl_context,
@@ -130,6 +131,9 @@ def get_tg_vars():
         tg=tg_vars
         )
     return root_vars
+    
+def genshi_template_loader():
+    pass
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
     
