@@ -20,20 +20,44 @@ from tw.api import make_middleware as tw_middleware
 log = logging.getLogger(__name__)
 
 def get_partial_dict(prefix, dictionary):
+    """Given a dictionary and a prefix, return a Bunch, with just items
+    that start with prefix
+    
+    The returned dictionary will have 'prefix.' stripped so:
+     
+    get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3})
+    
+    would return: 
+    
+    {'xyz':1,'zyx':2}
+    """
+    
+    #TODO: Handle keys like "z.y.z"
     new_dict = Bunch([(key.split(".")[1] ,dictionary[key]) 
                        for key in dictionary.iterkeys() 
-                       if prefix in key])
+                       if prefix+'.' in key]) 
     if new_dict:
         return new_dict
     else: 
         return AttributeError
 
-class ConfigWrapper(dict):
+class DictWrapper(dict):
     """Simple wrapper for the pylons config object that provides attribute 
-    style access to the config dictionary."""
+    style access to the pylons config dictionary.
+    
+    When used in TG, items with keys like "pylons.response_options" will 
+    be available via config.pylons.response_options as well as 
+    config['pylons.response_options'].
+    
+    This class works by proxying all attribute and dictionary access to
+    the underlying pylons config object, which is a application local 
+    proxy that allows for multiple pylons/tg2 applicatoins to live
+    in the same process simultaniously, but to always get the right 
+    config data for the app that's requesting them. 
+    """
     
     def __init__(self, dict_to_wrap):
-        print dict_to_wrap
+        """Initialize by passing in a dictionary to be wrapped"""
         self.__dict__['config_proxy'] = dict_to_wrap
         
     def __getitem__(self, key):
@@ -43,6 +67,10 @@ class ConfigWrapper(dict):
         self.config_proxy.current_conf()[key] = value
 
     def __getattr__(self, key):
+        """Tries to get the attribute off the wrapped object first, 
+        if that does not work, tries dictionary lookup, and finally
+        tries to grab all keys that start with the attribute and
+        return sub-dictionary, that can be looked up. """
         try: 
             return self.config_proxy.__getattribute__(key)
         except AttributeError:
@@ -70,7 +98,7 @@ class ConfigWrapper(dict):
     def pylons(self):
         return get_partial_dict('pylons', self.config_proxy.current_conf())
 
-config = ConfigWrapper(pylons_config)
+config = DictWrapper(pylons_config)
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
@@ -210,10 +238,6 @@ class AppConfig(Bunch):
     def setup_sqlalchemy(self):
         # Setup SQLAlchemy database engine
         from sqlalchemy import engine_from_config
-        print "*"*80
-        print "config:"
-        print config
-        print "*"*80
         engine = engine_from_config(pylons_config, 'sqlalchemy.')
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
