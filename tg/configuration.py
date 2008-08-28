@@ -42,7 +42,7 @@ def get_partial_dict(prefix, dictionary):
     else: 
         return AttributeError
 
-class DictWrapper(dict):
+class PylonsConfigWrapper(dict):
     """Simple wrapper for the pylons config object that provides attribute 
     style access to the pylons config dictionary.
     
@@ -99,7 +99,8 @@ class DictWrapper(dict):
     def pylons(self):
         return get_partial_dict('pylons', self.config_proxy.current_conf())
 
-config = DictWrapper(pylons_config)
+#Create a config object that has attribute style lookup built in. 
+config = PylonsConfigWrapper(pylons_config)
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
@@ -129,16 +130,30 @@ class AppConfig(Bunch):
     This class should have configuration/setup information 
     that is NECESSARY for proper application function.  
     Deployment specific configuration information should go in 
-    the config files (eg: development.ini or production.ini)" 
+    the config files (eg: development.ini or production.ini)
+    
+    AppConfig instances have a number of methods that are meant to be 
+    overridden by users who wish to have finer grained controll over 
+    the setup of the WSGI envirnment in which their applcation is run. 
+    
+    This is the place to configure custom routes, transaction handling, 
+    error handling, etc. 
     """
     
     def __init__(self):
+        """Creates some configuration defaults"""
+        
+        #Create a few bunches we know we'll use
+        self.paths = Bunch()
+        self.render_functions = Bunch()
+        
+        #Set individual defaults
         self.stand_alone = True
         self.default_renderer = 'genshi'
         self.auth_backend = None
         self.serve_static = True
-        self.paths = Bunch()
-        self.render_functions = Bunch()
+        self.use_legacy_render = True
+
     
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
@@ -153,7 +168,14 @@ class AppConfig(Bunch):
         self.paths = paths
 
     def init_config(self, global_conf, app_conf):
-        # Initialize config with the basic options
+        """Initialize the config object.
+        
+        tg.config is a proxy for pylons.config that allows attribute style
+        access, so it's automatically setup when we create the poylons config
+        
+        Besides basic initialization,  this method copies all the values 
+        in base_config  into the ``tg.config`` object. 
+        """
         pylons_config.init_app(global_conf, app_conf, 
                         package=self.package.__name__,
                         paths=self.paths)
@@ -191,7 +213,7 @@ class AppConfig(Bunch):
         config['sa_auth'] = defaults.update(config['sa_auth'])
     
     def setup_mako_renderer(self):
-        # Create the Mako TemplateLookup, with the default auto-escaping
+        """Setup a renderer and loader for mako templates"""
         from mako.lookup import TemplateLookup
         from tg.render import render_mako
 
@@ -205,7 +227,7 @@ class AppConfig(Bunch):
         self.renderer_functions.mako = render_mako
         
     def setup_genshi_renderer(self):
-        # Create the Genshi TemplateLoader
+        """Setup a renderer and loader for Genshi templates"""
         from genshi.template import TemplateLoader
         from tg.render import render_genshi
 
@@ -220,7 +242,7 @@ class AppConfig(Bunch):
         self.render_functions.genshi = render_genshi
     
     def setup_jinja_renderer(self):
-        # Create the Jinja Environment
+        """Setup a renderer and loader for Jinja templates"""
         from jinja import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
@@ -232,6 +254,13 @@ class AppConfig(Bunch):
         self.renderer_functions.jinja = render_jinja
     
     def setup_default_renderer(self):
+        """Setup template defaults in the buffed plugin
+        
+        This is only used when use_legacy_renderer is set to True
+        
+        And it will not depricated in the next major turbogears 
+        release.
+        """
         #This is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
         template_location = '%s.templates' %self.package.__name__
@@ -239,7 +268,7 @@ class AppConfig(Bunch):
                                    template_location,  {})
     
     def setup_sqlalchemy(self):
-        # Setup SQLAlchemy database engine
+        """Setup SQLAlchemy database engine"""
         from sqlalchemy import engine_from_config
         engine = engine_from_config(pylons_config, 'sqlalchemy.')
         config['pylons.app_globals'].sa_engine = engine
@@ -286,7 +315,7 @@ class AppConfig(Bunch):
 
 
     def add_error_middleware(self, global_conf, app):
-        # Handle Python exceptions
+        """Adds middleware which handles errors and exceptions"""
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
         # Display error documents for 401, 403, 404 status codes (and
@@ -298,7 +327,7 @@ class AppConfig(Bunch):
         return app
 
     def add_auth_middleware(self, app):
-        # configure identity Middleware
+        """Configure authorization/authentication"""
         from tg.ext.repoze.who.middleware import make_who_middleware
 
         auth = self.sa_auth
@@ -311,12 +340,14 @@ class AppConfig(Bunch):
         return app
     
     def add_core_middleware(self, app):    
+        """Adds support for routes dispatch, sessions, and caching"""
         app = RoutesMiddleware(app, config['routes.map'])
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app
     
     def add_tosca_middleware(self, app):
+        """Configure the ToscaWidgets middleware"""
         app = tw_middleware(app, {
             'toscawidgets.framework.default_view': 
             self.default_renderer,
@@ -341,10 +372,28 @@ class AppConfig(Bunch):
         return not (200 <= int(status.split()[0]) < 400)
 
     def add_tm_middleware(self, app):
+        """Sets up the transaction managment middleware
+        
+        To abort a transaction inside a TG2 app::
+        
+          import transaction
+          transaction.doom()
+        
+        By default http error responses also roll back transactions, 
+        but this behavior can be overridden by overiding 
+        base_config.commit_veto
+        """
         from repoze.tm import make_tm
         return make_tm(app, self.commit_veto)
 
     def add_dbsession_remover_middleware(self, app):
+        """Sets up middleware that cleans up the sqlalchmy session
+        
+        The default behavior of TG2 is to clean up the session on 
+        every request.  Only overide this method if you know what you
+        are doing!
+        
+        """
         def remover(environ, start_response):
             try:
                 return app(environ, start_response)
