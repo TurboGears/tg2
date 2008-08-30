@@ -54,13 +54,15 @@ Create a TileCache config in the file tilecache.cfg in the project folder and ad
     url=http://labs.metacarta.com/wms/vmap0
     extension=png
 
-Add the following lines in the tilecache.cfg file to add a Mapnik Tiles layer for the OpenStreetMap (OSM) data::
+Sections for all the required tilecache layers should be added to this file. For example, the following lines should be added in order to have a Mapnik Tiles layer using the OpenStreetMap (OSM) data::
 
     # Rendering OpenStreetMap data with Mapnik
     [osm]
     type=Mapnik
     mapfile=/home/user/osm-mapnik/osm.xml
     spherical_mercator=true
+
+Mapnik is a C++ toolkit with python bindings for rendering maps. OpenStreetMap is a free geographic data set containing streetmaps. A document describing the rendering of OSM maps using Mapnik can be found `here <http://wiki.openstreetmap.org/index.php/Mapnik>_`.
 
 
 Creating the Tiles Controller
@@ -70,18 +72,20 @@ Once the tilecache.cfg file is ready, the new controller containing TileCache WS
 
     (tg2env)$ paster geo-tilecache tiles
 
-where tiles is the new controller. Now edit the root controller (package/controllers/root.py) to mount the controller::
+where tiles is the new controller. Now edit the root controller (package/controllers/root.py) to import and mount the controller::
 
+
+    from tilesapp.controllers.tiles import TilesController
 
     class RootController(BaseController):
         tiles = TilesController()
 
 The tiles controller should now be accessible at the url location `http://<host>:<port>/tiles`.
 
-Pointing the browser to the above url should show the TileServer Capabilities document, which an xml document describing the service.
+Start the server and point your browser to the above url. You should be able to see the TileCache Capabilities document, which an xml document describing the service.
 
 
-Accessing the Tiles in an OpenLayers Map
+Rendering the Tiles in an OpenLayers Map
 ----------------------------------------
 
 
@@ -131,6 +135,8 @@ For a TMS Layer (e.g. OSM tiles in Spherical Mercator Projection) add the follow
                 new OpenLayers.Projection("EPSG:900913")), 15);
     }
     </script>
+
+Download OpenLayers javascript mapping toolkit from `www.openlayers.org <http://www.openlayers.org/>_` and unzip / untar the archive. Copy the OpenLayers.js file and the img folder in the archive to project/public/javascript folder.
 
 
 Adding the Style Code
