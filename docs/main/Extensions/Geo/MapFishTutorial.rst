@@ -29,9 +29,14 @@ It is assumed that a fresh virtualenv has been created and TG2 installed followi
 
     (tg2env)$ easy_install -i http://www.turbogears.org/2.0/downloads/current/index tg.ext.geo
 
-Make sure that tw.dojo and tw.openlayers is installed::
+Make sure that tw.openlayers is installed::
 
     (tg2env)$ easy_install tw.openlayers
+
+MapFish uses a PostGIS backend for storing Geographic data. Install instructions for PostGIS can be found `here <http://postgis.refractions.net/documentation/>_`. Additionally, we need to install the following::
+
+    (tg2env)$ easy_install -i http://www.turbogears.org/2.0/downloads/current/index egenix-mx-base
+    (tg2env)$ easy_install -i http://www.turbogears.org/2.0/downloads/current/index psycopg2 
 
 
 Creating a New TG2 App
@@ -63,7 +68,7 @@ Create a MapFish Layers config in the file layers.ini in the project folder and 
     geomcolumn=the_geom
     idcolumn=Integer:gid
 
-In the above example, a layer named countries would be created. The *singular* param is used for creating the model class with the first letter capitalized. In this case the model class would be *Country* . The *db* should be a the PostGIS database and *table* the table name to be mapped to the model class using reflection (SQLAlchemy autoload). *epsg* should have the EPSG (European Petroleum Survey Group) code for the desired datum and projection for the geometry data. *geocolumn* should have the name of the coulmn containing the geometry data. idcolumn should contain the data type and name of the primary key column.
+In the above example, a layer named countries would be created. The *singular* param is used for creating the model class with the first letter capitalized. In this case the model class would be *Country* . The *db* should be a the PostGIS database and *table* the table name to be mapped to the model class using database metadata reflection (SQLAlchemy autoload feature). *epsg* should have the EPSG (European Petroleum Survey Group) code for the desired datum and projection for the geometry data. *geomcolumn* should have the name of the coulmn containing the geometry data. *idcolumn* should contain the data type and name of the primary key column.
 
 
 Creating the Geo Model and Controller
@@ -73,8 +78,10 @@ Once the layers.ini file has been created in the project folder, the model and c
 
     (tg2env)$ paster geo-layer countries
 
-where countries is the new controller and should match the layer name defined in the layers.ini file. Now edit the root controller (package/controllers/root.py) to mount the new controller::
+where countries is the new controller and should match the layer name defined in the layers.ini file. Now edit the root controller (package/controllers/root.py) to import the new controller and mount it inside the RootController class::
 
+
+    from vectorapp.controllers.countries import CountriesController
 
     class RootController(BaseController):
         countries = CountriesController()
@@ -87,7 +94,7 @@ Pointing the browser to the above url should show up all objects (records) in th
 Displaying the Vector Data as a Layer in an OpenLayers Map
 ----------------------------------------------------------
 
-We are now ready to access the vector data from the PostGIS spatial database using the new countries controller. We now need to use the tw.openlayers ToscaWidgets Library to create a map and use the data returned by the countries controller as a vector layer in the map. We would also make use of some OpenLayers based javascript code to select feature on mouse hover and display them in a separate sidebar.
+We are now ready to access the vector data from the PostGIS spatial database using the new countries controller. We now need to use the tw.openlayers ToscaWidgets Library to create a map and use the data returned by the countries controller as a vector layer in the map. We would also make use of some OpenLayers based javascript code to select feature on mouse hover and display them in the sidebar div.
 
 
 Initialize the Widgets in Controller
