@@ -22,5 +22,6 @@ class DBTest(TestCase):
         self.model.metadata.create_all(self.database)
     
     def tearDown(self):
+        self.model.DBSession.rollback()
         self.model.metadata.drop_all(self.database)
         
