@@ -40,7 +40,7 @@ For example the widget is instantiated as::
 
 Once the Widget is instantiated it can be added to an existing form::
 
-   from toscawidgets.widgtets.forms import TableForm
+   from tw.forms import TableForm
 
    myForm = TableForm(id='myForm', children=[autoField])
 

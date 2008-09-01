@@ -44,9 +44,9 @@ Once that is done we can move onto the actual coding aspect.
 The first step is to make sure you have all of the imports that you need.  If you are already using forms and/or validation you may already have some of these::
 
  from tw.forms import TableForm
- from tw.twrecaptcha import ReCaptchaWidget
- from tw.twrecaptcha.validator import ReCaptchaValidator
- from toscawidgets.api import WidgetsList
+ from tw.recaptcha import ReCaptchaWidget
+ from tw.recaptcha.validator import ReCaptchaValidator
+ from tw.api import WidgetsList
  from formencode import Schema, NoDefault
  from formencode.validators import NotEmpty
 
