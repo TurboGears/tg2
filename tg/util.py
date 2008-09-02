@@ -91,3 +91,14 @@ class Bunch(dict):
             del self[name]
         except KeyError:
             raise AttributeError(name)
+
+
+def partial(*args, **create_time_kwds):
+    func = args[0]
+    create_time_args = args[1:]
+    def curried_function(*call_time_args, **call_time_kwds):
+        args = create_time_args + call_time_args
+        kwds = create_time_kwds.copy()
+        kwds.update(call_time_kwds)
+        return func(*args, **kwds)
+    return curried_function
