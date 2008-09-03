@@ -3,7 +3,7 @@
 Provides the BaseController class for subclassing.
 """
 from tg import TGController, tmpl_context
-from pylons.templating import render_genshi as render
+from tg.render import render
 
 import formstutorial.model as model
 
@@ -30,10 +30,4 @@ class BaseController(TGController):
         # the request is routed to. This routing information is
         # available in environ['pylons.routes_dict']
         
-        try:
-            return TGController.__call__(self, environ, start_response)
-        finally:
-            #after everything is done clear out the Database Session
-            #to eliminate possible cross request DBSession polution.
-            model.DBSession.remove()
-        
+        return TGController.__call__(self, environ, start_response)

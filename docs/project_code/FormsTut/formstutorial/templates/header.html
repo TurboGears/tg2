@@ -9,9 +9,11 @@
     <div class="headtext">
         Welcome to TurboGears 2
     </div>
+    <py:if test="defined('page')">
     <div class="currentpage">
      Now Viewing: <span py:replace="page"/>
      </div>
+    </py:if>
   </div>
-</py:def>    
+</py:def>
 </html>

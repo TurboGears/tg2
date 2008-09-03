@@ -1,4 +1,4 @@
-from ${package}.lib.base import *
+from formstutorial.lib.base import *
 
 class TemplateController(BaseController):
 

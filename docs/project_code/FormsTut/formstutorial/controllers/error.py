@@ -1,7 +1,7 @@
 import os.path
 
 import paste.fileapp
-from pylons import request
+from tg import request
 from pylons.controllers.util import forward
 from pylons.middleware import error_document_template, media_path
 

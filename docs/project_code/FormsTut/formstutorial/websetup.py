@@ -1,8 +1,9 @@
 """Setup the FormsTut application"""
 import logging
 
+import transaction
 from paste.deploy import appconfig
-from pylons import config
+from tg import config
 
 from formstutorial.config.environment import load_environment
 
@@ -18,5 +19,5 @@ def setup_config(command, filename, section, vars):
     model.metadata.create_all(bind=config['pylons.app_globals'].sa_engine)
 
 
-    model.DBSession.commit()
+    transaction.commit()
     print "Successfully setup"

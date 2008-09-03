@@ -30,3 +30,4 @@ formstutorial/templates/__init__.py
 formstutorial/tests/__init__.py
 formstutorial/tests/test_models.py
 formstutorial/tests/functional/__init__.py
+formstutorial/tests/functional/test_root.py
