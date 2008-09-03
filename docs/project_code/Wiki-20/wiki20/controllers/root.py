@@ -1,8 +1,8 @@
 """Main Controller"""
 from wiki20.lib.base import BaseController
+import tg
 from tg import expose, flash
 from pylons.i18n import ugettext as _
-import tg
 from tg import redirect, validate
 from wiki20.model import DBSession, metadata
 #from dbsprockets.dbmechanic.frameworks.tg2 import DBMechanic
@@ -36,23 +36,22 @@ class RootController(BaseController):
 
     @expose('wiki20.templates.about')
     def about(self):
-        return dict()
+        return dict(page='about')
 
     @expose()
     def save(self, pagename, data, submit):
         page = DBSession.query(Page).filter_by(pagename=pagename).one()
         page.data = data
-        DBSession.commit() # Tells database to commit changes permanently
         redirect("/" + pagename)
-        
+
     @expose("wiki20.templates.edit")
     def notfound(self, pagename):
         page = Page(pagename=pagename, data="")
         DBSession.save(page)
-        DBSession.commit()
         return dict(wikipage=page)
-        
+
     @expose("wiki20.templates.pagelist")
     def pagelist(self):
         pages = [page.pagename for page in DBSession.query(Page)]
         return dict(pages=pages)
+

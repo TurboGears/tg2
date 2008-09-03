@@ -18,6 +18,7 @@ wiki20/config/middleware.py
 wiki20/controllers/__init__.py
 wiki20/controllers/error.py
 wiki20/controllers/root.py
+wiki20/controllers/secc.py
 wiki20/controllers/template.py
 wiki20/lib/__init__.py
 wiki20/lib/app_globals.py
@@ -29,3 +30,4 @@ wiki20/templates/__init__.py
 wiki20/tests/__init__.py
 wiki20/tests/test_models.py
 wiki20/tests/functional/__init__.py
+wiki20/tests/functional/test_root.py

@@ -1,4 +1,3 @@
-from pylons import config
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, relation
 from wiki20.model import metadata
@@ -6,9 +5,9 @@ from wiki20.model import metadata
 # Normal tables may be defined and mapped at module level.
  
 foo_table = Table("Foo", metadata,
-     Column("id", types.Integer, primary_key=True),
-     Column("bar", types.String(255), nullable=False),
-     )
+    Column("id", Integer, primary_key=True),
+    Column("bar", String(255), nullable=False),
+    )
 
 class Foo(object):
     def __init__(self, **kw):
@@ -18,7 +17,7 @@ class Foo(object):
 
 mapper(Foo, foo_table)
 
-Classes for reflected tables may be defined here, but the table and
-mapping itself must be done in the init_model function.
+# Classes for reflected tables may be defined here, but the table and
+# mapping itself must be done in the init_model function.
 
 

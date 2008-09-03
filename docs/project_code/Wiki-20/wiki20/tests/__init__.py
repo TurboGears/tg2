@@ -13,7 +13,7 @@ import sys
 from unittest import TestCase
 
 import pkg_resources
-import paste.fixture
+import webtest
 import paste.script.appinstall
 from paste.deploy import loadapp
 from routes import url_for
@@ -36,5 +36,5 @@ class TestController(TestCase):
 
     def __init__(self, *args, **kwargs):
         wsgiapp = loadapp('config:test.ini', relative_to=conf_dir)
-        self.app = paste.fixture.TestApp(wsgiapp)
+        self.app = webtest.TestApp(wsgiapp)
         TestCase.__init__(self, *args, **kwargs)

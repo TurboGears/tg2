@@ -1,5 +1,4 @@
 from tg.configuration import AppConfig, Bunch
-from tg.environment import make_load_environment
 import wiki20
 from wiki20 import model
 from wiki20.lib import app_globals, helpers
@@ -16,3 +15,5 @@ base_config.renderers.append('genshi')
 #Configure the base SQLALchemy Setup
 base_config.use_sqlalchemy = True
 base_config.model = wiki20.model
+base_config.DBSession = wiki20.model.DBSession
+

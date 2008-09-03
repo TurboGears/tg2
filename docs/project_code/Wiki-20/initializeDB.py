@@ -15,6 +15,3 @@ page = Page("FrontPage", "initial data")
 # Save the page object to the in memory DBSession
 DBSession.save(page)
 
-# Use commit() to write all in-memory changes to the database.
-DBSession.commit()
-

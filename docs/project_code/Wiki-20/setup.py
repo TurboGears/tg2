@@ -14,11 +14,13 @@ setup(
     #url='',
     install_requires=[
         "TurboGears2",
-        "ToscaWidgets >= 0.9.1"
+        "ToscaWidgets >= 0.9.1",
+        "zope.sqlalchemy",
         ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     test_suite='nose.collector',
+    tests_require=['webtest', 'beautifulsoup'],
     package_data={'wiki20': ['i18n/*/LC_MESSAGES/*.mo',
                                  'templates/*/*',
                                  'public/*/*']},

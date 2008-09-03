@@ -1,5 +1,6 @@
 <html xmlns:py="http://genshi.edgewall.org/"
-      xmlns:xi="http://www.w3.org/2001/XInclude">
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
 <py:def function="header">
   <div id="header">
     <div class="alogo">
@@ -8,6 +9,11 @@
     <div class="headtext">
         Welcome to TurboGears 2
     </div>
+    <py:if test="defined('page')">
+    <div class="currentpage">
+     Now Viewing: <span py:replace="page"/>
+     </div>
+    </py:if>
   </div>
-</py:def>    
+</py:def>
 </html>

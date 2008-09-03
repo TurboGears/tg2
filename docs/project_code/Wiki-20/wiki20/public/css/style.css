@@ -46,7 +46,7 @@ h1,h2,h3,h4,h5,h6 {
 
 .sidebar {
   border: 1px solid #cce;
-  background-color: #ffffab;
+  background-color: #eee;
   margin: 0.5em;
   margin-left: 1.5em;
   padding: 1em;
@@ -111,11 +111,11 @@ h1,h2,h3,h4,h5,h6 {
 #header {
   height: 125px;
   width: 777px;
-  background: blue URL('../images/strype.png') repeat-x;
+  background: blue URL('../images/strype2.png') repeat-y;
   border-left: 1px solid #aaa;
   border-right: 1px solid #aaa;
   margin: 0 auto 0 auto;
-  color: white;
+  color: black;
 }
 
 .alogo {
@@ -136,14 +136,22 @@ h1,h2,h3,h4,h5,h6 {
   margin-bottom: 0px;
 }
 
-.curentpage {
-  color: white;
+.currentpage {
+ /* color: white;
   font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
   font-size: 18px;
   padding-top: 20px;
   padding-right: 20px;
   margin-bottom: 0px;
-  float: left;
+  float: left;*/
+  margin: 0 auto 0.5em auto;
+  padding: 5px 5px 5px 50px;
+  background: #cec URL('../images/ok.png') left center no-repeat;
+  border: 1px solid #9c9;
+  width: 400px;
+  font-size: 120%;
+  font-weight: bolder;
+
 }
 
 #footer {
