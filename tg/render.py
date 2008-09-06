@@ -153,11 +153,11 @@ def render_genshi(template_name, template_vars, **kwargs):
                                     **kwargs)
 
 def render_mako(template_name, template_vars, **kwargs):
-    tmpl_vars.update(get_tg_vars())
+    template_vars.update(get_tg_vars())
     return templating.render_mako(template_name, extra_vars=template_vars,
                                   **kwargs)
     
 def render_jinja(template_name, template_vars, **kwargs):
-    tmpl_vars.update(get_tg_vars())
+    template_vars.update(get_tg_vars())
     return templating.render_jinja(template_name, extra_vars=template_vars,
                                    **kwargs)
