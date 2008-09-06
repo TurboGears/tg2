@@ -183,7 +183,7 @@ class AppConfig(Bunch):
             imports=['from webhelpers.html import escape'],
             default_filters=['escape'])
         
-        self.renderer_functions.mako = render_mako
+        self.render_functions.mako = render_mako
         
     def setup_genshi_renderer(self):
         """Setup a renderer and loader for Genshi templates"""
@@ -210,7 +210,7 @@ class AppConfig(Bunch):
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
 
-        self.renderer_functions.jinja = render_jinja
+        self.render_functions.jinja = render_jinja
     
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin
