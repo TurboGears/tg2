@@ -5,6 +5,7 @@ import tg
 from tg.configuration import Bunch
 from genshi import XML
 from urllib import quote_plus
+from itertools import cycle as icycle
 
 class cycle:
     """
