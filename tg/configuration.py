@@ -111,7 +111,7 @@ class AppConfig(Bunch):
         self.default_renderer = 'genshi'
         self.auth_backend = None
         self.serve_static = True
-        self.use_legacy_render = True
+        self.use_legacy_renderer = True
 
     
     def setup_paths(self):
@@ -265,7 +265,8 @@ class AppConfig(Bunch):
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
 
-            self.setup_default_renderer()
+            if self.use_legacy_renderer:
+                self.setup_default_renderer()
             
             if self.use_sqlalchemy:
                 self.setup_sqlalchemy()
