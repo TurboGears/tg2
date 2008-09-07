@@ -68,7 +68,7 @@ def get_partial_dict(prefix, dictionary):
     if new_dict:
         return new_dict
     else: 
-        return AttributeError
+        raise AttributeError
 
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
