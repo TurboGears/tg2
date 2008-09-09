@@ -22,18 +22,18 @@ log = logging.getLogger(__name__)
 
 
 class PylonsConfigWrapper(dict):
-    """Simple wrapper for the pylons config object that provides attribute 
+    """Simple wrapper for the pylons config object that provides attribute
     style access to the pylons config dictionary.
 
-    When used in TG, items with keys like "pylons.response_options" will 
-    be available via config.pylons.response_options as well as 
+    When used in TG, items with keys like "pylons.response_options" will
+    be available via config.pylons.response_options as well as
     config['pylons.response_options'].
 
     This class works by proxying all attribute and dictionary access to
-    the underlying pylons config object, which is a application local 
+    the underlying pylons config object, which is a application local
     proxy that allows for multiple pylons/tg2 applicatoins to live
-    in the same process simultaniously, but to always get the right 
-    config data for the app that's requesting them. 
+    in the same process simultaniously, but to always get the right
+    config data for the app that's requesting them.
     """
 
     def __init__(self, dict_to_wrap):
@@ -47,11 +47,11 @@ class PylonsConfigWrapper(dict):
         self.config_proxy.current_conf()[key] = value
 
     def __getattr__(self, key):
-        """Tries to get the attribute off the wrapped object first, 
+        """Tries to get the attribute off the wrapped object first,
         if that does not work, tries dictionary lookup, and finally
         tries to grab all keys that start with the attribute and
         return sub-dictionary, that can be looked up. """
-        try: 
+        try:
             return self.config_proxy.__getattribute__(key)
         except AttributeError:
             try:
@@ -63,10 +63,10 @@ class PylonsConfigWrapper(dict):
         self.config_proxy.current_conf()[key] = value
 
     def __delattr__(self, name):
-           try:
-               del self.config_proxy.current_conf()[name]
-           except KeyError:
-               raise AttributeError(name)
+        try:
+            del self.config_proxy.current_conf()[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def update(self, new_dict):
         self.config_proxy.current_conf().update(new_dict)
@@ -79,33 +79,33 @@ class PylonsConfigWrapper(dict):
         return get_partial_dict('pylons', self.config_proxy.current_conf())
 
 
-#Create a config object that has attribute style lookup built in. 
+#Create a config object that has attribute style lookup built in.
 config = PylonsConfigWrapper(pylons_config)
 
 
 class AppConfig(Bunch):
     """Class to store application configuration
-    
-    This class should have configuration/setup information 
-    that is NECESSARY for proper application function.  
-    Deployment specific configuration information should go in 
+
+    This class should have configuration/setup information
+    that is NECESSARY for proper application function.
+    Deployment specific configuration information should go in
     the config files (eg: dvelopment.ini or production.ini)
-    
-    AppConfig instances have a number of methods that are meant to be 
-    overridden by users who wish to have finer grained controll over 
-    the setup of the WSGI envirnment in which their applcation is run. 
-    
-    This is the place to configure custom routes, transaction handling, 
-    error handling, etc. 
+
+    AppConfig instances have a number of methods that are meant to be
+    overridden by users who wish to have finer grained controll over
+    the setup of the WSGI envirnment in which their applcation is run.
+
+    This is the place to configure custom routes, transaction handling,
+    error handling, etc.
     """
-    
+
     def __init__(self):
         """Creates some configuration defaults"""
-        
+
         #Create a few bunches we know we'll use
         self.paths = Bunch()
         self.render_functions = Bunch()
-        
+
         #Set individual defaults
         self.stand_alone = True
         self.default_renderer = 'genshi'
@@ -113,7 +113,7 @@ class AppConfig(Bunch):
         self.serve_static = True
         self.use_legacy_renderer = True
 
-    
+
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
@@ -128,21 +128,21 @@ class AppConfig(Bunch):
 
     def init_config(self, global_conf, app_conf):
         """Initialize the config object.
-        
+
         tg.config is a proxy for pylons.config that allows attribute style
         access, so it's automatically setup when we create the poylons config
-        
-        Besides basic initialization,  this method copies all the values 
-        in base_config  into the ``tg.config`` object. 
+
+        Besides basic initialization,  this method copies all the values
+        in base_config  into the ``tg.config`` object.
         """
-        pylons_config.init_app(global_conf, app_conf, 
+        pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
                         paths=self.paths)
         config.update(self)
-                        
+
     def setup_routes(self):
         """Setup the default TG2 routes
-        
+
         Overide this and setup your own routes maps if you want to use routes.
         """
         map = Mapper(directory=config['pylons.paths']['controllers'],
@@ -152,13 +152,13 @@ class AppConfig(Bunch):
         map.connect('error/:action/:id', controller='error')
         # Setup a default route for the root of object dispatch
         map.connect('*url', controller='root', action='routes_placeholder')
-        
+
         config['routes.map'] = map
-    
+
     def setup_helpers_and_globals(self):
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
         config['pylons.h'] = self.package.lib.helpers
-    
+
     def setup_sa_auth_backend(self):
         defaults = {'users_table':'tg_user',
                     'groups_table':'tg_group',
@@ -169,8 +169,9 @@ class AppConfig(Bunch):
         # The developer must have defined a 'sa_auth' section, because
         # values such as the User, Group or Permission classes must be
         # explicitly defined.
-        config['sa_auth'] = defaults.update(config['sa_auth'])
-    
+        config['sa_auth'] = defaults
+        config['sa_auth'].update(self.sa_auth)
+
     def setup_mako_renderer(self):
         """Setup a renderer and loader for mako templates"""
         from mako.lookup import TemplateLookup
@@ -182,9 +183,9 @@ class AppConfig(Bunch):
             input_encoding='utf-8', output_encoding='utf-8',
             imports=['from webhelpers.html import escape'],
             default_filters=['escape'])
-        
+
         self.render_functions.mako = render_mako
-        
+
     def setup_genshi_renderer(self):
         """Setup a renderer and loader for Genshi templates"""
         from genshi.template import TemplateLoader
@@ -193,13 +194,13 @@ class AppConfig(Bunch):
         def template_loaded(template):
             "Plug-in our i18n function to Genshi."
             genshi.template.filters.insert(0, Translator(ugettext))
-        loader = TemplateLoader(search_path=self.paths.templates, 
+        loader = TemplateLoader(search_path=self.paths.templates,
                                 auto_reload=True)
-                                
+
         config['pylons.app_globals'].genshi_loader = loader
 
         self.render_functions.genshi = render_genshi
-    
+
     def setup_jinja_renderer(self):
         """Setup a renderer and loader for Jinja templates"""
         from jinja import ChoiceLoader, Environment, FileSystemLoader
@@ -211,21 +212,21 @@ class AppConfig(Bunch):
         config['pylons.strict_c'] = True
 
         self.render_functions.jinja = render_jinja
-    
+
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin
-        
+
         This is only used when use_legacy_renderer is set to True
-        
-        And it will not depricated in the next major turbogears 
+
+        And it will not depricated in the next major turbogears
         release.
         """
         #This is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
         template_location = '%s.templates' %self.package.__name__
-        config.add_template_engine(self.default_renderer, 
+        config.add_template_engine(self.default_renderer,
                                    template_location,  {})
-    
+
     def setup_sqlalchemy(self):
         """Setup SQLAlchemy database engine"""
         from sqlalchemy import engine_from_config
@@ -233,15 +234,15 @@ class AppConfig(Bunch):
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
-        
+
     def make_load_environment(self):
-        """Returns a load_environment function 
-        
-        The returned load_environment function can be called to configure the 
-        TurboGears runtime environment for this particular application.  You 
-        can do this dynamically with multiple nested TG applications if 
+        """Returns a load_environment function
+
+        The returned load_environment function can be called to configure the
+        TurboGears runtime environment for this particular application.  You
+        can do this dynamically with multiple nested TG applications if
         nessisary."""
-        
+
         def load_environment(global_conf, app_conf):
             """Configure the Pylons environment via the ``pylons.config``
             object
@@ -252,22 +253,22 @@ class AppConfig(Bunch):
             self.init_config(global_conf, app_conf)
             self.setup_routes()
             self.setup_helpers_and_globals()
-            
-            if self.auth_backend == "sqlalchemy": 
+
+            if self.auth_backend == "sqlalchemy":
                 self.setup_sa_auth_backend()
 
-            if 'genshi' in self.renderers: 
+            if 'genshi' in self.renderers:
                 self.setup_genshi_renderer()
 
             if 'mako' in self.renderers:
                 self.setup_mako_renderer()
-            
+
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
 
             if self.use_legacy_renderer:
                 self.setup_default_renderer()
-            
+
             if self.use_sqlalchemy:
                 self.setup_sqlalchemy()
 
@@ -292,29 +293,29 @@ class AppConfig(Bunch):
 
         auth = self.sa_auth
 
-        app = make_who_middleware(app, config, auth.user_class, 
-                                  auth.user_criterion, 
-                                  auth.user_id_column, 
+        app = make_who_middleware(app, config, auth.user_class,
+                                  auth.user_criterion,
+                                  auth.user_id_column,
                                   auth.dbsession,
                                   )
         return app
-    
-    def add_core_middleware(self, app):    
+
+    def add_core_middleware(self, app):
         """Adds support for routes dispatch, sessions, and caching"""
         app = RoutesMiddleware(app, config['routes.map'])
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app
-    
+
     def add_tosca_middleware(self, app):
         """Configure the ToscaWidgets middleware"""
         app = tw_middleware(app, {
-            'toscawidgets.framework.default_view': 
+            'toscawidgets.framework.default_view':
             self.default_renderer,
             'toscawidgets.middleware.inject_resources': True,
             })
         return app
-    
+
     def add_static_file_middleware(self, app):
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
         app = Cascade([static_app, app])
@@ -333,14 +334,14 @@ class AppConfig(Bunch):
 
     def add_tm_middleware(self, app):
         """Sets up the transaction managment middleware
-        
+
         To abort a transaction inside a TG2 app::
-        
+
           import transaction
           transaction.doom()
-        
-        By default http error responses also roll back transactions, 
-        but this behavior can be overridden by overiding 
+
+        By default http error responses also roll back transactions,
+        but this behavior can be overridden by overiding
         base_config.commit_veto
         """
         from repoze.tm import make_tm
@@ -348,11 +349,11 @@ class AppConfig(Bunch):
 
     def add_dbsession_remover_middleware(self, app):
         """Sets up middleware that cleans up the sqlalchmy session
-        
-        The default behavior of TG2 is to clean up the session on 
+
+        The default behavior of TG2 is to clean up the session on
         every request.  Only overide this method if you know what you
         are doing!
-        
+
         """
         def remover(environ, start_response):
             try:
@@ -371,7 +372,7 @@ class AppConfig(Bunch):
         ``setup_vars``
             A dictionary any special values nessisary for setting up
             the base wsgi app.
-        """                  
+        """
 
         def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
             """Create a tg WSGI application and return it
@@ -394,7 +395,7 @@ class AppConfig(Bunch):
             # Configure the Pylons environment
             load_environment(global_conf, app_conf)
             app = TGApp()
-            if wrap_app: 
+            if wrap_app:
                 wrap_app(app)
             app = self.add_core_middleware(app)
             app = self.add_tosca_middleware(app)
@@ -417,9 +418,9 @@ class AppConfig(Bunch):
             # Establish the Registry for this application
             app = RegistryManager(app)
 
-            # Static files (If running in production, and Apache or another 
-            # web server is serving static files) 
-            if self.serve_static: 
+            # Static files (If running in production, and Apache or another
+            # web server is serving static files)
+            if self.serve_static:
                 app = self.add_static_file_middleware(app)
             return app
 
