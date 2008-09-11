@@ -112,7 +112,7 @@ class AppConfig(Bunch):
         self.auth_backend = None
         self.serve_static = True
         self.use_legacy_renderer = True
-
+        self.auto_reload_templates = True
 
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
@@ -182,7 +182,8 @@ class AppConfig(Bunch):
             module_directory=self.paths['templates'],
             input_encoding='utf-8', output_encoding='utf-8',
             imports=['from webhelpers.html import escape'],
-            default_filters=['escape'])
+            default_filters=['escape'],
+            filesystem_checks=self.auto_reload_templates)
 
         self.render_functions.mako = render_mako
 
@@ -195,7 +196,7 @@ class AppConfig(Bunch):
             "Plug-in our i18n function to Genshi."
             genshi.template.filters.insert(0, Translator(ugettext))
         loader = TemplateLoader(search_path=self.paths.templates,
-                                auto_reload=True)
+                                auto_reload=self.auto_reload_templates)
 
         config['pylons.app_globals'].genshi_loader = loader
 
@@ -207,7 +208,8 @@ class AppConfig(Bunch):
         from tg.render import render_jinja
 
         config['pylons.app_globals'].jinja_env = Environment(loader=ChoiceLoader(
-                [FileSystemLoader(path) for path in self.paths['templates']]))
+                [FileSystemLoader(path, auto_reload=self.auto_reload_templates)
+                 for path in self.paths['templates']]))
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
 
