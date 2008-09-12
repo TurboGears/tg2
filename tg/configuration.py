@@ -1,6 +1,7 @@
 """Simple AppSetup helper class"""
 import os
 import logging
+from UserDict import DictMixin
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 
@@ -21,7 +22,7 @@ from tw.api import make_middleware as tw_middleware
 log = logging.getLogger(__name__)
 
 
-class PylonsConfigWrapper(dict):
+class PylonsConfigWrapper(DictMixin):
     """Simple wrapper for the pylons config object that provides attribute
     style access to the pylons config dictionary.
 
@@ -67,16 +68,9 @@ class PylonsConfigWrapper(dict):
             del self.config_proxy.current_conf()[name]
         except KeyError:
             raise AttributeError(name)
-
-    def update(self, new_dict):
-        self.config_proxy.current_conf().update(new_dict)
-
-    def __str__(self):
-        return self.config_proxy.__str__()
-
-    @property
-    def pylons(self):
-        return get_partial_dict('pylons', self.config_proxy.current_conf())
+               
+    def keys(self):
+        return self.config_proxy.keys()
 
 
 #Create a config object that has attribute style lookup built in.
