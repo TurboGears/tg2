@@ -24,6 +24,7 @@ setup(
     ],
     install_requires=[
         'Babel',
+        'decorator',
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9', 

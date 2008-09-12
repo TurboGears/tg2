@@ -7,12 +7,13 @@ needed to support these decorators."""
 
 import formencode
 from paste.util.mimeparse import best_match
+from decorator import decorator
 
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from tg.configuration import Bunch
 # this can't be tg, as we are circular importing then!
-from pylons import request
+from pylons import config, request
 from pylons import tmpl_context as c
 from util import partial
 
@@ -327,4 +328,15 @@ def paginate(name, items_per_page=10, use_prefix=False):
         return _w
     return _d
 
+@decorator
+def ignore_commits(func, *args, **kwargs):
+    #TODO: Test and document this.
+    s = config.get('DBSession', None)
+    assert hasattr(s, 'commit')
+    old_commit = s.commit
+    s.commit = s.flush
+    retval = func(*args, **kwargs)
+    s.commit = old_commit
+    return retval
+    
 
