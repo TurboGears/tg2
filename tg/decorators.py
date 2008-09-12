@@ -329,7 +329,7 @@ def paginate(name, items_per_page=10, use_prefix=False):
     return _d
 
 @decorator
-def ignore_commits(func, *args, **kwargs):
+def postpone_commits(func, *args, **kwargs):
     #TODO: Test and document this.
     s = config.get('DBSession', None)
     assert hasattr(s, 'commit')
