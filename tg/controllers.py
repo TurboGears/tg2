@@ -19,14 +19,13 @@ import urlparse, urllib
 import formencode
 import pylons
 from pylons.controllers import WSGIController
-from pylons.controllers.util import abort
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException, 
     HTTPClientError)
 from tg.render import get_tg_vars
 from tg.render import render as tg_render
 from tw.api import Widget
-from webob.exc import HTTPForbidden
+from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
 
@@ -409,8 +408,8 @@ def _object_dispatch(obj, url_path):
             return obj, remainder
 
         # identity error should be treated separatly from "not found" errors
-        except HTTPForbidden, httpe:
-            log.debug("a 403 error occured for obj: %s" % obj)
+        except HTTPUnauthorized, httpe:
+            log.debug("a 401 error occured for obj: %s" % obj)
             raise
 
         except HTTPException:
@@ -466,8 +465,7 @@ def _check_security(obj):
 
     if hasattr(klass_instance, "check_security"):
         if not klass_instance.check_security():
-            raise HTTPForbidden().exception
-            #abort(403)
+            raise HTTPUnauthorized().exception
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):
