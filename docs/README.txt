@@ -19,6 +19,16 @@ And pysvn module is required for the Wiki20 doc which pulls source code from svn
 
     http://pysvn.tigris.org/project_downloads.html
 
+Source package is here:
+
+    http://pysvn.barrys-emacs.org/source_kits/pysvn-1.6.1.tar.gz
+
+This may require that you have the includes for SVN.
+
+To generate the docs you will also need:
+
+  - Mercurial installed
+  - memcache or cmemcache installed (http://gijsbert.org/downloads/cmemcache/cmemcache-0.95.tar.bz2)
 
 Generate Doc
 -------------
