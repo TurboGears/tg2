@@ -37,10 +37,10 @@ the results and to re-display forms with validation errors if necessary.
 
 You can make a new form from a database table (using DBSprockets) like this::
 
-    from dbsprockets.primitives import makeForm
+    from dbsprockets.primitives import make_form
     from myProject.myModel import User
     
-    login_form = makeForm(User, identifier='myLoginForm', action='/login', limitFields=['user_name', 'password'])
+    login_form = make_form(User, identifier='myLoginForm', action='/login', limitFields=['user_name', 'password'])
 
 This form is actually a ToscaWidgets CompoundWidget object, with member widgets for each of the form fields, and with some code to wrap them up in a form and display them to the user.  DBSprockets takes the User object introspects it's table information, and makes a form for you.   In this case, we're limiting the fields that show up on the form to those needed for the user_name and password columns.   
 
