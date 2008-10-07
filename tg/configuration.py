@@ -188,7 +188,7 @@ class AppConfig(Bunch):
 
         def template_loaded(template):
             "Plug-in our i18n function to Genshi."
-            genshi.template.filters.insert(0, Translator(ugettext))
+            template.filters.insert(0, Translator(ugettext))
         loader = TemplateLoader(search_path=self.paths.templates,
                                 auto_reload=self.auto_reload_templates)
 
