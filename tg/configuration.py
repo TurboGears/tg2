@@ -190,7 +190,8 @@ class AppConfig(Bunch):
             "Plug-in our i18n function to Genshi."
             template.filters.insert(0, Translator(ugettext))
         loader = TemplateLoader(search_path=self.paths.templates,
-                                auto_reload=self.auto_reload_templates)
+                                auto_reload=self.auto_reload_templates,
+                                callback=template_loaded)
 
         config['pylons.app_globals'].genshi_loader = loader
 
