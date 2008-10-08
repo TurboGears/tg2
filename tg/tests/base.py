@@ -14,20 +14,14 @@ from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
 from tg import tmpl_context
+from tg.util import Bunch
+from tg.configuration import AppConfig
 from pylons.util import ContextObj, PylonsContext
 from pylons.controllers.util import Request, Response
 from tg.controllers import TGController
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
-#import pylons.tests
 
 from beaker.middleware import CacheMiddleware
-
-# TODO:
-#     We need infrastructure to test the whole WSGI stack for internal tests.
-#     eg: currently we have no way to test repoze.tm integration except from
-#     quickstarted app's tests.
-#     We also need this to test the configuration system, since that is part 
-#     of the tg egg. 
 
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -117,3 +111,4 @@ class TestWSGIController(TestCase):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
         return self.app.post(url, extra_environ=self.environ, params=kargs)
+    

@@ -330,6 +330,11 @@ def paginate(name, items_per_page=10, use_prefix=False):
 
 @decorator
 def postpone_commits(func, *args, **kwargs):
+    """Turns sqlalchemy commits into flushes in the decorated method
+    
+    This has the end-result of postponing the commit to the normal TG2 
+    transaction boundry. """
+    
     #TODO: Test and document this.
     s = config.get('DBSession', None)
     assert hasattr(s, 'commit')

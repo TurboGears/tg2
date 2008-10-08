@@ -81,8 +81,6 @@ class Bunch(dict):
             return self[name]
         except KeyError:
             return get_partial_dict(name, self)
-            #if both getitem, and partial-dict matches fail we're done
-            raise AttributeError(name)
 
     __setattr__ = dict.__setitem__
 

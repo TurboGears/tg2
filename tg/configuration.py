@@ -58,7 +58,7 @@ class PylonsConfigWrapper(DictMixin):
             try:
                 return self.config_proxy.current_conf()[key]
             except KeyError:
-                get_partial_dict(key, self.config_proxy.current_conf())
+                return get_partial_dict(key, self.config_proxy.current_conf())
 
     def __setattr__(self, key, value):
         self.config_proxy.current_conf()[key] = value
