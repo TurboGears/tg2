@@ -321,7 +321,7 @@ def paginate(name, items_per_page=10, use_prefix=False):
                 # string for everything it dosen't know.
                 # I didn't find that documented, so I
                 # just put this in here and hope it works.
-                if type(c.paginators) == str:
+                if not hasattr(c, 'paginators') or type(c.paginators) == str:
                     c.paginators = Bunch()
                 c.paginators[name] = page
             return res
