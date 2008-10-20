@@ -1,0 +1,214 @@
+/*
+ * Quick mash-up of CSS for the TG quick start page.
+ */
+
+html, body {
+  color: black;
+  background-color: #ddd;
+  font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+  font-size: 83%;
+  margin: 0;
+  padding: 0;
+}
+
+td, th {padding:3px;border:none;}
+tr th {text-align:left;background-color:#f0f0f0;color:#333;}
+tr.odd td {background-color:#edf3fe;}
+tr.even td {background-color:#fff;}
+
+
+a.link, a, a.active {
+  color: #369;
+}
+
+.white {
+  color: white;    
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: "Century Schoolbook L", Georgia, serif;
+  font-weight: bold;
+}
+
+
+#main_content {
+  color: black;
+  font-size: 127%;
+  background-color: white;
+  width: 757px;
+  margin: 0 auto 1em auto;
+  border: 1px solid #aaa;
+  border-top: 0px solid #aaa;
+  padding: 10px;
+  clear: both;
+}
+
+
+.sidebar {
+  border: 1px solid #cce;
+  background-color: #eee;
+  margin: 0.5em;
+  margin-left: 1.5em;
+  padding: 1em;
+  float: right;
+  width: 200px;
+  font-size: 88%;
+  background-color:#fffe1;
+  background-repeat:repeat-x;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  color: black;
+}
+
+.sidebar ul {
+  margin-left: 1.5em;
+  padding-left: 0;
+}
+
+
+
+#sb_top {
+  clear: right;
+}
+
+#sb_bottom {
+  clear: right;
+}
+
+#getting_started {
+  margin-left: 20px;
+}
+
+#getting_started_steps a {
+  text-decoration: none;
+}
+
+#getting_started_steps a:hover {
+  text-decoration: underline;
+}
+
+#getting_started_steps li {
+  font-size: 80%;
+  margin-bottom: 0.5em;
+}
+
+#getting_started_steps h2 {
+  font-size: 120%;
+}
+
+#getting_started_steps p {
+  font: 100% "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+}
+
+#getting_started_steps,.alogo,.headtext {
+  font-family: "Century Schoolbook L", Georgia, serif;
+  font-weight: bold;
+}
+
+
+#header {
+  height: 125px;
+  width: 777px;
+  background: blue URL('../images/strype2.png') repeat-y;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  margin: 0 auto 0 auto;
+  color: black;
+}
+
+.alogo {
+  font-size: 36px;
+  padding-left: 5px;
+  padding-top: 5px;
+  padding-right: 20px;
+  float: left;
+}
+
+.headtext {
+  color: white;
+  font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+  font-size: 44px;
+  padding-left: 20px;
+  padding-top: 20px;
+  padding-right: 20px;
+  margin-bottom: 0px;
+}
+
+.currentpage {
+ /* color: white;
+  font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+  font-size: 18px;
+  padding-top: 20px;
+  padding-right: 20px;
+  margin-bottom: 0px;
+  float: left;*/
+  margin: 0 auto 0.5em auto;
+  padding: 5px 5px 5px 50px;
+  background: #cec URL('../images/ok.png') left center no-repeat;
+  border: 1px solid #9c9;
+  width: 400px;
+  font-size: 120%;
+  font-weight: bolder;
+
+}
+
+#footer {
+  border: 0px solid #aaa;
+  color: #888;
+  background-color: white;
+  padding: 10px;
+  font-size: 90%;
+  text-align: center;
+  width: 600px;
+  margin-left: 40px;
+}
+
+.flogo {
+  padding-left: 20px;
+  padding-top: 0px;
+  padding-right: 20px;
+  margin-bottom: 0px;
+  float: left;
+}
+
+.foottext{
+}
+
+.code {
+  font-family: monospace;
+  font-size: 127%;
+}
+
+span.code {
+  font-weight: bold;
+  background: #eee;
+}
+
+#status_block {
+  margin: 0 auto 0.5em auto;
+  padding: 5px 15px 15px 55px;
+  background: #eef URL('../images/ok.png') left center no-repeat;
+  border: 1px solid #cce;
+  width: 680px;
+  font-size: 120%;
+  font-weight: bolder;
+}
+
+.notice {
+  margin: 0.5em auto 0.5em auto;
+  padding: 15px 10px 15px 55px;
+  width: 680px;
+  background: #eef URL('../images/info.png') left center no-repeat;
+  border: 1px solid #cce;
+}
+
+.fielderror {
+    color: red;
+    font-weight: bold;
+}
+
+div.clearingdiv {
+  clear:both;
+}
