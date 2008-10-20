@@ -252,7 +252,7 @@ Since a wiki is basically a linked collection of pages, we'll define a
 ``Page`` class as the name of our model. Create a new file called ``page.py`` in the
 ``Wiki-20/wiki20/model/`` directory:
 
-.. code:: Wiki-20/wiki20/model/page.py
+.. code:: wiki_root/trunk/wiki20/model/page.py
     
 The ``MetaData`` object is automatically created by the ``paste`` command
 inside the ``__init__.py`` file. It's a "single point of truth" that keeps all the
@@ -339,8 +339,7 @@ that processed data to a template.
 ``quickstart`` has already created some basic controller code for us at
 ``Wiki-20/wiki20/controllers/root.py``.  Here's what it looks like now:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-   :revision: 4831
+.. code:: wiki_root/snapshots/1/wiki20/controllers/root.py
 
 The first thing we need to do is uncomment the line that imports ``DBSession``.
 
@@ -386,8 +385,7 @@ containing the page that we looked up.
 
 Here's the whole file after incorporating the above modifications:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-   :revision: 4832
+.. code::wiki_root/snapshots/2/wiki20/controllers/root.py
 
 Now our ``index()`` method fetches a record from the database (creating
 an instance of our mapped ``Page`` class along the way), and returns it
@@ -428,8 +426,7 @@ Tell genshi to suck in the headers and footers for the page.
 Copy ``index.html`` into a file called ``page.html``. Now modify it for
 our purposes:
 
-.. code:: Wiki-20/wiki20/templates/page.html
-	:revision: 4831
+.. code:: Wwiki_root/snapshots/1/wiki20/templates/page.html
 
 This is a basic XHTML page with three substitutions:
 
@@ -441,14 +438,12 @@ This is a basic XHTML page with three substitutions:
 2.  In the second ``<div>`` element, we substitute the page
     name again with Genshi's ``py:replace``:
     
-	.. code:: Wiki-20/wiki20/templates/page.html
-		:revision: 4831
+	.. code:: wiki_root/snapshots/1/wiki20/templates/page.html
 		:section: PageName
 
 3.  In the third ``<div>``, we put in the contents of our ``wikipage``:
 
-	.. code:: Wiki-20/wiki20/templates/page.html
-		:revision: 4831
+	.. code:: wiki_root/snapshots/1/wiki20/templates/page.html
 		:section: PageContent
 
 When you refresh the output web page you should see "initial data" displayed on the page.
@@ -473,18 +468,17 @@ is an editing page. Here are the changes for ``edit.html``.
 
 #. Change the title in the header to reflect that we are editing the page:
 
-	.. code:: Wiki-20/wiki20/templates/edit.html
+	.. code:: wiki_root/trunk/wiki20/templates/edit.html
 		:section: Head
 
 #. Change the div that displays the page:
 
-	.. code:: Wiki-20/wiki20/templates/page.html
-		:revision: 4831
+	.. code:: wiki_root/snapshots/1/wiki20/templates/page.html
 		:section: PageContent
 
    with a div that contains a standard HTML form:
 
-	.. code:: Wiki-20/wiki20/templates/edit.html
+	.. code:: wiki_root/trunk/wiki20/templates/edit.html
 		:section: Form
 
 .. highlight:: python
@@ -494,8 +488,7 @@ the form and handle the form submission. For displaying the form, we'll add an
 ``edit`` method to our controller in ``Wiki-20/wiki20/controllers/root.py``. The
 new ``root.py`` file looks like this:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-	:revision: 4833
+.. code:: wiki_root/snapshots/3/wiki20/controllers/root.py
 
 For now, the new method is identical to the ``index`` method; the only difference is that
 the resulting dictionary is handed to the ``edit`` template. To see it work, go to
@@ -520,8 +513,7 @@ rest of the URL and turn it into positional parameters.
 
 Here's our new version of ``root.py`` which includes both ``default`` and ``save``:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-	:revision: 4834
+.. code:: wiki_root/snapshots/4/wiki20/controllers/root.py
 
 Unlike the previous methods we've made, ``save`` just uses a plain ``@expose()``
 without any template specified. That's because we're only redirecting the user
@@ -548,8 +540,7 @@ expression.
 
 Here's the new version of ``root.py``, which will be explained afterwards:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-	:revision: 4835
+.. code:: wiki_root/snapshots/5/wiki20/controllers/root.py
 
 We need some additional imports, including ``re`` for regular expressions and
 a method called ``publish_parts`` from ``docutils``.
@@ -586,8 +577,7 @@ key-value pair: ``content=content``. This will not break
 dictionary, however if we want to do something interesting with the new
 key-value pair we'll need to edit ``wiki20.templates.page``:
 
-.. code:: Wiki-20/wiki20/templates/page.html
-	:revision: 4841
+.. code:: wiki_root/snapshots/6/wiki20/templates/page.html
 	:language: html
 
 Since ``content`` comes through as XML, we can strip it off using the ``XML()``
@@ -611,8 +601,7 @@ we'll redirect to a new ``notfound`` method. We'll add this method after the
 ``index`` method and before the ``edit`` method. Here are the changes we make to
 the controller:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-	:revision: 4838
+.. code:: wiki_root/snapshots/7/wiki20/controllers/root.py
 
 The ``default`` code changes illustrate the "better to beg forgiveness than ask
 permission" pattern which is favored by most Pythonistas -- we first try to get
@@ -645,7 +634,7 @@ that we don't have to write the boilerplate.
 
 After editing, our ``pagelist.html`` looks like:
 
-.. code:: Wiki-20/wiki20/templates/pagelist.html
+.. code:: wiki_root/trunk/wiki20/templates/pagelist.html
    :language: html
 
 The bolded section represents the Genshi code of interest. You can guess that
@@ -658,9 +647,8 @@ following the link at the bottom of this page.
 We must also modify the controller to implement ``pagelist`` and to create and
 pass ``pages`` to our template:
 
-.. code:: Wiki-20/wiki20/controllers/root.py
-	:revision: 4839
-	:language: python
+.. code:: wiki_root/snapshots/8/wiki20/controllers/root.py
+    :language: python
 
 Here, we select all of the ``Page`` objects from the database, and order them by
 pagename.
@@ -668,8 +656,7 @@ pagename.
 We can also modify ``page.html`` so that the link to the page list is available on
 every page:
 
-.. code:: Wiki-20/wiki20/templates/page.html
-	:revision: 4842
+.. code:: wiki_root/snapshots/9/wiki20/templates/page.html
 	:language: html
 
 You can see your pagelist by clicking the link on a page or by
