@@ -17,6 +17,15 @@ check permissions for you, which have the same API as the Turbogears 1
 identity module.
 
 
+Terminology
+-----------
+@TODO
+  * ``Source``:
+  * ``Source adapter``:
+  * ``Section``:
+  * ``Item``:
+
+
 Implementing authorization
 --------------------------
 @TODO: Improve these contents.
@@ -99,6 +108,12 @@ Permissions handling plugins
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @TODO: Most probably Gustavo's job.
 
-Writing custom plugins
-~~~~~~~~~~~~~~~~~~~~~~
-@TODO: Most probably Gustavo's job.
+
+Advanced topics
+---------------
+
+.. toctree::
+    :maxdepth: 2
+
+    ManagingSources
+    WritingSourceAdapters
