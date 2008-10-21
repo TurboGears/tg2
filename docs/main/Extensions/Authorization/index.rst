@@ -1,7 +1,7 @@
 Authorization in TurboGears 2 with tgext.authorization
 ======================================================
 
-:Status: Work in progress
+:Status: Draft
 
 
 Overview

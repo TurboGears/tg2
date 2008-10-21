@@ -1,7 +1,7 @@
 Authentication and Authorization in TurboGears 2 Applications
 =============================================================
 
-:Status: Work in progress
+:Status: Draft
 
 
 Overview
@@ -95,4 +95,4 @@ want to customize some things, you may want to read the following pages:
     :maxdepth: 2
 
     Auth/Authentication
-    Auth/Authorization
+    Extensions/Authorization/index
