@@ -1,3 +1,0 @@
-TurboGears2
-ToscaWidgets >= 0.9.1
-zope.sqlalchemy
