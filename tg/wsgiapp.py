@@ -20,17 +20,19 @@ class TGApp(PylonsApp):
             return self.controller_classes[controller]
 
         root_module_path = self.config['paths']['root']
-        controller_path = self.config['paths']['controllers']
+        base_controller_path = self.config['paths']['controllers']
 
         #remove the part of the path we expect to be the root part (plus one '/')
-        assert controller_path.startswith(root_module_path)
-        controller_path = controller_path[len(root_module_path)+1:]
+        assert base_controller_path.startswith(root_module_path)
+        controller_path = base_controller_path[len(root_module_path)+1:]
 
         #attach the package
         pylons_package = self.config['pylons.package']
         full_module_name = (pylons_package+'.' +
                             controller_path.replace('/', '.') +
                             '.' + controller.replace('/', '.'))
+                            
+        print full_module_name
 
         if self.config.get('in_testing'):
             full_module_name = 'tg.tests.test_stack.controllers.root'

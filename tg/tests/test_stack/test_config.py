@@ -10,7 +10,7 @@ class TestConfig(AppConfig):
     def __init__(self):
         self.renderers = ['genshi'] 
         self.render_functions = tg.util.Bunch()
-        self.package = tg
+        self.package = tg.tests.test_stack
         self.default_renderer = 'genshi'
         self.globals = self
         self.helpers = {}
@@ -21,13 +21,14 @@ class TestConfig(AppConfig):
         self.in_testing = True
         
         root = "."
-        test_base_path = os.path.join(root,'tg', 'tests', 
-                                      'test_stack', 'config') 
-                                      
-        self.paths=tg.util.Bunch(root=test_base_path,
-                    controllers=os.path.join(test_base_path, 'controllers'),
-                    static_files=os.path.join(test_base_path, 'public'),
-                    templates=[os.path.join(test_base_path, 'config_templates')]
+        test_base_path = os.path.join(root,'tg', 'tests', 'test_stack',)
+        test_config_path = os.path.join(test_base_path, 'config')
+        print test_config_path
+        self.paths=tg.util.Bunch(
+                    root=test_base_path,
+                    controllers=os.path.join(test_config_path, 'controllers'),
+                    static_files=os.path.join(test_config_path, 'public'),
+                    templates=[os.path.join(test_config_path, 'templates')]
                     )
         
     def setup_helpers_and_globals(self):
