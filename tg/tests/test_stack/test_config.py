@@ -21,11 +21,13 @@ class TestConfig(AppConfig):
         self.in_testing = True
         
         root = "."
-        test_base_path = os.path.join(root,'tg', 'tests', 'test_stack')
+        test_base_path = os.path.join(root,'tg', 'tests', 
+                                      'test_stack', 'config') 
+                                      
         self.paths=tg.util.Bunch(root=test_base_path,
                     controllers=os.path.join(test_base_path, 'controllers'),
                     static_files=os.path.join(test_base_path, 'public'),
-                    templates=[os.path.join(test_base_path, 'templates')]
+                    templates=[os.path.join(test_base_path, 'config_templates')]
                     )
         
     def setup_helpers_and_globals(self):

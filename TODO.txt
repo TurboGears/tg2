@@ -1,11 +1,7 @@
 TODO:
 =====
 
-* transaction middleware, pre-configured for a transaction-per-request model
-    with auto-rollback and auto-commit
 * Upgrade Guide
-
-* Add sample tests to TurboGears paster template (use nose style setup functions) 
 
 * Create TG2 Docs on the Wiki
 
