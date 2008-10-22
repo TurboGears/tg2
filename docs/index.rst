@@ -131,6 +131,7 @@ Recipes
 .. toctree::
    :maxdepth: 2
 
+   main/Auth/Authentication
    main/TGandPyAMF
    main/RoutesIntegration
    main/StaticFile
