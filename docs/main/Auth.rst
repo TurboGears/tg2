@@ -1,5 +1,5 @@
-Authentication and Authorization in TurboGears 2 Applications
-=============================================================
+Authentication and Authorization
+================================
 
 :Status: Draft
 
@@ -32,7 +32,7 @@ Such a system is made up of two components, well integrated into TurboGears:
     when you created the project), but if you need something more advanced you
     are in the right place.
     
-  * `tgext.authorization`, a TurboGears 2 specific framework for 
+  * :mod:`tgext.authorization`, a TurboGears 2 specific framework for 
     ``authorization`` which is backwards compatible with the TurboGears 1 
     Identity authorization system.
     

@@ -46,6 +46,7 @@ from the basics, to advanced topics.
    
    main/Wiki20/wiki20
    main/ToscaWidgets/forms
+   main/Auth
 
 What's new
 ===============
@@ -119,7 +120,6 @@ Other TG Tools
    
    main/Config
    main/Caching
-   main/Auth
    main/LogSetup
    main/Internationalization
 
