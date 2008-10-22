@@ -106,6 +106,7 @@ TG2 Extensions
 .. toctree::
    :maxdepth: 2
 
+   main/Extensions/Authorization/index
    main/Extensions/SilverPlate/index
    main/Extensions/Geo/index
 

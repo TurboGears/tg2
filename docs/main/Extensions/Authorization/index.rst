@@ -1,5 +1,5 @@
-Authorization in TurboGears 2 with tgext.authorization
-======================================================
+:mod:`tgext.authorization` -- Authorization in TurboGears 2
+===========================================================
 
 :Status: Work in progress
 
