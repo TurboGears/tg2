@@ -31,11 +31,6 @@ class TGApp(PylonsApp):
         full_module_name = (pylons_package+'.' +
                             controller_path.replace('/', '.') +
                             '.' + controller.replace('/', '.'))
-                            
-        print full_module_name
-
-        if self.config.get('in_testing'):
-            full_module_name = 'tg.tests.test_stack.controllers.root'
 
         # Hide the traceback here if the import fails (bad syntax and such)
         __traceback_hide__ = 'before_and_this'
