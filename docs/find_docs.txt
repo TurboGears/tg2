@@ -1,0 +1,7 @@
+The source of the TurboGears 2 docs has been moved to: 
+
+http://svn.turbogears.org/docs/2.0
+
+and the online docs can always be found at: 
+
+http://turbogears.org/2.0/docs/
