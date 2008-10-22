@@ -1,7 +1,12 @@
-Authentication and Authorization
-================================
+Authentication and Authorization in TurboGears 2
+================================================
 
-:Status: Draft
+:Status: Official
+
+This documents describes how to implement authentication and authorization in
+TG 2 applications. Although there are other ways to implement it (e.g., using
+the `AuthKit <http://authkit.org/>`_ package or a project-specific solution), 
+this document only describes the officially supported and recommended way.
 
 
 Overview
@@ -21,68 +26,73 @@ pictures while others cannot. In other words, finding `what` you may do.
 TurboGears 2 applications may take advantage of a robust, extendable, pluggable 
 and easy-to-use system for authentication and authorization suitable for nearly 
 all situations — in fact, you may extend it to suite your needs if it doesn't, 
-which should be really simple in most situations.
+which should be really simple in most situations. Such a system is made up of 
+two components, well integrated into TurboGears:
 
-Such a system is made up of two components, well integrated into TurboGears:
-
-  * `repoze.who <http://static.repoze.org/whodocs/>`_, is a TurboGears
-    independent framework for ``authentication`` in WSGI applications. You
-    normally don't have to care about it because by default TG2 applications
-    ship all the code to set it up (as long as you had selected such an option
-    when you created the project), but if you need something more advanced you
-    are in the right place.
-    
+  * :mod:`repoze.who`, a TurboGears-independent framework for 
+    ``authentication`` in WSGI applications. You normally don't have to care 
+    about it because by default TG2 applications ship all the code to set it up
+    (as long as you had selected such an option when you created the project), 
+    but if you need something more advanced you are in the right place.
   * :mod:`tgext.authorization`, a TurboGears 2 specific framework for 
     ``authorization`` which is backwards compatible with the TurboGears 1 
     Identity authorization system.
-    
-Where would you like to store your users' credentials? In a database? LDAP?
-Htaccess file? You may use the backend you want (or create your own if it
-isn't available), and don't worry if you need to change it afterwards: You
-would not need to touch your code! Except, of course, the snippet that tells
-where the data may be found.
 
-Regardless of the level of customization you need for the
-authentication/authorization mechanisms in your applications, these documents
-will help you achieve what you need.
+You may store your users' credentials where you want (e.g., in a database, an
+LDAP server, an Htaccess file) and also store your authorization settings
+in any type of source (e.g., in a database, Ini file) -- if the back-end you
+need is not available, you may create it yourself (which is usually very easy). 
+And don't worry if you need to change the back-end afterwards: You would not 
+need to touch your code! Except, of course, the snippet that tells where the 
+data may be found.
 
 
 The three pillars: Users, groups and permissions
 ------------------------------------------------
 
-@TODO
+Authorization in TurboGears 2 applications uses a common pattern based on
+the ``users`` (authenticated or anonymous) of your web application, the 
+``groups`` they belong to and the ``permissions`` granted to such groups. But
+you can extend it to check for other conditions (such as checking that the
+user comes from a given country, based on her IP address, for example).
+
+The authentication framework (:mod:`repoze.who`) only deals with the 
+:term:`source` (or sources) that handle your users' credentials, while the 
+authorization framework (:mod:`tgext.authorization`) deals with both the 
+source(s) that handle your groups and those that handle your permissions.
 
 
 Getting started, quickly
 ------------------------
 
-While ``tgext.authorization`` only deals with authorization, it provides a
-module to setup authentication via ``repoze.who`` so that you can get started
-with authentication and authorization very quickly.
+While :mod:`tgext.authorization` only deals with authorization, it provides a
+module to setup authentication via :mod:`repoze.who` so that you can get started
+with authentication and authorization very quickly. It may be enabled while 
+creating the TG2 project or afterwards, and it may be easily replaced by a 
+custom solution.
 
-This module is called "quickstart" and stores your users' credentials, groups
-and permissions in a SQLAlchemy-managed database.
-
-The quickstart may be enabled while creating the TG2 project or afterwards,
-and it may be easily replaced by another.
-
-
-Using it on a new project
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To use this just answer `yes` during the `paster quickstart` process when it
-asks you if you want auth::
+To use it on a new projet, just answer "yes" during the `paster quickstart` 
+process when it asks you if you want auth::
  
-  Do you need Identity (usernames/passwords) in this project? [no] yes
+  Do you need authentication and authorization in this project? [yes]
 
-You'll then get authentication and authorization code added for you. 
+You'll then get authentication and authorization code added for you, including
+the SQLAlchemy-powered model definitions and the relevant settings in
+``{yourpackage}.config.app_cfg``. It also defines the default users, groups and
+permissions in ``{yourpackage}.websetup``, which you may want to customize. 
 
+Before trying to login and try authorization with the rows defined in
+``{yourpackage}.websetup``, you have to create the database; run the following
+command from your project's root directory::
 
-Implementing the quickstart on an existing project
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    paster setup-app
 
-@TODO: tgext.authorization's quickstart is the same as the former
-tg.ext.repoze.who's middleware module.
+.. note::
+  This module is :mod:`tgext.authorization.quickstart` and only works if your 
+  users' credentials, groups and permissions are stored in a `SQLAlchemy 
+  <http://www.sqlalchemy.org/>`_-managed database. To implement it on an 
+  existing project, or customize the model structure assumed by it, you have to
+  read the documentation for :mod:`tgext.authorization.quickstart`.
 
 
 Going beyond the quickstart
