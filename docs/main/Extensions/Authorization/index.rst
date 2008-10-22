@@ -1,29 +1,92 @@
 Authorization in TurboGears 2 with tgext.authorization
 ======================================================
 
-:Status: Draft
+:Status: Work in progress
 
 
 Overview
 --------
 
-@TODO: Write a better introduction.
+``tgext.authorization`` is an `authorization framework` for TurboGears 2,
+based on `repoze.who` (which deals with `authentication`).
 
-It's based on repoze.who which is designed just for authentication. The basic 
-design is that the user's name, groups and 
-permissions are looked up on the way in, and added to the request on the way 
-in to TurboGears.  tgext.authorization also provides some decorators that 
-check permissions for you, which have the same API as the Turbogears 1 
-identity module.
+On one hand, it enables an authorization system based on the groups to which
+the `authenticated or anonymous` user belongs and the permissions granted to 
+such groups by loading these groups and permissions into the request on the way 
+in to TurboGears. It also provides some decorators that check permissions for 
+you, which have the same API as the TurboGears 1 identity module.
+
+And on the other hand, it enables you to manage your groups and permissions
+from the application itself or another TurboGears extension, under a backend
+independent API. Among other things, this means that it will be easy for you
+to switch from one backend to other, and even use this framework to migrate the
+data.
 
 
 Terminology
 -----------
-@TODO
-  * ``Source``:
-  * ``Source adapter``:
-  * ``Section``:
-  * ``Item``:
+
+Because you may store your groups and permissions where you would like to, not
+only in a database, ``tgext.authorization`` uses a generic terminology:
+
+  * ``Source``: Where authorization data (groups and/or permissions) is stored.
+    It may be a database or a file (an Htgroups file, an Ini file, etc), for
+    example. 
+  * ``Group source``: A `source` that stores groups. For example, an Htgroups
+    file or an Ini file.
+  * ``Permission source``: A `source` that stores permissions. For example, an
+    Ini file.
+  * ``Source adapter``: An object that manages a given type of source to add,
+    edit and delete entries under an API independent of the source type.
+  * ``Section``: Sections are the groups that make up a source -- this is, in a
+    `permission source`, the sections are the permissions, and in a `group 
+    source`, the sections are the groups.
+  * ``Item``: The elements that are contained in a section. In a `permission
+    source`, the items are the groups that are granted the permission 
+    represented in their parent section; likewise, in a `group source`, the
+    items are the Ids of the users that belong to the group represented in the
+    parent section.
+
+In your TurboGears 2 applications you may use any amount of group and 
+permission sources.
+
+Sample sources
+~~~~~~~~~~~~~~
+Below are the contents of a mock ``.htgroups`` file that defines the groups of 
+your TG2 application. In other words, such a file is a ``group source`` of type
+``htgroups``::
+
+    developers: rms, linus, guido
+    admins: rms, linus
+    users: gustavo, maribel
+    
+And below are the contents of a mock ``*.ini`` file that defines the permissions
+of the groups in your TG2 application. In other words, such a file is a 
+``permission source`` of type ``Ini``::
+
+    [manage-site]
+    admins
+    [release-software]
+    developers
+    [add-users]
+    admins
+    developers
+    [contact-us]
+    users
+
+If you use a database to store your users, groups and permissions, then such a
+database is both the group and permission source:
+
+  * The tables where you store your groups and users are the sections and the
+    section items, respectively, of the group source. They form a many-to-many
+    relationship in which the children of a group (aka "section") are the
+    users (aka "items") that belong to the group/section, and the children of
+    a user are the groups she belongs to.
+  * The tables where you store your permissions and groups are the sections and 
+    the section items, respectively, of the permission source. They form a 
+    many-to-many relationship in which the children of a permission (aka 
+    "section") are the group (aka "items") that are granted the permission, and
+    the children of a group are the permissions granted to the group.
 
 
 Implementing authorization
