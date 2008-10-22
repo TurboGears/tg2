@@ -25,7 +25,6 @@ So, porting to TG2 should be a relatively straightforward process.  TG 1.1 will 
 
 There are two major pieces of TurboGears 1 which are not implemented in TurboGears 2:
 
- * Identity style user authorization (though the Authority project is working on this)
  * Automatic transaction support (this is likely to be replaced with a generalized transaction manager that handles multi-database transactions). 
 
 General pre-release TurboGears 2 tasks:
