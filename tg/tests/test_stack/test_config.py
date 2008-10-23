@@ -3,23 +3,27 @@ import tg
 
 from tg.configuration import AppConfig
 from paste.fixture import TestApp
-from tg import config
 
 class TestConfig(AppConfig):
 
-    def __init__(self):
-        self.renderers = ['genshi'] 
-        self.render_functions = tg.util.Bunch()
-        self.package = tg.tests.test_stack
-        self.default_renderer = 'genshi'
-        self.globals = self
-        self.helpers = {}
-        self.auth_backend = None
-        self.auto_reload_templates = False
-        self.use_legacy_renderer = True
-        self.serve_static = False
-        self.in_testing = True
+    def __init__(self, values=None):
         
+        if not values:
+            self.renderers = ['genshi'] 
+            self.render_functions = tg.util.Bunch()
+            self.package = tg.tests.test_stack
+            self.default_renderer = 'genshi'
+            self.globals = self
+            self.helpers = {}
+            self.auth_backend = None
+            self.auto_reload_templates = False
+            self.use_legacy_renderer = True
+            self.serve_static = False
+
+        else: 
+            for key, value in values.items():
+                setattr(self, key, value)
+
         root = "."
         test_base_path = os.path.join(root,'tg', 'tests', 'test_stack',)
         test_config_path = os.path.join(test_base_path, 'config')
@@ -32,8 +36,8 @@ class TestConfig(AppConfig):
                     )
         
     def setup_helpers_and_globals(self):
-        config['pylons.app_globals'] = self.globals
-        config['pylons.h'] = self.helpers
+        tg.config['pylons.app_globals'] = self.globals
+        tg.config['pylons.h'] = self.helpers
         
 def setup_noDB():
     global_config = {'debug': 'true', 
