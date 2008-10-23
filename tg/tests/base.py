@@ -13,6 +13,7 @@ from paste.fixture import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
+import tg
 from tg import tmpl_context
 from tg.util import Bunch
 from tg.configuration import AppConfig
@@ -111,4 +112,39 @@ class TestWSGIController(TestCase):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
         return self.app.post(url, extra_environ=self.environ, params=kargs)
-    
+
+class TestConfig(AppConfig):
+
+    def __init__(self, folder, values=None):
+
+        #First we setup some base values that we know will work
+        self.renderers = ['genshi'] 
+        self.render_functions = tg.util.Bunch()
+        self.package = tg.tests.test_stack
+        self.default_renderer = 'genshi'
+        self.globals = self
+        self.helpers = {}
+        self.auth_backend = None
+        self.auto_reload_templates = False
+        self.use_legacy_renderer = True
+        self.serve_static = False
+
+        #Then we overide those values with what was passed in
+        for key, value in values.items():
+            setattr(self, key, value)
+
+        
+        root = "."
+        test_base_path = os.path.join(root,'tg', 'tests', 'test_stack',)
+        test_config_path = os.path.join(test_base_path, folder)
+        print test_config_path
+        self.paths=tg.util.Bunch(
+                    root=test_base_path,
+                    controllers=os.path.join(test_config_path, 'controllers'),
+                    static_files=os.path.join(test_config_path, 'public'),
+                    templates=[os.path.join(test_config_path, 'templates')]
+                    )
+
+    def setup_helpers_and_globals(self):
+        tg.config['pylons.app_globals'] = self.globals
+        tg.config['pylons.h'] = self.helpers
