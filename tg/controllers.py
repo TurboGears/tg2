@@ -407,7 +407,7 @@ def _object_dispatch(obj, url_path):
             obj, remainder = _find_object(obj, remainder, notfound_handlers)
             return obj, remainder
 
-        # identity error should be treated separatly from "not found" errors
+        # auth error should be treated separatly from "not found" errors
         except HTTPUnauthorized, httpe:
             log.debug("a 401 error occured for obj: %s" % obj)
             raise

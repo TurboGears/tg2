@@ -12,7 +12,7 @@ entrypoints = {"TurboGears2 Commands" : "turbogears2.command",
 }
 """#elements that not clear yet
     "TurboGears2 Extensions" : "turbogears2.extensions",
-    "Identity Providers" : "turbogears2.identity.provider",
+    "Auth Providers" : "turbogears2.auth.provider",
     "Visit Managers" : "turbogears2.visit.manager",
 """
 

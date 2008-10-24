@@ -96,9 +96,12 @@ class AppConfig(Bunch):
     def __init__(self):
         """Creates some configuration defaults"""
 
-        #Create a few bunches we know we'll use
+        # Create a few bunches we know we'll use
         self.paths = Bunch()
         self.render_functions = Bunch()
+        # And also very often...
+        self.sa_auth = Bunch()
+        self.sa_auth.translations = Bunch()
 
         #Set individual defaults
         self.stand_alone = True
@@ -154,10 +157,7 @@ class AppConfig(Bunch):
         config['pylons.h'] = self.package.lib.helpers
 
     def setup_sa_auth_backend(self):
-        defaults = {'users_table':'tg_user',
-                    'groups_table':'tg_group',
-                    'permissions_table':'tg_permission',
-                    'password_encryption_method':'sha1',
+        defaults = {
                     'form_plugin': None
                    }
         # The developer must have defined a 'sa_auth' section, because
@@ -286,15 +286,13 @@ class AppConfig(Bunch):
 
     def add_auth_middleware(self, app):
         """Configure authorization/authentication"""
-        from tg.ext.repoze.who.middleware import make_who_middleware
+        from tgext.authorization.quickstart import setup_sql_auth
 
         auth = self.sa_auth
 
-        app = make_who_middleware(app, config, auth.user_class,
-                                  auth.user_criterion,
-                                  auth.user_id_column,
-                                  auth.dbsession,
-                                  )
+        app = setup_sql_auth(app, config, auth.user_class, auth.group_class,
+                             auth.permission_class, auth.dbsession,
+                             translations=auth.translations)
         return app
 
     def add_core_middleware(self, app):
