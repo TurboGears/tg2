@@ -29,6 +29,9 @@ setup(
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9', 
         'repoze.tm2',
+        'zope.sqlalchemy',
+        'SQLAlchemy>=0.5beta3',
+        'TurboJson', 
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
