@@ -205,12 +205,17 @@ class DecoratedController(WSGIController):
         All of these values are populated into the context object by the
         expose decorator.
         """
-
+            
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
         if content_type != CUSTOM_CONTENT_TYPE:
             pylons.response.headers['Content-Type'] = content_type
+        
+        #skip all the complicated stuff if we're just passing a string along. 
+        if isinstance(response, basestring):
+            return response
+        
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
@@ -245,7 +250,8 @@ class DecoratedController(WSGIController):
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = dict(tmpl_context=tmpl_context)
-        namespace.update(response)
+        if isinstance(response, dict):
+            namespace.update(response)
         if not engine_name in ['json']:
             namespace.update(get_tg_vars())
 

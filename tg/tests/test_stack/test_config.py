@@ -17,7 +17,6 @@ def setup_noDB():
     return app 
 
 def test_basic_stack():
-    """Ensure that the tg stack returns a string"""
     app = setup_noDB()
     resp = app.get('/')
     assert resp.body == "my foo"

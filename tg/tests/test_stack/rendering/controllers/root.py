@@ -4,9 +4,9 @@ from tg import expose, redirect, config
 from tg.controllers import TGController
 
 class RootController(TGController):
-    @expose()
+    @expose('index.html')
     def index(self):
-        return "my foo"
+        return {}
 
     @expose()
     def config_test(self):
