@@ -3,7 +3,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 execfile(os.path.join(here, 'tg', 'release.py'))
 from setuptools import find_packages, setup
 
-test_requirements = ["nose", "TurboKid", "TurboJson", "coverage"]
+test_requirements = ['coverage',
+                    'nose',
+                    'repoze.tm2',
+                    'TurboKid', 
+                    'TurboJson', 
+                    'zope.sqlalchemy',
+                    'SQLAlchemy>=0.5beta3',
+                    ]
 
 setup(
     name='TurboGears2',
@@ -27,11 +34,9 @@ setup(
         'decorator',
         'Genshi',
         'Pylons>=0.9.7beta3',
-        'ToscaWidgets>=0.9', 
-        'repoze.tm2',
-        'zope.sqlalchemy',
+        'ToscaWidgets>=0.9',
+        'tgext.authorization',
         'SQLAlchemy>=0.5beta3',
-        'TurboJson', 
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
