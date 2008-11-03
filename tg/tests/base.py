@@ -116,7 +116,7 @@ class TestWSGIController(TestCase):
 class TestConfig(AppConfig):
 
     def __init__(self, folder, values=None):
-
+        AppConfig.__init__(self)
         #First we setup some base values that we know will work
         self.renderers = ['genshi'] 
         self.render_functions = tg.util.Bunch()
@@ -128,6 +128,7 @@ class TestConfig(AppConfig):
         self.auto_reload_templates = False
         self.use_legacy_renderer = True
         self.serve_static = False
+        
 
         #Then we overide those values with what was passed in
         for key, value in values.items():

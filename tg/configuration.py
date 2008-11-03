@@ -1,4 +1,4 @@
-"""Simple AppSetup helper class"""
+"""Configuration Helpers for TurboGears 2"""
 import os
 import logging
 from UserDict import DictMixin
@@ -35,10 +35,15 @@ class PylonsConfigWrapper(DictMixin):
     proxy that allows for multiple pylons/tg2 applicatoins to live
     in the same process simultaniously, but to always get the right
     config data for the app that's requesting them.
+    
+    Sites, with seeking to maximize needs may perfer to use the pylons 
+    config stacked object proxy directly, using just dictionary style
+    access, particularly whenever config is checked on a per-request
+    basis. 
     """
 
     def __init__(self, dict_to_wrap):
-        """Initialize by passing in a dictionary to be wrapped"""
+        """Initialize the object by passing in pylons config to be wrapped"""
         self.__dict__['config_proxy'] = dict_to_wrap
 
     def __getitem__(self, key):
@@ -81,7 +86,7 @@ class AppConfig(Bunch):
     """Class to store application configuration
 
     This class should have configuration/setup information
-    that is NECESSARY for proper application function.
+    that is *nessisary* for proper application function.
     Deployment specific configuration information should go in
     the config files (eg: dvelopment.ini or production.ini)
 
@@ -104,12 +109,14 @@ class AppConfig(Bunch):
         self.sa_auth.translations = Bunch()
 
         #Set individual defaults
-        self.stand_alone = True
-        self.default_renderer = 'genshi'
-        self.auth_backend = None
-        self.serve_static = True
-        self.use_legacy_renderer = True
         self.auto_reload_templates = True
+        self.auth_backend = None
+        self.default_renderer = 'genshi'
+        self.serve_static = True
+        self.stand_alone = True
+        self.use_legacy_renderer = True
+        self.use_toscawidgets = True
+        self.use_transaction_manager = True
 
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
@@ -127,10 +134,13 @@ class AppConfig(Bunch):
         """Initialize the config object.
 
         tg.config is a proxy for pylons.config that allows attribute style
-        access, so it's automatically setup when we create the poylons config
+        access, so it's automatically setup when we create the pylons 
+        config.
 
-        Besides basic initialization,  this method copies all the values
-        in base_config  into the ``tg.config`` object.
+        Besides basic initialization, this method copies all the values
+        in base_config into the ``pylons.config`` and ``tg.config`` 
+        objects.
+        
         """
         pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
@@ -140,8 +150,11 @@ class AppConfig(Bunch):
     def setup_routes(self):
         """Setup the default TG2 routes
 
-        Overide this and setup your own routes maps if you want to use routes.
+        Overide this and setup your own routes maps if you want to use 
+        custom routes.
+        
         """
+        
         map = Mapper(directory=config['pylons.paths']['controllers'],
                     always_scan=config['debug'])
 
@@ -153,10 +166,18 @@ class AppConfig(Bunch):
         config['routes.map'] = map
 
     def setup_helpers_and_globals(self):
+        """Add Hepers and Globals objects to the config.
+        
+        Overide this method to customize the way that ``app_globals`` 
+        and ``helpers`` are setup.  
+        """
+        
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
+        config['pylons.helpers'] = self.package.lib.helpers
         config['pylons.h'] = self.package.lib.helpers
 
     def setup_sa_auth_backend(self):
+        """This method adds sa_auth information to the config."""
         defaults = {
                     'form_plugin': None
                    }
@@ -167,7 +188,17 @@ class AppConfig(Bunch):
         config['sa_auth'].update(self.sa_auth)
 
     def setup_mako_renderer(self):
-        """Setup a renderer and loader for mako templates"""
+        """Setup a renderer and loader for mako templates
+        
+        Overide this to customize the way that the mako template
+        renderer is setup.  In particular if you want to setup 
+        a different set of search paths, different encodings, or
+        additonal imports, all you need to do is update the
+        ``TemplateLookup`` constructor. 
+        
+        You can also use your own render_mako function instead of the one
+        provided by tg.render. 
+        """
         from mako.lookup import TemplateLookup
         from tg.render import render_mako
 
@@ -182,7 +213,10 @@ class AppConfig(Bunch):
         self.render_functions.mako = render_mako
 
     def setup_genshi_renderer(self):
-        """Setup a renderer and loader for Genshi templates"""
+        """Setup a renderer and loader for Genshi templates
+        
+        Overide this to customize the way that the internationalization
+        filter, template loader """
         from genshi.template import TemplateLoader
         from tg.render import render_genshi
 
@@ -372,9 +406,16 @@ class AppConfig(Bunch):
         def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
             """Create a tg WSGI application and return it
 
+            ``wrap_app``
+                a WSGI middleware component which takes the core turbogears
+                application and wraps it -- inside all the WSGI-components 
+                provided by TG and Pylons. This allows you to work with the 
+                full environ that your tg app would get before anything
+                happens in the app itself. 
+
             ``global_conf``
-                The inherited configuration for this application. Normally from
-                the [DEFAULT] section of the Paste ini file.
+                The inherited configuration for this application. Normally 
+                fromthe [DEFAULT] section of the Paste ini file.
 
             ``full_stack``
                 Whether or not this application provides a full WSGI stack (by
@@ -393,12 +434,16 @@ class AppConfig(Bunch):
             if wrap_app:
                 wrap_app(app)
             app = self.add_core_middleware(app)
-            app = self.add_tosca_middleware(app)
+            
+            if self.use_toscawidgets:
+                app = self.add_tosca_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
                 app = self.add_auth_middleware(app)
-
-            app = self.add_tm_middleware(app)
+            
+            if self.use_transaction_manager: 
+                app = self.add_tm_middleware(app)
+            
             if self.use_sqlalchemy:
                 if not hasattr(self, 'DBSession'):
                     # If the user hasn't specified a scoped_session, assume
