@@ -35,7 +35,7 @@ setup(
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9',
-        'tgext.authorization',
+        'repoze.what',
         'SQLAlchemy>=0.5beta3',
     ],
     extras_require={
