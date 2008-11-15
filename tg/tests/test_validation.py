@@ -103,12 +103,13 @@ class TestTGController(TestWSGIController):
         content = loads(resp.body)
         assert content['a'] == 1
                 
-    def test_validaton_errors(self):
+    def test_validation_errors(self):
         "Ensure that dict validation produces a full set of errors"
         form_values = {'a':'1', 'b':"guido~google.com"}
         resp = self.app.post('/two_validators', form_values)
-        print resp
-        assert 'An email address must contain a single @' in resp
+        ev = validators.Email()
+        m = ev.message("noAt", None)
+        assert m in resp
     
     def test_form_validation(self):
         "Check @validate's handing of ToscaWidget forms instances"
