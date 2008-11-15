@@ -26,9 +26,6 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    dependency_links=[
-        'http://turbogears.org/2.0/downloads/current',
-    ],
     install_requires=[
         'Babel',
         'decorator',
