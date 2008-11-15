@@ -320,7 +320,7 @@ class AppConfig(Bunch):
 
     def add_auth_middleware(self, app):
         """Configure authorization/authentication"""
-        from repoze.what.quickstart import setup_sql_auth
+        from repoze.what.plugins.quickstart import setup_sql_auth
 
         auth = self.sa_auth
 
