@@ -1,5 +1,5 @@
 import os
-from tg.tests.base import TestConfig
+from tg.test_stack import TestConfig
 from paste.fixture import TestApp
 
 def setup_noDB():

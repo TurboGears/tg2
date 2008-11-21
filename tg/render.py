@@ -108,6 +108,8 @@ def get_tg_vars():
         selector=selector,
         ipeek=ipeek, 
         cycle=cycle, 
+        flash=tg.get_flash(),
+        flash_status=tg.get_status(),
         quote_plus=quote_plus, 
         checker=checker,
         url = tg.controllers.url, 
@@ -118,22 +120,26 @@ def get_tg_vars():
         inputs = getattr(tmpl_context, "form_values", {}),
         request = tg.request
         )
-        
-    helpers = config.get('pylons.h') or config.get('pylons.helpers')
     
+    helpers = config.get('pylons.h') or config.get('pylons.helpers')
+        
     root_vars = Bunch(
         c=tmpl_context,
         tmpl_context = tmpl_context,
         response = response,
         request = request,
         h = helpers,
+        url = tg.url,
         helpers = helpers,
         tg=tg_vars
         )
+    #Allow users to provide a callable that defines extra vars to be 
+    #added to the template namespace
+    variable_provider = config.get('variable_provider', None)
+    if variable_provider:
+        root_vars.update(variable_provider())
     return root_vars
-    
-def genshi_template_loader():
-    pass
+
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
     
