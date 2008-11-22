@@ -9,13 +9,17 @@ import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
+from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
-from tg.configuration import Bunch
 # this can't be tg, as we are circular importing then!
 from pylons import config, request
 from pylons import tmpl_context as c
 from util import partial
+from repoze.what.authorize import check_authorization, NotAuthorizedError
+
+from tg.configuration import Bunch
+from tg.flash import flash
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -208,6 +212,7 @@ class expose(object):
             self.content_type, self.engine, self.template, self.exclude_names)
         return func
 
+
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the
     template that will be used to render the response dictionary
@@ -343,5 +348,26 @@ def postpone_commits(func, *args, **kwargs):
     retval = func(*args, **kwargs)
     s.commit = old_commit
     return retval
+
+
+def require(predicate):
+    """
+    Make repoze.what verify that the predicate is met.
     
+    @param predicate: A repoze.what predicate.
+    @return: The decorator that checks authorization.
+    
+    """
+    
+    @decorator
+    def check_auth(func, *args, **kwargs):
+        environ = request.environ
+        try:
+            check_authorization(predicate, environ)
+        except NotAuthorizedError, e:
+            flash(e.errors, status="status_error")
+            raise HTTPUnauthorized()
+        return func(*args, **kwargs)
+    
+    return check_auth
 

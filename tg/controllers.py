@@ -514,10 +514,9 @@ class TGController(ObjectDispatchController):
     def check_security(self):
         errors = []
         environ = pylons.request.environ
-        identity = environ.get('repoze.who.identity')
         if not hasattr(self, "require") or \
             self.require is None or \
-            self.require.eval_with_object(identity, errors):
+            self.require.eval_with_environ(environ, errors):
             return True
 
         # if we did not return this is an error :)
