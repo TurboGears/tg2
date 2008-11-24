@@ -324,7 +324,7 @@ class AppConfig(Bunch):
 
         auth = self.sa_auth
 
-        app = setup_sql_auth(app, config, auth.user_class, auth.group_class,
+        app = setup_sql_auth(app, auth.user_class, auth.group_class,
                              auth.permission_class, auth.dbsession,
                              translations=auth.translations)
         return app
