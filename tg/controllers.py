@@ -517,10 +517,12 @@ class TGController(ObjectDispatchController):
         if not hasattr(self, "require") or \
             self.require is None or \
             self.require.eval_with_environ(environ, errors):
+            log.debug('Successed controller authorization at %s',
+                      pylons.request.path)
             return True
 
-        # if we did not return this is an error :)
-        # TODO: do something with the errors variable like informing our user...
+        log.debug('Failed controller authorization at %s', pylons.request.path)
+        flash(errors, status="status_error")
         return False
 
 
