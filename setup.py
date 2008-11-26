@@ -6,8 +6,8 @@ from setuptools import find_packages, setup
 test_requirements = ['coverage',
                     'nose',
                     'repoze.tm2',
-                    'TurboKid', 
-                    'TurboJson', 
+                    'TurboKid',
+                    'TurboJson',
                     'zope.sqlalchemy',
                     'SQLAlchemy>=0.5beta3',
                     ]
@@ -32,13 +32,13 @@ setup(
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9',
-        'repoze.what',
-        'repoze.what.plugins.sql',
+        'repoze.what>=1.0b1',
+        'repoze.what.plugins.sql>=1.0a1',
         'SQLAlchemy>=0.5beta3',
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
-        #     since tests_require takes care of that as long as TG is tested 
+        #     since tests_require takes care of that as long as TG is tested
         #     with 'python setup.py test' (which we should IMHO so setuptools
         #     can take care of these details for us)
         'core-testing':test_requirements,
