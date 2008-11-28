@@ -25,6 +25,7 @@ from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
 from tg.render import get_tg_vars
 from tg.render import render as tg_render
 from tw.api import Widget
+from tg.flash import flash
 from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
