@@ -32,8 +32,7 @@ setup(
         'Genshi',
         'Pylons>=0.9.7beta3',
         'ToscaWidgets>=0.9',
-        'repoze.what>=1.0b1',
-        'repoze.what.plugins.sql>=1.0a1',
+        'repoze.what.plugins.sql>=1.0a2',
         'SQLAlchemy>=0.5beta3',
     ],
     extras_require={

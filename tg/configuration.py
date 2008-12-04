@@ -322,21 +322,7 @@ class AppConfig(Bunch):
         """Configure authentication and authorization"""
         from repoze.what.plugins.quickstart import setup_sql_auth
 
-        auth = self.sa_auth
-        
-        # Optional parameters:
-        form_plugin = auth.get('form_plugin')
-        form_identifies = auth.get('form_identifies', True)
-        identifiers = auth.get('identifiers', [])
-        authenticators = auth.get('authenticators', [])
-        challengers = auth.get('challengers', [])
-        mdproviders = auth.get('mdproviders', [])
-
-        app = setup_sql_auth(app, auth.user_class, auth.group_class,
-                             auth.permission_class, auth.dbsession, 
-                             form_plugin, form_identifies, identifiers,
-                             authenticators, challengers, mdproviders,
-                             auth.translations)
+        app = setup_sql_auth(app, **self.sa_auth)
         return app
 
     def add_core_middleware(self, app):
