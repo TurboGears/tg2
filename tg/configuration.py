@@ -428,7 +428,7 @@ class AppConfig(Bunch):
             load_environment(global_conf, app_conf)
             app = TGApp()
             if wrap_app:
-                wrap_app(app)
+                app = wrap_app(app)
             app = self.add_core_middleware(app)
             
             if self.use_toscawidgets:
