@@ -11,7 +11,7 @@ class cycle:
     Loops forever over an iterator. Wraps the itertools.cycle method
     but provides a way to get the current value via the 'value' attribute
 
-    >>> from turbogears.view.base import cycle
+    >>> from tg.render import cycle
     >>> oe = cycle(('odd','even'))
     >>> oe
     None
