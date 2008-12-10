@@ -24,7 +24,7 @@ The latest development version is available in the
     http://svn.turbogears.org/trunk#egg=turbogears-dev
 """
 url="http://www.turbogears.org"
-author= "Mark Ramm, Jonathan LaCour, Rick Copland, Alberto Vargas, and the TurboGears community"
+author= "Mark Ramm, Jonathan LaCour, Rick Copland, Alberto Valverde, and the TurboGears community"
 email = "mark.ramm@gmail.com, alberto@toscat.net,"
 copyright = """Copyright 2005-2007 Kevin Dangoor,
 Alberto Valverde, Mark Ramm and contributors"""
