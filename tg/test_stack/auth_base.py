@@ -23,6 +23,8 @@ from pylons.testutil import ControllerWrap, SetupCacheGlobal
 
 from beaker.middleware import CacheMiddleware
 
+from repoze.who.plugins.form import RedirectingFormPlugin
+from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.what.middleware import setup_auth
 from repoze.what.adapters import BaseSourceAdapter
 from pylons import config
@@ -144,8 +146,20 @@ def make_app(controller_klass=None, environ=None):
     # Setting up the source adapters:
     groups_adapters = {'my_groups': FakeGroupSourceAdapter()}
     permissions_adapters = {'my_permissions': FakePermissionSourceAdapter()}
+    
+    # Setting up repoze.who:
+    cookie = AuthTktCookiePlugin('secret', 'authtkt')
+    
+    form = RedirectingFormPlugin('/login', '/login_handler',
+                                 '/logout_handler',
+                                 rememberer_name='cookie')
+    
+    identifiers = [('main_identifier', form), ('cookie', cookie)]
+    challengers = [('form', form)]
     authenticators = (('auth', FakeAuthenticator()), )
-    app = setup_auth(app, groups_adapters, permissions_adapters, authenticators)
+    app = setup_auth(app, groups_adapters, permissions_adapters, 
+                     identifiers=identifiers, authenticators=authenticators,
+                     challengers=challengers)
 
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
