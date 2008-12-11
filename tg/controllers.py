@@ -137,14 +137,17 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
-
+        if isinstance(controller.im_self, DecoratedController):
+            params = params['pylons'].request.params
+        
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
 
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
-
+        
+        
         # The validator may be a dictionary, a FormEncode Schema object, or any
         # object with a "validate" method.
         if isinstance(validation.validators, dict):
