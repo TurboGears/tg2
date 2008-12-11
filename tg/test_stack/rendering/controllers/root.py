@@ -4,7 +4,7 @@ from tg import expose, redirect, config
 from tg.controllers import TGController
 
 class RootController(TGController):
-    @expose('index.html')
+    @expose('tg.test_stack.rendering.templates.index')
     def index(self):
         return {}
 

@@ -221,7 +221,7 @@ class DecoratedController(WSGIController):
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
-        
+
         if use_legacy_renderer: 
             buffet = pylons.buffet._current_obj()
         
@@ -278,6 +278,7 @@ class DecoratedController(WSGIController):
             result = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
+
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):

@@ -114,7 +114,19 @@ class AppConfig(Bunch):
         self.default_renderer = 'genshi'
         self.serve_static = True
         self.stand_alone = True
-        self.use_legacy_renderer = True
+
+        # this is to activate the legacy renderers
+        # legacy renderers are buffet interface plugins
+        self.use_legacy_renderer = False
+        # if this is set to True the @expose decorator will be able to
+        # specify template names using a dotted name that will be searched
+        # in the python path. This option is used in tg.render.render_genshi
+        # TODO: we should set this to False once we implement simple names
+        # support in the @expose decorator as explained in #1942
+        # for the moment only the dotted names notation is supported with the
+        # new generation renderer functions
+        self.use_dotted_templatenames = True
+
         self.use_toscawidgets = True
         self.use_transaction_manager = True
 
@@ -200,15 +212,51 @@ class AppConfig(Bunch):
         provided by tg.render. 
         """
         from mako.lookup import TemplateLookup
+        from mako.template import Template
+
         from tg.render import render_mako
 
-        config['pylons.app_globals'].mako_lookup = TemplateLookup(
-            directories=self.paths['templates'],
-            module_directory=self.paths['templates'],
-            input_encoding='utf-8', output_encoding='utf-8',
-            imports=['from webhelpers.html import escape'],
-            default_filters=['escape'],
-            filesystem_checks=self.auto_reload_templates)
+        class DottedTemplateLookup(object):
+            """this is an emulation of the Mako template lookup
+            that will handle get_template and support dotted names
+            in python path notation to support zipped eggs
+            """
+            def __init__(self, input_encoding, output_encoding,
+                    imports, default_filters):
+                self.input_encoding = input_encoding
+                self.output_encoding = output_encoding
+                self.imports = imports
+                self.default_filters = default_filters
+
+            def get_template(self, template_name):
+                """this is the emulated method that must return a template
+                instance based on a given template name
+                """
+                return Template(open(template_name).read(),
+                    input_encoding=self.input_encoding,
+                    output_encoding=self.output_encoding,
+                    default_filters=self.default_filters,
+                    imports=self.imports)
+
+        if config.get('use_dotted_templatenames', False):
+            # support dotted names by injecting a slightly different template
+            # lookup system that will return templates from dotted template
+            # notation.
+            config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
+                input_encoding='utf-8', output_encoding='utf-8',
+                imports=['from webhelpers.html import escape'],
+                default_filters=['escape'])
+                
+        else:
+            # if no dotted names support was required we will just setup
+            # a file system based template lookup mechanism
+            config['pylons.app_globals'].mako_lookup = TemplateLookup(
+                directories=self.paths['templates'],
+                module_directory=self.paths['templates'],
+                input_encoding='utf-8', output_encoding='utf-8',
+                imports=['from webhelpers.html import escape'],
+                default_filters=['escape'],
+                filesystem_checks=self.auto_reload_templates)
 
         self.render_functions.mako = render_mako
 
@@ -221,8 +269,12 @@ class AppConfig(Bunch):
         from tg.render import render_genshi
 
         def template_loaded(template):
-            "Plug-in our i18n function to Genshi."
+            """Plug-in our i18n function to Genshi, once the template
+            is loaded.
+            This function will be called by genshi TemplateLoader after
+            loading the template"""
             template.filters.insert(0, Translator(ugettext))
+
         loader = TemplateLoader(search_path=self.paths.templates,
                                 auto_reload=self.auto_reload_templates,
                                 callback=template_loaded)

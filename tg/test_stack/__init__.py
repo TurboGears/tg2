@@ -16,6 +16,7 @@ class TestConfig(AppConfig):
         self.auth_backend = None
         self.auto_reload_templates = False
         self.use_legacy_renderer = True
+        self.use_dotted_templatenames = True
         self.serve_static = False
         
 

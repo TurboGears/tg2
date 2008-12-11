@@ -78,8 +78,10 @@ class Decoration(object):
         if tg_format:
             assert '/' in tg_format, 'Invalid tg_format: must be a MIME type'
             accept_types = tg_format
+
         else:
             accept_types = request.headers.get('accept', '*/*')
+
         content_type = best_match(self.engines.keys(), accept_types)
         engine, template, exclude_names = self.engines[content_type]
 
