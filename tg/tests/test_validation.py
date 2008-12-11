@@ -48,11 +48,12 @@ class BasicTGController(TGController):
         return dict(int=a,str=b)
 
     @expose('json')
-    @validate(validators={"a":validators.Int(), "b":validators.Email})
-    def two_validators(self, a=None, b=None, *args):
+    @validate(validators={"a":validators.Int(), "someemail":validators.Email})
+    def two_validators(self, a=None, someemail=None, *args):
         errors = pylons.c.form_errors
         values =  pylons.c.form_values
-        return dict(a=a, b=b, errors=str(errors), values=str(values))
+        return dict(a=a, someemail=someemail,
+                errors=str(errors), values=str(values))
 
     @expose()
     def display_form(self, **kwargs):
@@ -98,19 +99,22 @@ class TestTGController(TestWSGIController):
     
     def test_two_validators_errors(self):
         "Ensure that multiple validators are applied correctly"
-        form_values = {'a':'1', 'b':"guido@google.com"}
+        form_values = {'a':'1', 'someemail':"guido@google.com"}
         resp = self.app.post('/two_validators', form_values)
         content = loads(resp.body)
         assert content['a'] == 1
                 
     def test_validation_errors(self):
         "Ensure that dict validation produces a full set of errors"
-        form_values = {'a':'1', 'b':"guido~google.com"}
+        form_values = {'a':'1', 'someemail':"guido~google.com"}
         resp = self.app.post('/two_validators', form_values)
-        ev = validators.Email()
-        m = ev.message("noAt", None)
-        assert m in resp
-    
+
+        content = loads(resp.body)
+        errors = content.get('errors', None)
+
+        assert errors, 'There should have been at least one error'
+        assert 'someemail' in errors, 'The email was invalid and should have been reported in the errors'
+
     def test_form_validation(self):
         "Check @validate's handing of ToscaWidget forms instances"
         form_values = {'title':'Razer', 'year':"2007"}
