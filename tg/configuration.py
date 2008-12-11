@@ -1,6 +1,7 @@
 """Configuration Helpers for TurboGears 2"""
 import os
 import logging
+from copy import copy
 from UserDict import DictMixin
 from pylons.i18n import ugettext
 from genshi.filters import Translator
@@ -373,8 +374,13 @@ class AppConfig(Bunch):
     def add_auth_middleware(self, app):
         """Configure authentication and authorization"""
         from repoze.what.plugins.quickstart import setup_sql_auth
+        
+        # Removing keywords not used by repoze.who:
+        auth_args = copy(self.sa_auth)
+        if 'password_encryption_method' in auth_args:
+            del auth_args['password_encryption_method']
 
-        app = setup_sql_auth(app, **self.sa_auth)
+        app = setup_sql_auth(app, **auth_args)
         return app
 
     def add_core_middleware(self, app):
