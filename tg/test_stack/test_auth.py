@@ -7,7 +7,7 @@ Tests for the integration of repoze.who and repoze.what into TG.
 import tg, pylons
 from tg.controllers import TGController
 from tg.decorators import expose, require
-from repoze.what import authorize
+from repoze.what import predicates
 from nose.tools import eq_
 
 from auth_base import TestWSGIController, make_app, setup_session_dir, \
@@ -34,10 +34,32 @@ class SubController1(TGController):
         return 'in group'
 
 
+class SecurePanel(TGController):
+    """Mock TG2 secure controller"""
+    
+    _require = predicates.has_permission('edit-site')
+    
+    @expose()
+    def index(self):
+        return 'you have the permission'
+    
+    @expose()
+    @require(predicates.in_group('developers'))
+    def commit(self):
+        return 'you can commit'
+    
+    @expose()
+    @require(predicates.in_group('admins'))
+    def delete_user(self):
+        return 'you can delete users'
+
+
 class BasicTGController(TGController):
     """Mock TG2 controller"""
 
     sub1 = SubController1()
+    
+    panel = SecurePanel()
     
     @expose()
     def index(self, **kwargs):
@@ -48,42 +70,42 @@ class BasicTGController(TGController):
         return "Main Default Page called for url /%s" % remainder
     
     @expose()
-    @require(authorize.in_group('admins'))
+    @require(predicates.in_group('admins'))
     def admin(self):
         return 'got to admin'
     
     @expose()
-    @require(authorize.in_all_groups('developers', 'admins'))
+    @require(predicates.in_all_groups('developers', 'admins'))
     def all_groups(self):
         return 'got to all groups'
 
     @expose()
-    @require(authorize.in_any_group('php', 'trolls'))
+    @require(predicates.in_any_group('php', 'trolls'))
     def any_groups(self):
         return 'got to any groups'
 
     @expose()
-    @require(authorize.is_user('rms'))
+    @require(predicates.is_user('rms'))
     def rms_user(self):
         return 'got to promote freedomware'
     
     @expose()
-    @require(authorize.has_permission('edit-site'))
+    @require(predicates.has_permission('edit-site'))
     def editsite_perm_only(self):
         return 'got to edit'
     
     @expose()
-    @require(authorize.has_any_permission('commit'))
+    @require(predicates.has_any_permission('commit'))
     def commit_perm(self):
         return 'got to commit'
 
     @expose()
-    @require(authorize.has_all_permissions('commit', 'edit-site'))
+    @require(predicates.has_all_permissions('commit', 'edit-site'))
     def all_perm(self):
         return 'got to all perm'
 
     @expose()
-    @require(authorize.not_anonymous())
+    @require(predicates.not_anonymous())
     def not_anon(self):
         return 'got to not anon'
     
@@ -185,3 +207,23 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/login_handler?login=sballmer&password=developers')
         resp = self.app.get('/sub1/in_group')
         eq_(resp.body, 'in group')
+    
+    def test_controller_wide_authorization_when_allowed(self):
+        resp = self.app.get('/login_handler?login=rms&password=freedom')
+        resp = self.app.get('/panel')
+        eq_(resp.body, 'you have the permission')
+    
+    def test_controller_wide_authorization_when_denied(self):
+        resp = self.app.get('/login_handler?login=sballmer&password=developers')
+        resp = self.app.get('/panel')
+        assert resp.body.startswith('302 Found'), resp.body
+    
+    def test_controller_authorization_with_require_decorator_when_allowed(self):
+        resp = self.app.get('/login_handler?login=linus&password=linux')
+        resp = self.app.get('/panel/commit')
+        eq_(resp.body, 'you can commit')
+    
+    def test_controller_authorization_with_require_decorator_when_denied(self):
+        resp = self.app.get('/login_handler?login=linus&password=linux')
+        resp = self.app.get('/panel/delete_user')
+        assert resp.body.startswith('302 Found'), resp.body

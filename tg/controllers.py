@@ -30,7 +30,8 @@ from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
 
-# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't override pylons.request.content_type
+# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't 
+# override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
 def _configured_engines():
@@ -439,7 +440,7 @@ def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
-
+        
         _check_security(obj)
 
         if _iscontroller(obj):
@@ -519,9 +520,9 @@ class TGController(ObjectDispatchController):
     def check_security(self):
         errors = []
         environ = pylons.request.environ
-        if not hasattr(self, "require") or \
-            self.require is None or \
-            self.require.eval_with_environ(environ, errors):
+        if not hasattr(self, "_require") or \
+            self._require is None or \
+            self._require.eval_with_environ(environ, errors):
             log.debug('Successed controller authorization at %s',
                       pylons.request.path)
             return True
