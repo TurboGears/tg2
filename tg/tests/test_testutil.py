@@ -33,7 +33,7 @@ class TestGroup(BaseModelTest):
         group = model.Group()
         group.group_name = u"turbogears"
         group.display_name = u"The TurboGears Team"
-        model.DBSession.save(group)
+        model.DBSession.add(group)
         model.DBSession.flush()
         transaction.commit()
     
@@ -41,6 +41,6 @@ class TestGroup(BaseModelTest):
         group = model.Group()
         group.group_name = u"turbogears"
         group.display_name = u"The TurboGears Team"
-        model.DBSession.save(group)
+        model.DBSession.add(group)
         model.DBSession.flush()
         transaction.commit()
