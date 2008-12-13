@@ -475,8 +475,8 @@ def _check_security(obj):
     else:
         klass_instance = obj
 
-    if hasattr(klass_instance, "check_security"):
-        if not klass_instance.check_security():
+    if hasattr(klass_instance, "_check_security"):
+        if not klass_instance._check_security():
             raise HTTPUnauthorized().exception
 
 def _iscontroller(obj):
@@ -517,7 +517,7 @@ class TGController(ObjectDispatchController):
             result._exception = True
         return result
     
-    def check_security(self):
+    def _check_security(self):
         errors = []
         environ = pylons.request.environ
         if not hasattr(self, "_require") or \
