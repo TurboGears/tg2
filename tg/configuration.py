@@ -308,6 +308,19 @@ class AppConfig(Bunch):
         #This is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
         template_location = '%s.templates' %self.package.__name__
+        template_location = '%s.templates' % self.package.__name__
+
+        def template_loaded(template):
+            template.filters.insert(0, Translator(ugettext))
+        
+        #Set some default options for genshi
+        options = {
+            'genshi.loader_callback': template_loaded,
+            'genshi.default_format': 'xhtml',
+        }
+        
+        #overide those options from config
+        config['buffet.template_options'].update(options)        
         config.add_template_engine(self.default_renderer,
                                    template_location,  {})
 
