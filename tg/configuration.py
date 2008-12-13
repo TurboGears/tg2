@@ -388,6 +388,10 @@ class AppConfig(Bunch):
         """Configure authentication and authorization"""
         from repoze.what.plugins.quickstart import setup_sql_auth
         
+        # Configuring auth logging:
+        if 'log_stream' not in self.sa_auth:
+            self.sa_auth['log_stream'] = logging.getLogger('auth')
+        
         # Removing keywords not used by repoze.who:
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
