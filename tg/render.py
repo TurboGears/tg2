@@ -6,6 +6,15 @@ from genshi import XML
 from urllib import quote_plus
 from itertools import cycle as icycle, chain
 
+class MissingRendererError(Exception):
+    def __init__(self, template_engine):
+        super(MissingRendererError, self).__init__(
+            ("The renderer for '%(template_engine)s' templates is missing. "
+            "Try adding the following line in you app_cfg.py:\n"
+            "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
+            template_engine=template_engine))
+        self.template_engine = template_engine
+
 class cycle:
     """
     Loops forever over an iterator. Wraps the itertools.cycle method
@@ -140,10 +149,12 @@ def get_tg_vars():
         root_vars.update(variable_provider())
     return root_vars
 
-
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
     
-    render_function = config['render_functions'].get(template_engine)
+    if template_engine is not None:
+        render_function = config['render_functions'].get(template_engine)
+        if render_function is None:
+            raise MissingRendererError(template_engine)
     
     if not template_vars: 
         template_vars={}
