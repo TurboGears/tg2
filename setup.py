@@ -31,7 +31,7 @@ setup(
         'Babel',
         'decorator',
         'Genshi',
-        'Pylons>=0.9.7beta3',
+        'Pylons>=0.9.7rc3',
         'ToscaWidgets>=0.9',
         'repoze.what.plugins.sql>1.0a1',
         'SQLAlchemy>=0.5beta3',

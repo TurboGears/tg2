@@ -25,15 +25,3 @@ def test_default_genshi_renderer():
     resp = app.get('/')
     assert "Welcome" in resp
     assert "TurboGears" in resp
-
-def test_mako_renderer():
-    app = setup_noDB()
-    resp = app.get('/mako_index')
-    print resp
-    assert "<p>This is the mako index page</p>" in resp
-
-def test_mako_inheritance():
-    app = setup_noDB()
-    resp = app.get('/mako_inherits')
-    print resp
-    assert "inherited mako page" in resp
