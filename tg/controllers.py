@@ -232,15 +232,6 @@ class DecoratedController(WSGIController):
         if template_name is None:
             return response
 
-        # Deprecation warnings if people return a widget in the dict rather
-        # than setting it on tmpl_context
-        if isinstance(response, dict):
-            for key, item in response.iteritems():
-                if isinstance(item, Widget):
-                    msg = "Returning a widget is deprecated, set them on pylons.tmpl_context instead"
-                    warnings.warn(msg, DeprecationWarning)
-                    setattr(tmpl_context, key, item)
-
         # Prepare the engine, if it's not already been prepared.
         if use_legacy_renderer:
             if engine_name not in _configured_engines():
@@ -434,6 +425,7 @@ def _object_dispatch(obj, url_path):
 
             else:
                 obj, remainder = obj(*remainder)
+                list(remainder)
                 continue
 
 def _find_object(obj, remainder, notfound_handlers):
