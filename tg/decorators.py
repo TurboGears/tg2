@@ -186,23 +186,34 @@ class expose(object):
     def __init__(self, template='', content_type=None, exclude_names=None):
         if exclude_names is None:
             exclude_names = []
+
         if template == 'json':
             engine, template = 'json', ''
+
         elif ':' in template:
             engine, template = template.split(':', 1)
+
         elif template:
             # Use the default templating engine from the config
             from pylons import config
-            engine = config['buffet.template_engines'][0]['engine']
+            if config.get('use_legacy_renderer'):
+                engine = config['buffet.template_engines'][0]['engine']
+
+            else:
+                engine = config.get('default_renderer')
+
         else:
             engine, template = None, None
+
         if content_type is None:
             if engine == 'json':
                 content_type = 'application/json'
             else:
                 content_type = 'text/html'
+
         if engine == 'json' and 'tmpl_context' not in exclude_names:
             exclude_names.append('tmpl_context')
+
         self.engine = engine
         self.template = template
         self.content_type = content_type

@@ -153,6 +153,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     
     if template_engine is not None:
         render_function = config['render_functions'].get(template_engine)
+
         if render_function is None:
             raise MissingRendererError(template_engine)
     
