@@ -7,7 +7,7 @@ class TestConfig(AppConfig):
     def __init__(self, folder, values=None):
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi'] 
+        self.renderers = ['genshi', 'mako'] 
         self.render_functions = tg.util.Bunch()
         self.package = tg.test_stack
         self.default_renderer = 'genshi'
@@ -15,11 +15,10 @@ class TestConfig(AppConfig):
         self.helpers = {}
         self.auth_backend = None
         self.auto_reload_templates = False
-        self.use_legacy_renderer = True
+        self.use_legacy_renderer = False
         self.use_dotted_templatenames = True
         self.serve_static = False
         
-
         #Then we overide those values with what was passed in
         for key, value in values.items():
             setattr(self, key, value)

@@ -25,3 +25,9 @@ def test_default_genshi_renderer():
     resp = app.get('/')
     assert "Welcome" in resp
     assert "TurboGears" in resp
+
+def test_default_mako_renderer():
+    app = setup_noDB()
+    resp = app.get('/mako_index')
+    print resp
+    assert "<p>This is the mako index page</p>" in resp

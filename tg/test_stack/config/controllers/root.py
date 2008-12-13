@@ -24,6 +24,10 @@ class RootController(TGController):
     def config_attr_set(self, foo):
         config.test_value = foo
         return str(config.test_value)
+        
+    @expose()
+    def config_set_method(self):
+        return str(config.get('pylons'))
 
     @expose()
     def config_dict_set(self, foo):
