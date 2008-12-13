@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-<%inherit file="/base.mako" />
+<%inherit file="/mako_base.mak" />
 
 <%def name="head_tags()">
   <!-- add some head tags here -->

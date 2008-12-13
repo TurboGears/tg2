@@ -16,7 +16,7 @@ class TestConfig(AppConfig):
         self.auth_backend = None
         self.auto_reload_templates = False
         self.use_legacy_renderer = False
-        self.use_dotted_templatenames = True
+        self.use_dotted_templatenames = False
         self.serve_static = False
         
         #Then we overide those values with what was passed in
@@ -32,7 +32,7 @@ class TestConfig(AppConfig):
                     root=test_base_path,
                     controllers=os.path.join(test_config_path, 'controllers'),
                     static_files=os.path.join(test_config_path, 'public'),
-                    templates=[os.path.join(test_config_path, 'templates')]
+                    templates=os.path.join(test_config_path, 'templates')
                     )
 
     def setup_helpers_and_globals(self):
