@@ -111,6 +111,8 @@ def get_tg_vars():
         the WebOb Request Object
     config
         the app's config object
+    auth_stack_enabled
+        A boolean that determines if the auth stack is present in the environment
     """
     # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
@@ -127,7 +129,8 @@ def get_tg_vars():
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
-        request = tg.request
+        request = tg.request,
+        auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ
         )
     
     # TODO: we should actually just get helpers from the package's helpers
