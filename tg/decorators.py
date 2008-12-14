@@ -195,7 +195,6 @@ class expose(object):
 
         elif template:
             # Use the default templating engine from the config
-            from pylons import config
             if config.get('use_legacy_renderer'):
                 engine = config['buffet.template_engines'][0]['engine']
 
