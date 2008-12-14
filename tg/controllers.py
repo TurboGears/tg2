@@ -226,14 +226,15 @@ class DecoratedController(WSGIController):
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
 
-        if use_legacy_renderer: 
-            buffet = pylons.buffet._current_obj()
-        
         if template_name is None:
             return response
 
         # Prepare the engine, if it's not already been prepared.
-        if use_legacy_renderer:
+        # json is a buffet engine ATM
+        if use_legacy_renderer or 'json' == engine_name:
+            # get the buffet handler
+            buffet = pylons.buffet._current_obj()
+
             if engine_name not in _configured_engines():
                 from pylons import config
                 template_options = dict(config).get('buffet.template_options', {})
@@ -248,6 +249,7 @@ class DecoratedController(WSGIController):
         namespace = dict(tmpl_context=tmpl_context)
         if isinstance(response, dict):
             namespace.update(response)
+
         if not engine_name in ['json']:
             namespace.update(get_tg_vars())
 
@@ -264,7 +266,7 @@ class DecoratedController(WSGIController):
             testing_variables['controller_output'] = response
 
         # Render the result.
-        if use_legacy_renderer:
+        if use_legacy_renderer or 'json' == engine_name:
             result = buffet.render(engine_name=engine_name,
                                template_name=template_name,
                                include_pylons_variables=False,

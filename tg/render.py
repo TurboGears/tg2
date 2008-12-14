@@ -155,7 +155,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
         # the engine was defined in the @expose()
         render_function = config['render_functions'].get(template_engine)
 
-        if render_function is None and not template_engine == 'json':
+        if render_function is None:
             # engine was force in @expose() but is not present in the
             # engine list, warn developper
             raise MissingRendererError(template_engine)
