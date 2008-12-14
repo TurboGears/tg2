@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Basic controller classes for turbogears
 
@@ -20,7 +21,7 @@ import formencode
 import pylons
 from pylons.controllers import WSGIController
 
-from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException, 
+from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import get_tg_vars
 from tg.render import render as tg_render
@@ -30,7 +31,7 @@ from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
 
-# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't 
+# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
@@ -140,15 +141,15 @@ class DecoratedController(WSGIController):
         """
         if isinstance(controller.im_self, DecoratedController):
             params = pylons.request.params
-            
+
         validation = getattr(controller.decoration, 'validation', None)
         if validation is None:
             return params
 
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
-        
-        
+
+
         # The validator may be a dictionary, a FormEncode Schema object, or any
         # object with a "validate" method.
         if isinstance(validation.validators, dict):
@@ -210,17 +211,17 @@ class DecoratedController(WSGIController):
         All of these values are populated into the context object by the
         expose decorator.
         """
-            
+
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
         if content_type != CUSTOM_CONTENT_TYPE:
             pylons.response.headers['Content-Type'] = content_type
-        
-        #skip all the complicated stuff if we're just passing a string along. 
+
+        #skip all the complicated stuff if we're just passing a string along.
         if isinstance(response, basestring):
             return response
-        
+
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
@@ -243,7 +244,7 @@ class DecoratedController(WSGIController):
 
         #if there is an identity, push it to the pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
-        
+
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = dict(tmpl_context=tmpl_context)
@@ -271,7 +272,7 @@ class DecoratedController(WSGIController):
                                template_name=template_name,
                                include_pylons_variables=False,
                                namespace=namespace)
-        else: 
+        else:
             result = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
@@ -434,7 +435,7 @@ def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
-        
+
         _check_security(obj)
 
         if _iscontroller(obj):
@@ -510,13 +511,13 @@ class TGController(ObjectDispatchController):
                 result.headers.pop('Content-Type', None)
             result._exception = True
         return result
-    
+
     def _check_security(self):
         errors = []
         environ = pylons.request.environ
-        if not hasattr(self, "_require") or \
-            self._require is None or \
-            self._require.eval_with_environ(environ, errors):
+        if not hasattr(self, "allow_only") or \
+            self.allow_only is None or \
+            self.allow_only.eval_with_environ(environ, errors):
             log.debug('Successed controller authorization at %s',
                       pylons.request.path)
             return True
@@ -599,7 +600,7 @@ def url(tgpath, tgparams=None, **kw):
 
 def use_wsgi_app(wsgi_app):
     return wsgi_app(pylons.request.environ, pylons.request.start_response)
-    
+
 
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
