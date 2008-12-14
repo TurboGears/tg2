@@ -152,9 +152,12 @@ def get_tg_vars():
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
     
     if template_engine is not None:
+        # the engine was defined in the @expose()
         render_function = config['render_functions'].get(template_engine)
 
-        if render_function is None:
+        if render_function is None and not template_engine == 'json':
+            # engine was force in @expose() but is not present in the
+            # engine list, warn developper
             raise MissingRendererError(template_engine)
     
     if not template_vars: 
@@ -163,6 +166,8 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     template_vars.update(get_tg_vars())
 
     if not render_function:
+        # getting the default renderer. (this is only if no engine was defined
+        # in the @expose()
         render_function = config['render_functions'][config['default_renderer']]
 
     return render_function(template_name, template_vars, **kwargs)
