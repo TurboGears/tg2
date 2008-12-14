@@ -85,8 +85,6 @@ def get_tg_vars():
         the selector function
     checker
         the checker function
-    tg_js
-        the path to the JavaScript libraries
     ipeek
         the ipeek function
     cycle
@@ -118,14 +116,14 @@ def get_tg_vars():
     tg_vars = Bunch(
         selector=selector,
         ipeek=ipeek, 
-        cycle=cycle, 
+        cycle=cycle,
+        config = tg.config,
         flash=tg.get_flash(),
         flash_status=tg.get_status(),
         quote_plus=quote_plus, 
         checker=checker,
         url = tg.controllers.url, 
         session=session, 
-        config=config,
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
@@ -161,7 +159,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
         render_function = config['render_functions'].get(template_engine)
 
         if render_function is None:
-            # engine was force in @expose() but is not present in the
+            # engine was forced in @expose() but is not present in the
             # engine list, warn developper
             raise MissingRendererError(template_engine)
     
