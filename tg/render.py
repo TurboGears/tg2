@@ -15,80 +15,11 @@ class MissingRendererError(Exception):
             template_engine=template_engine))
         self.template_engine = template_engine
 
-class cycle:
-    """
-    Loops forever over an iterator. Wraps the itertools.cycle method
-    but provides a way to get the current value via the 'value' attribute
-
-    >>> from tg.render import cycle
-    >>> oe = cycle(('odd','even'))
-    >>> oe
-    None
-    >>> oe.next()
-    'odd'
-    >>> oe
-    'odd'
-    >>> oe.next()
-    'even'
-    >>> oe.next()
-    'odd'
-    >>> oe.value
-    'odd'
-    """
-    value = None
-    def __init__(self, iterable):
-        self._cycle = icycle(iterable)
-    def __str__(self):
-        return self.value.__str__()
-    def __repr__(self):
-        return self.value.__repr__()
-    def next(self):
-        self.value = self._cycle.next()
-        return self.value
-
-def selector(expression):
-    """If the expression is true, return the string 'selected'. Useful for
-    HTML <option>s."""
-    if expression:
-        return "selected"
-    else:
-        return None
-
-def checker(expression):
-    """If the expression is true, return the string "checked". This is useful
-    for checkbox inputs.
-    """
-    if expression:
-        return "checked"
-    else:
-        return None
-
-def ipeek(it):
-    """Lets you look at the first item in an iterator. This is a good way
-    to verify that the iterator actually contains something. This is useful
-    for cases where you will choose not to display a list or table if there
-    is no data present.
-    """
-    it = iter(it)
-    try:
-        item = it.next()
-        return chain([item], it)
-    except StopIteration:
-        return None
-
 def get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
 
     These variables are:
 
-    selector
-        the selector function
-    checker
-        the checker function
-    ipeek
-        the ipeek function
-    cycle
-        cycle through a set of values
     quote_plus
         the urllib quote_plus function
     url
@@ -114,14 +45,10 @@ def get_tg_vars():
     """
     # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
-        selector=selector,
-        ipeek=ipeek, 
-        cycle=cycle,
         config = tg.config,
         flash=tg.get_flash(),
         flash_status=tg.get_status(),
         quote_plus=quote_plus, 
-        checker=checker,
         url = tg.controllers.url, 
         session=session, 
         locale = tg.request.accept_language.best_matches(),
