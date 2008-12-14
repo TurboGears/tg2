@@ -448,7 +448,7 @@ class AppConfig(Bunch):
         return make_tm(app, self.commit_veto)
 
     def add_dbsession_remover_middleware(self, app):
-        """Sets up middleware that cleans up the sqlalchmy session
+        """Sets up middleware that cleans up the sqlalchemy session
 
         The default behavior of TG2 is to clean up the session on
         every request.  Only overide this method if you know what you
