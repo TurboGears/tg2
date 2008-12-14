@@ -130,6 +130,8 @@ def get_tg_vars():
         request = tg.request
         )
     
+    # TODO: we should actually just get helpers from the package's helpers
+    # module and dump the use of the SOP. 
     helpers = config.get('pylons.h') or config.get('pylons.helpers')
         
     root_vars = Bunch(
