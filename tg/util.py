@@ -2,6 +2,7 @@
 from pylons import config
 import os, sys
 import pkg_resources
+from pkg_resources import resource_filename
 
 def get_project_meta(name):
     for dirname in os.listdir("./"):
@@ -100,3 +101,39 @@ def partial(*args, **create_time_kwds):
         kwds.update(call_time_kwds)
         return func(*args, **kwds)
     return curried_function
+
+def get_dotted_filename(template_name, template_extension='.html'):
+    """this helper function is designed to search a template or any other
+    file by python module name.
+
+    Given a string containing the file/template name passed to the @expose
+    decorator we will return a resource useable as a filename even
+    if the file is in fact inside a zipped egg.
+
+    The actual implementation is a revamp of the Genshi buffet support
+    plugin, but could be used with any kind a file inside a python package.
+
+    @param template_name: the string representation of the template name
+    as it has been given by the user on his @expose decorator.
+    Basically this will be a string in the form of:
+    "genshi:myapp.templates.somename"
+    @type template_name: string
+
+    @param template_extension: the extension we excpect the template to have,
+    this MUST be the full extension as returned by the os.path.splitext
+    function. This means it should contain the dot. ie: '.html'
+
+    This argument is optional and the default value if nothing is provided will
+    be '.html'
+    @type template_extension: string
+    """
+    divider = template_name.rfind('.')
+    if divider >= 0:
+        package = template_name[:divider]
+        basename = template_name[divider + 1:] + template_extension
+        result = resource_filename(package, basename)
+
+    else:
+        result = template_name
+
+    return result

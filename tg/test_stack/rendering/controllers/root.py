@@ -32,6 +32,6 @@ class RootController(TGController):
     def mako_index_dotted(self):
         return {}
 
-    @expose('mako:tg.test_stack.rendering.templates.mako_inherits')
+    @expose('mako:tg.test_stack.rendering.templates.mako_inherits_dotted')
     def mako_inherits_dotted(self):
         return {}
