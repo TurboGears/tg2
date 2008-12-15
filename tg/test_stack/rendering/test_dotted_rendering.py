@@ -37,17 +37,18 @@ def test_genshi_inheritance():
 
 # the mako tests have been removed for the moment because the
 # dotted name notation breaks inheritance support for Mako
-"""
 def test_mako_renderer():
     app = setup_noDB()
-    resp = app.get('/mako_index')
+    resp = app.get('/mako_index_dotted')
     print resp
     assert "<p>This is the mako index page</p>" in resp
 
+"""
 def test_mako_inheritance():
     app = setup_noDB()
-    resp = app.get('/mako_inherits')
+    resp = app.get('/mako_inherits_dotted')
     print resp
     assert "inherited mako page" in resp
     assert "Inside parent template" in resp
 """
+
