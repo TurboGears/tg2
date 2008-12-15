@@ -26,6 +26,8 @@ class Decoration(object):
     """
     def __init__(self):
         self.engines = {}
+        self.custom_engines = {}
+        self.render_custom_format = None
         self.validation = None
         self.error_handler = None
         self.hooks = dict(before_validate=[],
@@ -67,9 +69,32 @@ class Decoration(object):
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
 
+    def register_custom_template_engine(self, custom_format, content_type, engine, template,
+                                        exclude_names):
+        """Registers a custom engine on the controller.
+        
+        Mulitple engines can be registered, but only one engine per
+        custom_format.
+        
+        The engine is registered when @expose is used with the
+        custom_format parameter and controllers render using this
+        engine when the use_custom_format() function is called
+        with the corresponding custom_format.
+
+        exclude_names keeps track of a list of keys which will be
+        removed from the controller's dictionary before it is loaded
+        into the template.  This allows you to exclude some information
+        from JSONification, and other 'automatic' engines which don't
+        require a template.
+        """
+
+        if content_type is None:
+            content_type = "*/*"
+        self.custom_engines[custom_format] = content_type, engine, template, exclude_names
+        
     def lookup_template_engine(self, request):
         """Return the template engine data.
-
+        
         Provides a convenience method to get the proper engine,
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers)."
@@ -82,8 +107,11 @@ class Decoration(object):
         else:
             accept_types = request.headers.get('accept', '*/*')
 
-        content_type = best_match(self.engines.keys(), accept_types)
-        engine, template, exclude_names = self.engines[content_type]
+        if self.render_custom_format:
+            content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
+        else:
+            content_type = best_match(self.engines.keys(), accept_types)
+            engine, template, exclude_names = self.engines[content_type]
 
         if 'charset' not in content_type and (
            content_type.startswith('text') or content_type  == 'application/json'):
@@ -172,6 +200,8 @@ class expose(object):
         @expose('json', exclude_names='d')
         @expose('kid:blogtutorial.templates.test_form',
                 content_type='text/html')
+        @expose('kid:blogtutorial.templates.test_form_xml',
+                content_type='text/xml', custom_format='xml')
         def my_exposed_method(self):
             return dict(a=1, b=2, d="username")
 
@@ -181,9 +211,16 @@ class expose(object):
 
     Otherwise expose assumes that the template is for html.  All other
     content_types must be explicitly matched to a template and engine.
+    
+    The last expose uses the custom_format parameter which takes an
+    arbitrary value (in this case 'xml').  You can then use the
+    `use_custom_format` function within the method to decide which
+    of the 'custom_format' registered expose decorators to use to
+    render the template.
     """
 
-    def __init__(self, template='', content_type=None, exclude_names=None):
+    def __init__(self, template='', content_type=None, exclude_names=None,
+                 custom_format=None):
         if exclude_names is None:
             exclude_names = []
 
@@ -217,13 +254,30 @@ class expose(object):
         self.template = template
         self.content_type = content_type
         self.exclude_names = exclude_names
+        self.custom_format = custom_format
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-        deco.register_template_engine(
-            self.content_type, self.engine, self.template, self.exclude_names)
+
+        if self.custom_format:
+            deco.register_custom_template_engine(
+                self.custom_format, self.content_type, self.engine,
+                self.template, self.exclude_names)
+        else:
+            deco.register_template_engine(
+                self.content_type, self.engine, self.template, self.exclude_names)
         return func
 
+def use_custom_format(controller, custom_format):
+    """Use use_custom_format in a controller in order to change
+    the active @expose decorator when available."""
+    deco = Decoration.get_decoration(controller)
+    
+    # Check the custom_format passed is available for use
+    if not custom_format in deco.custom_engines.keys():
+        raise ValueError("'%s' is not a valid custom_format" % custom_format)
+        
+    deco.render_custom_format = custom_format
 
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the
