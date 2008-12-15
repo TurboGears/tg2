@@ -12,7 +12,7 @@ def setup_noDB():
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
-                                       # this is specific to mako to make sure
+                                       # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
                                        }
