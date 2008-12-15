@@ -7,6 +7,10 @@ class RootController(TGController):
     @expose('genshi:index.html')
     def index(self):
         return {}
+
+    @expose('genshi:genshi_inherits.html')
+    def genshi_inherits(self):
+        return()
     
     @expose('mako:mako_noop.mak')
     def mako_index(self):

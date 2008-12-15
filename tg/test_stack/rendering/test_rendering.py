@@ -29,6 +29,12 @@ def test_default_genshi_renderer():
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
+def test_genshi_inheritance():
+    app = setup_noDB()
+    resp = app.get('/genshi_inherits')
+    assert "Inheritance template" in resp
+    assert "Master template" in resp
+
 def test_mako_renderer():
     app = setup_noDB()
     resp = app.get('/mako_index')
