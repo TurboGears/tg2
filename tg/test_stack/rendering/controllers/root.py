@@ -1,14 +1,37 @@
 """Main Controller"""
 
-from tg import expose, redirect, config
+from tg import expose, redirect, config, validate
 from tg.decorators import use_custom_format
 from tg.controllers import TGController
+from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
+from tw.api import WidgetsList
+
+class MovieForm(TableForm):
+    # This WidgetsList is just a container
+    class fields(WidgetsList):
+        title = TextField()
+        year = TextField(size=4)
+        description = TextArea()
+
+#then, we create an instance of this form
+base_movie_form = MovieForm("movie_form", action='create')
 
 class RootController(TGController):
     @expose('genshi:index.html')
     def index(self):
         return {}
-
+    
+    @expose('genshi:genshi_form.html')
+    def form(self):
+        return dict(form=base_movie_form)
+    
+    @expose('json')
+    @validate(form=base_movie_form)
+    def process_form_errors(self, **kwargs):
+        #add error messages to the kwargs dictionary and return it
+        kwargs['errors'] = pylons.tmpl_context.form_errors
+        return dict(kwargs)
+    
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
         return()
@@ -43,3 +66,4 @@ class RootController(TGController):
     def custom_format(self, format):
         use_custom_format(self.custom_format, format)
         return dict(format=format, status="ok")
+    
