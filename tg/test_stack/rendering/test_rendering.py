@@ -12,8 +12,9 @@ def setup_noDB():
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
+                                       # this is specific to mako to make sure
+                                       # to make sure inheritance works
                                        'use_dotted_templatenames': False,
-                                       
                                        }
                              )
                              
@@ -39,3 +40,4 @@ def test_mako_inheritance():
     resp = app.get('/mako_inherits')
     print resp
     assert "inherited mako page" in resp
+    assert "Inside parent template" in resp

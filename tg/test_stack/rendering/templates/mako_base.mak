@@ -6,6 +6,7 @@
     ${self.head_tags()}
   </head>
   <body>
+  	<p>Inside parent template</p>
     ${self.body()}
   </body>
 </html>
