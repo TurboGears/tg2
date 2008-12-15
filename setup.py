@@ -5,7 +5,7 @@ execfile(os.path.join(here, 'tg', 'release.py'))
 try:
     from setuptools import find_packages, setup
 except ImportError:
-    from ez_setup import use_setuptools use_setuptools()
+    from ez_setup import use_setuptools
     use_setuptools()
     from setuptools import find_packages, setup
 
