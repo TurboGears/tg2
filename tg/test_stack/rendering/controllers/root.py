@@ -19,3 +19,19 @@ class RootController(TGController):
     @expose('mako:mako_inherits.mak')
     def mako_inherits(self):
         return {}
+
+    @expose('genshi:tg.test_stack.rendering.templates.index')
+    def index_dotted(self):
+        return {}
+
+    @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits')
+    def genshi_inherits_dotted(self):
+        return()
+    
+    @expose('mako:tg.test_stack.rendering.templates.mako_noop')
+    def mako_index_dotted(self):
+        return {}
+
+    @expose('mako:tg.test_stack.rendering.templates.mako_inherits')
+    def mako_inherits_dotted(self):
+        return {}
