@@ -37,7 +37,7 @@ class SubController1(TGController):
 class SecurePanel(TGController):
     """Mock TG2 secure controller"""
     
-    _require = predicates.has_permission('edit-site')
+    allow_only = predicates.has_permission('edit-site')
     
     @expose()
     def index(self):
