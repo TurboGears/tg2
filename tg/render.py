@@ -46,11 +46,11 @@ def get_tg_vars():
     # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
         config = tg.config,
-        flash=tg.get_flash(),
-        flash_status=tg.get_status(),
-        quote_plus=quote_plus, 
+        flash = tg.get_flash(),
+        flash_status = tg.get_status(),
+        quote_plus = quote_plus, 
         url = tg.controllers.url, 
-        session=session, 
+        session = session, 
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
@@ -63,14 +63,14 @@ def get_tg_vars():
     helpers = config.get('pylons.h') or config.get('pylons.helpers')
         
     root_vars = Bunch(
-        c=tmpl_context,
+        c = tmpl_context,
         tmpl_context = tmpl_context,
         response = response,
         request = request,
         h = helpers,
         url = tg.url,
         helpers = helpers,
-        tg=tg_vars
+        tg = tg_vars
         )
     #Allow users to provide a callable that defines extra vars to be 
     #added to the template namespace
