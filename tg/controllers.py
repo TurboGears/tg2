@@ -607,7 +607,10 @@ def use_wsgi_app(wsgi_app):
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
     languages = pylons.request.accept_language.best_matches()
+
     if languages:
+        # get a copy of the languages list because we will
+        # edit languages and cannot iter directly on it.
         for lang in languages[:]:
             try:
                 add_fallback(lang)
@@ -616,10 +619,12 @@ def setup_i18n():
                 # remove the language from the list
                 languages.remove(lang)
                 log.debug("Skip language %s: not supported", lang)
+
         # if any language is left, set the best match as a default
         if languages:
             set_lang(languages[0])
             log.info("Set request language to %s", languages[0])
+
 __all__ = [
     "DecoratedController", "ObjectDispatchController", "TGController",
     "url", "redirect"
