@@ -139,10 +139,12 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
+
         if isinstance(controller.im_self, DecoratedController):
             params = pylons.request.params
 
         validation = getattr(controller.decoration, 'validation', None)
+
         if validation is None:
             return params
 
@@ -185,7 +187,7 @@ class DecoratedController(WSGIController):
 
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(params)
+            new_params = validation.validators.validate(controller, params)
 
         # Theoretically this should not happen...
         if new_params is None:
@@ -317,9 +319,9 @@ class DecoratedController(WSGIController):
             output = error_handler(*remainder, **dict(params))
         elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
             output = error_handler(*remainder, **dict(params))
+            
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
-
         return error_handler, output
 
     def _initialize_validation_context(self):
