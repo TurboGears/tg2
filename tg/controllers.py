@@ -19,6 +19,7 @@ import urlparse, urllib
 
 import formencode
 import pylons
+from pylons import url
 from pylons.controllers import WSGIController
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
@@ -529,7 +530,7 @@ class TGController(ObjectDispatchController):
         return False
 
 
-def redirect(url, params=None, **kw):
+def redirect(*args, **kwargs):
     """
     Generate an HTTP redirect. The function raises an exception internally,
     which is handled by the framework. The URL may be either absolute (e.g.
@@ -539,66 +540,11 @@ def redirect(url, params=None, **kw):
     browser; if the request is POST, the browser will issue GET for the second
     request.
     """
-    if not params:
-        params = {}
+    
+    url(*args, **kwargs)
+    found = HTTPFound(location=url(*args, **kwargs)).exception
 
-    curent_url = pylons.request.url
-    url = urlparse.urljoin(curent_url, url)
-    params.update(kw)
-    if params:
-        url += (('?' in url) and '&' or '?') + urllib.urlencode(params, True)
-    if isinstance(url, unicode):
-        url = url.encode('utf8')
-    found = HTTPFound(location=url).exception
-
-    #TODO: Make this work with WebOb
-
-    ## Merging cookies and headers from global response into redirect
-    #for header in pylons.response.headerlist:
-        #if header[0] == 'Set-Cookie' or header[0].startswith('X-'):
-            #found.headers.append(header)
     raise found
-
-def url(tgpath, tgparams=None, **kw):
-    """
-    url() re-implementation from TG1
-    """
-
-    if not isinstance(tgpath, basestring):
-        tgpath = "/".join(list(tgpath))
-    if tgpath.startswith("/"):
-        app_root = pylons.request.application_url[len(pylons.request.host_url):]
-        tgpath = app_root + tgpath
-        tgpath = pylons.config.get("server.webpath", "") + tgpath
-        result = tgpath
-    else:
-        result = tgpath
-
-    if tgparams is None:
-        tgparams = kw
-    else:
-        try:
-            tgparams = tgparams.copy()
-            tgparams.update(kw)
-        except AttributeError:
-            raise TypeError('url() expects a dictionary for query parameters')
-    args = []
-    for key, value in tgparams.iteritems():
-        if value is None:
-            continue
-        if isinstance(value, (list, tuple)):
-            pairs = [(key, v) for v in value]
-        else:
-            pairs = [(key, value)]
-        for (k, v) in pairs:
-            if v is None:
-                continue
-            if isinstance(v, unicode):
-                v = v.encode("utf8")
-            args.append("%s=%s" % (k, urllib.quote(str(v))))
-    if args:
-        result += "?" + "&".join(args)
-    return result
 
 def use_wsgi_app(wsgi_app):
     return wsgi_app(pylons.request.environ, pylons.request.start_response)

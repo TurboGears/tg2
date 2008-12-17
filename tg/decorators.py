@@ -12,7 +12,6 @@ from decorator import decorator
 from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
-# this can't be tg, as we are circular importing then!
 from pylons import config, request
 from pylons import tmpl_context as c
 from util import partial

@@ -15,6 +15,8 @@ from paste import httpexceptions
 
 import tg
 from tg import tmpl_context
+from pylons import url
+from routes import URLGenerator, Mapper
 from tg.util import Bunch
 from pylons.util import ContextObj, PylonsContext
 from pylons.controllers.util import Request, Response
@@ -40,6 +42,13 @@ default_environ = {
     'pylons.routes_dict': dict(action='index'),
     'paste.config': dict(global_conf=dict(debug=True))
 }
+
+default_map = Mapper()
+
+# Setup a default route for the error controller:
+default_map.connect('error/:action/:id', controller='error')
+# Setup a default route for the root of object dispatch
+default_map.connect('*url', controller='root', action='routes_placeholder')
 
 def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance."""
@@ -84,6 +93,7 @@ def create_request(path, environ=None):
     reg.register(pylons.request, req)
     # setup tmpl context
     tmpl_context._push_object(ContextObj())
+    url._push_object(URLGenerator(default_map, environ))
     return req
 
 class TestWSGIController(TestCase):
@@ -105,10 +115,11 @@ class TestWSGIController(TestCase):
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)
+
         return self.app.get(url, extra_environ=self.environ)
 
     def post_response(self, **kargs):
         url = kargs.pop('_url', '/')
-        self.environ['pylons.routes_dict'].update(kargs)
+
         return self.app.post(url, extra_environ=self.environ, params=kargs)
 
