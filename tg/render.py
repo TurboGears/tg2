@@ -48,20 +48,20 @@ def get_tg_vars():
         config = tg.config,
         flash = tg.get_flash(),
         flash_status = tg.get_status(),
-        quote_plus = quote_plus, 
-        url = tg.controllers.url, 
-        session = session, 
+        quote_plus = quote_plus,
+        url = tg.controllers.url,
+        session = session,
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
         request = tg.request,
         auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ
         )
-    
+
     # TODO: we should actually just get helpers from the package's helpers
-    # module and dump the use of the SOP. 
+    # module and dump the use of the SOP.
     helpers = config.get('pylons.h') or config.get('pylons.helpers')
-        
+
     root_vars = Bunch(
         c = tmpl_context,
         tmpl_context = tmpl_context,
@@ -72,7 +72,7 @@ def get_tg_vars():
         helpers = helpers,
         tg = tg_vars
         )
-    #Allow users to provide a callable that defines extra vars to be 
+    #Allow users to provide a callable that defines extra vars to be
     #added to the template namespace
     variable_provider = config.get('variable_provider', None)
     if variable_provider:
@@ -80,7 +80,7 @@ def get_tg_vars():
     return root_vars
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
-    
+
     if template_engine is not None:
         # the engine was defined in the @expose()
         render_function = config['render_functions'].get(template_engine)
@@ -89,8 +89,8 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
             # engine was forced in @expose() but is not present in the
             # engine list, warn developper
             raise MissingRendererError(template_engine)
-    
-    if not template_vars: 
+
+    if not template_vars:
         template_vars={}
 
     template_vars.update(get_tg_vars())
@@ -111,7 +111,7 @@ def render_genshi(template_name, template_vars, **kwargs):
         template_name = get_dotted_filename(template_name,
                 template_extension='.html')
 
-    return templating.render_genshi(template_name, extra_vars=template_vars, 
+    return templating.render_genshi(template_name, extra_vars=template_vars,
                                     **kwargs)
 
 def render_mako(template_name, template_vars, **kwargs):
@@ -123,8 +123,9 @@ def render_mako(template_name, template_vars, **kwargs):
 
     return templating.render_mako(template_name, extra_vars=template_vars,
                                   **kwargs)
-    
+
 def render_jinja(template_name, template_vars, **kwargs):
     template_vars.update(get_tg_vars())
     return templating.render_jinja(template_name, extra_vars=template_vars,
                                    **kwargs)
+

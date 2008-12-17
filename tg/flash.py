@@ -1,11 +1,14 @@
-import logging
-from pylons import request, response, session
+"""Flash messaging system for sending info to the user in a
+non-obtrusive way
+"""
+from pylons import session
 
 def flash(msg, status=None):
     """Sets a message to be displayed on the page. This message will survive a
     redirect.
     
-    flash allow to pass in any status, but TurboGears 2 build in three predefined status:
+    flash allows to pass in any status, but TurboGears 2 build in three
+    predefined status:
     
       - status_ok
       - status_warning
@@ -22,7 +25,7 @@ def get_flash():
     
     Additonally removes the old flash message """
     msg = session.get('flash_message', '')
-    session['flash_message']=''
+    session['flash_message'] = ''
     session.save()
     return msg
 
@@ -32,7 +35,7 @@ def get_status():
     Additonally removes the old flash message status"""
     
     status = session.get('flash_status', 'status_ok')
-    session['flash_status']=''
+    session['flash_status'] = ''
     session.save()
     return status
     

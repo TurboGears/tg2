@@ -53,10 +53,10 @@ assumptions about how things will work.
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, use_wsgi_app
 from tg.configuration import config
-from tg.decorators import validate, expose, override_template, paginate, \
-                          postpone_commits, require
-from tg.flash import flash, get_flash, get_status
+from tg.decorators import (validate, expose, override_template, paginate,
+                          postpone_commits, require)
 
+from tg.flash import flash, get_flash, get_status
 from pylons import g, request, response, tmpl_context, session
 
 __all__ = [
