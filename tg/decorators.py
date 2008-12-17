@@ -1,7 +1,7 @@
 """Decorators use by the TurboGears controllers
 
-These decorators are not traditonal wrappers.  They  are much simplified from the
-turbogears 1 decorators, because all they do is regester attributes on
+These decorators are not traditional wrappers. They are much simplified
+from the turbogears 1 decorators, because all they do is regester attributes on
 the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators."""
 
@@ -14,7 +14,7 @@ from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from pylons import config, request
 from pylons import tmpl_context as c
-from util import partial
+from tg.util import partial
 from repoze.what.authorize import check_authorization, NotAuthorizedError
 
 from tg.configuration import Bunch
@@ -432,6 +432,7 @@ def require(predicate):
         except NotAuthorizedError, e:
             flash(e.errors, status="status_error")
             raise HTTPUnauthorized()
+
         return func(*args, **kwargs)
     
     return check_auth
