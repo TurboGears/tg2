@@ -15,10 +15,14 @@ class MissingRendererError(Exception):
             template_engine=template_engine))
         self.template_engine = template_engine
 
-def get_tg_vars():
+def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
 
     These variables are:
+
+    WARNING: This function should not be called from outside of the render()
+    code. If you do so you'll mess badly with the flash messages.
+    Please consider this function as private.
 
     quote_plus
         the urllib quote_plus function
@@ -93,7 +97,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     if not template_vars:
         template_vars={}
 
-    template_vars.update(get_tg_vars())
+    template_vars.update(_get_tg_vars())
 
     if not render_function:
         # getting the default renderer. (this is only if no engine was defined
