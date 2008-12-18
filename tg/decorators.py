@@ -368,13 +368,18 @@ def paginate(name, items_per_page=10, use_prefix=False):
     def _d(f):
         def _w(*args, **kwargs):
             page = int(kwargs.pop(own_parameters["page"], 1))
-            real_items_per_page = int(kwargs.pop(own_parameters['items_per_page'], items_per_page))
+            real_items_per_page = int(
+                    kwargs.pop(
+                            own_parameters['items_per_page'],
+                            items_per_page))
+
             res = f(*args, **kwargs)
             if isinstance(res, dict) and name in res:
                 additional_parameters = MultiDict()
                 for key, value in request.str_params.iteritems():
                     if key not in own_parameters:
                         additional_parameters.add(key, value)
+
                 collection = res[name]
                 page = Page(
                     collection,
@@ -384,7 +389,8 @@ def paginate(name, items_per_page=10, use_prefix=False):
                     )
                 # wrap the pager so that it will render
                 # the proper page-parameter
-                page.pager = partial(page.pager, page_param=own_parameters["page"])
+                page.pager = partial(page.pager,
+                        page_param=own_parameters["page"])
                 res[name] = page
                 # this is a bit strange - it appears
                 # as if c returns an empty
@@ -401,10 +407,10 @@ def paginate(name, items_per_page=10, use_prefix=False):
 @decorator
 def postpone_commits(func, *args, **kwargs):
     """Turns sqlalchemy commits into flushes in the decorated method
-    
-    This has the end-result of postponing the commit to the normal TG2 
+
+    This has the end-result of postponing the commit to the normal TG2
     transaction boundry. """
-    
+
     #TODO: Test and document this.
     s = config.get('DBSession', None)
     assert hasattr(s, 'commit')
@@ -418,19 +424,20 @@ def postpone_commits(func, *args, **kwargs):
 def require(predicate):
     """
     Make repoze.what verify that the predicate is met.
-    
+
     @param predicate: A repoze.what predicate.
     @return: The decorator that checks authorization.
-    
+
     """
-    
+
     @decorator
     def check_auth(func, *args, **kwargs):
         environ = request.environ
         try:
             check_authorization(predicate, environ)
+
         except NotAuthorizedError, e:
-            flash(e.errors, status="status_error")
+            flash(e.errors, status="status_warning")
             raise HTTPUnauthorized()
 
         return func(*args, **kwargs)
