@@ -24,7 +24,6 @@ from pylons.controllers import WSGIController
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
-from tg.render import get_tg_vars
 from tg.render import render as tg_render
 from tw.api import Widget
 from tg.flash import flash
@@ -257,9 +256,6 @@ class DecoratedController(WSGIController):
         namespace = dict(tmpl_context=tmpl_context)
         if isinstance(response, dict):
             namespace.update(response)
-
-        if not engine_name in ['json']:
-            namespace.update(get_tg_vars())
 
         for name in exclude_names:
             namespace.pop(name)

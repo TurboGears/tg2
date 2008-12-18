@@ -115,8 +115,6 @@ def render_genshi(template_name, template_vars, **kwargs):
                                     **kwargs)
 
 def render_mako(template_name, template_vars, **kwargs):
-    template_vars.update(get_tg_vars())
-
     if config.get('use_dotted_templatenames', False):
         template_name = get_dotted_filename(template_name,
                 template_extension='.mak')
@@ -125,7 +123,6 @@ def render_mako(template_name, template_vars, **kwargs):
                                   **kwargs)
 
 def render_jinja(template_name, template_vars, **kwargs):
-    template_vars.update(get_tg_vars())
     return templating.render_jinja(template_name, extra_vars=template_vars,
                                    **kwargs)
 
