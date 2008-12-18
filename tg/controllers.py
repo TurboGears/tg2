@@ -186,9 +186,13 @@ class DecoratedController(WSGIController):
             # parameters to sanitized Python values
             new_params = validation.validators.to_python(params)
 
-        elif hasattr(validation.validators, 'validate'):
+        elif hasattr(validation.validators, 'validate') and hasattr(validation, 'needs_controller') and validation.needs_controller:
             # An object with a "validate" method - call it with the parameters
             new_params = validation.validators.validate(controller, params)
+
+        elif hasattr(validation.validators, 'validate'):
+            # An object with a "validate" method - call it with the parameters
+            new_params = validation.validators.validate(params)
 
         # Theoretically this should not happen...
         if new_params is None:
