@@ -425,8 +425,8 @@ def require(predicate):
     """
     Make repoze.what verify that the predicate is met.
 
-    @param predicate: A repoze.what predicate.
-    @return: The decorator that checks authorization.
+    :param predicate: A repoze.what predicate.
+    :return: The decorator that checks authorization.
 
     """
 
