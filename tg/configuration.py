@@ -283,6 +283,18 @@ class AppConfig(Bunch):
 
         self.render_functions.mako = render_mako
 
+    def setup_chameleongenshi_renderer(self):
+        """setup a renderer and loader for the chameleon.genshi engine""" 
+        from chameleon.genshi.loader import TemplateLoader as ChameleonLoader
+        from tg.render import render_chameleon_genshi
+
+        loader = ChameleonLoader(search_path=self.paths.templates,
+                                auto_reload=self.auto_reload_templates)
+
+        config['pylons.app_globals'].chameleon_genshi_loader = loader
+
+        self.render_functions.chameleon_genshi = render_chameleon_genshi
+
     def setup_genshi_renderer(self):
         """Setup a renderer and loader for Genshi templates
         
@@ -378,6 +390,9 @@ class AppConfig(Bunch):
 
             if 'genshi' in self.renderers:
                 self.setup_genshi_renderer()
+
+            if 'chameleon_genshi' in self.renderers:
+                self.setup_chameleongenshi_renderer()
 
             if 'mako' in self.renderers:
                 self.setup_mako_renderer()

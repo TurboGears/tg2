@@ -107,8 +107,20 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     return render_function(template_name, template_vars, **kwargs)
 
 
+def render_chameleon_genshi(template_name, template_vars, **kwargs):
+    """Render the template_vars with the chameleon.genshi template"""
+    template_vars['XML'] = XML
+    
+    if config.get('use_dotted_templatenames', False):
+        template_name = get_dotted_filename(template_name,
+                template_extension='.html')
+
+    # here we use the render genshi function because it should be api compliant
+    return templating.render_genshi(template_name, extra_vars=template_vars,
+                                    **kwargs)
+
 def render_genshi(template_name, template_vars, **kwargs):
-    """Render a the template_vars with the Genshi template"""
+    """Render the template_vars with the Genshi template"""
     template_vars['XML'] = XML
 
     if config.get('use_dotted_templatenames', False):
