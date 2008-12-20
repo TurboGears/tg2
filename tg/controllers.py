@@ -516,17 +516,16 @@ class TGController(ObjectDispatchController):
         return result
 
     def _check_security(self):
-        errors = []
         environ = pylons.request.environ
         if not hasattr(self, "allow_only") or \
             self.allow_only is None or \
-            self.allow_only.eval_with_environ(environ, errors):
-            log.debug('Successed controller authorization at %s',
+            self.allow_only.eval_with_environ(environ):
+            log.debug('Succeeded controller authorization at %s',
                       pylons.request.path)
             return True
 
         log.debug('Failed controller authorization at %s', pylons.request.path)
-        flash(errors, status="status_error")
+        flash(self.allow_only.error, status="status_warning")
         return False
 
 

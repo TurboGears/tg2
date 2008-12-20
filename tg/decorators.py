@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Decorators use by the TurboGears controllers
 
 These decorators are not traditional wrappers. They are much simplified
@@ -71,10 +72,10 @@ class Decoration(object):
     def register_custom_template_engine(self, custom_format, content_type, engine, template,
                                         exclude_names):
         """Registers a custom engine on the controller.
-        
+
         Mulitple engines can be registered, but only one engine per
         custom_format.
-        
+
         The engine is registered when @expose is used with the
         custom_format parameter and controllers render using this
         engine when the use_custom_format() function is called
@@ -90,10 +91,10 @@ class Decoration(object):
         if content_type is None:
             content_type = "*/*"
         self.custom_engines[custom_format] = content_type, engine, template, exclude_names
-        
+
     def lookup_template_engine(self, request):
         """Return the template engine data.
-        
+
         Provides a convenience method to get the proper engine,
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers)."
@@ -210,7 +211,7 @@ class expose(object):
 
     Otherwise expose assumes that the template is for html.  All other
     content_types must be explicitly matched to a template and engine.
-    
+
     The last expose uses the custom_format parameter which takes an
     arbitrary value (in this case 'xml').  You can then use the
     `use_custom_format` function within the method to decide which
@@ -271,11 +272,11 @@ def use_custom_format(controller, custom_format):
     """Use use_custom_format in a controller in order to change
     the active @expose decorator when available."""
     deco = Decoration.get_decoration(controller)
-    
+
     # Check the custom_format passed is available for use
     if not custom_format in deco.custom_engines.keys():
         raise ValueError("'%s' is not a valid custom_format" % custom_format)
-        
+
     deco.render_custom_format = custom_format
 
 def override_template(controller, template):
@@ -435,12 +436,10 @@ def require(predicate):
         environ = request.environ
         try:
             check_authorization(predicate, environ)
-
-        except NotAuthorizedError, e:
-            flash(e.errors, status="status_warning")
+        except NotAuthorizedError, reason:
+            flash(reason, status='status_warning')
             raise HTTPUnauthorized()
 
         return func(*args, **kwargs)
-    
     return check_auth
 
