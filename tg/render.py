@@ -54,6 +54,8 @@ def _get_tg_vars():
         flash_status = tg.get_status(),
         quote_plus = quote_plus,
         url = tg.controllers.url,
+        # this will be None if no identity
+        identity = request.environ.get('repoze.who.identity'),
         session = session,
         locale = tg.request.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
