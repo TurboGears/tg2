@@ -171,8 +171,6 @@ class AppConfig(Bunch):
         map = Mapper(directory=config['pylons.paths']['controllers'],
                     always_scan=config['debug'])
 
-        # Setup a default route for the error controller:
-        map.connect('error/:action/:id', controller='error')
         # Setup a default route for the root of object dispatch
         map.connect('*url', controller='root', action='routes_placeholder')
 

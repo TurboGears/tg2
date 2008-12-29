@@ -66,10 +66,6 @@ def test_url_doesnt_change_tgparams():
     result = url('/foo', params, spamm='ham')
     eq_(params['spamm'], 'eggs')
 
-# TODO: Fix this test!
-# This is tested manually, and it works, but I can't get the pylons.url
-# stacked object proxy setup to test it here yet ...
-
 #def test_approotsWithPath():
 #    create_request('/coolsite/root/subthing/', {'SCRIPT_NAME' : '/subthing'})
 #    pylons.config.update({"server.webpath":"/coolsite/root"})

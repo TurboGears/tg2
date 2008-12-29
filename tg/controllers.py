@@ -19,7 +19,7 @@ import urlparse, urllib
 
 import formencode
 import pylons
-from pylons import url
+from pylons import url as pylons_url
 from pylons.controllers import WSGIController
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
@@ -528,10 +528,54 @@ class TGController(ObjectDispatchController):
         flash(self.allow_only.error, status="status_warning")
         return False
 
+def url(*args, **kwargs):
+    """Generate an absolute URL that's specific to this application. 
+    
+    The URL function takes a string, appends the SCRIPT_NAME and adds url
+    parameters for all of the other keyword arguments passed in. 
+    
+    For backwards compatability you can also pass in a params dictionary
+    which is turned into url params.  
+    
+    In general tg.url is just a proxy for pylons.url which is in turn
+    a proxy for routes url_for function.  But if tg1 like params are 
+    passed in we support a params dictionary in additon to the standard
+    keyword arguments.  
+    """
+    args = list(args)
+    new_args = []
+    new_kwargs = {}
+    
+    if args and isinstance(args[0], basestring):
+        #First we handle the possibility that the user passed in params
+        if kwargs.get('params'):
+            params = kwargs['params'].copy()
+            new_kwargs = params.update(kwargs)
+        
+        if len(args) >= 2 and isinstance(args[1], dict):
+            new_kwargs = args[1].copy()
+            new_kwargs.update(kwargs)
+            args.pop(1)
+            
+    #Next we do utf8 encoding for everything
+    for arg in args:
+        if isinstance(arg, unicode):
+            new_args.append(arg.encode('utf8'))
+        else: 
+            new_args.append(arg) 
+          
+    for key, value in kwargs.iteritems():
+        if isinstance(value, unicode):
+            new_kwargs[key] = value.encode('utf8')
+        else:
+            new_kwargs[key] = value
+            
+    return pylons_url(*new_args, **new_kwargs)
 
 def redirect(*args, **kwargs):
-    """
-    Generate an HTTP redirect. The function raises an exception internally,
+    """Generate an HTTP redirect. 
+    
+    The function raises an exception internally,
     which is handled by the framework. The URL may be either absolute (e.g.
     http://example.com or /myfile.html) or relative. Relative URLs are
     automatically converted to absolute URLs. Parameters may be specified,
