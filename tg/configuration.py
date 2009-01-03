@@ -1,4 +1,5 @@
 """Configuration Helpers for TurboGears 2"""
+import atexit
 import os
 import logging
 from copy import copy
@@ -131,6 +132,26 @@ class AppConfig(Bunch):
 
         self.use_toscawidgets = True
         self.use_transaction_manager = True
+        
+        #Registy for functions to be called on startup/teardown
+        self.call_on_startup = []
+        self.call_on_shutdown = []
+
+    def setup_startup_and_shutdown(self):
+        for cmd in self.call_on_startup:
+            if callable(cmd):
+                try:
+                    cmd()
+                except Exception, error:
+                    log.debug("Error registering %s at startup: %s" % (cmd, error )) 
+            else:
+                log.debug("Unable to register %s for startup" % cmd )
+        
+        for cmd in self.call_on_shutdown:
+            if callable(cmd):
+                atexit.register(cmd)
+            else:
+                log.debug("Unable to register %s for shutdown" % cmd )
 
     def setup_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
@@ -379,6 +400,10 @@ class AppConfig(Bunch):
             """
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
+            #Regesters functions to be called at startup and shutdown
+            #from self.call_on_startup and shutdown respectively. 
+            self.setup_startup_and_shutdown()
+            
             self.setup_paths()
             self.init_config(global_conf, app_conf)
             self.setup_routes()
