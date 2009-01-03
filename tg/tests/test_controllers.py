@@ -40,12 +40,14 @@ def test_multi_values():
 def test_unicode():
     """url() can handle unicode parameters"""
     create_request("/")
-    eq_(url('/', x=u'\N{LATIN SMALL LETTER A WITH GRAVE}'
+    unicodestring = (u'\N{LATIN SMALL LETTER A WITH GRAVE}'
         u'\N{LATIN SMALL LETTER E WITH GRAVE}'
         u'\N{LATIN SMALL LETTER I WITH GRAVE}'
         u'\N{LATIN SMALL LETTER O WITH GRAVE}'
-        u'\N{LATIN SMALL LETTER U WITH GRAVE}'),
-        '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
+        u'\N{LATIN SMALL LETTER U WITH GRAVE}')
+    print unicodestring.encode('utf8')
+    eq_(url('/', x=unicodestring),
+        '/?x=%25C3%25A0%25C3%25A8%25C3%25AC%25C3%25B2%25C3%25B9'
         )
 
 def test_list():

@@ -22,6 +22,7 @@ import pylons
 from pylons import url as pylons_url
 from pylons.controllers import WSGIController
 
+from tg.util import iri2uri
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import render as tg_render
@@ -560,13 +561,13 @@ def url(*args, **kwargs):
     #Next we do utf8 encoding for everything
     for arg in args:
         if isinstance(arg, unicode):
-            new_args.append(arg.encode('utf8'))
+            new_args.append(iri2uri(arg))
         else: 
             new_args.append(arg) 
           
     for key, value in kwargs.iteritems():
         if isinstance(value, unicode):
-            new_kwargs[key] = value.encode('utf8')
+            new_kwargs[key] = iri2uri(value)
         else:
             new_kwargs[key] = value
             
