@@ -12,7 +12,7 @@ from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
-from pylons.middleware import ErrorHandler, StatusCodeRedirect
+from pylons.middleware import ErrorHandler, report_libs, StatusCodeRedirect
 from tg import TGApp
 from tg.util import Bunch, get_partial_dict, get_dotted_filename
 from routes import Mapper
@@ -410,6 +410,8 @@ class AppConfig(Bunch):
     def add_error_middleware(self, global_conf, app):
         """Adds middleware which handles errors and exceptions"""
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
+        
+        report_libs.extend(['sprox', 'tg.devtools'])
 
         # Display error documents for 401, 403, 404 status codes (and
         # 500 when debug is disabled)
