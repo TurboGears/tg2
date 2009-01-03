@@ -86,7 +86,6 @@ class DecoratedController(WSGIController):
         The after_render hook can act upon and modify the response out of
         rendering.
         """
-
         self._initialize_validation_context()
         pylons.request.start_response = self.start_response
 
@@ -101,10 +100,10 @@ class DecoratedController(WSGIController):
             # Validate user input
             params = self._perform_validate(controller, params)
 
+            
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
-
             # call controller method
             output = controller(*remainder, **dict(params))
 
@@ -142,7 +141,7 @@ class DecoratedController(WSGIController):
         """
 
         if isinstance(controller.im_self, DecoratedController):
-            params = pylons.request.params
+            params.update(pylons.request.params)
 
         validation = getattr(controller.decoration, 'validation', None)
 
