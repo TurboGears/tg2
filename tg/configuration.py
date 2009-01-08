@@ -136,6 +136,9 @@ class AppConfig(Bunch):
         #Registy for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
+        # The codes TG should display an error page for. All other HTTP errors are
+        # sent to the client or left for some middleware above us to handle
+        self.handle_status_codes = [401, 403, 404]
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -437,12 +440,13 @@ class AppConfig(Bunch):
         """Adds middleware which handles errors and exceptions"""
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
-        # Display error documents for 401, 403, 404 status codes (and
+        # Display error documents for self.handle_status_codes status codes (and
         # 500 when debug is disabled)
+
         if asbool(config['debug']):
-            app = StatusCodeRedirect(app)
+            app = StatusCodeRedirect(app, self.handle_status_codes)
         else:
-            app = StatusCodeRedirect(app, [400, 401, 403, 404, 500])
+            app = StatusCodeRedirect(app, self.handle_status_codes + [500])
         return app
 
     def add_auth_middleware(self, app):
