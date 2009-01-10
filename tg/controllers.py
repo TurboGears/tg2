@@ -413,6 +413,7 @@ class ObjectDispatchController(DecoratedController):
 def _object_dispatch(obj, url_path):
     remainder = url_path
 
+    pylons.request.response_type = None
     # if the last item in the remainder has an extention
     # remove the extension, and add a content type to the request
     # parameters
@@ -421,7 +422,7 @@ def _object_dispatch(obj, url_path):
         extension_spot = last_remainder.rfind('.')
         extension = last_remainder[extension_spot:]
         remainder[-1] = last_remainder[:extension_spot]
-        pylons.request.content_type = mimetypes.guess_type(extension)[0]
+        pylons.request.response_type = mimetypes.guess_type(extension)[0]
 
     notfound_handlers = []
     while True:

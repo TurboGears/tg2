@@ -101,8 +101,8 @@ class Decoration(object):
         """
         tg_format = request.headers.get('tg_format')
 
-        if request.content_type and request.content_type != 'application/x-www-form-urlencoded':
-            accept_types = request.content_type
+        if request.response_type:
+            accept_types = request.response_type
 
         elif tg_format:
             assert '/' in tg_format, 'Invalid tg_format: must be a MIME type'
