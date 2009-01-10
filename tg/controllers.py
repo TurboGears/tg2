@@ -16,6 +16,7 @@ Basic controller classes for turbogears
 import logging
 import warnings
 import urlparse, urllib
+import mimetypes
 
 import formencode
 import pylons
@@ -102,7 +103,7 @@ class DecoratedController(WSGIController):
             # Validate user input
             params = self._perform_validate(controller, params)
 
-            
+
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
@@ -322,7 +323,7 @@ class DecoratedController(WSGIController):
             output = error_handler(*remainder, **dict(params))
         elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
             output = error_handler(*remainder, **dict(params))
-            
+
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
         return error_handler, output
@@ -411,6 +412,16 @@ class ObjectDispatchController(DecoratedController):
 
 def _object_dispatch(obj, url_path):
     remainder = url_path
+
+    # if the last item in the remainder has an extention
+    # remove the extension, and add a content type to the request
+    # parameters
+    if remainder and '.' in remainder[-1]:
+        last_remainder = remainder[-1]
+        extension_spot = last_remainder.rfind('.')
+        extension = last_remainder[extension_spot:]
+        remainder[-1] = last_remainder[:extension_spot]
+        pylons.request.content_type = mimetypes.guess_type(extension)[0]
 
     notfound_handlers = []
     while True:
@@ -567,55 +578,55 @@ class WSGIAppController(TGController):
         Override me if you need to update the environ, mangle response, etc...
         """
         return self.app(environ, start_response)
-        
+
 
 def url(*args, **kwargs):
-    """Generate an absolute URL that's specific to this application. 
-    
+    """Generate an absolute URL that's specific to this application.
+
     The URL function takes a string, appends the SCRIPT_NAME and adds url
-    parameters for all of the other keyword arguments passed in. 
-    
+    parameters for all of the other keyword arguments passed in.
+
     For backwards compatability you can also pass in a params dictionary
-    which is turned into url params.  
-    
+    which is turned into url params.
+
     In general tg.url is just a proxy for pylons.url which is in turn
-    a proxy for routes url_for function.  But if tg1 like params are 
+    a proxy for routes url_for function.  But if tg1 like params are
     passed in we support a params dictionary in additon to the standard
-    keyword arguments.  
+    keyword arguments.
     """
     args = list(args)
     new_args = []
     new_kwargs = {}
-    
+
     if args and isinstance(args[0], basestring):
         #First we handle the possibility that the user passed in params
         if kwargs.get('params'):
             params = kwargs['params'].copy()
             new_kwargs = params.update(kwargs)
-        
+
         if len(args) >= 2 and isinstance(args[1], dict):
             new_kwargs = args[1].copy()
             new_kwargs.update(kwargs)
             args.pop(1)
-            
+
     #Next we do utf8 encoding for everything
     for arg in args:
         if isinstance(arg, unicode):
             new_args.append(iri2uri(arg))
-        else: 
-            new_args.append(arg) 
-          
+        else:
+            new_args.append(arg)
+
     for key, value in kwargs.iteritems():
         if isinstance(value, unicode):
             new_kwargs[key] = iri2uri(value)
         else:
             new_kwargs[key] = value
-            
+
     return pylons_url(*new_args, **new_kwargs)
 
 def redirect(*args, **kwargs):
-    """Generate an HTTP redirect. 
-    
+    """Generate an HTTP redirect.
+
     The function raises an exception internally,
     which is handled by the framework. The URL may be either absolute (e.g.
     http://example.com or /myfile.html) or relative. Relative URLs are
@@ -624,7 +635,7 @@ def redirect(*args, **kwargs):
     browser; if the request is POST, the browser will issue GET for the second
     request.
     """
-    
+
     url(*args, **kwargs)
     found = HTTPFound(location=url(*args, **kwargs)).exception
 

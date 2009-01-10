@@ -100,7 +100,11 @@ class Decoration(object):
         tg_format (which is pulled off of the request headers)."
         """
         tg_format = request.headers.get('tg_format')
-        if tg_format:
+
+        if request.content_type and request.content_type != 'application/x-www-form-urlencoded':
+            accept_types = request.content_type
+
+        elif tg_format:
             assert '/' in tg_format, 'Invalid tg_format: must be a MIME type'
             accept_types = tg_format
 
@@ -109,9 +113,15 @@ class Decoration(object):
 
         if self.render_custom_format:
             content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
+
         else:
+            #print accept_types
+            #if request.content_type == 'application/x-www-form-urlencoded':
+            #    assert 0
+            #print self.engines.keys()
             content_type = best_match(self.engines.keys(), accept_types)
             engine, template, exclude_names = self.engines[content_type]
+
 
         if 'charset' not in content_type and (
            content_type.startswith('text') or content_type  == 'application/json'):
