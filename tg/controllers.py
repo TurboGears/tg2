@@ -202,7 +202,6 @@ class DecoratedController(WSGIController):
 
         return new_params
 
-    #XXX: Perhaps rename to _render_output to avoid confusion with Response obj?
     def _render_response(self, controller, response):
         """
         Render response takes the dictionary returned by the

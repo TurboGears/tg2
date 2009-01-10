@@ -106,11 +106,13 @@ class TestWSGIController(TestCase):
             default_engine='genshi',tmpl_options=tmpl_options
             )
         pylons.buffet._push_object(self._buffet)
+        setup_session_dir()
 
 
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
         pylons.buffet._pop_object(self._buffet)
+        teardown_session_dir()
         
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
