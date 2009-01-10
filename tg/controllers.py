@@ -30,7 +30,6 @@ from tg.decorators import expose
 from tg.flash import flash
 
 from webob import Request
-from webob.exc import HTTPUnauthorized, status_map
 
 log = logging.getLogger(__name__)
 
@@ -568,45 +567,6 @@ class WSGIAppController(TGController):
         """
         return self.app(environ, start_response)
         
-#XXX This thing probably doesn't belong here... should we create a module with
-#    a bunch of this kind of helpers?
-class TracController(WSGIAppController):
-    """
-    Mounts a Trac instance inside a TG app.
-
-    Example::
-
-        class RootController(BaseController):
-            trac = TracController(env_path='/home/tracs/myproject')
-
-    The trac can be protected by TG's authorization framework::
-
-        from repoze.what import prediactes
-
-        is_manager = predicates.has_permission(
-            'manage',
-            msg=_('Only for people with the "manage" permission')
-            )
-
-        class RootController(BaseController):
-            trac = TracController(is_manager, env_path='/home/tracs/myproject')
-    """
-    def __init__(self, allow_only=None, **trac_config):
-        self.trac_config = dict(
-            ('trac.'+k, v) for k,v in trac_config.iteritems()
-            )
-        from trac.web.main import dispatch_request
-        super(TracController, self).__init__(dispatch_request, allow_only)
-
-    def delegate(self, environ, start_response):
-        from trac.web.api import HTTPException
-        environ.update(self.trac_config)
-        try:
-            return super(TracController, self).delegate(environ, start_response)
-        except HTTPException, e:
-            # Translate Trac's HTTP codes to webob.exc.HTTPExceptions
-            resp = status_map[e.code](str(e))
-            return resp(environ, start_response)
 
 def url(*args, **kwargs):
     """Generate an absolute URL that's specific to this application. 
