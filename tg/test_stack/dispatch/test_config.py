@@ -1,6 +1,6 @@
 import os
 from tg.test_stack import TestConfig
-from paste.fixture import TestApp
+from webtest import TestApp
 
 def setup_noDB():
     global_config = {'debug': 'true', 

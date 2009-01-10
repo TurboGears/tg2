@@ -1,6 +1,6 @@
 from tg.test_stack import TestConfig
 from tg.util import Bunch
-from paste.fixture import TestApp
+from webtest import TestApp
 from pylons import tmpl_context
 
 def setup_noDB():

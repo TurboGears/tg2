@@ -10,7 +10,7 @@ import webob
 import beaker
 import pylons
 from paste.registry import Registry, RegistryManager
-from paste.fixture import TestApp
+from webtest import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 

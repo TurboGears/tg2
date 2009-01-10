@@ -9,7 +9,7 @@ import beaker
 import pylons
 from paste.registry import Registry
 from paste.registry import RegistryManager
-from paste.fixture import TestApp
+from webtest import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
