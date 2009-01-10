@@ -38,6 +38,7 @@ setup(
         'decorator',
         'Genshi',
         'Pylons>=0.9.7rc3',
+        'WebOb >= 0.9.5',
         'ToscaWidgets>=0.9',
         'repoze.what.plugins.sql > 1.0a2',
         'SQLAlchemy>=0.5beta3',
