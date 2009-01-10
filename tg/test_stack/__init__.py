@@ -7,7 +7,7 @@ class TestConfig(AppConfig):
     def __init__(self, folder, values=None):
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako'] 
+        self.renderers = ['genshi', 'mako']
         self.render_functions = tg.util.Bunch()
         self.package = tg.test_stack
         self.default_renderer = 'genshi'
@@ -18,12 +18,12 @@ class TestConfig(AppConfig):
         self.use_legacy_renderer = False
         self.use_dotted_templatenames = False
         self.serve_static = False
-        
+
         #Then we overide those values with what was passed in
         for key, value in values.items():
             setattr(self, key, value)
 
-        
+
         root = "."
         test_base_path = os.path.join(root,'tg', 'test_stack',)
         test_config_path = os.path.join(test_base_path, folder)
@@ -40,11 +40,11 @@ class TestConfig(AppConfig):
         tg.config['pylons.h'] = self.helpers
 
 def teardown():
-    global_config = {'debug': 'true', 
-                     'error_email_from': 'paste@localhost', 
+    global_config = {'debug': 'true',
+                     'error_email_from': 'paste@localhost',
                      'smtp_server': 'localhost'}
 
-    base_config = TestConfig(folder = 'rendering', 
+    base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': tg.util.Bunch(),
                                        'use_legacy_renderer': True,

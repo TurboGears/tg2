@@ -39,7 +39,7 @@ class SubController2(object):
     @expose()
     def index(self):
         tg.redirect('list')
-    
+
     @expose()
     def list(self, **kw):
         return "hello list"
@@ -56,13 +56,13 @@ class RootController(TGController):
     @expose()
     def feed(self, feed=None):
         return feed
-        
+
     sub = SubController()
     sub2 = SubController2()
 
     @expose()
     def redirect_me(self, target, **kw):
-        print tg.url(target, kw)
+        #print tg.url(target, kw)
         tg.redirect(target, kw)
 
     @expose()
@@ -91,7 +91,7 @@ class RootController(TGController):
     @expose()
     def flash_after_redirect(self):
         return tg.get_flash()
-    
+
     @expose()
     def flash_status(self):
         return tg.get_status()
@@ -99,26 +99,26 @@ class RootController(TGController):
     @expose()
     def flash_no_redirect(self):
         tg.flash("Wow, flash!")
-        return tg.get_flash() 
+        return tg.get_flash()
 
     @expose('json')
     @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
-    
+
     @expose('json')
     @validate(validators={"a":validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
         return dict(int=a,str=b)
-    
+
     @expose()
     @expose('json')
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
-        
+
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def custom_content_type(self):
         pylons.response.headers['content-type'] = 'image/png'
@@ -128,7 +128,7 @@ class RootController(TGController):
     def test_url_sop(self):
         from tg import url
         eq_('/foo', url('/foo'))
-        
-        print url("/foo", bar=1, baz=2)
+
+        #print url("/foo", bar=1, baz=2)
         assert url("/foo", bar=1, baz=2) in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"]

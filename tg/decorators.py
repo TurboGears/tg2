@@ -119,10 +119,6 @@ class Decoration(object):
             content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
 
         else:
-            #print accept_types
-            #if request.content_type == 'application/x-www-form-urlencoded':
-            #    assert 0
-            #print self.engines.keys()
             content_type = best_match(self.engines.keys(), accept_types)
             engine, template, exclude_names = self.engines[content_type]
 
