@@ -19,6 +19,7 @@ from tg.error import ErrorHandler
 from tg.util import Bunch, get_partial_dict, get_dotted_filename
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
+from webob import Request
 
 from tw.api import make_middleware as tw_middleware
 
@@ -587,6 +588,8 @@ class AppConfig(Bunch):
                     self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
 
+            app = maybe_make_body_seekable(app)
+
             if asbool(full_stack):
                 # This should nevery be true for internal nested apps
                 app = self.add_error_middleware(global_conf, app)
@@ -601,3 +604,11 @@ class AppConfig(Bunch):
             return app
 
         return make_base_app
+
+def maybe_make_body_seekable(app):
+    def wrapper(environ, start_response):
+        if pylons_config.get('make_body_seekable'):
+            log.debug("Making request body seekable")
+            Request(environ).make_body_seekable()
+        return app(environ, start_response)
+    return wrapper

@@ -26,9 +26,11 @@ from tg.util import iri2uri
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import render as tg_render
-from tw.api import Widget
+from tg.decorators import expose
 from tg.flash import flash
-from webob.exc import HTTPUnauthorized
+
+from webob import Request
+from webob.exc import HTTPUnauthorized, status_map
 
 log = logging.getLogger(__name__)
 
@@ -527,6 +529,84 @@ class TGController(ObjectDispatchController):
         log.debug('Failed controller authorization at %s', pylons.request.path)
         flash(self.allow_only.error, status="status_warning")
         return False
+
+class WSGIAppController(TGController):
+    """
+    A controller you can use to mount a WSGI app.
+    """
+    def __init__(self, app, allow_only=None):
+        self.app = app
+        self.allow_only = allow_only
+        # Signal tg.configuration.maybe_make_body_seekable which is wrapping
+        # The stack to make the body seekable so default() can rewind it.
+        pylons.config['make_body_seekable'] = True
+
+    @expose()
+    def default(self, *args, **kw):
+        """
+        This method is called whenever a request reaches this controller.
+        It prepares the WSGI environment and delegates the request to the
+        WSGI app.
+        """
+        # Push into SCRIPT_NAME the path components that have been consumed,
+        request = pylons.request._current_obj()
+        new_req = request.copy()
+        to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
+        for i in xrange(to_pop):
+            new_req.path_info_pop()
+        if not new_req.path_info:
+            # Append trailing slash and redirect
+            redirect(request.script_name+request.path_info+'/')
+        new_req.body_file.seek(0)
+        return self.delegate(new_req.environ, request.start_response)
+
+    def delegate(self, environ, start_response):
+        """
+        Delegates the request to the WSGI app.
+
+        Override me if you need to update the environ, mangle response, etc...
+        """
+        return self.app(environ, start_response)
+        
+#XXX This thing probably doesn't belong here... should we create a module with
+#    a bunch of this kind of helpers?
+class TracController(WSGIAppController):
+    """
+    Mounts a Trac instance inside a TG app.
+
+    Example::
+
+        class RootController(BaseController):
+            trac = TracController(env_path='/home/tracs/myproject')
+
+    The trac can be protected by TG's authorization framework::
+
+        from repoze.what import prediactes
+
+        is_manager = predicates.has_permission(
+            'manage',
+            msg=_('Only for people with the "manage" permission')
+            )
+
+        class RootController(BaseController):
+            trac = TracController(is_manager, env_path='/home/tracs/myproject')
+    """
+    def __init__(self, allow_only=None, **trac_config):
+        self.trac_config = dict(
+            ('trac.'+k, v) for k,v in trac_config.iteritems()
+            )
+        from trac.web.main import dispatch_request
+        super(TracController, self).__init__(dispatch_request, allow_only)
+
+    def delegate(self, environ, start_response):
+        from trac.web.api import HTTPException
+        environ.update(self.trac_config)
+        try:
+            return super(TracController, self).delegate(environ, start_response)
+        except HTTPException, e:
+            # Translate Trac's HTTP codes to webob.exc.HTTPExceptions
+            resp = status_map[e.code](str(e))
+            return resp(environ, start_response)
 
 def url(*args, **kwargs):
     """Generate an absolute URL that's specific to this application. 
