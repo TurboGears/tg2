@@ -51,7 +51,8 @@ they make it possible for a group of TurboGears components to share
 assumptions about how things will work.
 """
 from tg.wsgiapp import TGApp
-from tg.controllers import TGController, redirect, url, use_wsgi_app
+from tg.controllers import TGController, redirect, url, use_wsgi_app,\
+                           WSGIAppController
 from tg.configuration import config
 from tg.decorators import (validate, expose, override_template, paginate,
                           postpone_commits, require)

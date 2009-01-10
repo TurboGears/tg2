@@ -30,6 +30,7 @@ from tg.decorators import expose
 from tg.flash import flash
 
 from webob import Request
+from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
 

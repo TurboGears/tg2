@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
+from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, WSGIAppController
 from tg.decorators import expose, validate
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from formencode import validators
+from webob import Response, Request
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
@@ -14,7 +15,16 @@ def setup():
 def teardown():
     teardown_session_dir()
 
+def wsgi_app(environ, start_response):
+    req = Request(environ)
+    if req.method == 'POST':
+        resp = Response(req.POST['data'])
+    else:
+        resp = Response("Hello from %s/%s"%(req.script_name, req.path_info))
+    return resp(environ, start_response)
+
 class SubController(object):
+    mounted_app = WSGIAppController(wsgi_app)
     @expose()
     def foo(self,):
         return 'sub_foo'
@@ -49,6 +59,7 @@ class SubController2(object):
         return "hello list"
 
 class BasicTGController(TGController):
+    mounted_app = WSGIAppController(wsgi_app)
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -133,3 +144,14 @@ class TestTGController(TestWSGIController):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
         
+    def test_mounted_wsgi_app_at_root(self):
+        r = self.app.get('/mounted_app/')
+        self.failUnless('Hello from /mounted_app' in r, r)
+        
+    def test_mounted_wsgi_app_at_subcontroller(self):
+        r = self.app.get('/sub/mounted_app/')
+        self.failUnless('Hello from /sub/mounted_app/' in r, r)
+
+    def test_posting_to_mounted_app(self):
+        r = self.app.post('/mounted_app/', params={'data':'Foooo'})
+        self.failUnless('Foooo' in r, r)
