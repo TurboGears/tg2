@@ -60,6 +60,10 @@ class RootController(TGController):
     def mako_inherits(self):
         return {}
 
+    @expose('chameleon_genshi:tg.test_stack.rendering.templates.index')
+    def chameleon_index_dotted(self):
+        return {}
+
     @expose('genshi:tg.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}
