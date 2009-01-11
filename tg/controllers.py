@@ -604,7 +604,7 @@ def url(*args, **kwargs):
         #First we handle the possibility that the user passed in params
         if kwargs.get('params'):
             params = kwargs['params'].copy()
-            new_kwargs = params.update(kwargs)
+            kwargs.update(params)
 
         if len(args) >= 2 and isinstance(args[1], dict):
             new_kwargs = args[1].copy()

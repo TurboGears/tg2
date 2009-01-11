@@ -25,7 +25,7 @@ def test_approots():
 
 def test_lowerapproots():
     create_request(
-                '/subthing/subsubthing/', 
+                '/subthing/subsubthing/',
                 { 'SCRIPT_NAME' : '/subthing/subsubthing' }
                 )
     eq_("/subthing/subsubthing/foo", url("/foo"))
@@ -62,6 +62,11 @@ def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}
     result = url('/foo', params, spamm='ham')
     assert 'spamm=ham' in result
+
+def test_url_with_params_key():
+    params = {'spamm': 'eggs'}
+    result = url('/foo', params=params, spamm='ham')
+    assert 'spamm=eggs' in result
 
 def test_url_doesnt_change_tgparams():
     params = {'spamm': 'eggs'}
