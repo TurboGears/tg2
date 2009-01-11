@@ -1,4 +1,5 @@
 import os
+from webtest import TestApp 
 import tg
 from tg.configuration import AppConfig
 
@@ -39,18 +40,23 @@ class TestConfig(AppConfig):
         tg.config['pylons.app_globals'] = self.globals
         tg.config['pylons.h'] = self.helpers
 
-def teardown():
-    global_config = {'debug': 'true',
-                     'error_email_from': 'paste@localhost',
-                     'smtp_server': 'localhost'}
+def app_from_config(base_config, deployment_config=None):
+    if not deployment_config:
+        deployment_config = {'debug': 'true',
+                             'error_email_from': 'paste@localhost',
+                             'smtp_server': 'localhost'}
 
+    env_loader = base_config.make_load_environment()
+    app_maker = base_config.setup_tg_wsgi_app(env_loader)
+    app = TestApp(app_maker(deployment_config, full_stack=True))
+    return app
+    
+def teardown():
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': tg.util.Bunch(),
                                        'use_legacy_renderer': True,
                                        }
                              )
-    env_loader = base_config.make_load_environment()
-    app_maker = base_config.setup_tg_wsgi_app(env_loader)
-    app = app_maker(global_config, full_stack=True)
+    app = app_from_config(base_config)
 
