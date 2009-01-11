@@ -23,7 +23,7 @@ class MyForm(TableForm):
     class fields(WidgetsList):
         title=TextField(validator=validators.NotEmpty())
         year = TextField(size=4, validator=validators.Int())
-        
+
 #then, we create an instance of this form
 myform = MyForm("my_form", action='create')
 
@@ -32,6 +32,15 @@ class Pwd(Schema):
     pwd2 = validators.String(not_empty=True)
     chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
+class controller_based_validate(validate):
+    def __init__(self, error_handler=None, *args,**kw):
+        self.error_handler = error_handler
+        self.needs_controller = True
+        class Validators(object):
+            def validate(self, controller, params):
+                return params
+        self.validators = Validators()
+
 class BasicTGController(TGController):
 
     @expose('json')
@@ -39,13 +48,18 @@ class BasicTGController(TGController):
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
-    
+
     @expose('json')
     @validate(validators={"a":validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
         return dict(int=a,str=b)
+
+    @expose()
+    @controller_based_validate()
+    def validate_controller_based_validator(self, *args, **kw):
+        return 'ok'
 
     @expose('json')
     @validate(validators={"a":validators.Int(), "someemail":validators.Email})
@@ -64,46 +78,46 @@ class BasicTGController(TGController):
     def process_form(self, **kwargs):
         kwargs['errors'] = pylons.c.form_errors
         return dict(kwargs)
-    
+
     @expose('json')
     @validate(form=myform, error_handler=process_form)
     def send_to_error_handler(self, **kwargs):
         kwargs['errors'] = pylons.c.form_errors
         return dict(kwargs)
 
-    @expose()    
+    @expose()
     @validate(validators=Pwd())
     def password(self, pwd1, pwd2):
         if pylons.c.form_errors:
             return "There was an error"
         else:
             return "Password ok!"
-        
+
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-        
+
     def test_basic_validation_and_jsonification(self):
         "Ensure you can pass in a dictionary of validators"
         form_values = {"some_int":22}
         resp = self.app.post('/validated_int', form_values)
         assert '{"response": 22}'in resp
-        
+
     def test_for_other_params_after_validation(self):
         "Ensure that both validated and unvalidated data make it through"
         form_values = {'a':1, 'b':"string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp
         assert '"str": "string"' in resp
-    
+
     def test_two_validators_errors(self):
         "Ensure that multiple validators are applied correctly"
         form_values = {'a':'1', 'someemail':"guido@google.com"}
         resp = self.app.post('/two_validators', form_values)
         content = loads(resp.body)
         assert content['a'] == 1
-                
+
     def test_validation_errors(self):
         "Ensure that dict validation produces a full set of errors"
         form_values = {'a':'1', 'someemail':"guido~google.com"}
@@ -122,7 +136,7 @@ class TestTGController(TestWSGIController):
         print resp
         values = loads(resp.body)
         assert values['year'] == 2007
-    
+
     def test_form_render(self):
         'Test that myform renders properly'
         resp = self.app.post('/display_form')
@@ -130,7 +144,7 @@ class TestTGController(TestWSGIController):
         assert 'id="my_form_title.label"' in resp
         assert 'class="fieldlabel required"' in resp
         assert "Title" in resp
-    
+
     def test_form_validation_error(self):
         "Test validation form vaidation (with errors)"
         form_values = {'title':'Razer', 'year':"t007"}
@@ -156,3 +170,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/password', form_values)
         assert "Password ok!" in resp
 
+    def test_controller_based_validator(self):
+        resp = self.app.post('/validate_controller_based_validator')
+        assert 'ok' in resp
