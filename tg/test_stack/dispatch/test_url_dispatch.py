@@ -45,9 +45,6 @@ def test_tg_style_subcontroller_default():
     assert 'tim' in resp.body
     assert 'joe' in resp.body
 
-
-#TODO Fix these four tests!
-
 def test_redirect_absolute():
     resp = app.get('/redirect_me?target=/')
     print resp.status
