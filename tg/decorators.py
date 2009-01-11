@@ -106,7 +106,7 @@ class Decoration(object):
         #remove this after deprecation period for tg_format
         tg_format = request.headers.get('tg_format')
 
-        if request.response_type:
+        if hasattr(request, 'response_type') and request.response_type in self.engines:
             accept_types = request.response_type
 
         elif tg_format:
