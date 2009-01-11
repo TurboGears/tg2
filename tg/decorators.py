@@ -12,6 +12,7 @@ from decorator import decorator
 
 #this can be removed after tg_format is removed
 import mimetypes
+import warnings
 
 from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
@@ -102,14 +103,18 @@ class Decoration(object):
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers)."
         """
+        #remove this after deprecation period for tg_format
         tg_format = request.headers.get('tg_format')
 
         if request.response_type:
             accept_types = request.response_type
 
         elif tg_format:
+            warnings.warn('tg_format is now deprecated.  Use .mimetype in your URL to create the same behavior')
             if '/' not in tg_format:
-                accept_types = mimetypes.guess_type(tg_format)[0]
+                accept_types = mimetypes.guess_type('.'+tg_format)[0]
+                if accept_types is None:
+                    raise Exception('Unknown mimetype: %s'%tg_format)
             else:
                 accept_types = tg_format
         else:

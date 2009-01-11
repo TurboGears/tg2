@@ -7,6 +7,7 @@ from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from formencode import validators
 from webob import Response, Request
+from nose.tools import raises
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
@@ -53,7 +54,7 @@ class SubController2(object):
     @expose()
     def index(self):
         tg.redirect('list')
-    
+
     @expose()
     def list(self, **kw):
         return "hello list"
@@ -71,7 +72,7 @@ class BasicTGController(TGController):
     @expose()
     def feed(self, feed=None):
         return feed
-        
+
     sub = SubController()
     sub2 = SubController2()
 
@@ -105,7 +106,7 @@ class BasicTGController(TGController):
     @expose()
     def flash_after_redirect(self):
         return tg.get_flash()
-    
+
     @expose()
     def flash_status(self):
         return tg.get_status()
@@ -113,26 +114,26 @@ class BasicTGController(TGController):
     @expose()
     def flash_no_redirect(self):
         tg.flash("Wow, flash!")
-        return tg.get_flash() 
+        return tg.get_flash()
 
     @expose('json')
     @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
-    
+
     @expose('json')
     @validate(validators={"a":validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
         return dict(int=a,str=b)
-    
+
     @expose()
     @expose('json')
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
-        
+
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def custom_content_type(self):
         pylons.response.headers['content-type'] = 'image/png'
@@ -143,11 +144,11 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-        
+
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
         self.failUnless('Hello from /mounted_app' in r, r)
-        
+
     def test_mounted_wsgi_app_at_subcontroller(self):
         r = self.app.get('/sub/mounted_app/')
         self.failUnless('Hello from /sub/mounted_app/' in r, r)
@@ -155,3 +156,15 @@ class TestTGController(TestWSGIController):
     def test_posting_to_mounted_app(self):
         r = self.app.post('/mounted_app/', params={'data':'Foooo'})
         self.failUnless('Foooo' in r, r)
+
+    def test_response_type(self):
+        r = self.app.post('/stacked_expose.json')
+        assert 'got_json' in r, r
+
+    def test_deprecated_tg_format_no_mimetype(self):
+        r = self.app.post('/stacked_expose?tg_format=json')
+        assert 'got_json' in r, r
+
+    @raises(Exception)
+    def test_unknown_mimetype(self):
+        r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
