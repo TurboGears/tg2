@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from nose.tools import eq_, raises
 
 import tg, pylons
 from tg.controllers import TGController
@@ -110,6 +111,12 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp
         assert '"str": "string"' in resp
+
+    @raises(AssertionError)
+    def test_validation_fails_with_no_error_handler(self):
+        form_values = {'a':'asdf', 'b':"string"}
+        resp = self.app.post('/validated_and_unvalidated', form_values)
+
 
     def test_two_validators_errors(self):
         "Ensure that multiple validators are applied correctly"

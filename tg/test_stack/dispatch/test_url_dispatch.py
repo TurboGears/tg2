@@ -7,14 +7,14 @@ from nose.tools import eq_
 
 
 def setup_noDB():
-    global_config = {'debug': 'true', 
-                     'error_email_from': 'paste@localhost', 
+    global_config = {'debug': 'true',
+                     'error_email_from': 'paste@localhost',
                      'smtp_server': 'localhost'}
-    
-    base_config = TestConfig(folder = 'dispatch', 
+
+    base_config = TestConfig(folder = 'dispatch',
                              values = {'use_sqlalchemy': False}
                              )
-                             
+
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)
     app = TestApp(app_maker(global_config, full_stack=True))
@@ -107,7 +107,7 @@ def test_subcontroller_redirect_no_slash_sub2index():
 def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
     assert'Wow, flash!' in resp
-    
+
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
     assert'Wow, flash!' in resp
@@ -116,7 +116,7 @@ def test_flash_unicode():
     resp = app.get('/flash_unicode').follow()
     content = resp.body.decode('utf8')
     assert u'Привет, мир!' in content
-    
+
 def test_flash_status():
     resp = app.get('/flash_status')
     assert'status_ok'in resp
@@ -129,6 +129,6 @@ def test_custom_content_type():
     resp = app.get('/custom_content_type')
     assert 'image/png' == dict(resp.headers)['content-type']
     assert resp.body == 'PNG'
-    
+
 def test_basicurls():
     resp = app.get("/test_url_sop")
