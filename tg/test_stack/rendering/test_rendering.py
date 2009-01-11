@@ -35,10 +35,20 @@ def test_genshi_inheritance():
     assert "Inheritance template" in resp
     assert "Master template" in resp
 
+def test_chameleon_genshi_base():
+    app = setup_noDB()
+    resp = app.get('/chameleon_genshi_index')
+    assert "<p>TurboGears 2 is rapid web application development toolkit designed to make your life easier.</p>" in resp
+
+def test_chameleon_genshi_inheritance():
+    app = setup_noDB()
+    resp = app.get('/chameleon_genshi_inherits')
+    assert "Inheritance template" in resp
+    assert "Master template" in resp
+
 def test_jinja_base():
     app = setup_noDB()
     resp = app.get('/jinja_index')
-    print resp
     assert "move along" in resp
 
 def _test_jinja_inherits():

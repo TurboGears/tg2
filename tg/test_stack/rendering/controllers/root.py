@@ -36,16 +36,24 @@ class RootController(TGController):
     def genshi_inherits(self):
         return()
 
-    @expose('mako:mako_noop.mak')
-    def mako_index(self):
-        return {}
-
     @expose('jinja:tg/test_stack/rendering/templates/jinja_noop.html')
     def jinja_index(self):
         return {}
 
     @expose('jinja:tg/test_stack/rendering/templates/jinja_inherits.html')
     def jinja_inherits(self):
+        return {}
+
+    @expose('chameleon_genshi:index.html')
+    def chameleon_genshi_index(self):
+        return {}
+
+    @expose('chameleon_genshi:genshi_inherits.html')
+    def chameleon_genshi_inherits(self):
+        return()
+
+    @expose('mako:mako_noop.mak')
+    def mako_index(self):
         return {}
 
     @expose('mako:mako_inherits.mak')
