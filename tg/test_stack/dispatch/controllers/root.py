@@ -35,6 +35,11 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
+class LookupController(TGController):
+    @expose()
+    def findme(self, *args, **kw):
+        return 'got to lookup'
+
 class SubController2(object):
     @expose()
     def index(self):
@@ -43,6 +48,11 @@ class SubController2(object):
     @expose()
     def list(self, **kw):
         return "hello list"
+
+    @expose()
+    def lookup(self, *args):
+        lookup = LookupController()
+        return lookup, args
 
 class RootController(TGController):
     @expose()

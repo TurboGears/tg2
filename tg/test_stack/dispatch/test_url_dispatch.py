@@ -100,6 +100,12 @@ def test_subcontroller_redirect_sub2index():
     resp=app.get('/sub2/').follow()
     assert'hello list' in resp
 
+#this test does not run because of some bug in nose
+def _test_subcontroller_lookup():
+    resp=app.get('/sub2/findme').follow()
+    assert'lookup' in resp
+
+
 def test_subcontroller_redirect_no_slash_sub2index():
     resp=app.get('/sub2/').follow()
     assert'hello list' in resp
