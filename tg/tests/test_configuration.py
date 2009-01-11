@@ -121,3 +121,4 @@ class TestAppConfig:
 
     def test_add_static_file_middleware(self):
         self.config.add_static_file_middleware(None)
+

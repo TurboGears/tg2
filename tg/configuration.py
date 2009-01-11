@@ -39,11 +39,11 @@ class PylonsConfigWrapper(DictMixin):
     proxy that allows for multiple pylons/tg2 applicatoins to live
     in the same process simultaniously, but to always get the right
     config data for the app that's requesting them.
-    
-    Sites, with seeking to maximize needs may perfer to use the pylons 
+
+    Sites, with seeking to maximize needs may perfer to use the pylons
     config stacked object proxy directly, using just dictionary style
     access, particularly whenever config is checked on a per-request
-    basis. 
+    basis.
     """
 
     def __init__(self, dict_to_wrap):
@@ -77,7 +77,7 @@ class PylonsConfigWrapper(DictMixin):
             del self.config_proxy.current_conf()[name]
         except KeyError:
             raise AttributeError(name)
-               
+
     def keys(self):
         return self.config_proxy.keys()
 
@@ -133,7 +133,7 @@ class AppConfig(Bunch):
 
         self.use_toscawidgets = True
         self.use_transaction_manager = True
-        
+
         #Registy for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
@@ -147,10 +147,10 @@ class AppConfig(Bunch):
                 try:
                     cmd()
                 except Exception, error:
-                    log.debug("Error registering %s at startup: %s" % (cmd, error )) 
+                    log.debug("Error registering %s at startup: %s" % (cmd, error ))
             else:
                 log.debug("Unable to register %s for startup" % cmd )
-        
+
         for cmd in self.call_on_shutdown:
             if callable(cmd):
                 atexit.register(cmd)
@@ -173,13 +173,13 @@ class AppConfig(Bunch):
         """Initialize the config object.
 
         tg.config is a proxy for pylons.config that allows attribute style
-        access, so it's automatically setup when we create the pylons 
+        access, so it's automatically setup when we create the pylons
         config.
 
         Besides basic initialization, this method copies all the values
-        in base_config into the ``pylons.config`` and ``tg.config`` 
+        in base_config into the ``pylons.config`` and ``tg.config``
         objects.
-        
+
         """
         pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
@@ -189,11 +189,11 @@ class AppConfig(Bunch):
     def setup_routes(self):
         """Setup the default TG2 routes
 
-        Overide this and setup your own routes maps if you want to use 
+        Overide this and setup your own routes maps if you want to use
         custom routes.
-        
+
         """
-        
+
         map = Mapper(directory=config['pylons.paths']['controllers'],
                     always_scan=config['debug'])
 
@@ -204,11 +204,11 @@ class AppConfig(Bunch):
 
     def setup_helpers_and_globals(self):
         """Add Hepers and Globals objects to the config.
-        
-        Overide this method to customize the way that ``app_globals`` 
-        and ``helpers`` are setup.  
+
+        Overide this method to customize the way that ``app_globals``
+        and ``helpers`` are setup.
         """
-        
+
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
         config['pylons.helpers'] = self.package.lib.helpers
         config['pylons.h'] = self.package.lib.helpers
@@ -226,15 +226,15 @@ class AppConfig(Bunch):
 
     def setup_mako_renderer(self):
         """Setup a renderer and loader for mako templates
-        
+
         Overide this to customize the way that the mako template
-        renderer is setup.  In particular if you want to setup 
+        renderer is setup.  In particular if you want to setup
         a different set of search paths, different encodings, or
         additonal imports, all you need to do is update the
-        ``TemplateLookup`` constructor. 
-        
+        ``TemplateLookup`` constructor.
+
         You can also use your own render_mako function instead of the one
-        provided by tg.render. 
+        provided by tg.render.
         """
         from mako.lookup import TemplateLookup
         from mako.template import Template
@@ -293,7 +293,7 @@ class AppConfig(Bunch):
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'])
-                
+
         else:
             # if no dotted names support was required we will just setup
             # a file system based template lookup mechanism
@@ -308,7 +308,7 @@ class AppConfig(Bunch):
         self.render_functions.mako = render_mako
 
     def setup_chameleongenshi_renderer(self):
-        """setup a renderer and loader for the chameleon.genshi engine""" 
+        """setup a renderer and loader for the chameleon.genshi engine"""
         from chameleon.genshi.loader import TemplateLoader as ChameleonLoader
         from tg.render import render_chameleon_genshi
 
@@ -321,7 +321,7 @@ class AppConfig(Bunch):
 
     def setup_genshi_renderer(self):
         """Setup a renderer and loader for Genshi templates
-        
+
         Overide this to customize the way that the internationalization
         filter, template loader """
         from genshi.template import TemplateLoader
@@ -350,6 +350,7 @@ class AppConfig(Bunch):
         config['pylons.app_globals'].jinja_env = Environment(loader=ChoiceLoader(
                 [FileSystemLoader(path, auto_reload=self.auto_reload_templates)
                  for path in self.paths['templates']]))
+
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
 
@@ -370,15 +371,15 @@ class AppConfig(Bunch):
 
         def template_loaded(template):
             template.filters.insert(0, Translator(ugettext))
-        
+
         #Set some default options for genshi
         options = {
             'genshi.loader_callback': template_loaded,
             'genshi.default_format': 'xhtml',
         }
-        
+
         #overide those options from config
-        config['buffet.template_options'].update(options)        
+        config['buffet.template_options'].update(options)
         config.add_template_engine(self.default_renderer,
                                    template_location,  {})
 
@@ -405,9 +406,9 @@ class AppConfig(Bunch):
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
             #Regesters functions to be called at startup and shutdown
-            #from self.call_on_startup and shutdown respectively. 
+            #from self.call_on_startup and shutdown respectively.
             self.setup_startup_and_shutdown()
-            
+
             self.setup_paths()
             self.init_config(global_conf, app_conf)
             self.setup_routes()
@@ -453,11 +454,11 @@ class AppConfig(Bunch):
     def add_auth_middleware(self, app):
         """Configure authentication and authorization"""
         from repoze.what.plugins.quickstart import setup_sql_auth
-        
+
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
             self.sa_auth['log_stream'] = logging.getLogger('auth')
-        
+
         # Removing keywords not used by repoze.who:
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
@@ -545,13 +546,13 @@ class AppConfig(Bunch):
 
             ``wrap_app``
                 a WSGI middleware component which takes the core turbogears
-                application and wraps it -- inside all the WSGI-components 
-                provided by TG and Pylons. This allows you to work with the 
+                application and wraps it -- inside all the WSGI-components
+                provided by TG and Pylons. This allows you to work with the
                 full environ that your tg app would get before anything
-                happens in the app itself. 
+                happens in the app itself.
 
             ``global_conf``
-                The inherited configuration for this application. Normally 
+                The inherited configuration for this application. Normally
                 fromthe [DEFAULT] section of the Paste ini file.
 
             ``full_stack``
@@ -571,16 +572,16 @@ class AppConfig(Bunch):
             if wrap_app:
                 app = wrap_app(app)
             app = self.add_core_middleware(app)
-            
+
             if self.use_toscawidgets:
                 app = self.add_tosca_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
                 app = self.add_auth_middleware(app)
-            
-            if self.use_transaction_manager: 
+
+            if self.use_transaction_manager:
                 app = self.add_tm_middleware(app)
-            
+
             if self.use_sqlalchemy:
                 if not hasattr(self, 'DBSession'):
                     # If the user hasn't specified a scoped_session, assume

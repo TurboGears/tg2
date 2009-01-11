@@ -4,11 +4,11 @@ from webtest import TestApp
 from pylons import tmpl_context
 
 def setup_noDB():
-    global_config = {'debug': 'true', 
-                     'error_email_from': 'paste@localhost', 
+    global_config = {'debug': 'true',
+                     'error_email_from': 'paste@localhost',
                      'smtp_server': 'localhost'}
-    
-    base_config = TestConfig(folder = 'rendering', 
+
+    base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
@@ -17,11 +17,11 @@ def setup_noDB():
                                        'use_dotted_templatenames': False,
                                        }
                              )
-                             
+
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)
     app = TestApp(app_maker(global_config, full_stack=True))
-    return app 
+    return app
 
 def test_default_genshi_renderer():
     app = setup_noDB()
@@ -34,6 +34,18 @@ def test_genshi_inheritance():
     resp = app.get('/genshi_inherits')
     assert "Inheritance template" in resp
     assert "Master template" in resp
+
+def test_jinja_base():
+    app = setup_noDB()
+    resp = app.get('/jinja_index')
+    print resp
+    assert "move along" in resp
+
+def _test_jinja_inherits():
+    app = setup_noDB()
+    resp = app.get('/jinja_inherits')
+    print resp
+    assert "Welcome on my awsome homepage" in resp
 
 def test_mako_renderer():
     app = setup_noDB()

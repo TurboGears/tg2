@@ -1,5 +1,5 @@
 import os
-from webtest import TestApp 
+from webtest import TestApp
 import tg
 from tg.configuration import AppConfig
 
@@ -8,7 +8,7 @@ class TestConfig(AppConfig):
     def __init__(self, folder, values=None):
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako']
+        self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja']
         self.render_functions = tg.util.Bunch()
         self.package = tg.test_stack
         self.default_renderer = 'genshi'
@@ -50,7 +50,7 @@ def app_from_config(base_config, deployment_config=None):
     app_maker = base_config.setup_tg_wsgi_app(env_loader)
     app = TestApp(app_maker(deployment_config, full_stack=True))
     return app
-    
+
 def teardown():
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
