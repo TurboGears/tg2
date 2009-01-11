@@ -25,20 +25,21 @@ def setup_noDB():
 def test_json_custom_format():
     app = setup_noDB()
     resp = app.get('/custom_format?format=json')
-    assert resp.header('Content-Type') == 'application/json; charset=utf-8'
+    assert resp.content_type == 'application/json'
     assert '"status": "ok"' in resp.body
     assert '"format": "json"' in resp.body
     
 def test_xml_custom_format():
     app = setup_noDB()
     resp = app.get('/custom_format?format=xml')
-    assert resp.header('Content-Type') == 'text/xml; charset=utf-8'
+
+    assert 'text/xml' in resp.content_type
     assert "<status>ok</status>" in resp.body
     assert "<format>xml</format>" in resp.body
     
 def test_html_custom_format():
     app = setup_noDB()
     resp = app.get('/custom_format?format=html')
-    assert resp.header('Content-Type') == 'text/html; charset=utf-8'
+    assert 'text/html' in resp.content_type
     assert "<li>Status: ok</li>" in resp.body
     assert "<li>Format: html</li>" in resp.body

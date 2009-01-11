@@ -7,6 +7,6 @@ TODO:
 
   * Explain the context and global objects 
   * Document paster commands (shell, quickstart) etc. 
-  * Document WebTest tests
+  * Document webtest tests
   * Document babel based internationalization
 
