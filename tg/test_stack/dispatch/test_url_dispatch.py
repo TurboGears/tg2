@@ -1,24 +1,15 @@
 # -*- coding: utf-8 -*-
-
 import os
-from tg.test_stack import TestConfig
+from tg.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 from nose.tools import eq_
 
-
 def setup_noDB():
-    global_config = {'debug': 'true',
-                     'error_email_from': 'paste@localhost',
-                     'smtp_server': 'localhost'}
-
-    base_config = TestConfig(folder = 'dispatch',
+    base_config = TestConfig(folder = 'dispatch', 
                              values = {'use_sqlalchemy': False}
                              )
+    return app_from_config(base_config) 
 
-    env_loader = base_config.make_load_environment()
-    app_maker = base_config.setup_tg_wsgi_app(env_loader)
-    app = TestApp(app_maker(global_config, full_stack=True))
-    return app
 
 app = setup_noDB()
 
