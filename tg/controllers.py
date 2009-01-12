@@ -333,7 +333,6 @@ class DecoratedController(WSGIController):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
 
-
 class ObjectDispatchController(DecoratedController):
     """
     Object dispatch (also "object publishing") means that each portion of the
@@ -429,14 +428,18 @@ def _object_dispatch(obj, url_path):
     notfound_handlers = []
     while True:
         try:
-            obj, remainder = _find_object(obj, remainder, notfound_handlers)
+            obj, parent, remainder = _find_object(obj, remainder, notfound_handlers)
 
             #check to see if the obj has any restful attributes
             method = pylons.request.method.lower()
             if hasattr(obj, method):
                 possible_rest_method = getattr(obj, method)
                 if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
-                    obj = getattr(obj(), method)
+                    obj = obj()
+                    #attach the parent class so the inner class has access to it's members
+                    obj.parent = parent
+                    obj = getattr(obj, method)
+
 
             return obj, remainder
 
@@ -459,15 +462,8 @@ def _object_dispatch(obj, url_path):
                 continue
 
 
-class RestMethod(object):
-    """This Dummies out a controller so that restfullness can take place"""
-    class decoration(object):
-        exposed = True
-
-    def __call__(self, *args, **kw):
-        pass
-
 def _find_object(obj, remainder, notfound_handlers):
+    parent = None
     while True:
         if obj is None:
             raise HTTPNotFound().exception
@@ -475,12 +471,12 @@ def _find_object(obj, remainder, notfound_handlers):
         _check_security(obj)
 
         if _iscontroller(obj):
-            return obj, remainder
+            return obj, parent, remainder
 
         if not remainder or remainder == ['']:
             index = getattr(obj, 'index', None)
             if _iscontroller(index):
-                return index, remainder
+                return index, obj, remainder
 
         default = getattr(obj, 'default', None)
         if _iscontroller(default):
@@ -493,6 +489,7 @@ def _find_object(obj, remainder, notfound_handlers):
         if not remainder:
             raise HTTPNotFound().exception
 
+        parent = obj
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
 
@@ -516,6 +513,14 @@ def _iscontroller(obj):
     if not hasattr(obj, 'decoration'):
         return False
     return obj.decoration.exposed
+
+class RestMethod(object):
+    """This Dummies out a controller so that restfullness can take place"""
+    class decoration(object):
+        exposed = True
+
+    def __call__(self, *args, **kw):
+        pass
 
 class TGController(ObjectDispatchController):
     """
