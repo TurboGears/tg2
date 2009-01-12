@@ -149,6 +149,7 @@ class DecoratedController(WSGIController):
 
         validation = getattr(controller.decoration, 'validation', None)
 
+        #import pdb; pdb.set_trace()
         if validation is None:
             return params
 
@@ -527,7 +528,7 @@ def _iscontroller(obj):
         return False
     return obj.decoration.exposed
 
-class RestMethod(DecoratedController):
+class RestController(DecoratedController):
     """This Dummies out a controller so that restfullness can take place"""
     class decoration(object):
         exposed = True

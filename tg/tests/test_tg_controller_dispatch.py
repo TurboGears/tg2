@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, WSGIAppController, RestMethod
+from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, WSGIAppController, RestController
 from tg.decorators import expose, validate
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -59,7 +59,7 @@ class SubController2(object):
     def list(self, **kw):
         return "hello list"
 
-    class rest(RestMethod):
+    class rest(RestController):
 
         @expose()
         def get(self):
