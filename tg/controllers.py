@@ -463,6 +463,14 @@ def _find_restful_dispatch(obj, parent, remainder):
             if method == 'get':
                 method = remainder[-1]
             remainder = remainder[:-1]
+        elif hasattr(obj, remainder[0]):
+            #revert the dispatch back to object_dispatch
+            return _find_object(getattr(obj, remainder[0]), remainder[1:], [])
+    #support for get_all and get_one methods
+    if not remainder and method == 'get' and hasattr(obj, 'get_all') and obj.get_all.decoration.exposed:
+        method = 'get_all'
+    if remainder and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
+        method = 'get_one'
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
