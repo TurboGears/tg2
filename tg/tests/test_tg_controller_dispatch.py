@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, WSGIAppController
+from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, WSGIAppController, RestMethod
 from tg.decorators import expose, validate
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -58,6 +58,21 @@ class SubController2(object):
     @expose()
     def list(self, **kw):
         return "hello list"
+
+    class rest(RestMethod):
+
+        @expose()
+        def get(self):
+            return "REST GET"
+        @expose()
+        def post(self):
+            return "REST POST"
+        @expose()
+        def put(self):
+            return "REST PUT"
+        @expose()
+        def delete(self):
+            return "REST DELETE"
 
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
@@ -172,3 +187,20 @@ class TestTGController(TestWSGIController):
     @raises(Exception)
     def test_unknown_mimetype(self):
         r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
+
+    def test_rest_post(self):
+        r = self.app.post('/sub2/rest/')
+        assert 'REST POST' in r, r
+
+    def test_rest_get(self):
+        r = self.app.get('/sub2/rest/')
+        assert 'REST GET' in r, r
+
+    def test_rest_delete(self):
+        r = self.app.delete('/sub2/rest/')
+        assert 'REST DELETE' in r, r
+
+    def test_rest_put(self):
+        r = self.app.put('/sub2/rest/')
+        assert 'REST PUT' in r, r
+

@@ -424,11 +424,21 @@ def _object_dispatch(obj, url_path):
         extension = last_remainder[extension_spot:]
         remainder[-1] = last_remainder[:extension_spot]
         pylons.request.response_type = mimetypes.guess_type(extension)[0]
+        pylons.request.response_ext = extension
 
     notfound_handlers = []
     while True:
         try:
             obj, remainder = _find_object(obj, remainder, notfound_handlers)
+
+            #check to see if the obj has any restful attributes
+            method = pylons.request.method.lower()
+            if hasattr(obj, method):
+                if isinstance(obj, RestMethod):
+                    possible_rest_method = getattr(obj, method)
+                    if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
+                        obj = getattr(obj(), method)
+
             return obj, remainder
 
         # auth error should be treated separatly from "not found" errors
@@ -448,6 +458,15 @@ def _object_dispatch(obj, url_path):
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
+
+
+class RestMethod(object):
+    """This Dummies out a controller so that restfullness can take place"""
+    class decoration(object):
+        exposed = True
+
+    def __call__(self, *args, **kw):
+        pass
 
 def _find_object(obj, remainder, notfound_handlers):
     while True:
