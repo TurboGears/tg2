@@ -456,6 +456,13 @@ def _find_restful_dispatch(obj, parent, remainder):
     params = pylons.request.params
     if '_method' in params:
         method = params['_method'].lower()
+    if remainder and remainder[-1] == '':
+            remainder = remainder[:-1]
+    if remainder:
+        if remainder[-1] in ['new', 'edit']:
+            if method == 'get':
+                method = remainder[-1]
+            remainder = remainder[:-1]
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
