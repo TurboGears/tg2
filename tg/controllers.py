@@ -473,11 +473,15 @@ def _find_restful_dispatch(obj, parent, remainder):
         if remainder[-1] in ['new', 'edit']:
             if method == 'get':
                 method = remainder[-1]
-        if remainder[-1] == 'delete':
-            method = 'delete'
-            if len(remainder) == 2:
+            if method == 'edit' and len(remainder) <=2:
                 remainder = remainder[:-1]
-        if hasattr(obj, remainder[0]) and remainder[0] not in ['new', 'edit']:
+            if method == 'new' and len(remainder) == 1:
+                remainder = remainder[:-1]
+        elif remainder[-1] == 'delete':
+            method = 'delete'
+            if len(remainder) <= 2:
+                remainder = remainder[:-1]
+        if remainder and hasattr(obj, remainder[0]) and remainder[0] not in ['new', 'edit']:
             #revert the dispatch back to object_dispatch
             if inspect.isclass(obj):
                 obj = obj()

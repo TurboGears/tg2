@@ -58,6 +58,10 @@ class SubController3(object):
 class RestController2(RestController):
 
     @expose()
+    def new(self):
+        return "REST NEW"
+    
+    @expose()
     def get_one(self, *args):
         return "REST GETONE"
     @expose()
@@ -269,4 +273,8 @@ class TestTGController(TestWSGIController):
     def test_rest_post_delete(self):
         r = self.app.post('/sub2/rest/rest2/1/delete')
         assert 'REST POSTDEL' in r, r
-    
+        
+    def test_rest_nested_new(self):
+        r = self.app.get('/sub2/rest/rest2/new')
+        assert 'REST NEW' in r, r
+        
