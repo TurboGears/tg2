@@ -452,25 +452,50 @@ def _object_dispatch(obj, url_path):
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
-    method = pylons.request.method.lower()
+
+    _check_security(obj)
+
+    if not inspect.isclass(obj) and not isinstance(obj, RestController):
+        return obj, remainder
+    if inspect.isclass(obj) and not issubclass(obj, RestController):
+        return obj, remainder
+    
+    request_method = method = pylons.request.method.lower()
+
+    #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
         method = params['_method'].lower()
+    
     if remainder and remainder[-1] == '':
             remainder = remainder[:-1]
     if remainder:
         if remainder[-1] in ['new', 'edit']:
             if method == 'get':
                 method = remainder[-1]
-            remainder = remainder[:-1]
-        elif hasattr(obj, remainder[0]):
+        if remainder[-1] == 'delete':
+            method = 'delete'
+            if len(remainder) == 2:
+                remainder = remainder[:-1]
+        if hasattr(obj, remainder[0]) and remainder[0] not in ['new', 'edit']:
             #revert the dispatch back to object_dispatch
-            return _find_object(getattr(obj, remainder[0]), remainder[1:], [])
+            if inspect.isclass(obj):
+                obj = obj()
+            return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
+
     #support for get_all and get_one methods
     if not remainder and method == 'get' and hasattr(obj, 'get_all') and obj.get_all.decoration.exposed:
         method = 'get_all'
-    if remainder and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
+    if len(remainder)>0 and method != 'delete' and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
         method = 'get_one'
+    
+    #support for get_delete and post_delete methods
+    if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and obj.get_delete.decoration.exposed:
+        method = 'get_delete'
+    if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and obj.post_delete.decoration.exposed:
+        method = 'post_delete'
+
+    #if isinstance(obj, RestController) and hasattr(obj, method):
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
@@ -479,7 +504,11 @@ def _find_restful_dispatch(obj, parent, remainder):
             #attach the parent class so the inner class has access to it's members
             obj.parent = parent
             obj = getattr(obj, method)
-
+        else:
+            raise HTTPNotFound().exception
+    elif isinstance(obj, RestController):
+        raise HTTPNotFound().exception
+    
     return obj, remainder
 
 
@@ -513,7 +542,7 @@ def _find_object(obj, remainder, notfound_handlers):
         parent = obj
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
-
+        
 def _check_security(obj):
     """this function checks if a controller has a 'require' attribute and if
     it is the case, test that this require predicate can be evaled to True.

@@ -50,6 +50,30 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
+class SubController3(object):
+    @expose()
+    def index(self):
+        return 'Sub 3'
+    
+class RestController2(RestController):
+
+    @expose()
+    def get_one(self, *args):
+        return "REST GETONE"
+    @expose()
+    def get_all(self):
+        return "REST GETALL"
+    
+    def post(self):
+        """this is intentionally not exposed"""
+        
+    @expose()
+    def get_delete(self, *args, **kw):
+        return "REST GETDEL"
+    @expose()
+    def post_delete(self, *args):
+        return "REST POSTDEL"
+
 class SubController2(object):
     @expose()
     def index(self):
@@ -61,6 +85,9 @@ class SubController2(object):
 
     class rest(RestController):
 
+        sub3 = SubController3()
+        rest2 = RestController2()
+        
         @expose()
         def get(self):
             return "REST GET"
@@ -73,6 +100,17 @@ class SubController2(object):
         @expose()
         def delete(self):
             return "REST DELETE"
+        @expose()
+        def new(self):
+            return "REST NEW"
+        
+        @expose()
+        def edit(self, *args, **kw):
+            return "REST EDIT"
+        
+        @expose()
+        def non_resty_thing(self):
+            return "non_resty"
 
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
@@ -192,6 +230,14 @@ class TestTGController(TestWSGIController):
         r = self.app.post('/sub2/rest/')
         assert 'REST POST' in r, r
 
+    def test_rest_non_resty(self):
+        r = self.app.post('/sub2/rest/non_resty_thing')
+        assert 'non_resty' in r, r
+        
+    def test_rest_sub_controller(self):
+        r = self.app.get('/sub2/rest/sub3')
+        assert 'Sub 3' in r, r
+
     def test_rest_get(self):
         r = self.app.get('/sub2/rest/')
         assert 'REST GET' in r, r
@@ -204,3 +250,23 @@ class TestTGController(TestWSGIController):
         r = self.app.put('/sub2/rest/')
         assert 'REST PUT' in r, r
 
+    def test_rest_get_all(self):
+        r = self.app.get('/sub2/rest/rest2/')
+        assert 'REST GETALL' in r, r
+
+    def test_rest_get_one(self):
+        r = self.app.get('/sub2/rest/rest2/1')
+        assert 'REST GETONE' in r, r
+
+    def test_rest_get_delete_ugly(self):
+        r = self.app.get('/sub2/rest/rest2/1?_method=delete')
+        assert 'REST GETDEL' in r, r
+    
+    def test_rest_get_delete(self):
+        r = self.app.get('/sub2/rest/rest2/1/delete')
+        assert 'REST GETDEL' in r, r
+    
+    def test_rest_post_delete(self):
+        r = self.app.post('/sub2/rest/rest2/1/delete')
+        assert 'REST POSTDEL' in r, r
+    
