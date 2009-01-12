@@ -434,10 +434,9 @@ def _object_dispatch(obj, url_path):
             #check to see if the obj has any restful attributes
             method = pylons.request.method.lower()
             if hasattr(obj, method):
-                if isinstance(obj, RestMethod):
-                    possible_rest_method = getattr(obj, method)
-                    if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
-                        obj = getattr(obj(), method)
+                possible_rest_method = getattr(obj, method)
+                if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
+                    obj = getattr(obj(), method)
 
             return obj, remainder
 
