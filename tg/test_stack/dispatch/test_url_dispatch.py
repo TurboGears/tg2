@@ -69,12 +69,15 @@ def test_redirect_external():
 
 def test_redirect_param():
     resp = app.get('/redirect_me?target=/hello&name=paj')
+    print resp
     resp = resp.follow()
     assert'Hello paj' in resp
     resp = app.get('/redirect_me?target=/hello&name=pbj')
+    print resp
     resp = resp.follow()
     assert'Hello pbj' in resp
     resp = app.get('/redirect_me?target=/hello&silly=billy&name=pcj')
+    print resp
     resp = resp.follow()
     print resp
     assert'Hello pcj' in resp
