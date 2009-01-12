@@ -17,6 +17,7 @@ import logging
 import warnings
 import urlparse, urllib
 import mimetypes
+import inspect
 
 import formencode
 import pylons
@@ -430,18 +431,7 @@ def _object_dispatch(obj, url_path):
         try:
             obj, parent, remainder = _find_object(obj, remainder, notfound_handlers)
 
-            #check to see if the obj has any restful attributes
-            method = pylons.request.method.lower()
-            if hasattr(obj, method):
-                possible_rest_method = getattr(obj, method)
-                if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
-                    obj = obj()
-                    #attach the parent class so the inner class has access to it's members
-                    obj.parent = parent
-                    obj = getattr(obj, method)
-
-
-            return obj, remainder
+            return _find_restful_dispatch(obj, parent, remainder)
 
         # auth error should be treated separatly from "not found" errors
         except HTTPUnauthorized, httpe:
@@ -452,14 +442,30 @@ def _object_dispatch(obj, url_path):
             if not notfound_handlers:
                 raise HTTPNotFound().exception
 
-            name, obj, remainder = notfound_handlers.pop()
+            name, obj, parent, remainder = notfound_handlers.pop()
             if name == 'default':
-                return obj, remainder
+                return _find_restful_dispatch(obj, parent, remainder)
 
             else:
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
+
+def _find_restful_dispatch(obj, parent, remainder):
+    method = pylons.request.method.lower()
+    params = pylons.request.params
+    if '_method' in params:
+        method = params['_method'].lower()
+    if hasattr(obj, method):
+        possible_rest_method = getattr(obj, method)
+        if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
+            if inspect.isclass(obj):
+                obj = obj()
+            #attach the parent class so the inner class has access to it's members
+            obj.parent = parent
+            obj = getattr(obj, method)
+
+    return obj, remainder
 
 
 def _find_object(obj, remainder, notfound_handlers):
@@ -480,11 +486,11 @@ def _find_object(obj, remainder, notfound_handlers):
 
         default = getattr(obj, 'default', None)
         if _iscontroller(default):
-            notfound_handlers.append(('default', default, remainder))
+            notfound_handlers.append(('default', default, obj, remainder))
 
         lookup = getattr(obj, 'lookup', None)
         if _iscontroller(lookup):
-            notfound_handlers.append(('lookup', lookup, remainder))
+            notfound_handlers.append(('lookup', lookup, obj, remainder))
 
         if not remainder:
             raise HTTPNotFound().exception
@@ -514,13 +520,10 @@ def _iscontroller(obj):
         return False
     return obj.decoration.exposed
 
-class RestMethod(object):
+class RestMethod(DecoratedController):
     """This Dummies out a controller so that restfullness can take place"""
     class decoration(object):
         exposed = True
-
-    def __call__(self, *args, **kw):
-        pass
 
 class TGController(ObjectDispatchController):
     """
