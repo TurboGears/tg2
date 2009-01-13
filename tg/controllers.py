@@ -465,7 +465,8 @@ def _find_restful_dispatch(obj, parent, remainder):
     #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
-        method = params['_method'].lower()
+        if params['_method']:
+            method = params['_method'].lower()
     
     if remainder and remainder[-1] == '':
             remainder = remainder[:-1]
@@ -499,7 +500,7 @@ def _find_restful_dispatch(obj, parent, remainder):
     if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
-    #if isinstance(obj, RestController) and hasattr(obj, method):
+#    import pdb; pdb.set_trace()
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
