@@ -23,6 +23,7 @@ import formencode
 import pylons
 from pylons import url as pylons_url
 from pylons.controllers import WSGIController
+import tw
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
@@ -253,6 +254,10 @@ class DecoratedController(WSGIController):
 
         #if there is an identity, push it to the pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
+        
+        #set up the tw renderer
+        if engine_name in 'genshi' or 'mako':
+            tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
