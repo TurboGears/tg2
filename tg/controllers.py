@@ -459,7 +459,7 @@ def _find_restful_dispatch(obj, parent, remainder):
         return obj, remainder
     if inspect.isclass(obj) and not issubclass(obj, RestController):
         return obj, remainder
-    
+
     request_method = method = pylons.request.method.lower()
 
     #conventional hack for handling methods which are not supported by most browsers
@@ -467,7 +467,7 @@ def _find_restful_dispatch(obj, parent, remainder):
     if '_method' in params:
         if params['_method']:
             method = params['_method'].lower()
-    
+
     if remainder and remainder[-1] == '':
             remainder = remainder[:-1]
     if remainder:
@@ -493,7 +493,7 @@ def _find_restful_dispatch(obj, parent, remainder):
         method = 'get_all'
     if len(remainder)>0 and method != 'delete' and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
         method = 'get_one'
-    
+
     #support for get_delete and post_delete methods
     if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and obj.get_delete.decoration.exposed:
         method = 'get_delete'
@@ -513,7 +513,7 @@ def _find_restful_dispatch(obj, parent, remainder):
             raise HTTPNotFound().exception
     elif isinstance(obj, RestController):
         raise HTTPNotFound().exception
-    
+
     return obj, remainder
 
 
@@ -547,7 +547,7 @@ def _find_object(obj, remainder, notfound_handlers):
         parent = obj
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
-        
+
 def _check_security(obj):
     """this function checks if a controller has a 'require' attribute and if
     it is the case, test that this require predicate can be evaled to True.
@@ -685,11 +685,11 @@ def url(*args, **kwargs):
 
         if len(args) >= 2 and isinstance(args[1], dict):
             params = args[1].copy()
-            if kwargs: 
+            if kwargs:
                 params.update(kwargs)
             kwargs = params
             args.pop(1)
-            
+
         if isinstance(args[0], unicode):
             args[0] = args[0].encode('utf8')
     return pylons_url(*args, **kwargs)
@@ -738,5 +738,5 @@ def setup_i18n():
 
 __all__ = [
     "DecoratedController", "ObjectDispatchController", "TGController",
-    "url", "redirect"
+    "url", "redirect", "RestController"
     ]

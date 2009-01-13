@@ -24,6 +24,7 @@ from repoze.what.authorize import check_authorization, NotAuthorizedError
 
 from tg.configuration import Bunch
 from tg.flash import flash
+#from tg.controllers import redirect
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -436,6 +437,23 @@ def postpone_commits(func, *args, **kwargs):
     s.commit = old_commit
     return retval
 
+@decorator
+def without_trailing_slash(func, *args, **kwargs):
+    """if the url is ends with '/' it redirects you to not('/')
+    """
+    if request.method == 'GET' and request.url.endswith('/') and not(request.response_type):
+        from tg.controllers import redirect
+        redirect(request.url[:-1])
+    return func(*args, **kwargs)
+
+@decorator
+def with_trailing_slash(func, *args, **kwargs):
+    """if the url doesn't end with '/' it redirects you to the URL + '/'
+    """
+    if request.method == 'GET' and not(request.url.endswith('/')) and not(request.response_type):
+        from tg.controllers import redirect
+        redirect(request.url+'/')
+    return func(*args, **kwargs)
 
 def require(predicate):
     """
@@ -457,4 +475,3 @@ def require(predicate):
 
         return func(*args, **kwargs)
     return check_auth
-
