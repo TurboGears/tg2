@@ -326,13 +326,11 @@ class DecoratedController(WSGIController):
         if error_handler is None:
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
+        elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
+            output = error_handler(*remainder, **dict(params))
         else:
-            import warnings
-            warnings.warn('this code is being deprecated.  If you have a need for it, please bring it up on the mailing list')
-            if hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
-                output = error_handler(*remainder, **dict(params))
-            else:
-                output = error_handler(controller.im_self, *remainder, **dict(params))
+            output = error_handler(controller.im_self, *remainder, **dict(params))
+        
         return error_handler, output
 
     def _initialize_validation_context(self):
@@ -466,7 +464,7 @@ def _find_restful_dispatch(obj, parent, remainder):
         return obj, remainder
 
     request_method = method = pylons.request.method.lower()
-
+    
     #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
@@ -505,7 +503,6 @@ def _find_restful_dispatch(obj, parent, remainder):
     if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
-#    import pdb; pdb.set_trace()
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
