@@ -16,7 +16,9 @@ test_requirements = ['coverage',
                     'TurboJson',
                     'zope.sqlalchemy',
                     'SQLAlchemy>=0.5beta3',
-                    'repoze.what > 1.0rc1'
+                    'repoze.what > 1.0rc1',
+                    'jinja',
+                    'chameleon.genshi',
                     ]
 
 setup(
