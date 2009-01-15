@@ -196,6 +196,9 @@ class BasicTGController(TGController):
         pylons.response.headers['content-type'] = 'image/png'
         return 'PNG'
 
+    @expose()
+    def multi_value_kws(sekf, *args, **kw):
+        assert kw['foo'] == ['1', '2'], kw
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -278,3 +281,5 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/sub2/rest/rest2/new')
         assert 'REST NEW' in r, r
         
+    def test_multi_value_kw(self):
+        r = self.app.get('/multi_value_kws?foo=1&foo=2')

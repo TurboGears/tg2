@@ -104,7 +104,6 @@ class DecoratedController(WSGIController):
             # Validate user input
             params = self._perform_validate(controller, params)
 
-
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
@@ -143,9 +142,13 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
-
+        
+        # this is here because the params were not getting passed in on controllers that
+        # were mapped with routes.  This is a fix, but it's in the wrong place.
+        # we need to add better tests to ensure decorated controllers with routings work
+        # properly.
         if isinstance(controller.im_self, DecoratedController):
-            params.update(pylons.request.params)
+            params.update(pylons.request.params.mixed())
 
         validation = getattr(controller.decoration, 'validation', None)
 
