@@ -1,41 +1,31 @@
 """Flash messaging system for sending info to the user in a
 non-obtrusive way
 """
-from pylons import session
+from webflash import Flash
+from pylons import response, request
 
-def flash(msg, status=None):
-    """Sets a message to be displayed on the page. This message will survive a
-    redirect.
-    
-    flash allows to pass in any status, but TurboGears 2 build in three
-    predefined status:
-    
-      - status_ok
-      - status_warning
-      - status_alert
+from logging import getLogger
 
-    default status: status_ok
-    """
-    session['flash_message'] = msg
-    session['flash_status'] = status or "status_ok"
-    session.save()
-    
+log = getLogger(__name__)
+
+class TGFlash(Flash):
+    def __call__(self, message, status=None, **extra_payload):
+        log.debug("flash: message=%r, status=%s", message, status)
+        return super(TGFlash, self).__call__(
+            unicode(message), status, request=request, response=response,
+            **extra_payload
+            )
+
+flash = TGFlash(default_status="status_ok")
+
 def get_flash():
     """Returns the message previously set by calling flash()
     
     Additonally removes the old flash message """
-    msg = session.get('flash_message', '')
-    session['flash_message'] = ''
-    session.save()
-    return msg
+    return flash.pop_payload(request, response).get('message')
 
 def get_status():
     """Returns the status of the last flash messagese
     
     Additonally removes the old flash message status"""
-    
-    status = session.get('flash_status', 'status_ok')
-    session['flash_status'] = ''
-    session.save()
-    return status
-    
+    return flash.pop_payload(request, response).get('status') or 'status_ok'
