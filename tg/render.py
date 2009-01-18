@@ -15,14 +15,28 @@ class MissingRendererError(Exception):
             template_engine=template_engine))
         self.template_engine = template_engine
 
+class DeprecatedFlashVariable(object):
+    def __init__(self, callable, msg):
+        self.callable = callable
+        self.msg = msg
+
+    def __unicode__(self):
+        import warnings
+        warnings.warn(self.msg, DeprecationWarning, 2)
+        return unicode(self.callable())
+
+    def __nonzero__(self):
+        import warnings
+        warnings.warn(self.msg, DeprecationWarning, 2)
+        return bool(self.callable())
+        
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
 
     These variables are:
 
     WARNING: This function should not be called from outside of the render()
-    code. If you do so you'll mess badly with the flash messages.
-    Please consider this function as private.
+    code.  Please consider this function as private.
 
     quote_plus
         the urllib quote_plus function
@@ -50,8 +64,17 @@ def _get_tg_vars():
     # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
         config = tg.config,
-        flash = tg.get_flash(),
-        flash_status = tg.get_status(),
+        flash_obj = tg.flash,
+        flash = DeprecatedFlashVariable(
+            lambda: tg.flash.message,
+            "flash is deprecated, please use flash_obj.message instead "
+            "or use the new flash_obj.render() method"
+            ),
+        flash_status = DeprecatedFlashVariable(
+            lambda: 'status_' + tg.flash.status,
+            "flash_status is deprecated, please use flash_obj.status instead "
+            "or use the new flash_obj.render() method"
+            ),
         quote_plus = quote_plus,
         url = tg.controllers.url,
         # this will be None if no identity

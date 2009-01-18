@@ -41,7 +41,7 @@ setup(
         'Genshi',
         'Pylons>=0.9.7rc3',
         'WebOb >= 0.9.5',
-        'WebFlash >= 0.1a5',
+        'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
         'repoze.what.plugins.sql > 1.0a2',
         'SQLAlchemy>=0.5beta3',
