@@ -16,7 +16,7 @@ class TGFlash(Flash):
             **extra_payload
             )
 
-flash = TGFlash(default_status="status_ok")
+flash = TGFlash(default_status="ok")
 
 def get_flash():
     """Returns the message previously set by calling flash()
@@ -28,4 +28,4 @@ def get_status():
     """Returns the status of the last flash messagese
     
     Additonally removes the old flash message status"""
-    return flash.pop_payload(request, response).get('status') or 'status_ok'
+    return flash.pop_payload(request, response).get('status') or 'ok'
