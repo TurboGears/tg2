@@ -55,14 +55,32 @@ class SubController3(object):
     def index(self):
         return 'Sub 3'
     
+class SubRestController(RestController):
+    @expose()
+    def new(self):
+        return "SUBREST NEW"
+    
+    @expose()
+    def get_one(self, id, *args):
+        return "SUBREST GETONE"
+    
+    @expose()
+    def get_all(self):
+        return "SUBREST GETALL"
+    
+    def post(self):
+        """this is intentionally not exposed"""
+
 class RestController2(RestController):
 
+    subrest = SubRestController()
+    
     @expose()
     def new(self):
         return "REST NEW"
     
     @expose()
-    def get_one(self, *args):
+    def get_one(self, id, *args):
         return "REST GETONE"
     @expose()
     def get_all(self):
@@ -280,6 +298,18 @@ class TestTGController(TestWSGIController):
     def test_rest_nested_new(self):
         r = self.app.get('/sub2/rest/rest2/new')
         assert 'REST NEW' in r, r
+
+    def test_rest_sub_all(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest')
+        assert 'SUBREST GETALL' in r, r
+
+    def test_rest_sub_one(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/3')
+        assert 'SUBREST GETONE' in r, r
+
+    def test_rest_sub_new(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/new')
+        assert 'SUBREST NEW' in r, r
         
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')

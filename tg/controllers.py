@@ -477,14 +477,15 @@ def _find_restful_dispatch(obj, parent, remainder):
     if remainder and remainder[-1] == '':
             remainder = remainder[:-1]
     if remainder:
-        if remainder[-1] in ['new', 'edit']:
+        #dispatch is finished, and we are where we need to be
+        if remainder[-1] in ['new', 'edit'] and len(remainder)<=2:
             if method == 'get':
                 method = remainder[-1]
             if method == 'edit' and len(remainder) <=2:
                 remainder = remainder[:-1]
             if method == 'new' and len(remainder) == 1:
                 remainder = remainder[:-1]
-        elif remainder[-1] == 'delete':
+        elif remainder[-1] == 'delete' and len(remainder)<=2:
             method = 'delete'
             if len(remainder) <= 2:
                 remainder = remainder[:-1]
@@ -497,8 +498,17 @@ def _find_restful_dispatch(obj, parent, remainder):
     #support for get_all and get_one methods
     if not remainder and method == 'get' and hasattr(obj, 'get_all') and obj.get_all.decoration.exposed:
         method = 'get_all'
-    if len(remainder)>0 and method != 'delete' and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
-        method = 'get_one'
+    if len(remainder)>0 and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
+        if len(remainder) == 1:
+            method = 'get_one'
+        else:
+            func = getattr(obj, 'get_one')
+            arg_len = len(inspect.getargspec(func)[0])-1
+            remainder = remainder[arg_len:]
+            if len(remainder) > 0 and hasattr(obj, remainder[0]):
+                return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
+            else:
+                raise HTTPNotFound().exception
 
     #support for get_delete and post_delete methods
     if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and obj.get_delete.decoration.exposed:
@@ -682,11 +692,11 @@ def url(*args, **kwargs):
         if isinstance(kwargs.get('params'), dict):
             params = kwargs['params'].copy()
             del kwargs['params']
-            print "kwargs:", kwargs
+#            print "kwargs:", kwargs
             params.update(kwargs)
-            print "updated params:", params
+#            print "updated params:", params
             kwargs = params
-            print "final kwargs:", kwargs
+#            print "final kwargs:", kwargs
 
         if len(args) >= 2 and isinstance(args[1], dict):
             params = args[1].copy()
