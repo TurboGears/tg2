@@ -113,6 +113,12 @@ class BasicTGController(TGController):
     def redirect_me(self, target, **kw):
         tg.redirect(target, kw)
 
+    
+    @expose()
+    def gimme_a_401(self):
+        pylons.response.set_cookie('sentinel', 'i should be in the response')
+        pylons.response.status = 401
+        return "get away"
 
 class TestTGController(TestWSGIController):
     """Test case for the mock TG controller and its subcontroller"""
@@ -227,3 +233,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/login_handler?login=linus&password=linux')
         resp = self.app.get('/panel/delete_user')
         assert resp.body.startswith('302 Found'), resp.body
+
+    def FIXME_cookie_in_401(self):
+        resp = self.app.get('/gimme_a_401')
+        self.failUnless('sentinel' in resp.cookies_set, resp.cookies_set)
