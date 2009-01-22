@@ -234,6 +234,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/panel/delete_user')
         assert resp.body.startswith('302 Found'), resp.body
 
-    def FIXME_cookie_in_401(self):
+    def test_cookie_in_401(self):
         resp = self.app.get('/gimme_a_401')
         self.failUnless('sentinel' in resp.cookies_set, resp.cookies_set)

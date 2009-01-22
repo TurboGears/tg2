@@ -139,7 +139,7 @@ class AppConfig(Bunch):
         self.call_on_shutdown = []
         # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
-        self.handle_status_codes = [401, 403, 404]
+        self.handle_status_codes = [403, 404]
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -588,7 +588,14 @@ class AppConfig(Bunch):
 
             app = maybe_make_body_seekable(app)
 
+
             if asbool(full_stack):
+                if self.auth_backend is None and \
+                   401 not in self.handle_status_codes:
+                    # If there's no auth backend configured which traps 401
+                    # responses we redirect those responses to a nicely
+                    # formatted error page
+                    self.handle_status_codes.append(401)
                 # This should nevery be true for internal nested apps
                 app = self.add_error_middleware(global_conf, app)
 
