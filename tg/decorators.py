@@ -450,7 +450,7 @@ def without_trailing_slash(func, *args, **kwargs):
 def with_trailing_slash(func, *args, **kwargs):
     """if the url doesn't end with '/' it redirects you to the URL + '/'
     """
-    if request.method == 'GET' and not(request.url.endswith('/')) and not(request.response_type) and not(request.params):
+    if request.method == 'GET' and not(request.path.endswith('/')) and not(request.response_type) and len(request.params)==0:
         from tg.controllers import redirect
         redirect(request.url+'/')
     return func(*args, **kwargs)

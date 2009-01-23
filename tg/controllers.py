@@ -428,11 +428,11 @@ def _object_dispatch(obj, url_path):
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
         extension_spot = last_remainder.rfind('.')
-        extension = last_remainder[extension_spot:]
+        extension = last_remainder[extension_spot-1:]
         remainder[-1] = last_remainder[:extension_spot]
         pylons.request.response_type = mimetypes.guess_type(extension)[0]
         pylons.request.response_ext = extension
-
+        
     notfound_handlers = []
     while True:
         try:
