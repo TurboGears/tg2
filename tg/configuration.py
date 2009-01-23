@@ -575,6 +575,9 @@ class AppConfig(Bunch):
 
             if self.use_toscawidgets:
                 app = self.add_tosca_middleware(app)
+                
+            if self.auth_backend == "sqlalchemy":
+                app = self.add_auth_middleware(app)
 
             if self.use_transaction_manager:
                 app = self.add_tm_middleware(app)
@@ -606,11 +609,6 @@ class AppConfig(Bunch):
             # web server is serving static files)
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
-
-            # The repoze.who middleware must be added after the error handling
-            # middleware, apparently (see ticket #2152):
-            if self.auth_backend == "sqlalchemy":
-                app = self.add_auth_middleware(app)
                 
             return app
 
