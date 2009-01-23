@@ -5,7 +5,9 @@ from weberror.evalexception import EvalException
 from weberror.errormiddleware import ErrorMiddleware
 
 media_path = pylons.middleware.media_path
-report_libs = pylons.middleware.report_libs.extend(['tg.devtools'])
+report_libs = pylons.middleware.report_libs
+if 'tg.devtools' not in report_libs:
+    report_libs.extend(['tg.devtools'])
 header_html = pylons.middleware.head_html
 
 footer_html = """\
@@ -18,7 +20,7 @@ var TRACEBACK = {
 }
 </script>
 <div id="service_widget">
-<h2 class="assistance">TurbOGears Online Assistance</h2>
+<h2 class="assistance">TurboGears Online Assistance</h2>
 <div id="nv">
 <ul id="supportnav">
     <li class="nav active"><a class="overview" href="#">Overview</a></li>
