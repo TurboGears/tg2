@@ -454,6 +454,7 @@ def _object_dispatch(obj, url_path):
                 return _find_restful_dispatch(obj, parent, remainder)
 
             else:
+                print 'in not found handlers'
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
@@ -543,10 +544,13 @@ def _find_object(obj, remainder, notfound_handlers):
 
         if _iscontroller(obj):
             return obj, parent, remainder
-
-        if not remainder or remainder == ['']:
+        
+        if not remainder or (len(remainder) == 1 and remainder[0] == ''):
+            if isinstance(remainder, tuple):
+                remainder = list(remainder)
             index = getattr(obj, 'index', None)
             if _iscontroller(index):
+                print 'remainder'
                 return index, obj, remainder
 
         default = getattr(obj, 'default', None)
@@ -554,7 +558,7 @@ def _find_object(obj, remainder, notfound_handlers):
             notfound_handlers.append(('default', default, obj, remainder))
 
         lookup = getattr(obj, 'lookup', None)
-        if _iscontroller(lookup):
+        if remainder and not(len(remainder) == 1 and (remainder[0]=='')) and _iscontroller(lookup):
             notfound_handlers.append(('lookup', lookup, obj, remainder))
 
         if not remainder:

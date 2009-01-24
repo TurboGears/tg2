@@ -439,16 +439,46 @@ def postpone_commits(func, *args, **kwargs):
 
 @decorator
 def without_trailing_slash(func, *args, **kwargs):
-    """if the url is ends with '/' it redirects you to not('/')
+    """This decorator allows you to ensure that the URL does not end in "/"
+    The decorator accomplish this by redirecting to the correct URL.
+    
+    :Usage:
+    
+    You use this decorator as follows::
+    
+     class MyController(object):
+    
+         @without_trailing_slash
+         @expose()
+         def sample(self, *args):
+             return "found sample"
+    
+    In the above example http://localhost:8080/sample/ redirects to http://localhost:8080/sample
+    In addition, the URL http://localhost:8080/sample/1/ redirects to http://localhost:8080/sample/1
     """
-    if request.method == 'GET' and request.url.endswith('/') and not(request.response_type):
+    if request.method == 'GET' and request.path.endswith('/') and not(request.response_type) and len(request.params)==0:
         from tg.controllers import redirect
         redirect(request.url[:-1])
     return func(*args, **kwargs)
 
 @decorator
 def with_trailing_slash(func, *args, **kwargs):
-    """if the url doesn't end with '/' it redirects you to the URL + '/'
+    """This decorator allows you to ensure that the URL ends in "/"
+    The decorator accomplish this by redirecting to the correct URL.
+    
+    :Usage:
+    
+    You use this decorator as follows::
+    
+     class MyController(object):
+    
+         @with_trailing_slash
+         @expose()
+         def sample(self, *args):
+             return "found sample"
+    
+    In the above example http://localhost:8080/sample redirects to http://localhost:8080/sample/
+    In addition, the URL http://localhost:8080/sample/1 redirects to http://localhost:8080/sample/1/
     """
     if request.method == 'GET' and not(request.path.endswith('/')) and not(request.response_type) and len(request.params)==0:
         from tg.controllers import redirect
