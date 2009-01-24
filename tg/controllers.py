@@ -550,7 +550,6 @@ def _find_object(obj, remainder, notfound_handlers):
                 remainder = list(remainder)
             index = getattr(obj, 'index', None)
             if _iscontroller(index):
-                print 'remainder'
                 return index, obj, remainder
 
         default = getattr(obj, 'default', None)

@@ -24,11 +24,27 @@ def wsgi_app(environ, start_response):
         resp = Response("Hello from %s/%s"%(req.script_name, req.path_info))
     return resp(environ, start_response)
 
+
+class BeforeController(object):
+    
+    
+    def __before__(self, *args, **kw):
+        pylons.c.var == 'before'
+        
+    def index(self):
+        assert pylons.c.var
+        return pylons.c.var
+
 class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
+    
+    before = BeforeController()
+    
     @expose()
     def foo(self,):
         return 'sub_foo'
+    
+    
 
     @expose()
     def index(self):
@@ -313,3 +329,7 @@ class TestTGController(TestWSGIController):
         
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
+
+    def test_before_controller(self):
+        r = self.app.get('/sub/before')
+        assert 'before' in r
