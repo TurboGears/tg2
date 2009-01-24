@@ -25,12 +25,12 @@ def wsgi_app(environ, start_response):
     return resp(environ, start_response)
 
 
-class BeforeController(object):
-    
+class BeforeController(TGController):
     
     def __before__(self, *args, **kw):
-        pylons.c.var == 'before'
+        pylons.c.var = '__my_before__'
         
+    @expose()
     def index(self):
         assert pylons.c.var
         return pylons.c.var
@@ -332,4 +332,4 @@ class TestTGController(TestWSGIController):
 
     def test_before_controller(self):
         r = self.app.get('/sub/before')
-        assert 'before' in r
+        assert '__my_before__' in r, r

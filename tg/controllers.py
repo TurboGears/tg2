@@ -69,7 +69,13 @@ class DecoratedController(WSGIController):
         d) after the rendering has happened.
     """
 
+    def __before__(self, *args, **kw):
+        """placeholder to make certain that __before__'s get called for methods that inherit from this class"""
+        pass
 
+    def __after__(self, *args, **kw):
+        pass
+    
     def _perform_call(self, controller, params, remainder=None):
         """
         _perform_call is called by _inspect_call in Pylons' WSGIController.
@@ -91,6 +97,7 @@ class DecoratedController(WSGIController):
         The after_render hook can act upon and modify the response out of
         rendering.
         """
+
         self._initialize_validation_context()
         pylons.request.start_response = self.start_response
 
@@ -153,7 +160,6 @@ class DecoratedController(WSGIController):
 
         validation = getattr(controller.decoration, 'validation', None)
 
-        #import pdb; pdb.set_trace()
         if validation is None:
             return params
 
@@ -407,6 +413,13 @@ class ObjectDispatchController(DecoratedController):
 
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
+        func_name = func.__name__
+        if func_name == '__before__' or func_name == '__after__': 
+            if hasattr(controller.im_class, '__before__'):
+                return controller.im_self.__before__(*args)
+            if hasattr(controller.im_class, '__after__'):
+                return controller.im_self.__before__(*args)
+            return
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
@@ -454,7 +467,6 @@ def _object_dispatch(obj, url_path):
                 return _find_restful_dispatch(obj, parent, remainder)
 
             else:
-                print 'in not found handlers'
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
@@ -611,8 +623,18 @@ class TGController(ObjectDispatchController):
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
 
-        try:
+        try: 
             controller, remainder, params = self._get_routing_info(routingArgs)
+            # this has to be done before decorated controller is called because
+            # otherwise the controller method will get sent, and the function name will
+            # be lost.
+            func_name = func.__name__
+            if func_name == '__before__' or func_name == '__after__': 
+                if hasattr(controller.im_class, '__before__'):
+                    return controller.im_self.__before__(*args)
+                if hasattr(controller.im_class, '__after__'):
+                    return controller.im_self.__before__(*args)
+                return
             result = DecoratedController._perform_call(
                 self, controller, params, remainder=remainder)
 
@@ -701,11 +723,8 @@ def url(*args, **kwargs):
         if isinstance(kwargs.get('params'), dict):
             params = kwargs['params'].copy()
             del kwargs['params']
-#            print "kwargs:", kwargs
             params.update(kwargs)
-#            print "updated params:", params
             kwargs = params
-#            print "final kwargs:", kwargs
 
         if len(args) >= 2 and isinstance(args[1], dict):
             params = args[1].copy()
