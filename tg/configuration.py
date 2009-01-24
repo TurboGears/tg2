@@ -20,6 +20,7 @@ from tg.util import Bunch, get_partial_dict, get_dotted_filename
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from webob import Request
+import mimetypes
 
 from tw.api import make_middleware as tw_middleware
 
@@ -355,6 +356,7 @@ class AppConfig(Bunch):
         config['pylons.strict_c'] = True
 
         self.render_functions.jinja = render_jinja
+        
 
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin
@@ -382,6 +384,14 @@ class AppConfig(Bunch):
         config['buffet.template_options'].update(options)
         config.add_template_engine(self.default_renderer,
                                    template_location,  {})
+
+    def setup_mimetypes(self):
+        if 'mimetype_lookup' in config:
+            lookup = config['mimetype_lookuup']
+        else:
+            lookup = {'.json':'application/json'}
+        for key, value in lookup.iteritems():
+            mimetypes.add_type(value, key)
 
     def setup_sqlalchemy(self):
         """Setup SQLAlchemy database engine"""
@@ -413,6 +423,7 @@ class AppConfig(Bunch):
             self.init_config(global_conf, app_conf)
             self.setup_routes()
             self.setup_helpers_and_globals()
+            self.setup_mimetypes()
 
             if self.auth_backend == "sqlalchemy":
                 self.setup_sa_auth_backend()

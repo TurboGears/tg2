@@ -35,10 +35,6 @@ from tg.flash import flash
 from webob import Request
 from webob.exc import HTTPUnauthorized
 
-#this allows those systems without the json mimetype registered to have it registered.
-if mimetypes.guess_type('.json')[0] is None:
-    mimetypes.add_type('application/json', '.json')
-
 log = logging.getLogger(__name__)
 
 # If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't
