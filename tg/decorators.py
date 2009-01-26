@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Decorators use by the TurboGears controllers
+"""
+Decorators use by the TurboGears controllers
 
-These decorators are not traditional wrappers. They are much simplified
-from the turbogears 1 decorators, because all they do is regester attributes on
+Not all of these decorators are traditional wrappers. They are much simplified
+from the turbogears 1 decorators, because all they do is register attributes on
 the functions they wrap, and then the DecoratedController provides the hooks
-needed to support these decorators."""
+needed to support these decorators.
+"""
 
 import formencode
 from paste.util.mimeparse import best_match
@@ -354,15 +356,31 @@ def paginate(name, items_per_page=10, use_prefix=False):
     Paginate a given collection.
 
     This decorator is mainly exposing the functionality
-    of webhelpers.paginate.
+    of :func:`webhelpers.paginate`.
 
-    To render the actual pager, use
+    :Usage:
+    
+    You use this decorator as follows::
+    
+     class MyController(object):
+    
+         @expose()
+         @paginate("collection")
+         def sample(self, *args):
+             collection = get_a_collection()
+             return dict(collection=collection)
+
+    To render the actual pager, use::
 
       ${c.paginators.<name>.pager()}
 
     where c is the tmpl_context.
 
-
+    It is possible to have several :func:`paginate`-decorators for
+    one controller action to paginate several collections independently
+    from each other. If this is desired, don't forget to set the :attr:`use_prefix`-parameter
+    to :const:`True`.
+    
     :Parameters:
       name
         the collection to be paginated.
@@ -371,7 +389,7 @@ def paginate(name, items_per_page=10, use_prefix=False):
       use_prefix
         if True, the parameters the paginate
         decorator renders and reacts to are prefixed with
-        "name_". This allows for multi-pagination.
+        "<name>_". This allows for multi-pagination.
 
     """
     prefix = ""
