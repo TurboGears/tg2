@@ -43,7 +43,7 @@ setup(
         'WebOb >= 0.9.5',
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
-        'repoze.who >= 1.0.10dev-r3295',
+        'repoze.who >= 1.0.10',
         'repoze.what.plugins.sql > 1.0b1',
         'SQLAlchemy>=0.5beta3',
     ],
