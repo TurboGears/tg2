@@ -16,7 +16,7 @@ test_requirements = ['coverage',
                     'TurboJson',
                     'zope.sqlalchemy',
                     'SQLAlchemy>=0.5beta3',
-                    'repoze.what >= 1.0.2',
+                    'repoze.what >= 1.0.3',
                     'jinja',
                     'chameleon.genshi',
                     ]
@@ -44,7 +44,7 @@ setup(
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
         'repoze.who >= 1.0.10dev-r3295',
-        'repoze.what.plugins.sql > 1.0a2',
+        'repoze.what.plugins.sql > 1.0b1',
         'SQLAlchemy>=0.5beta3',
     ],
     extras_require={
