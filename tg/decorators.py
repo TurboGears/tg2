@@ -518,7 +518,7 @@ def require(predicate):
         try:
             check_authorization(predicate, environ)
         except NotAuthorizedError, reason:
-            flash(reason, status='status_warning')
+            flash(reason, status='warning')
             raise HTTPUnauthorized()
 
         return func(*args, **kwargs)
