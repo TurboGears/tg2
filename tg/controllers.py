@@ -670,7 +670,7 @@ class TGController(ObjectDispatchController):
         except NotAuthorizedError, error:
             log.debug('Failed controller authorization at %s', 
                       pylons.request.path)
-            flash(unicode(error), status="status_warning")
+            flash(unicode(error), status="warning")
             return False
 
 class WSGIAppController(TGController):
