@@ -503,7 +503,7 @@ def with_trailing_slash(func, *args, **kwargs):
         redirect(request.url+'/')
     return func(*args, **kwargs)
 
-def require(predicate):
+def require(predicate, error_handler=None):
     """
     Make repoze.what verify that the predicate is met.
 
@@ -518,6 +518,8 @@ def require(predicate):
         try:
             check_authorization(predicate, environ)
         except NotAuthorizedError, reason:
+            if error_handler:
+                return error_handler(reason)
             flash(reason, status='warning')
             raise HTTPUnauthorized()
 

@@ -589,7 +589,7 @@ def _find_object(obj, remainder, notfound_handlers):
         remainder = remainder[1:]
 
 def _check_security(obj):
-    """this function checks if a controller has a 'require' attribute and if
+    """this function checks if a controller has a 'alow_only' attribute and if
     it is the case, test that this require predicate can be evaled to True.
     It will raise a Forbidden exception if the predicate is not valid.
     """
@@ -600,6 +600,8 @@ def _check_security(obj):
 
     if hasattr(klass_instance, "_check_security"):
         if not klass_instance._check_security():
+            if hasattr(klass_instance, "_failed_authorization"):
+                return klass_instance._failed_authorization()
             raise HTTPUnauthorized().exception
 
 def _iscontroller(obj):
