@@ -503,7 +503,7 @@ def _find_restful_dispatch(obj, parent, remainder):
             method = 'delete'
             if len(remainder) <= 2:
                 remainder = remainder[:-1]
-        elif remainder >=2 and method == 'post':
+        elif remainder >=2 and method == 'post' and hasattr(obj, 'get_one'):
             func = getattr(obj, 'get_one')
             arg_len = len(inspect.getargspec(func)[0])-1
             remainder = remainder[arg_len:]
