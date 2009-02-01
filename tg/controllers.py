@@ -640,6 +640,8 @@ class TGController(ObjectDispatchController):
             # otherwise the controller method will get sent, and the function name will
             # be lost.
             func_name = func.__name__
+            if not args:
+                args = []
             if func_name == '__before__' or func_name == '__after__': 
                 if hasattr(controller.im_class, '__before__'):
                     return controller.im_self.__before__(*args)
