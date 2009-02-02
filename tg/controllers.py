@@ -232,15 +232,14 @@ class DecoratedController(WSGIController):
         expose decorator.
         """
 
-        content_type, engine_name, template_name, exclude_names = \
-            controller.decoration.lookup_template_engine(pylons.request)
-
-        if content_type != CUSTOM_CONTENT_TYPE:
-            pylons.response.headers['Content-Type'] = content_type
-
         #skip all the complicated stuff if we're just passing a string along.
         if isinstance(response, basestring):
             return response
+
+        content_type, engine_name, template_name, exclude_names = \
+            controller.decoration.lookup_template_engine(pylons.request)
+
+        pylons.response.headers['Content-Type'] = content_type
 
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
@@ -436,8 +435,8 @@ def _object_dispatch(obj, url_path):
 
     pylons.request.response_type = None
     # if the last item in the remainder has an extention
-    # remove the extension, and add a content type to the request
-    # parameters
+    # remove the extension, and add a response content type to the 
+    # request parameters
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
         extension_spot = last_remainder.rfind('.')
