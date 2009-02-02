@@ -232,9 +232,10 @@ class DecoratedController(WSGIController):
         expose decorator.
         """
 
-        #skip all the complicated stuff if we're just passing a string along.
-        if isinstance(response, basestring):
+        #skip str, list, generator, iterator, which are valid WSGI responses
+        if not isinstance(response, dict):
             return response
+
 
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
