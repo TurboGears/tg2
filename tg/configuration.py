@@ -91,16 +91,17 @@ class AppConfig(Bunch):
     """Class to store application configuration
 
     This class should have configuration/setup information
-    that is *nessisary* for proper application function.
+    that is *	necessary* for proper application function.
     Deployment specific configuration information should go in
-    the config files (eg: development.ini or deployment.ini)
+    the config files (e.g. development.ini or deployment.ini).
 
     AppConfig instances have a number of methods that are meant to be
-    overridden by users who wish to have finer grained controll over
-    the setup of the WSGI envirnment in which their applcation is run.
+    overridden by users who wish to have finer grained control over
+    the setup of the WSGI envirnment in which their application is run.
 
     This is the place to configure custom routes, transaction handling,
     error handling, etc.
+
     """
 
     def __init__(self):
@@ -356,7 +357,7 @@ class AppConfig(Bunch):
         config['pylons.strict_c'] = True
 
         self.render_functions.jinja = render_jinja
-        
+
 
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin
@@ -586,7 +587,7 @@ class AppConfig(Bunch):
 
             if self.use_toscawidgets:
                 app = self.add_tosca_middleware(app)
-                
+
             if self.auth_backend == "sqlalchemy":
                 app = self.add_auth_middleware(app)
 
@@ -620,7 +621,7 @@ class AppConfig(Bunch):
             # web server is serving static files)
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
-                
+
             return app
 
         return make_base_app
