@@ -93,7 +93,7 @@ class AppConfig(Bunch):
     This class should have configuration/setup information
     that is *nessisary* for proper application function.
     Deployment specific configuration information should go in
-    the config files (eg: dvelopment.ini or production.ini)
+    the config files (eg: development.ini or deployment.ini)
 
     AppConfig instances have a number of methods that are meant to be
     overridden by users who wish to have finer grained controll over
