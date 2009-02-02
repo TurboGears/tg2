@@ -28,23 +28,25 @@ log = logging.getLogger(__name__)
 
 
 class PylonsConfigWrapper(DictMixin):
-    """Simple wrapper for the pylons config object that provides attribute
-    style access to the pylons config dictionary.
+    """Wrapper for the Pylons configuration.
+
+    Simple wrapper for the Pylons config object that provides attribute
+    style access to the Pylons config dictionary.
 
     When used in TG, items with keys like "pylons.response_options" will
     be available via config.pylons.response_options as well as
     config['pylons.response_options'].
 
     This class works by proxying all attribute and dictionary access to
-    the underlying pylons config object, which is a application local
-    proxy that allows for multiple pylons/tg2 applicatoins to live
-    in the same process simultaniously, but to always get the right
-    config data for the app that's requesting them.
+    the underlying Pylons config object, which is an application local
+    proxy that allows for multiple Pylons/TG2 applicatoins to live
+    in the same process simultaneously, but to always get the right
+    config data for the application that's requesting them.
 
-    Sites, with seeking to maximize needs may perfer to use the pylons
+    Sites, with seeking to maximize needs may prefer to use the Pylons
     config stacked object proxy directly, using just dictionary style
-    access, particularly whenever config is checked on a per-request
-    basis.
+    access, particularly whenever config is checked on a per-request basis.
+
     """
 
     def __init__(self, dict_to_wrap):
@@ -58,10 +60,14 @@ class PylonsConfigWrapper(DictMixin):
         self.config_proxy.current_conf()[key] = value
 
     def __getattr__(self, key):
-        """Tries to get the attribute off the wrapped object first,
+        """Our custom attribute getter.
+
+        Tries to get the attribute off the wrapped object first,
         if that does not work, tries dictionary lookup, and finally
         tries to grab all keys that start with the attribute and
-        return sub-dictionary, that can be looked up. """
+        return sub-dictionaries that can be looked up.
+
+        """
         try:
             return self.config_proxy.__getattribute__(key)
         except AttributeError:
@@ -88,10 +94,10 @@ config = PylonsConfigWrapper(pylons_config)
 
 
 class AppConfig(Bunch):
-    """Class to store application configuration
+    """Class to store application configuration.
 
     This class should have configuration/setup information
-    that is *	necessary* for proper application function.
+    that is *necessary* for proper application function.
     Deployment specific configuration information should go in
     the config files (e.g. development.ini or deployment.ini).
 
@@ -175,12 +181,10 @@ class AppConfig(Bunch):
         """Initialize the config object.
 
         tg.config is a proxy for pylons.config that allows attribute style
-        access, so it's automatically setup when we create the pylons
-        config.
+        access, so it's automatically setup when we create the pylons config.
 
         Besides basic initialization, this method copies all the values
-        in base_config into the ``pylons.config`` and ``tg.config``
-        objects.
+        in base_config into the ``pylons.config`` and ``tg.config`` objects.
 
         """
         pylons_config.init_app(global_conf, app_conf,
@@ -205,10 +209,11 @@ class AppConfig(Bunch):
         config['routes.map'] = map
 
     def setup_helpers_and_globals(self):
-        """Add Hepers and Globals objects to the config.
+        """Add helpers and globals objects to the config.
 
-        Overide this method to customize the way that ``app_globals``
+        Override this method to customize the way that ``app_globals``
         and ``helpers`` are setup.
+
         """
 
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
@@ -227,9 +232,9 @@ class AppConfig(Bunch):
         config['sa_auth'].update(self.sa_auth)
 
     def setup_mako_renderer(self):
-        """Setup a renderer and loader for mako templates
+        """Setup a renderer and loader for mako templates.
 
-        Overide this to customize the way that the mako template
+        Override this to customize the way that the mako template
         renderer is setup.  In particular if you want to setup
         a different set of search paths, different encodings, or
         additonal imports, all you need to do is update the
@@ -237,6 +242,7 @@ class AppConfig(Bunch):
 
         You can also use your own render_mako function instead of the one
         provided by tg.render.
+
         """
         from mako.lookup import TemplateLookup
         from mako.template import Template
@@ -244,9 +250,12 @@ class AppConfig(Bunch):
         from tg.render import render_mako
 
         class DottedTemplateLookup(object):
-            """this is an emulation of the Mako template lookup
-            that will handle get_template and support dotted names
-            in python path notation to support zipped eggs
+            """Mako template lookup emulation.
+
+            This is an emulation of the Mako template lookup that will handle
+            get_template and support dotted names in Python path notation
+            to support zipped eggs.
+
             """
             def __init__(self, input_encoding, output_encoding,
                     imports, default_filters):
@@ -256,22 +265,22 @@ class AppConfig(Bunch):
                 self.default_filters = default_filters
 
             def adjust_uri(self, uri, relativeto):
-                """this method is used by mako for filesystem based reasons.
-                In dotted lookup land we don't adjust uri so se just return
-                the value we are given without any change
+                """Adjust the given uri relative to a filename.
+
+                This method is used by mako for filesystem based reasons.
+                In dotted lookup land we don't adjust uri so we just return
+                the value we are given without any change.
+
                 """
                 if '.' in uri:
-                    """we are in the DottedTemplateLookup system so dots in
-                    names should be treated as a python path.
-                    Since this method is called by template inheritance we must
-                    support dotted names also in the inheritance.
-                    """
+                    # We are in the DottedTemplateLookup system so dots in
+                    # names should be treated as a Python path. Since this
+                    # method is called by template inheritance we must
+                    # support dotted names also in the inheritance.
                     result = get_dotted_filename(template_name=uri,
                             template_extension='.mak')
-
                 else:
-                    """no dot detected, just return plain name
-                    """
+                    # no dot detected, just return plain name
                     result = uri
 
                 return result
@@ -288,7 +297,7 @@ class AppConfig(Bunch):
                     lookup=self)
 
         if config.get('use_dotted_templatenames', False):
-            # support dotted names by injecting a slightly different template
+            # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template
             # notation.
             config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
@@ -297,8 +306,8 @@ class AppConfig(Bunch):
                 default_filters=['escape'])
 
         else:
-            # if no dotted names support was required we will just setup
-            # a file system based template lookup mechanism
+            # If no dotted names support was required we will just setup
+            # a file system based template lookup mechanism.
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
                 module_directory=self.paths['templates'],
@@ -310,7 +319,7 @@ class AppConfig(Bunch):
         self.render_functions.mako = render_mako
 
     def setup_chameleongenshi_renderer(self):
-        """setup a renderer and loader for the chameleon.genshi engine"""
+        """Setup a renderer and loader for the chameleon.genshi engine."""
         from chameleon.genshi.loader import TemplateLoader as ChameleonLoader
         from tg.render import render_chameleon_genshi
 
@@ -322,18 +331,22 @@ class AppConfig(Bunch):
         self.render_functions.chameleon_genshi = render_chameleon_genshi
 
     def setup_genshi_renderer(self):
-        """Setup a renderer and loader for Genshi templates
+        """Setup a renderer and loader for Genshi templates.
 
-        Overide this to customize the way that the internationalization
-        filter, template loader """
+        Override this to customize the way that the internationalization
+        filter, template loader
+
+        """
         from genshi.template import TemplateLoader
         from tg.render import render_genshi
 
         def template_loaded(template):
-            """Plug-in our i18n function to Genshi, once the template
-            is loaded.
+            """Plug-in our i18n function to Genshi, once the template is loaded.
+
             This function will be called by genshi TemplateLoader after
-            loading the template"""
+            loading the template.
+
+            """
             template.filters.insert(0, Translator(ugettext))
 
         loader = TemplateLoader(search_path=self.paths.templates,
@@ -345,7 +358,7 @@ class AppConfig(Bunch):
         self.render_functions.genshi = render_genshi
 
     def setup_jinja_renderer(self):
-        """Setup a renderer and loader for Jinja templates"""
+        """Setup a renderer and loader for Jinja templates."""
         from jinja import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
@@ -360,14 +373,13 @@ class AppConfig(Bunch):
 
 
     def setup_default_renderer(self):
-        """Setup template defaults in the buffed plugin
+        """Setup template defaults in the buffed plugin.
 
         This is only used when use_legacy_renderer is set to True
+        and it will not get deprecated in the next major TurboGears release.
 
-        And it will not depricated in the next major turbogears
-        release.
         """
-        #This is specific to buffet, will not be needed later
+        #T his is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
         template_location = '%s.templates' %self.package.__name__
         template_location = '%s.templates' % self.package.__name__
@@ -375,13 +387,13 @@ class AppConfig(Bunch):
         def template_loaded(template):
             template.filters.insert(0, Translator(ugettext))
 
-        #Set some default options for genshi
+        # Set some default options for genshi
         options = {
             'genshi.loader_callback': template_loaded,
             'genshi.default_format': 'xhtml',
         }
 
-        #overide those options from config
+        # Override those options from config
         config['buffet.template_options'].update(options)
         config.add_template_engine(self.default_renderer,
                                    template_location,  {})
@@ -395,7 +407,7 @@ class AppConfig(Bunch):
             mimetypes.add_type(value, key)
 
     def setup_sqlalchemy(self):
-        """Setup SQLAlchemy database engine"""
+        """Setup SQLAlchemy database engine."""
         from sqlalchemy import engine_from_config
         engine = engine_from_config(pylons_config, 'sqlalchemy.')
         config['pylons.app_globals'].sa_engine = engine
@@ -403,17 +415,17 @@ class AppConfig(Bunch):
         self.package.model.init_model(engine)
 
     def make_load_environment(self):
-        """Returns a load_environment function
+        """Return a load_environment function.
 
-        The returned load_environment function can be called to configure the
-        TurboGears runtime environment for this particular application.  You
-        can do this dynamically with multiple nested TG applications if
-        nessisary."""
+        The returned load_environment function can be called to configure
+        the TurboGears runtime environment for this particular application.
+        You can do this dynamically with multiple nested TG applications
+        if necessary.
+
+        """
 
         def load_environment(global_conf, app_conf):
-            """Configure the Pylons environment via the ``pylons.config``
-            object
-            """
+            """Configure the Pylons environment via ``pylons.config``."""
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
             #Regesters functions to be called at startup and shutdown
@@ -451,7 +463,7 @@ class AppConfig(Bunch):
 
 
     def add_error_middleware(self, global_conf, app):
-        """Adds middleware which handles errors and exceptions"""
+        """Add middleware which handles errors and exceptions."""
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
         # Display error documents for self.handle_status_codes status codes (and
@@ -464,7 +476,7 @@ class AppConfig(Bunch):
         return app
 
     def add_auth_middleware(self, app):
-        """Configure authentication and authorization"""
+        """Configure authentication and authorization."""
         from repoze.what.plugins.quickstart import setup_sql_auth
 
         # Configuring auth logging:
@@ -480,14 +492,14 @@ class AppConfig(Bunch):
         return app
 
     def add_core_middleware(self, app):
-        """Adds support for routes dispatch, sessions, and caching"""
+        """Add support for routes dispatch, sessions, and caching."""
         app = RoutesMiddleware(app, config['routes.map'])
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app
 
     def add_tosca_middleware(self, app):
-        """Configure the ToscaWidgets middleware"""
+        """Configure the ToscaWidgets middleware."""
         app = tw_middleware(app, {
             'toscawidgets.framework.default_view':
             self.default_renderer,
@@ -501,37 +513,38 @@ class AppConfig(Bunch):
         return app
 
     def commit_veto(self, environ, status, headers):
-        """
+        """Veto a commit.
+
         This hook is called by repoze.tm in case we want to veto a commit
         for some reason. Return True to force a rollback.
 
         By default we veto if the response's status code is an error code.
         Override this method, or monkey patch the instancemethod, to fine
         tune this behaviour.
+
         """
-        return not (200 <= int(status.split()[0]) < 400)
+        return not 200 <= int(status.split(None, 1)[0]) < 400
 
     def add_tm_middleware(self, app):
-        """Sets up the transaction managment middleware
+        """Set up the transaction managment middleware.
 
         To abort a transaction inside a TG2 app::
 
           import transaction
           transaction.doom()
 
-        By default http error responses also roll back transactions,
-        but this behavior can be overridden by overiding
-        base_config.commit_veto
+        By default http error responses also roll back transactions, but this
+        behavior can be overridden by overriding base_config.commit_veto.
+
         """
         from repoze.tm import make_tm
         return make_tm(app, self.commit_veto)
 
     def add_dbsession_remover_middleware(self, app):
-        """Sets up middleware that cleans up the sqlalchemy session
+        """Set up middleware that cleans up the sqlalchemy session.
 
-        The default behavior of TG2 is to clean up the session on
-        every request.  Only overide this method if you know what you
-        are doing!
+        The default behavior of TG 2 is to clean up the session on every
+        request.  Only override this method if you know what you are doing!
 
         """
         def remover(environ, start_response):
@@ -543,29 +556,30 @@ class AppConfig(Bunch):
         return remover
 
     def setup_tg_wsgi_app(self, load_environment):
-        """Create a base TG app, with all the standard middleware
+        """Create a base TG app, with all the standard middleware.
 
         ``load_environment``
-            A required callable, which sets up the basic application
-            evironment.
+            A required callable, which sets up the basic evironment
+            needed for the application.
         ``setup_vars``
-            A dictionary any special values nessisary for setting up
+            A dictionary with all special values necessary for setting up
             the base wsgi app.
+
         """
 
         def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
-            """Create a tg WSGI application and return it
+            """Create a tg WSGI application and return it.
 
             ``wrap_app``
                 a WSGI middleware component which takes the core turbogears
                 application and wraps it -- inside all the WSGI-components
                 provided by TG and Pylons. This allows you to work with the
-                full environ that your tg app would get before anything
-                happens in the app itself.
+                full environment that your TG application would get before
+                anything happens in the application itself.
 
             ``global_conf``
                 The inherited configuration for this application. Normally
-                fromthe [DEFAULT] section of the Paste ini file.
+                from the [DEFAULT] section of the Paste ini file.
 
             ``full_stack``
                 Whether or not this application provides a full WSGI stack (by
@@ -574,9 +588,10 @@ class AppConfig(Bunch):
                 another WSGI middleware.
 
             ``app_conf``
-                The application's local configuration. Normally specified in the
-                [app:<name>] section of the Paste ini file (where <name>
+                The application's local configuration. Normally specified in
+                the [app:<name>] section of the Paste ini file (where <name>
                 defaults to main).
+
             """
             # Configure the Pylons environment
             load_environment(global_conf, app_conf)
@@ -605,8 +620,8 @@ class AppConfig(Bunch):
 
 
             if asbool(full_stack):
-                if self.auth_backend is None and \
-                   401 not in self.handle_status_codes:
+                if (self.auth_backend is None
+                        and 401 not in self.handle_status_codes):
                     # If there's no auth backend configured which traps 401
                     # responses we redirect those responses to a nicely
                     # formatted error page
@@ -614,10 +629,10 @@ class AppConfig(Bunch):
                 # This should nevery be true for internal nested apps
                 app = self.add_error_middleware(global_conf, app)
 
-            # Establish the Registry for this application
+            # Establish the registry for this application
             app = RegistryManager(app)
 
-            # Static files (If running in production, and Apache or another
+            # Static files (if running in production, and Apache or another
             # web server is serving static files)
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
