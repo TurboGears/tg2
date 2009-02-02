@@ -34,7 +34,7 @@ class RootController(TGController):
 
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
-        return()
+        return {}
 
     @expose('jinja:tg/test_stack/rendering/templates/jinja_noop.html')
     def jinja_index(self):
@@ -50,7 +50,7 @@ class RootController(TGController):
 
     @expose('chameleon_genshi:genshi_inherits.html')
     def chameleon_genshi_inherits(self):
-        return()
+        return {}
 
     @expose('mako:mako_noop.mak')
     def mako_index(self):
@@ -70,7 +70,7 @@ class RootController(TGController):
 
     @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits')
     def genshi_inherits_dotted(self):
-        return()
+        return {}
 
     @expose('mako:tg.test_stack.rendering.templates.mako_noop')
     def mako_index_dotted(self):

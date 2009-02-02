@@ -232,7 +232,8 @@ class DecoratedController(WSGIController):
         expose decorator.
         """
 
-        #skip str, list, generator, iterator, which are valid WSGI responses
+        # skip all the complicated stuff if we're don't have a response dict
+        # to work with.
         if not isinstance(response, dict):
             return response
 
