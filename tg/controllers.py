@@ -732,6 +732,8 @@ def url(*args, **kwargs):
     keyword arguments.
     """
     args = list(args)
+    if isinstance(args[0], list): 
+        args[0] = u'/'.join(args[0])
     if args and isinstance(args[0], basestring):
         #First we handle the possibility that the user passed in params
         if isinstance(kwargs.get('params'), dict):
