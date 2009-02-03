@@ -311,7 +311,18 @@ def use_custom_format(controller, custom_format):
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the
     template that will be used to render the response dictionary
-    dynamically."""
+    dynamically. 
+    
+    The template string passed in requires that 
+    you include the template engine name, even if you're using the default. 
+    
+    So you have topass in a template id string like::
+      
+       "genshi:myproject.templates.index2"
+    
+    future versions may make the `genshi:` optional if you want to use 
+    the default engine. 
+    """
     if hasattr(controller, 'decoration'):
         decoration = controller.decoration
     else:
