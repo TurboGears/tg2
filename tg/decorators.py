@@ -219,20 +219,31 @@ class expose(object):
         @expose('kid:blogtutorial.templates.test_form',
                 content_type='text/html')
         @expose('kid:blogtutorial.templates.test_form_xml',
-                content_type='text/xml', custom_format='xml')
+                content_type='text/xml', custom_format='special_xml')
         def my_exposed_method(self):
             return dict(a=1, b=2, d="username")
 
     The expose('json') syntax is a special case.  json is a buffet
     rendering engine, but unlike others it does not require a template,
     and expose assumes that it matches content_type='application/json'
+    
+    If you want to declare a desired content_type in a url, you 
+    can use the mime-type style dotted notation::
+    
+        "/mypage.json" ==> for json
+        "/mypage.html" ==> for text/html
+        "/mypage.xml" ==> for xml. 
+    
+    If you're doing an http post, you can also declare the desired 
+    content type in the accept headers, with standard content type 
+    strings. 
 
-    Otherwise expose assumes that the template is for html.  All other
+    By default expose assumes that the template is for html.  All other
     content_types must be explicitly matched to a template and engine.
 
     The last expose uses the custom_format parameter which takes an
-    arbitrary value (in this case 'xml').  You can then use the
-    `use_custom_format` function within the method to decide which
+    arbitrary value (in this case 'special_xml').  You can then use 
+    the`use_custom_format` function within the method to decide which
     of the 'custom_format' registered expose decorators to use to
     render the template.
     """
