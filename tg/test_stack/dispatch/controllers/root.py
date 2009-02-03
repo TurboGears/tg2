@@ -30,6 +30,10 @@ class SubController(object):
     @expose()
     def redirect_sub(self):
         tg.redirect('index')
+    
+    @expose()
+    def redirect_list(self):
+        tg.redirect(["/sub2", "list"])
 
     @expose()
     def hello(self, name):

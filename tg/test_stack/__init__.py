@@ -25,13 +25,13 @@ class TestConfig(AppConfig):
         root = "."
         test_base_path = os.path.join(root,'tg', 'test_stack',)
         test_config_path = os.path.join(test_base_path, folder)
-        print test_config_path
         self.paths=tg.util.Bunch(
                     root=test_base_path,
                     controllers=os.path.join(test_config_path, 'controllers'),
                     static_files=os.path.join(test_config_path, 'public'),
                     templates=os.path.join(test_config_path, 'templates')
                     )
+        print self.package
 
         #Then we overide those values with what was passed in
         for key, value in values.items():

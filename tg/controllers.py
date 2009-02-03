@@ -723,13 +723,15 @@ def url(*args, **kwargs):
     The URL function takes a string, appends the SCRIPT_NAME and adds url
     parameters for all of the other keyword arguments passed in.
 
-    For backwards compatability you can also pass in a params dictionary
-    which is turned into url params.
+    For backwards compatibility you can also pass in a params dictionary
+    which is turned into url params, or you can send in a a list of
+    strings as the first argument, which will be joined with /'s to 
+    make a url string. 
 
     In general tg.url is just a proxy for pylons.url which is in turn
-    a proxy for routes url_for function.  But if tg1 like params are
-    passed in we support a params dictionary in additon to the standard
-    keyword arguments.
+    a proxy for routes url_for function.  This means that if the first
+    argument is not a basestring but a method that has been routed to, 
+    the standard routes url_for reverse lookup system will be used.
     """
     args = list(args)
     if isinstance(args[0], list): 
@@ -761,8 +763,8 @@ def redirect(*args, **kwargs):
     http://example.com or /myfile.html) or relative. Relative URLs are
     automatically converted to absolute URLs. Parameters may be specified,
     which are appended to the URL. This causes an external redirect via the
-    browser; if the request is POST, the browser will issue GET for the second
-    request.
+    browser; if the request is POST, the browser will issue GET for the 
+    second request.
     """
 
     url(*args, **kwargs)

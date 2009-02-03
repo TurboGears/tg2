@@ -103,6 +103,11 @@ def _test_subcontroller_lookup():
 def test_subcontroller_redirect_no_slash_sub2index():
     resp=app.get('/sub2/').follow()
     assert'hello list' in resp
+    
+def test_redirect_to_list_of_strings():
+    resp = app.get('/sub/redirect_list').follow()
+    print resp
+    assert 'hello list' in resp
 
 def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
