@@ -22,7 +22,7 @@ from webhelpers.paginate import Page
 from pylons import config, request
 from pylons import tmpl_context as c
 from tg.util import partial
-from repoze.what.authorize import check_authorization, NotAuthorizedError
+from repoze.what.predicates import NotAuthorizedError
 
 from tg.configuration import Bunch
 from tg.flash import flash
@@ -226,23 +226,23 @@ class expose(object):
     The expose('json') syntax is a special case.  json is a buffet
     rendering engine, but unlike others it does not require a template,
     and expose assumes that it matches content_type='application/json'
-    
-    If you want to declare a desired content_type in a url, you 
+
+    If you want to declare a desired content_type in a url, you
     can use the mime-type style dotted notation::
-    
+
         "/mypage.json" ==> for json
         "/mypage.html" ==> for text/html
-        "/mypage.xml" ==> for xml. 
-    
-    If you're doing an http post, you can also declare the desired 
-    content type in the accept headers, with standard content type 
-    strings. 
+        "/mypage.xml" ==> for xml.
+
+    If you're doing an http post, you can also declare the desired
+    content type in the accept headers, with standard content type
+    strings.
 
     By default expose assumes that the template is for html.  All other
     content_types must be explicitly matched to a template and engine.
 
     The last expose uses the custom_format parameter which takes an
-    arbitrary value (in this case 'special_xml').  You can then use 
+    arbitrary value (in this case 'special_xml').  You can then use
     the`use_custom_format` function within the method to decide which
     of the 'custom_format' registered expose decorators to use to
     render the template.
@@ -311,17 +311,17 @@ def use_custom_format(controller, custom_format):
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the
     template that will be used to render the response dictionary
-    dynamically. 
-    
-    The template string passed in requires that 
-    you include the template engine name, even if you're using the default. 
-    
+    dynamically.
+
+    The template string passed in requires that
+    you include the template engine name, even if you're using the default.
+
     So you have topass in a template id string like::
-      
+
        "genshi:myproject.templates.index2"
-    
-    future versions may make the `genshi:` optional if you want to use 
-    the default engine. 
+
+    future versions may make the `genshi:` optional if you want to use
+    the default engine.
     """
     if hasattr(controller, 'decoration'):
         decoration = controller.decoration
@@ -381,11 +381,11 @@ def paginate(name, items_per_page=10, use_prefix=False):
     of :func:`webhelpers.paginate`.
 
     :Usage:
-    
+
     You use this decorator as follows::
-    
+
      class MyController(object):
-    
+
          @expose()
          @paginate("collection")
          def sample(self, *args):
@@ -402,7 +402,7 @@ def paginate(name, items_per_page=10, use_prefix=False):
     one controller action to paginate several collections independently
     from each other. If this is desired, don't forget to set the :attr:`use_prefix`-parameter
     to :const:`True`.
-    
+
     :Parameters:
       name
         the collection to be paginated.
@@ -481,18 +481,18 @@ def postpone_commits(func, *args, **kwargs):
 def without_trailing_slash(func, *args, **kwargs):
     """This decorator allows you to ensure that the URL does not end in "/"
     The decorator accomplish this by redirecting to the correct URL.
-    
+
     :Usage:
-    
+
     You use this decorator as follows::
-    
+
      class MyController(object):
-    
+
          @without_trailing_slash
          @expose()
          def sample(self, *args):
              return "found sample"
-    
+
     In the above example http://localhost:8080/sample/ redirects to http://localhost:8080/sample
     In addition, the URL http://localhost:8080/sample/1/ redirects to http://localhost:8080/sample/1
     """
@@ -505,18 +505,18 @@ def without_trailing_slash(func, *args, **kwargs):
 def with_trailing_slash(func, *args, **kwargs):
     """This decorator allows you to ensure that the URL ends in "/"
     The decorator accomplish this by redirecting to the correct URL.
-    
+
     :Usage:
-    
+
     You use this decorator as follows::
-    
+
      class MyController(object):
-    
+
          @with_trailing_slash
          @expose()
          def sample(self, *args):
              return "found sample"
-    
+
     In the above example http://localhost:8080/sample redirects to http://localhost:8080/sample/
     In addition, the URL http://localhost:8080/sample/1 redirects to http://localhost:8080/sample/1/
     """
@@ -538,7 +538,7 @@ def require(predicate, error_handler=None):
     def check_auth(func, *args, **kwargs):
         environ = request.environ
         try:
-            check_authorization(predicate, environ)
+            predicate.check_authorization(environ)
         except NotAuthorizedError, reason:
             if error_handler:
                 return error_handler(reason)
