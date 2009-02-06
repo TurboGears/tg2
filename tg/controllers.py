@@ -504,15 +504,20 @@ def _find_restful_dispatch(obj, parent, remainder):
             method = 'delete'
             if len(remainder) <= 2:
                 remainder = remainder[:-1]
-        elif remainder >=2 and method == 'post' and hasattr(obj, 'get_one'):
+        
+        #handles put and post for parental relations
+        elif remainder >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
             func = getattr(obj, 'get_one')
             arg_len = len(inspect.getargspec(func)[0])-1
-            remainder = remainder[arg_len:]
-            if len(remainder) > 0 and hasattr(obj, remainder[0]):
+            new_remainder = remainder[arg_len:]
+            if len(new_remainder) > 0 and hasattr(obj, new_remainder[0]):
+                return _find_restful_dispatch(*_find_object(getattr(obj, new_remainder[0]), new_remainder[1:], []))
+            elif hasattr(obj, remainder[0]):
                 return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
             else:
                 raise HTTPNotFound().exception
-
+        
+        #handles new and edit for parental relations
         if remainder and hasattr(obj, remainder[0]) and remainder[0] not in ['new', 'edit']:
             #revert the dispatch back to object_dispatch
             if inspect.isclass(obj):
