@@ -24,7 +24,7 @@ import pylons
 from pylons import url as pylons_url
 from pylons.controllers import WSGIController
 import tw
-from repoze.what.authorize import check_authorization, NotAuthorizedError
+from repoze.what.predicates import NotAuthorizedError
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
@@ -662,13 +662,13 @@ class TGController(ObjectDispatchController):
 
     def _check_security(self):
         if not hasattr(self, "allow_only") or  self.allow_only is None:
-            log.debug('No controller authorization at %s',
+            log.debug('No controller-wide authorization at %s',
                       pylons.request.path)
             return True
         
         environ = pylons.request.environ
         try:
-            check_authorization(self.allow_only, environ)
+            self.allow_only.check_authorization(environ)
             log.debug('Succeeded controller-wide authorization at %s',
                       pylons.request.path)
             return True

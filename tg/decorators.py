@@ -22,7 +22,7 @@ from webhelpers.paginate import Page
 from pylons import config, request
 from pylons import tmpl_context as c
 from tg.util import partial
-from repoze.what.authorize import check_authorization, NotAuthorizedError
+from repoze.what.predicates import NotAuthorizedError
 
 from tg.configuration import Bunch
 from tg.flash import flash
@@ -538,7 +538,7 @@ def require(predicate, error_handler=None):
     def check_auth(func, *args, **kwargs):
         environ = request.environ
         try:
-            check_authorization(predicate, environ)
+            predicate.check_authorization(environ)
         except NotAuthorizedError, reason:
             if error_handler:
                 return error_handler(reason)
