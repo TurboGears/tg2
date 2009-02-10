@@ -255,6 +255,15 @@ class AppConfig(Bunch):
             This is an emulation of the Mako template lookup that will handle
             get_template and support dotted names in Python path notation
             to support zipped eggs.
+
+            This is necessary because Mako asserts that your project will always
+            be installed in a zip-unsafe manner with all files somewhere on the
+            hard drive.
+            This is not the case when you want your application to be deployed
+            in a single zip file (zip-safe). If you want to deploy in a zip
+            file _and_ use the dotted template name notation then this class
+            is necessary because it emulates files on the filesystem for the
+            underlying Mako engine while they are in fact in your zip file.
             """
 
             def __init__(self, input_encoding, output_encoding,
@@ -265,6 +274,8 @@ class AppConfig(Bunch):
                 self.default_filters = default_filters
                 # implement a cache for the loaded templates
                 self.template_cache = dict()
+                # implement a cache for the filename lookups
+                self.template_filenames_cache = dict()
 
             def adjust_uri(self, uri, relativeto):
                 """Adjust the given uri relative to a filename.
@@ -281,6 +292,11 @@ class AppConfig(Bunch):
                     # support dotted names also in the inheritance.
                     result = get_dotted_filename(template_name=uri,
                             template_extension='.mak')
+
+                    if not self.template_filenames_cache.has_key(uri):
+                        # feed our filename cache if needed.
+                        self.template_filenames_cache[uri] = result
+
                 else:
                     # no dot detected, just return plain name
                     result = uri
