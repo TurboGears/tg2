@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Decorators use by the TurboGears controllers
+Decorators use by the TurboGears controllers.
 
 Not all of these decorators are traditional wrappers. They are much simplified
 from the turbogears 1 decorators, because all they do is register attributes on
 the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
+
 """
 
 import formencode
@@ -19,10 +20,10 @@ import warnings
 from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
-from pylons import config, request
+from pylons import config, request, response
 from pylons import tmpl_context as c
 from tg.util import partial
-from repoze.what.predicates import NotAuthorizedError
+from repoze.what.plugins.pylonshq import ActionProtector, ControllerProtector
 
 from tg.configuration import Bunch
 from tg.flash import flash
@@ -525,25 +526,49 @@ def with_trailing_slash(func, *args, **kwargs):
         redirect(request.url+'/')
     return func(*args, **kwargs)
 
-def require(predicate, error_handler=None):
+
+#{ Authorization decorators
+
+
+def _authorization_denial_handler(reason):
+    """Authorization denial handler for repoze.what-pylons protectors."""
+    if response.status.startswith('401'):
+        status = 'warning'
+    else:
+        # Status is a 403
+        status = 'error'
+    flash(reason, status=status)
+
+
+class require(ActionProtector):
     """
-    Make repoze.what verify that the predicate is met.
-
-    :param predicate: A repoze.what predicate.
-    :return: The decorator that checks authorization.
-
+    TurboGears-specific repoze.what-pylons action protector.
+    
+    The default authorization denial handler of this protector will flash
+    the message of the unmet predicate with ``warning`` or ``error`` as the
+    flash status if the HTTP status code is 401 or 403, respectively.
+    
     """
+    default_denial_handler = staticmethod(_authorization_denial_handler)
 
-    @decorator
-    def check_auth(func, *args, **kwargs):
-        environ = request.environ
-        try:
-            predicate.check_authorization(environ)
-        except NotAuthorizedError, reason:
-            if error_handler:
-                return error_handler(reason)
-            flash(reason, status='warning')
-            raise HTTPUnauthorized()
 
-        return func(*args, **kwargs)
-    return check_auth
+class protect(ControllerProtector):
+    """
+    TurboGears-specific repoze.what-pylons controller protector.
+    
+    The default authorization denial handler of this protector will flash
+    the message of the unmet predicate with ``warning`` or ``error`` as the
+    flash status if the HTTP status code is 401 or 403, respectively.
+    
+    If the controller class has the ``_failed_authorization`` *class method*,
+    it will replace the default denial handler.
+    
+    """
+    default_denial_handler = staticmethod(_authorization_denial_handler)
+    
+    def __call__(self, cls, *args, **kwargs):
+        if hasattr(cls, '_failed_authorization'):
+            self.denial_handler = cls._failed_authorization
+        return super(protect, self).__call__(cls, *args, **kwargs)
+
+#}
