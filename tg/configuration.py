@@ -255,14 +255,16 @@ class AppConfig(Bunch):
             This is an emulation of the Mako template lookup that will handle
             get_template and support dotted names in Python path notation
             to support zipped eggs.
-
             """
+
             def __init__(self, input_encoding, output_encoding,
                     imports, default_filters):
                 self.input_encoding = input_encoding
                 self.output_encoding = output_encoding
                 self.imports = imports
                 self.default_filters = default_filters
+                # implement a cache for the loaded templates
+                self.template_cache = dict()
 
             def adjust_uri(self, uri, relativeto):
                 """Adjust the given uri relative to a filename.
@@ -289,12 +291,16 @@ class AppConfig(Bunch):
                 """this is the emulated method that must return a template
                 instance based on a given template name
                 """
-                return Template(open(template_name).read(),
-                    input_encoding=self.input_encoding,
-                    output_encoding=self.output_encoding,
-                    default_filters=self.default_filters,
-                    imports=self.imports,
-                    lookup=self)
+                if not self.template_cache.has_key(template_name):
+                    # the template string is not yet loaded into the cache. Do do now
+                    self.template_cache[template_name] = Template(open(template_name).read(),
+                        input_encoding=self.input_encoding,
+                        output_encoding=self.output_encoding,
+                        default_filters=self.default_filters,
+                        imports=self.imports,
+                        lookup=self)
+
+                return self.template_cache[template_name]
 
         if config.get('use_dotted_templatenames', False):
             # Support dotted names by injecting a slightly different template
