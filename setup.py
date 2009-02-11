@@ -44,7 +44,7 @@ setup(
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
         'repoze.who >= 1.0.10',
-        'repoze.what-pylons',
+        'repoze.what-pylons >= 1.0b2',
         'SQLAlchemy>=0.5beta3',
     ],
     extras_require={
