@@ -29,7 +29,6 @@ from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import render as tg_render
 from tg.decorators import expose, allow_only
-from tg.flash import flash
 
 from webob import Request
 from webob.exc import HTTPUnauthorized
