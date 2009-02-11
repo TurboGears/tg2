@@ -530,16 +530,6 @@ def with_trailing_slash(func, *args, **kwargs):
 #{ Authorization decorators
 
 
-def _authorization_denial_handler(reason):
-    """Authorization denial handler for repoze.what-pylons protectors."""
-    if response.status.startswith('401'):
-        status = 'warning'
-    else:
-        # Status is a 403
-        status = 'error'
-    flash(reason, status=status)
-
-
 class require(ActionProtector):
     """
     TurboGears-specific repoze.what-pylons action protector.
@@ -549,7 +539,15 @@ class require(ActionProtector):
     flash status if the HTTP status code is 401 or 403, respectively.
     
     """
-    default_denial_handler = staticmethod(_authorization_denial_handler)
+    
+    def default_denial_handler(self, reason):
+        """Authorization denial handler for repoze.what-pylons protectors."""
+        if response.status.startswith('401'):
+            status = 'warning'
+        else:
+            # Status is a 403
+            status = 'error'
+        flash(reason, status=status)
 
 
 class protect(ControllerProtector):
@@ -558,13 +556,15 @@ class protect(ControllerProtector):
     
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
-    flash status if the HTTP status code is 401 or 403, respectively.
+    flash status if the HTTP status code is 401 or 403, respectively, since
+    by default the ``__before__`` method of the controller is decorated with
+    :class:`require`.
     
     If the controller class has the ``_failed_authorization`` *class method*,
     it will replace the default denial handler.
     
     """
-    default_denial_handler = staticmethod(_authorization_denial_handler)
+    protector = require
     
     def __call__(self, cls, *args, **kwargs):
         if hasattr(cls, '_failed_authorization'):
