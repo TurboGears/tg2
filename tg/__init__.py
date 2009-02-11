@@ -55,7 +55,7 @@ from tg.controllers import TGController, redirect, url, use_wsgi_app,\
                            WSGIAppController
 from tg.configuration import config
 from tg.decorators import (validate, expose, override_template,
-                           require, protect)
+                           require, allow_only)
 
 from tg.flash import flash, get_flash, get_status
 from pylons import g, request, response, tmpl_context, session
@@ -63,5 +63,5 @@ from pylons import g, request, response, tmpl_context, session
 __all__ = [
     'expose', 'validate', 'TGController', 'tmpl_context', 'app_globals',
     'overide_template', 'request', 'response', 'session','TurboGearsApplication',
-    'use_wsgi_app', 'TGApp', 'app_globals', 'require', 'protect'
+    'use_wsgi_app', 'TGApp', 'app_globals', 'require', 'allow_only'
 ]

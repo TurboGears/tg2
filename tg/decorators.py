@@ -538,6 +538,8 @@ class require(ActionProtector):
     the message of the unmet predicate with ``warning`` or ``error`` as the
     flash status if the HTTP status code is 401 or 403, respectively.
     
+    See :class:`allow_only` for controller-wide authorization.
+    
     """
     
     def default_denial_handler(self, reason):
@@ -550,7 +552,7 @@ class require(ActionProtector):
         flash(reason, status=status)
 
 
-class protect(ControllerProtector):
+class allow_only(ControllerProtector):
     """
     TurboGears-specific repoze.what-pylons controller protector.
     
@@ -570,5 +572,6 @@ class protect(ControllerProtector):
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
         return super(protect, self).__call__(cls, *args, **kwargs)
+
 
 #}
