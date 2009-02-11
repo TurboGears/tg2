@@ -571,7 +571,7 @@ class allow_only(ControllerProtector):
     def __call__(self, cls, *args, **kwargs):
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
-        return super(protect, self).__call__(cls, *args, **kwargs)
+        return super(allow_only, self).__call__(cls, *args, **kwargs)
 
 
 #}
