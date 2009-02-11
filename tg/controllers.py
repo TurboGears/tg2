@@ -24,12 +24,11 @@ import pylons
 from pylons import url as pylons_url
 from pylons.controllers import WSGIController
 import tw
-from repoze.what.predicates import NotAuthorizedError
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import render as tg_render
-from tg.decorators import expose
+from tg.decorators import expose, allow_only
 from tg.flash import flash
 
 from webob import Request
@@ -51,6 +50,7 @@ def _configured_engines():
         g.tg_configured_engines = set()
     return g.tg_configured_engines
 
+
 class DecoratedController(WSGIController):
     """
     DecoratedController takes action on the decorated controller methods
@@ -68,6 +68,14 @@ class DecoratedController(WSGIController):
         c) before the rendering takes place, and
         d) after the rendering has happened.
     """
+    
+    def __init__(self, *args, **kwargs):
+        super(DecoratedController, self).__init__(*args, **kwargs)
+        if hasattr(self, 'allow_only'):
+            # Let's turn Controller.allow_only into something useful for
+            # the @allow_only decorator.
+            predicate = self.allow_only
+            self = allow_only(predicate)(self)
 
     def __before__(self, *args, **kw):
         """placeholder to make certain that __before__'s get called for methods that inherit from this class"""
@@ -474,8 +482,6 @@ def _object_dispatch(obj, url_path):
 
 def _find_restful_dispatch(obj, parent, remainder):
 
-    _check_security(obj)
-
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
     if inspect.isclass(obj) and not issubclass(obj, RestController):
@@ -567,8 +573,6 @@ def _find_object(obj, remainder, notfound_handlers):
         if obj is None:
             raise HTTPNotFound().exception
 
-        _check_security(obj)
-
         if _iscontroller(obj):
             return obj, parent, remainder
         
@@ -593,22 +597,6 @@ def _find_object(obj, remainder, notfound_handlers):
         parent = obj
         obj = getattr(obj, remainder[0], None)
         remainder = remainder[1:]
-
-def _check_security(obj):
-    """this function checks if a controller has a 'alow_only' attribute and if
-    it is the case, test that this require predicate can be evaled to True.
-    It will raise a Forbidden exception if the predicate is not valid.
-    """
-    if hasattr(obj, "im_self"):
-        klass_instance = obj.im_self
-    else:
-        klass_instance = obj
-
-    if hasattr(klass_instance, "_check_security"):
-        if not klass_instance._check_security():
-            if hasattr(klass_instance, "_failed_authorization"):
-                return klass_instance._failed_authorization()
-            raise HTTPUnauthorized().exception
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):
@@ -665,23 +653,6 @@ class TGController(ObjectDispatchController):
             result._exception = True
         return result
 
-    def _check_security(self):
-        if not hasattr(self, "allow_only") or  self.allow_only is None:
-            log.debug('No controller-wide authorization at %s',
-                      pylons.request.path)
-            return True
-        
-        environ = pylons.request.environ
-        try:
-            self.allow_only.check_authorization(environ)
-            log.debug('Succeeded controller-wide authorization at %s',
-                      pylons.request.path)
-            return True
-        except NotAuthorizedError, error:
-            log.debug('Failed controller authorization at %s', 
-                      pylons.request.path)
-            flash(unicode(error), status="warning")
-            return False
 
 class WSGIAppController(TGController):
     """
