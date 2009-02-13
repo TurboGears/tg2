@@ -36,16 +36,12 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Babel',
-        'decorator',
+        'Pylons>=0.9.7rc4',
         'Genshi',
-        'Pylons>=0.9.7rc3',
-        'WebOb >= 0.9.5',
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
-        'repoze.who >= 1.0.10',
+	'WebError',
         'repoze.what-pylons >= 1.0b2',
-        'SQLAlchemy>=0.5beta3',
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
