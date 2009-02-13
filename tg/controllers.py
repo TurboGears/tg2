@@ -495,7 +495,7 @@ def _find_restful_dispatch(obj, parent, remainder):
             method = params['_method'].lower()
 
     if remainder and remainder[-1] == '':
-            remainder = remainder[:-1]
+        remainder = remainder[:-1]
     if remainder:
         #dispatch is finished, and we are where we need to be
         if remainder[-1] in ['new', 'edit'] and len(remainder)<=2:
@@ -511,7 +511,9 @@ def _find_restful_dispatch(obj, parent, remainder):
                 remainder = remainder[:-1]
         
         #handles put and post for parental relations
-        elif remainder >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
+        elif len(remainder) >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
+            print 'in here'
+            print remainder
             func = getattr(obj, 'get_one')
             arg_len = len(inspect.getargspec(func)[0])-1
             new_remainder = remainder[arg_len:]
