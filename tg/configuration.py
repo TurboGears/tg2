@@ -510,7 +510,7 @@ class AppConfig(Bunch):
 
     def setup_mimetypes(self):
         if 'mimetype_lookup' in config:
-            lookup = config['mimetype_lookuup']
+            lookup = config['mimetype_lookup']
         else:
             lookup = {'.json':'application/json'}
         for key, value in lookup.iteritems():
