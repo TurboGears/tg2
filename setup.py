@@ -36,7 +36,7 @@ setup(
         'Genshi',
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
-	'WebError',
+        'WebError',
         'repoze.what-pylons >= 1.0b2',
         'repoze.tm2',
         'TurboJson',
