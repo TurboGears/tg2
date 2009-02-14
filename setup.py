@@ -11,12 +11,8 @@ except ImportError:
 
 test_requirements = ['coverage',
                     'nose',
-                    'repoze.tm2',
                     'TurboKid',
-                    'TurboJson',
                     'zope.sqlalchemy',
-                    'SQLAlchemy>=0.5beta3',
-                    'repoze.what-pylons',
                     'jinja',
                     'chameleon.genshi',
                     ]
@@ -42,6 +38,8 @@ setup(
         'ToscaWidgets>=0.9',
 	'WebError',
         'repoze.what-pylons >= 1.0b2',
+        'repoze.tm2',
+        'TurboJson',
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
