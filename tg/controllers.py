@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Basic controller classes for turbogears
+Controller Classes, dispatch methods and helper functions for controller operation.
 
-  DecoratedController allows the decorators in tg.decorators to work
+This module contains the main classes which describe Turbogears2 Controllers.
+These Controllers are handled by the Dispatch functions which are also provided here.
 
-  ObjectDispatchController is a specialised form of DecoratedController that
-  converts URL portions into traversing Python objects.  This controller is
-  usable in plain pylons if you route to it's "routes_placeholder" method
-
-  TGController is a specialised form of ObjectDispatchController that forms the
-  basis of standard TurboGears controllers.  The "Root" controller of a standard
-  tg project must be a TGController.
+Lastly, url definition and browser redirection are defined here.
 """
 
 import logging
@@ -77,11 +72,24 @@ class DecoratedController(WSGIController):
             self = allow_only(predicate)(self)
 
     def __before__(self, *args, **kw):
-        """placeholder to make certain that __before__'s get called for methods that inherit from this class"""
-        pass
-
+        """
+        Override this method to define any action you would like taken
+        before the controller code is executed.  This is particularly useful
+        for defining a Controller-wide specification (all methods) for things like:
+        setting up variables/objects in the template context,
+        restricting access, or other tasks which should be executed 
+        before the controller method is called.
+        """
+        
     def __after__(self, *args, **kw):
-        pass
+        """Override this method to define what you would like to run after the 
+        template has been rendered. This method will 
+        always be run after your method, even if it raises an Exception or redirects.
+        
+        An example use-case would be a runtime-specific template change,
+        you where would want to change the template back to the originally
+        decorated template after you have temporarily changed it.
+        """
     
     def _perform_call(self, controller, params, remainder=None):
         """
@@ -607,19 +615,97 @@ def _iscontroller(obj):
     return obj.decoration.exposed
 
 class RestController(DecoratedController):
-    """This Dummies out a controller so that restfullness can take place"""
+    """A Decorated Controller that dispatches in a RESTful Manner.
+    
+    This controller was designed to follow Representational State Transfer protocol, also known as REST.
+    The goal of this controller method is to provide the developer a way to map
+    RESTful URLS to controller methods directly, while still allowing Normal Object Dispatch to occur.
+    
+    Here is a brief rundown of the methods which are called on dispatch along with an example URL.
+
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | Method          | Description                                                  | Example Method(s) / URL(s)                 |
+    +=================+==============================================================+============================================+
+    | get_one         | Display one record.                                          | GET /movies/1                              |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | get_all         | Display all records in a resource.                           | GET /movies/                               |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | get             | A combo of get_one and get_all.                              | GET /movies/                               |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | GET /movies/1                              |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | new             | Display a page to prompt the User for resource creation.     | GET /movies/new                            |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | edit            | Display a page to prompt the User for resource modification. |  GET /movies/1/edit                        |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | post            | Create a new record.                                         | POST /movies/                              |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | put             | Update an existing record.                                   | POST /movies/1?_method=PUT                 |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | PUT /movies/1                              |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | post_delete     | Delete an existing record.                                   | POST /movies/1?_method=DELETE              |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | DELETE /movies/1                           |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | get_delete      | Display a delete Confirmation page.                          | GET /movies/1/delete                       |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | delete          | A combination of post_delete and get_delete.                 | GET /movies/delete                         |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | DELETE /movies/1                           |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | DELETE /movies/                            |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | POST /movies/1/delete                      |
+    |                 |                                                              +--------------------------------------------+
+    |                 |                                                              | POST /movies/delete                        |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    
+    You may note the ?_method on some of the URLs.  This is basically a hack because exiting browsers
+    do not support the PUT and DELETE methods.  Just note that if you decide to use a this resource with a web browser,
+    you will likely have to add a _method as a hidden field in your forms for these items.  Also note that RestController differs
+    from TGController in that it offers no index, default, or lookup.  It is intended primarily for  resource management. 
+
+    :References:
+    
+      `Controller <../main/Controllers.html>`_  A basic overview on how to write controller methods.
+      
+      `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
+    
+    """
     class decoration(object):
+        """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
         exposed = True
 
 class TGController(ObjectDispatchController):
     """
-    An ObjectDispatchController-derived class for stock-standard TurboGears
-    controllers.
+    TGController is a specialized form of ObjectDispatchController that forms the
+    basis of standard TurboGears controllers.  The "Root" controller of a standard
+    tg project must be a TGController.
 
     This controller can be used as a baseclass for anything in the
     object dispatch tree, but it MUST be used in the Root controller
     and any controller which you intend to do object dispatch from
     using Routes.
+    
+    This controller has a few reserved method names which provide special functionality.
+    
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | Method          | Description                                                  | Example URL(s)                             |
+    +=================+==============================================================+============================================+
+    | index           | The root of the controller.                                  | /                                          |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | default         | A method to call when all other methods have failed.         | /movies                                    |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+    | lookup          | Allows the developer to return a                             | /location/23.35/2343.34/elevation          |
+    |                 | Controller instance for further dispatch.                    |                                            |
+    +-----------------+--------------------------------------------------------------+--------------------------------------------+
+
+    
+    :References:
+    
+      `Controller <../main/Controllers.html>`_  A basic overview on how to write controller methods.
+
     """
 
     def _perform_call(self, func, args):
