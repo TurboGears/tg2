@@ -547,9 +547,9 @@ def _find_restful_dispatch(obj, parent, remainder):
                 raise HTTPNotFound().exception
 
     #support for get_delete and post_delete methods
-    if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and obj.get_delete.decoration.exposed:
+    if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and hasattr(getattr(obj, 'get_delete'), 'decoration') and obj.get_delete.decoration.exposed:
         method = 'get_delete'
-    if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and obj.post_delete.decoration.exposed:
+    if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and hasattr(getattr(obj, 'post_delete'), 'decoration')and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
     if hasattr(obj, method):
