@@ -458,10 +458,12 @@ def _object_dispatch(obj, url_path):
         last_remainder = remainder[-1]
         extension_spot = last_remainder.rfind('.')
         extension = last_remainder[extension_spot-1:]
-        remainder[-1] = last_remainder[:extension_spot]
-        pylons.request.response_type = mimetypes.guess_type(extension)[0]
-        pylons.request.response_ext = extension
-        
+        mime_type, encoding = mimetypes.guess_type(extension)
+        if mime_type:
+            remainder[-1] = last_remainder[:extension_spot]
+            pylons.request.response_type = mime_type
+            pylons.request.response_ext = extension
+
     notfound_handlers = []
     while True:
         try:
