@@ -509,10 +509,9 @@ class AppConfig(Bunch):
                                    template_location,  {})
 
     def setup_mimetypes(self):
-        if 'mimetype_lookup' in config:
-            lookup = config['mimetype_lookup']
-        else:
-            lookup = {'.json':'application/json'}
+        lookup = {'.json':'application/json'}
+        lookup.update(config.get('mimetype_lookup', {}))
+            
         for key, value in lookup.iteritems():
             mimetypes.add_type(value, key)
 
