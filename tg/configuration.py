@@ -318,7 +318,7 @@ class AppConfig(Bunch):
         from jinja import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
-        config['pylons.app_globals'].jinja_env = Environment(loader=ChoiceLoader(
+        config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
                 [FileSystemLoader(path, auto_reload=self.auto_reload_templates)
                  for path in self.paths['templates']]))
 

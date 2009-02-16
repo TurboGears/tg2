@@ -164,6 +164,6 @@ def render_mako(template_name, template_vars, **kwargs):
                                   **kwargs)
 
 def render_jinja(template_name, template_vars, **kwargs):
-    return templating.render_jinja(template_name, extra_vars=template_vars,
+    return templating.render_jinja2(template_name, extra_vars=template_vars,
                                    **kwargs)
 
