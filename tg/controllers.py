@@ -767,7 +767,7 @@ class WSGIAppController(TGController):
             new_req.path_info_pop()
         if not new_req.path_info:
             # Append trailing slash and redirect
-            redirect(request.script_name+request.path_info+'/')
+            redirect(request.path_info+'/')
         new_req.body_file.seek(0)
         return self.delegate(new_req.environ, request.start_response)
 
