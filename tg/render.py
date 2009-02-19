@@ -1,10 +1,14 @@
+from urllib import quote_plus
+
+from genshi import XML
 from pylons import (app_globals, config, session, tmpl_context, request, 
                     response, templating)
+from repoze.what import predicates
+
 import tg
 from tg.util import get_dotted_filename
 from tg.configuration import Bunch
-from genshi import XML
-from urllib import quote_plus
+
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -60,6 +64,9 @@ def _get_tg_vars():
         the app's config object
     auth_stack_enabled
         A boolean that determines if the auth stack is present in the environment
+    predicates
+        The :mod:`repoze.what.predicates` module.
+    
     """
     # TODO: Implement user_agent and other missing features. 
     tg_vars = Bunch(
@@ -84,7 +91,8 @@ def _get_tg_vars():
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
         request = tg.request,
-        auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ
+        auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ,
+        predicates = predicates,
         )
 
     # TODO: we should actually just get helpers from the package's helpers

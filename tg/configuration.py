@@ -433,6 +433,10 @@ class AppConfig(Bunch):
     def add_auth_middleware(self, app):
         """Configure authentication and authorization."""
         from repoze.what.plugins.quickstart import setup_sql_auth
+        from repoze.what.plugins.pylonshq import booleanize_predicates
+        
+        # Predicates booleanized:
+        booleanize_predicates()
 
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
