@@ -753,6 +753,8 @@ class WSGIAppController(TGController):
         # Signal tg.configuration.maybe_make_body_seekable which is wrapping
         # The stack to make the body seekable so default() can rewind it.
         pylons.config['make_body_seekable'] = True
+        # Calling the parent's contructor, to enable controller-wide auth:
+        super(WSGIAppController, self).__init__()
 
     @expose()
     def default(self, *args, **kw):
