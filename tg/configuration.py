@@ -4,7 +4,9 @@ import os
 import stat
 import logging
 from copy import copy
+import mimetypes
 from UserDict import DictMixin
+
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 
@@ -15,14 +17,15 @@ from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
 from pylons.middleware import report_libs, StatusCodeRedirect
+
 import tg
 from tg import TGApp
 from tg.error import ErrorHandler
-from tg.util import Bunch, get_partial_dict
+from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
+
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from webob import Request
-import mimetypes
 
 from tw.api import make_middleware as tw_middleware
 
@@ -219,6 +222,8 @@ class AppConfig(Bunch):
         """
 
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
+        g = config['pylons.app_globals']
+        g.dotted_filename_finder = DottedFileNameFinder()
         config['pylons.helpers'] = self.package.lib.helpers
         config['pylons.h'] = self.package.lib.helpers
 
@@ -337,7 +342,7 @@ class AppConfig(Bunch):
         """
         #T his is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
-        template_location = '%s.templates' %self.package.__name__
+        template_location = '%s.templates' % self.package.__name__
         template_location = '%s.templates' % self.package.__name__
 
         def template_loaded(template):
@@ -357,7 +362,7 @@ class AppConfig(Bunch):
     def setup_mimetypes(self):
         lookup = {'.json':'application/json'}
         lookup.update(config.get('mimetype_lookup', {}))
-            
+
         for key, value in lookup.iteritems():
             mimetypes.add_type(value, key)
 

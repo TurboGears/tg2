@@ -3,7 +3,6 @@ that supports dotted names
 """
 
 import tg
-from tg.util import get_dotted_filename
 from mako.template import Template
 try:
     import threading
@@ -58,8 +57,10 @@ class DottedTemplateLookup(object):
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = get_dotted_filename(template_name=uri,
-                    template_extension='.mak')
+            result = tg.config['pylons.app_globals'
+                    ].dotted_filename_finder.get_dotted_filename(
+                            template_name=uri,
+                            template_extension='.mak')
 
             if not self.template_filenames_cache.has_key(uri):
                 # feed our filename cache if needed.

@@ -1,12 +1,11 @@
 from urllib import quote_plus
 
 from genshi import XML
-from pylons import (app_globals, config, session, tmpl_context, request, 
+from pylons import (app_globals, config, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
 
 import tg
-from tg.util import get_dotted_filename
 from tg.configuration import Bunch
 
 
@@ -33,7 +32,7 @@ class DeprecatedFlashVariable(object):
         import warnings
         warnings.warn(self.msg, DeprecationWarning, 2)
         return bool(self.callable())
-        
+
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
 
@@ -66,9 +65,9 @@ def _get_tg_vars():
         A boolean that determines if the auth stack is present in the environment
     predicates
         The :mod:`repoze.what.predicates` module.
-    
+
     """
-    # TODO: Implement user_agent and other missing features. 
+    # TODO: Implement user_agent and other missing features.
     tg_vars = Bunch(
         config = tg.config,
         flash_obj = tg.flash,
@@ -128,7 +127,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     if not template_vars:
         template_vars={}
-    
+
     #Get the extra vars, and merge in the vars from the controller
     tg_vars = _get_tg_vars()
     tg_vars.update(template_vars)
@@ -141,14 +140,15 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     return render_function(template_name, template_vars, **kwargs)
 
-
 def render_chameleon_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the chameleon.genshi template"""
     template_vars['XML'] = XML
-    
+
     if config.get('use_dotted_templatenames', False):
-        template_name = get_dotted_filename(template_name,
-                template_extension='.html')
+        template_name = tg.config['pylons.app_globals'
+                ].dotted_filename_finder.get_dotted_filename(
+                        template_name,
+                        template_extension='.html')
 
     # here we use the render genshi function because it should be api compliant
     return templating.render_genshi(template_name, extra_vars=template_vars,
@@ -159,16 +159,21 @@ def render_genshi(template_name, template_vars, **kwargs):
     template_vars['XML'] = XML
 
     if config.get('use_dotted_templatenames', False):
-        template_name = get_dotted_filename(template_name,
-                template_extension='.html')
+        template_name = tg.config['pylons.app_globals'
+                ].dotted_filename_finder.get_dotted_filename(
+                        template_name,
+                        template_extension='.html')
 
     return templating.render_genshi(template_name, extra_vars=template_vars,
                                     **kwargs)
 
+
 def render_mako(template_name, template_vars, **kwargs):
     if config.get('use_dotted_templatenames', False):
-        template_name = get_dotted_filename(template_name,
-                template_extension='.mak')
+        template_name = tg.config['pylons.app_globals'
+                ].dotted_filename_finder.get_dotted_filename(
+                        template_name,
+                        template_extension='.mak')
 
     return templating.render_mako(template_name, extra_vars=template_vars,
                                   **kwargs)

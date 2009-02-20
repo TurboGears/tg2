@@ -23,7 +23,7 @@ def get_package_name():
     package = config.get("modules")
     if package:
         return package
-    
+
     if "--egg" in sys.argv:
         projectname = sys.argv[sys.argv.index("--egg")+1]
         egg = pkg_resources.get_distribution(projectname)
@@ -31,7 +31,7 @@ def get_package_name():
     else:
         fname = get_project_meta('top_level.txt')
         top_level = fname and open(fname) or []
-    
+
     for package in top_level:
         package = package.rstrip()
         if package and package != 'locales':
@@ -48,7 +48,7 @@ def get_model():
 
     if hasattr(package, "model"):
         return package.model
-        
+
 def get_partial_dict(prefix, dictionary):
     """Given a dictionary and a prefix, return a Bunch, with just items
     that start with prefix
@@ -57,19 +57,19 @@ def get_partial_dict(prefix, dictionary):
 
     get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3})
 
-    would return: 
+    would return:
 
     {'xyz':1,'zyx':2}
     """
 
     match = prefix + "."
 
-    new_dict = Bunch([(key.lstrip(match) ,dictionary[key]) 
-                       for key in dictionary.iterkeys() 
-                       if key.startswith(match)]) 
+    new_dict = Bunch([(key.lstrip(match) ,dictionary[key])
+                       for key in dictionary.iterkeys()
+                       if key.startswith(match)])
     if new_dict:
         return new_dict
-    else: 
+    else:
         raise AttributeError
 
 class Bunch(dict):
@@ -103,38 +103,60 @@ def partial(*args, **create_time_kwds):
         return func(*args, **kwds)
     return curried_function
 
-def get_dotted_filename(template_name, template_extension='.html'):
-    """this helper function is designed to search a template or any other
-    file by python module name.
+class DottedFileNameFinder(object):
+    """this class implements a cache system above the
+    get_dotted_filename function and is designed to be stuffed
+    inside the app_globals.
 
-    Given a string containing the file/template name passed to the @expose
-    decorator we will return a resource useable as a filename even
-    if the file is in fact inside a zipped egg.
+    It exposes a method named get_dotted_filename with the exact
+    same signature as the function of the same name in this module.
 
-    The actual implementation is a revamp of the Genshi buffet support
-    plugin, but could be used with any kind a file inside a python package.
-
-    @param template_name: the string representation of the template name
-    as it has been given by the user on his @expose decorator.
-    Basically this will be a string in the form of:
-    "genshi:myapp.templates.somename"
-    @type template_name: string
-
-    @param template_extension: the extension we excpect the template to have,
-    this MUST be the full extension as returned by the os.path.splitext
-    function. This means it should contain the dot. ie: '.html'
-
-    This argument is optional and the default value if nothing is provided will
-    be '.html'
-    @type template_extension: string
+    The reason is that is uses this function itself and just adds
+    caching mechanism on top.
     """
-    divider = template_name.rfind('.')
-    if divider >= 0:
-        package = template_name[:divider]
-        basename = template_name[divider + 1:] + template_extension
-        result = resource_filename(package, basename)
+    def __init__(self):
+        self.__cache = dict()
 
-    else:
-        result = template_name
+    def get_dotted_filename(self, template_name, template_extension='.html'):
+        """this helper function is designed to search a template or any other
+        file by python module name.
 
-    return result
+        Given a string containing the file/template name passed to the @expose
+        decorator we will return a resource useable as a filename even
+        if the file is in fact inside a zipped egg.
+
+        The actual implementation is a revamp of the Genshi buffet support
+        plugin, but could be used with any kind a file inside a python package.
+
+        @param template_name: the string representation of the template name
+        as it has been given by the user on his @expose decorator.
+        Basically this will be a string in the form of:
+        "genshi:myapp.templates.somename"
+        @type template_name: string
+
+        @param template_extension: the extension we excpect the template to have,
+        this MUST be the full extension as returned by the os.path.splitext
+        function. This means it should contain the dot. ie: '.html'
+
+        This argument is optional and the default value if nothing is provided will
+        be '.html'
+        @type template_extension: string
+        """
+        try:
+            return self.__cache[template_name]
+
+        except KeyError, e:
+            # the template name was not found in our cache
+            divider = template_name.rfind('.')
+            if divider >= 0:
+                package = template_name[:divider]
+                basename = template_name[divider + 1:] + template_extension
+                result = resource_filename(package, basename)
+
+            else:
+                result = template_name
+
+            self.__cache[template_name] = result
+
+            return result
+

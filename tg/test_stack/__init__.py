@@ -1,6 +1,7 @@
 import os
 from webtest import TestApp
 import tg
+from tg.util import DottedFileNameFinder
 from tg.configuration import AppConfig
 
 class TestConfig(AppConfig):
@@ -40,6 +41,8 @@ class TestConfig(AppConfig):
     def setup_helpers_and_globals(self):
         tg.config['pylons.app_globals'] = self.globals
         tg.config['pylons.h'] = self.helpers
+        g = tg.config['pylons.app_globals']
+        g.dotted_filename_finder = DottedFileNameFinder()
 
 def app_from_config(base_config, deployment_config=None):
     if not deployment_config:
