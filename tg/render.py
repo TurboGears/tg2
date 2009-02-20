@@ -83,7 +83,7 @@ def _get_tg_vars():
             "or use the new flash_obj.render() method"
             ),
         quote_plus = quote_plus,
-        url = tg.controllers.url,
+        url = tg.url,
         # this will be None if no identity
         identity = request.environ.get('repoze.who.identity'),
         session = session,
@@ -104,7 +104,6 @@ def _get_tg_vars():
         tmpl_context = tmpl_context,
         response = response,
         request = request,
-        h = helpers,
         url = tg.url,
         helpers = helpers,
         tg = tg_vars
@@ -129,8 +128,11 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     if not template_vars:
         template_vars={}
-
-    template_vars.update(_get_tg_vars())
+    
+    #Get the extra vars, and merge in the vars from the controller
+    tg_vars = _get_tg_vars()
+    tg_vars.update(template_vars)
+    template_vars = tg_vars
 
     if not render_function:
         # getting the default renderer. (this is only if no engine was defined
