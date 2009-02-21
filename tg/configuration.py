@@ -1,7 +1,6 @@
 """Configuration Helpers for TurboGears 2"""
 import atexit
 import os
-import stat
 import logging
 from copy import copy
 import mimetypes
