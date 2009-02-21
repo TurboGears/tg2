@@ -317,7 +317,7 @@ def override_template(controller, template):
     The template string passed in requires that
     you include the template engine name, even if you're using the default.
 
-    So you have topass in a template id string like::
+    So you have to pass in a template id string like::
 
        "genshi:myproject.templates.index2"
 

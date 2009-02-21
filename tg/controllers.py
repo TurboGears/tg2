@@ -16,7 +16,7 @@ import inspect
 
 import formencode
 import pylons
-from pylons import url as pylons_url
+from pylons import url as pylons_url, config
 from pylons.controllers import WSGIController
 import tw
 
@@ -123,7 +123,10 @@ class DecoratedController(WSGIController):
 
             controller.decoration.run_hooks('before_validate', remainder,
                                             params)
-
+            for ignore in config.get('ignore_parameters', []):
+                if params.get(ignore):
+                    del params[ignore]
+                    
             # Validate user input
             params = self._perform_validate(controller, params)
 
@@ -273,7 +276,6 @@ class DecoratedController(WSGIController):
             buffet = pylons.buffet._current_obj()
 
             if engine_name not in _configured_engines():
-                from pylons import config
                 template_options = dict(config).get('buffet.template_options', {})
                 buffet.prepare(engine_name, **template_options)
                 _configured_engines().add(engine_name)

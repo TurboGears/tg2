@@ -6,7 +6,9 @@ from nose.tools import eq_
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch', 
-                             values = {'use_sqlalchemy': False}
+                             values = {'use_sqlalchemy': False,
+                             'ignore_parameters': ["ignore", "ignore_me"]
+                             }
                              )
     return app_from_config(base_config) 
 
@@ -137,3 +139,7 @@ def test_custom_content_type():
 
 def test_basicurls():
     resp = app.get("/test_url_sop")
+    
+def test_ignore_parameters():
+    resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
+    assert "None Recieved"

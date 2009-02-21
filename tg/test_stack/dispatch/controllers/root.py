@@ -137,12 +137,19 @@ class RootController(TGController):
     def custom_content_type(self):
         pylons.response.headers['content-type'] = 'image/png'
         return 'PNG'
-
+    
+    @expose()
+    def check_params(self, *args, **kwargs):
+        if not args and not kwargs:
+            return "None recieved"
+        else:
+            return "Controler recieved: %s, %s" %(args, kwargs) 
+    
     @expose()
     def test_url_sop(self):
         from tg import url
         eq_('/foo', url('/foo'))
 
-        #print url("/foo", bar=1, baz=2)
+        print url("/foo", bar=1, baz=2)
         assert url("/foo", bar=1, baz=2) in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"]
