@@ -1,6 +1,7 @@
 """a reimplementation of the mako template loader
 that supports dotted names
 """
+import os,stat
 
 import tg
 from mako.template import Template
