@@ -64,7 +64,7 @@ class DecoratedController(WSGIController):
     """
     
     def __init__(self, *args, **kwargs):
-        if hasattr(self, 'allow_only'):
+        if hasattr(self, 'allow_only') and self.allow_only is not None:
             # Let's turn Controller.allow_only into something useful for
             # the @allow_only decorator.
             predicate = self.allow_only
@@ -749,8 +749,7 @@ class WSGIAppController(TGController):
     """
     def __init__(self, app, allow_only=None):
         self.app = app
-        if allow_only:
-            self.allow_only = allow_only
+        self.allow_only = allow_only
         # Signal tg.configuration.maybe_make_body_seekable which is wrapping
         # The stack to make the body seekable so default() can rewind it.
         pylons.config['make_body_seekable'] = True
