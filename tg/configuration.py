@@ -30,7 +30,6 @@ from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
-
 class PylonsConfigWrapper(DictMixin):
     """Wrapper for the Pylons configuration.
 

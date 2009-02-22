@@ -6,6 +6,8 @@ import stat
 
 import tg
 from mako.template import Template
+from paste.deploy.converters import asbool
+
 try:
     import threading
 except:
@@ -23,6 +25,7 @@ class DottedTemplateLookup(object):
     This is necessary because Mako asserts that your project will always
     be installed in a zip-unsafe manner with all files somewhere on the
     hard drive.
+    
     This is not the case when you want your application to be deployed
     in a single zip file (zip-safe). If you want to deploy in a zip
     file _and_ use the dotted template name notation then this class
@@ -154,7 +157,8 @@ class DottedTemplateLookup(object):
             # Do so now
             self.__load(template_name)
 
-        if tg.config.get('templating.mako.reloadfromdisk', 'false').lower() == 'true':
+        #TODO: use the paste asbool function here.
+        if asbool(tg.config.get('templating.mako.reloadfromdisk', 'false')):
             # AUTO RELOADING will be activated only if user has
             # explicitly asked for it in the configuration
             # return the template, but first make sure it's not outdated
