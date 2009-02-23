@@ -30,7 +30,7 @@ class TestConfig(AppConfig):
                     root=test_base_path,
                     controllers=os.path.join(test_config_path, 'controllers'),
                     static_files=os.path.join(test_config_path, 'public'),
-                    templates=os.path.join(test_config_path, 'templates')
+                    templates=[os.path.join(test_config_path, 'templates')]
                     )
         print self.package
 
