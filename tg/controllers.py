@@ -227,8 +227,7 @@ class DecoratedController(WSGIController):
         elif (hasattr(validation.validators, 'validate')
               and getattr(validation, 'needs_controller', False)):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(controller, params,
-                    state)
+            new_params = validation.validators.validate(controller, params, state)
 
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
@@ -461,13 +460,14 @@ def _object_dispatch(obj, url_path):
     remainder = url_path
 
     pylons.request.response_type = None
+    pylons.request.response_ext = None
     # if the last item in the remainder has an extention
     # remove the extension, and add a response content type to the 
     # request parameters
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
         extension_spot = last_remainder.rfind('.')
-        extension = last_remainder[extension_spot-1:]
+        extension = last_remainder[extension_spot:]
         mime_type, encoding = mimetypes.guess_type(extension)
         if mime_type:
             remainder[-1] = last_remainder[:extension_spot]
@@ -500,7 +500,7 @@ def _object_dispatch(obj, url_path):
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
-
+    
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
     if inspect.isclass(obj) and not issubclass(obj, RestController):
@@ -517,23 +517,22 @@ def _find_restful_dispatch(obj, parent, remainder):
     if remainder and remainder[-1] == '':
         remainder = remainder[:-1]
     if remainder:
+        remainder_len = len(remainder)
         #dispatch is finished, and we are where we need to be
-        if remainder[-1] in ['new', 'edit'] and len(remainder)<=2:
+        if remainder_len <=2 and remainder[-1] in ['new', 'edit']:
             if method == 'get':
                 method = remainder[-1]
             if method == 'edit' and len(remainder) <=2:
                 remainder = remainder[:-1]
             if method == 'new' and len(remainder) == 1:
                 remainder = remainder[:-1]
-        elif remainder[-1] == 'delete' and len(remainder)<=2:
+        elif remainder_len <=2 and remainder[-1] == 'delete':
             method = 'delete'
-            if len(remainder) <= 2:
+            if remainder_len <= 2:
                 remainder = remainder[:-1]
         
         #handles put and post for parental relations
-        elif len(remainder) >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
-            print 'in here'
-            print remainder
+        elif remainder_len >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
             func = getattr(obj, 'get_one')
             arg_len = len(inspect.getargspec(func)[0])-1
             new_remainder = remainder[arg_len:]
@@ -543,18 +542,17 @@ def _find_restful_dispatch(obj, parent, remainder):
                 return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
             else:
                 raise HTTPNotFound().exception
-        
         #handles new and edit for parental relations
         if remainder and hasattr(obj, remainder[0]) and remainder[0] not in ['new', 'edit']:
             #revert the dispatch back to object_dispatch
             if inspect.isclass(obj):
                 obj = obj()
             return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
-
+        
     #support for get_all and get_one methods
-    if not remainder and method == 'get' and hasattr(obj, 'get_all') and obj.get_all.decoration.exposed:
+    if not remainder and method == 'get' and hasattr(obj, 'get_all') and hasattr(obj.get_all, 'decoration') and obj.get_all.decoration.exposed:
         method = 'get_all'
-    if len(remainder)>0 and method == 'get' and hasattr(obj, 'get_one') and obj.get_one.decoration.exposed:
+    if len(remainder)>0 and method == 'get' and hasattr(obj, 'get_one') and hasattr(obj.get_all, 'decoration') and obj.get_one.decoration.exposed:
         if len(remainder) == 1:
             method = 'get_one'
         else:
@@ -563,13 +561,15 @@ def _find_restful_dispatch(obj, parent, remainder):
             remainder = remainder[arg_len:]
             if len(remainder) > 0 and hasattr(obj, remainder[0]):
                 return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
+            elif hasattr(obj, 'get_one') and inspect.getargspec(obj.get_one)[1]:
+                method = 'get_one'
             else:
                 raise HTTPNotFound().exception
 
     #support for get_delete and post_delete methods
-    if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and hasattr(getattr(obj, 'get_delete'), 'decoration') and obj.get_delete.decoration.exposed:
+    if request_method == 'get' and method == 'delete' and hasattr(obj, 'get_delete') and hasattr(obj.get_delete, 'decoration') and obj.get_delete.decoration.exposed:
         method = 'get_delete'
-    if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and hasattr(getattr(obj, 'post_delete'), 'decoration')and obj.post_delete.decoration.exposed:
+    if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and hasattr(obj.post_delete, 'decoration')and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
     if hasattr(obj, method):
