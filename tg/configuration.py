@@ -265,11 +265,21 @@ class AppConfig(Bunch):
                 default_filters=['escape'])
 
         else:
+            compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
+
+            if not compiled_dir:
+                # no specific compile dir give by conf... we expect that
+                # the server will have access to the first template dir
+                # to write the compiled version...
+                # If this is not the case we are doomed and the user should
+                # provide us the required config...
+                compiled_dir = self.paths['templates'][0]
+
             # If no dotted names support was required we will just setup
             # a file system based template lookup mechanism.
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
-                module_directory=self.paths['templates'],
+                module_directory=compiled_dir,
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'],
