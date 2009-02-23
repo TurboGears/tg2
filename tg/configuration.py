@@ -277,6 +277,16 @@ class AppConfig(Bunch):
 
             # If no dotted names support was required we will just setup
             # a file system based template lookup mechanism.
+            compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
+
+            if not compiled_dir:
+                # no specific compile dir give by conf... we expect that
+                # the server will have access to the first template dir
+                # to write the compiled version...
+                # If this is not the case we are doomed and the user should
+                # provide us the required config...
+                compiled_dir = self.paths['templates'][0]
+
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
                 module_directory=compiled_dir,
@@ -473,8 +483,8 @@ class AppConfig(Bunch):
     def add_tosca_middleware(self, app):
         """Configure the ToscaWidgets middleware."""
         app = tw_middleware(app, {
-            'toscawidgets.framework.default_view':
-            self.default_renderer,
+            'toscawidgets.framework.default_view': self.default_renderer,
+            'toscawidgets.framework.translator': ugettext,
             'toscawidgets.middleware.inject_resources': True,
             })
         return app

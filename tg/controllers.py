@@ -181,6 +181,10 @@ class DecoratedController(WSGIController):
         if validation is None:
             return params
 
+        # An object used by FormEncode to get translator function
+        state = type('state', (),
+                {'_': staticmethod(pylons_formencode_gettext)})
+
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
 
@@ -195,8 +199,10 @@ class DecoratedController(WSGIController):
             errors = {}
             for field, validator in validation.validators.iteritems():
                 try:
-                    validator.to_python(params.get(field))
-                    new_params[field] = validator.to_python(params.get(field))
+                    # XXX: Is this necessary to call twice?
+                    #validator.to_python(params.get(field), state)
+                    new_params[field] = validator.to_python(params.get(field),
+                            state)
                 # catch individual validation errors into the errors dictionary
                 except formencode.api.Invalid, inv:
                     errors[field] = inv
@@ -216,15 +222,17 @@ class DecoratedController(WSGIController):
         elif isinstance(validation.validators, formencode.Schema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
-            new_params = validation.validators.to_python(params)
+            new_params = validation.validators.to_python(params, state)
 
-        elif hasattr(validation.validators, 'validate') and hasattr(validation, 'needs_controller') and validation.needs_controller:
+        elif (hasattr(validation.validators, 'validate')
+              and getattr(validation, 'needs_controller', False)):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(controller, params)
+            new_params = validation.validators.validate(controller, params,
+                    state)
 
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(params)
+            new_params = validation.validators.validate(params, state)
 
         # Theoretically this should not happen...
         if new_params is None:
@@ -845,6 +853,47 @@ def use_wsgi_app(wsgi_app):
     return wsgi_app(pylons.request.environ, pylons.request.start_response)
 
 
+def set_formencode_translation(languages):
+    """Set request specific translation of FormEncode
+    """
+    from gettext import translation
+    from pylons.i18n import LanguageError
+    try:
+        t = translation('FormEncode', languages=languages,
+                localedir=formencode.api.get_localedir())
+
+    except IOError, ioe:
+        raise LanguageError('IOError: %s' % ioe)
+
+    pylons.c.formencode_translation = t
+
+
+# Idea stolen from Pylons
+def pylons_formencode_gettext(value):
+    from pylons.i18n import ugettext as pylons_gettext
+    from gettext import NullTranslations
+
+    trans = pylons_gettext(value)
+
+    # Translation failed, try formencode
+    if trans == value:
+
+        try:
+            fetrans = pylons.c.formencode_translation
+        except AttributeError, attrerror:
+            # the translator was not set in the Pylons context
+            # we are certainly in the test framework
+            # let's make sure won't return something that is ok with the caller
+            fetrans = NullTranslations()
+
+        if not fetrans:
+            fetrans = NullTranslations()
+
+        trans = fetrans.ugettext(value)
+
+    return trans
+
+
 def setup_i18n():
     from pylons.i18n import add_fallback, set_lang, LanguageError
     languages = pylons.request.accept_language.best_matches()
@@ -859,12 +908,26 @@ def setup_i18n():
                 # if there is no resource bundle for this language
                 # remove the language from the list
                 languages.remove(lang)
-                log.debug("Skip language %s: not supported", lang)
+                log.warn("Skip language %s: not supported", lang)
 
         # if any language is left, set the best match as a default
         if languages:
-            set_lang(languages[0])
-            log.info("Set request language to %s", languages[0])
+            try:
+                set_lang(languages[0])
+            except LanguageError:
+                log.info("Language %s: not supported", languages[0])
+            else:
+                log.info("Set request language to %s", languages[0])
+
+            try:
+                set_formencode_translation(languages)
+            except LanguageError:
+                log.info("Language %s: not supported by FormEncode",
+                        languages[0])
+            else:
+                log.info("Set request language for FormEncode to %s",
+                        languages[0])
+
 
 __all__ = [
     "DecoratedController", "ObjectDispatchController", "TGController",

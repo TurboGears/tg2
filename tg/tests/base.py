@@ -108,7 +108,6 @@ class TestWSGIController(TestCase):
         pylons.buffet._push_object(self._buffet)
         setup_session_dir()
 
-
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
         pylons.buffet._pop_object(self._buffet)

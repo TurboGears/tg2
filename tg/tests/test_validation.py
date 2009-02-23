@@ -38,7 +38,7 @@ class controller_based_validate(validate):
         self.error_handler = error_handler
         self.needs_controller = True
         class Validators(object):
-            def validate(self, controller, params):
+            def validate(self, controller, params, state):
                 return params
         self.validators = Validators()
 
