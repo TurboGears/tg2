@@ -469,6 +469,9 @@ def _object_dispatch(obj, url_path):
         extension_spot = last_remainder.rfind('.')
         extension = last_remainder[extension_spot:]
         mime_type, encoding = mimetypes.guess_type(extension)
+        if not mime_type:
+            #try with a "." in front of the type
+            mime_type, encoding = mimetypes.guess_type('.'+extension)
         if mime_type:
             remainder[-1] = last_remainder[:extension_spot]
             pylons.request.response_type = mime_type
