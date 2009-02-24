@@ -116,7 +116,9 @@ class Decoration(object):
         elif tg_format:
             warnings.warn('tg_format is now deprecated.  Use .mimetype in your URL to create the same behavior')
             if '/' not in tg_format:
-                accept_types = mimetypes.guess_type('.'+tg_format)[0]
+                accept_types = mimetypes.guess_type(tg_format)[0]
+                if accept_types is None:
+                    accept_types = mimetypes.guess_type('.'+tg_format)[0]
                 if accept_types is None:
                     raise Exception('Unknown mimetype: %s'%tg_format)
             else:
