@@ -466,10 +466,10 @@ def _object_dispatch(obj, url_path):
     # request parameters
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
-        extension_spot = last_remainder.rfind('.')
-        extension = last_remainder[extension_spot:]
-        mime_type, encoding = mimetypes.guess_type(extension)
+        mime_type, encoding = mimetypes.guess_type(last_remainder)
         if mime_type:
+            extension_spot = last_remainder.rfind('.')
+            extension = last_remainder[extension_spot:]
             remainder[-1] = last_remainder[:extension_spot]
             pylons.request.response_type = mime_type
             pylons.request.response_ext = extension
