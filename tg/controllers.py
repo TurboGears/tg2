@@ -467,7 +467,7 @@ def _object_dispatch(obj, url_path):
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
         extension_spot = last_remainder.rfind('.')
-        extension = last_remainder[extension_spot-1:]
+        extension = last_remainder[extension_spot:]
         mime_type, encoding = mimetypes.guess_type(extension)
         if mime_type:
             remainder[-1] = last_remainder[:extension_spot]
