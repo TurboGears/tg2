@@ -776,6 +776,8 @@ class WSGIAppController(TGController):
         # Push into SCRIPT_NAME the path components that have been consumed,
         request = pylons.request._current_obj()
         new_req = request.copy()
+        #see #2241
+        new_req.environ['CONTENT_LENGTH']=request.environ['CONTENT_LENGTH']
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
         for i in xrange(to_pop):
             new_req.path_info_pop()
