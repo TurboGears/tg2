@@ -551,7 +551,7 @@ class require(ActionProtector):
             # Status is a 403
             status = 'error'
         flash(reason, status=status)
-        abort(response.status_int)
+        abort(response.status_int, comment=reason)
 
 
 class allow_only(ControllerProtector):
