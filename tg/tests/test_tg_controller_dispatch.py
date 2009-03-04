@@ -8,6 +8,7 @@ from routes.middleware import RoutesMiddleware
 from formencode import validators
 from webob import Response, Request
 from nose.tools import raises
+from repoze.what import predicates
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
@@ -150,8 +151,26 @@ class SubController2(object):
         def non_resty_thing(self):
             return "non_resty"
 
+is_manager = predicates.has_permission('manage')
+missile_launch_orders = []
+
+class ProtectedTGController(TGController):
+    allow_only = is_manager
+    @expose()
+    def index(self, **kwargs):
+        return "you should not see me"
+
+    @expose()
+    def launch_missiles(self, **kwargs):
+        missile_launch_orders.append(kwargs)
+        return "missile launch orders have been queued sir, armageddon will "\
+               "ensue"
+
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
+    protected_mounted_app = WSGIAppController(wsgi_app, allow_only=is_manager)
+    protected_controller = ProtectedTGController()
+
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -238,6 +257,7 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
+
 
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
@@ -333,3 +353,33 @@ class TestTGController(TestWSGIController):
     def test_before_controller(self):
         r = self.app.get('/sub/before')
         assert '__my_before__' in r, r
+
+class TestProtectedControllers(TestWSGIController):
+    def setUp(self):
+        super(TestProtectedControllers, self).setUp()
+        missile_launch_orders[:] = []
+
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(BasicTGController)
+
+    def test_protected_wsgi_app_with_trailing_slash(self):
+        r = self.app.get('/protected_mounted_app/', status=401)
+        self.failUnless('Hello from /protected_mounted_app/' not in r, r)
+
+    def test_protected_wsgi_app_without_trailing_slash(self):
+        r = self.app.get('/protected_mounted_app', status=401)
+        self.failUnless('Hello from /protected_mounted_app' not in r, r)
+
+    def test_protected_controller_without_trailing_slash(self):
+        r = self.app.get('/protected_controller', status=401)
+        self.failUnless('you should not see me' not in r, r)
+
+    def test_protected_controller_with_trailing_slash(self):
+        r = self.app.get('/protected_controller/', status=401)
+        self.failUnless('you should not see me' not in r, r)
+
+    def test_method_body_not_executed(self):
+        r = self.app.get('/protected_controller/launch_missiles', status=401)
+        self.failUnless(not missile_launch_orders, missile_launch_orders)
+        self.failUnless('armageddon' not in r, r)

@@ -21,6 +21,7 @@ from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from pylons import config, request, response
+from pylons.controllers.util import abort
 from pylons import tmpl_context as c
 from tg.util import partial
 from repoze.what.plugins.pylonshq import ActionProtector, ControllerProtector
@@ -550,6 +551,7 @@ class require(ActionProtector):
             # Status is a 403
             status = 'error'
         flash(reason, status=status)
+        abort(response.status_int)
 
 
 class allow_only(ControllerProtector):
