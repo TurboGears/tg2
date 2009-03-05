@@ -911,7 +911,7 @@ def setup_i18n():
                 # if there is no resource bundle for this language
                 # remove the language from the list
                 languages.remove(lang)
-                log.warn("Skip language %s: not supported", lang)
+                log.info("Skip language %s: not supported", lang)
 
         # if any language is left, set the best match as a default
         if languages:
