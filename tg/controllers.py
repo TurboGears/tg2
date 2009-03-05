@@ -18,6 +18,7 @@ import formencode
 import pylons
 from pylons import url as pylons_url, config
 from pylons.controllers import WSGIController
+from repoze.what.predicates import NotAuthorizedError
 import tw
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
@@ -455,6 +456,21 @@ class ObjectDispatchController(DecoratedController):
         """
         pass
 
+def _check_security(obj): 
+    """this function checks if a controller has a 'alow_only' attribute and if 
+    it is the case, test that this require predicate can be evaled to True. 
+    It will raise a Forbidden exception if the predicate is not valid. 
+    """ 
+    if hasattr(obj, "im_self"): 
+        klass_instance = obj.im_self 
+    else: 
+        klass_instance = obj 
+
+    if hasattr(klass_instance, "_check_security"): 
+        if not klass_instance._check_security(): 
+            if hasattr(klass_instance, "_failed_authorization"): 
+                return klass_instance._failed_authorization() 
+            raise HTTPUnauthorized().exception
 
 def _object_dispatch(obj, url_path):
     remainder = url_path
@@ -500,7 +516,7 @@ def _object_dispatch(obj, url_path):
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
-    
+    _check_security(obj)
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
     if inspect.isclass(obj) and not issubclass(obj, RestController):
@@ -593,7 +609,9 @@ def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
-
+        
+        _check_security(obj)
+        
         if _iscontroller(obj):
             return obj, parent, remainder
         
@@ -751,7 +769,23 @@ class TGController(ObjectDispatchController):
                 result.headers.pop('Content-Type', None)
             result._exception = True
         return result
-
+        
+    def _check_security(self):
+        if not hasattr(self, "allow_only") or  self.allow_only is None:
+            log.debug('No controller-wide authorization at %s',
+                      pylons.request.path)
+            return True
+   
+        environ = pylons.request.environ
+        try:
+            self.allow_only.check_authorization(environ)
+            log.debug('Succeeded controller-wide authorization at %s',
+                      pylons.request.path)
+            return True
+        except NotAuthorizedError, error:
+            log.debug('Failed controller authorization at %s',
+                      pylons.request.path)
+            return False
 
 class WSGIAppController(TGController):
     """
