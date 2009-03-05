@@ -453,8 +453,16 @@ class AppConfig(Bunch):
             app = StatusCodeRedirect(app, self.handle_status_codes + [500])
         return app
 
-    def add_auth_middleware(self, app):
-        """Configure authentication and authorization."""
+    def add_auth_middleware(self, app, skip_authentication):
+        """
+        Configure authentication and authorization.
+        
+        :param app: The TG2 application.
+        :param skip_authentication: Should authentication be skipped if
+            explicitly requested? (used by repoze.who-testutil)
+        :type skip_authentication: bool
+        
+        """
         from repoze.what.plugins.quickstart import setup_sql_auth
         from repoze.what.plugins.pylonshq import booleanize_predicates
         
@@ -470,7 +478,8 @@ class AppConfig(Bunch):
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
 
-        app = setup_sql_auth(app, **auth_args)
+        app = setup_sql_auth(app, skip_authentication=skip_authentication,
+                             **auth_args)
         return app
 
     def add_core_middleware(self, app):
@@ -586,7 +595,10 @@ class AppConfig(Bunch):
                 app = self.add_tosca_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
-                app = self.add_auth_middleware(app)
+                # Skipping authentication if explicitly requested. Used by 
+                # repoze.who-testutil:
+                skip_authentication = app_conf.get('skip_authentication')
+                app = self.add_auth_middleware(app, skip_authentication)
 
             if self.use_transaction_manager:
                 app = self.add_tm_middleware(app)
