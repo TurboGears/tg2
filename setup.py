@@ -37,7 +37,7 @@ setup(
         'WebFlash >= 0.1a7',
         'ToscaWidgets>=0.9',
         'WebError',
-        'repoze.what-pylons >= 1.0rc1',
+        'repoze.what-pylons >= 1.0rc3',
         'repoze.tm2',
         'TurboJson',
     ],
