@@ -15,6 +15,8 @@ test_requirements = ['coverage',
                     'zope.sqlalchemy',
                     'jinja',
                     'chameleon.genshi',
+                    'repoze.what >= 1.0.5',
+                    'repoze.who-testutil >= 1.0rc1',
                     ]
 
 setup(

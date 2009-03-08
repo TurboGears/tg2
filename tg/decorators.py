@@ -545,13 +545,13 @@ class require(ActionProtector):
     
     def default_denial_handler(self, reason):
         """Authorization denial handler for repoze.what-pylons protectors."""
-        if response.status.startswith('401'):
+        if response.status_int == 401:
             status = 'warning'
         else:
             # Status is a 403
             status = 'error'
         flash(reason, status=status)
-        abort(response.status_int, comment=reason)
+        abort(response.status_int, reason)
 
 
 class allow_only(ControllerProtector):
