@@ -41,12 +41,6 @@ session_dir = os.path.join(data_dir, 'session')
 # Just in case...
 rmtree(session_dir, ignore_errors=True)
 
-default_environ = {
-    'pylons.use_webob' : True,
-    'pylons.routes_dict': dict(action='index'),
-    'paste.config': dict(global_conf=dict(debug=True))
-}
-
 
 def make_app(controller_klass, environ={}):
     """Creates a ``TestApp`` instance."""
