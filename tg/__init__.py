@@ -69,4 +69,4 @@ __version__ = version
 __all__ = ['__version__',
     'allow_only', 'app_globals', 'expose', 'overide_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
-    'TurboGearsApplication', 'use_wsgi_app', 'validate']
+    'TurboGearsApplication', 'use_wsgi_app', 'validate', 'i18n']

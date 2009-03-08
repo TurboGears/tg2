@@ -25,6 +25,7 @@ from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
     HTTPClientError)
 from tg.render import render as tg_render
 from tg.decorators import expose, allow_only
+from tg.i18n import setup_i18n
 
 from webob import Request
 from webob.exc import HTTPUnauthorized
@@ -890,21 +891,6 @@ def use_wsgi_app(wsgi_app):
     return wsgi_app(pylons.request.environ, pylons.request.start_response)
 
 
-def set_formencode_translation(languages):
-    """Set request specific translation of FormEncode
-    """
-    from gettext import translation
-    from pylons.i18n import LanguageError
-    try:
-        t = translation('FormEncode', languages=languages,
-                localedir=formencode.api.get_localedir())
-
-    except IOError, ioe:
-        raise LanguageError('IOError: %s' % ioe)
-
-    pylons.c.formencode_translation = t
-
-
 # Idea stolen from Pylons
 def pylons_formencode_gettext(value):
     from pylons.i18n import ugettext as pylons_gettext
@@ -929,41 +915,6 @@ def pylons_formencode_gettext(value):
         trans = fetrans.ugettext(value)
 
     return trans
-
-
-def setup_i18n():
-    from pylons.i18n import add_fallback, set_lang, LanguageError
-    languages = pylons.request.accept_language.best_matches()
-
-    if languages:
-        # get a copy of the languages list because we will
-        # edit languages and cannot iter directly on it.
-        for lang in languages[:]:
-            try:
-                add_fallback(lang)
-            except LanguageError:
-                # if there is no resource bundle for this language
-                # remove the language from the list
-                languages.remove(lang)
-                log.info("Skip language %s: not supported", lang)
-
-        # if any language is left, set the best match as a default
-        if languages:
-            try:
-                set_lang(languages[0])
-            except LanguageError:
-                log.info("Language %s: not supported", languages[0])
-            else:
-                log.info("Set request language to %s", languages[0])
-
-            try:
-                set_formencode_translation(languages)
-            except LanguageError:
-                log.info("Language %s: not supported by FormEncode",
-                        languages[0])
-            else:
-                log.info("Set request language for FormEncode to %s",
-                        languages[0])
 
 
 __all__ = [
