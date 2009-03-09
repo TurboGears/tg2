@@ -24,6 +24,7 @@ from tg import response, expose, require, allow_only
 from tg.controllers import TGController, WSGIAppController, RestController
 import pylons
 from pylons import tmpl_context
+from pylons.controllers.util import abort
 from pylons.util import ContextObj, PylonsContext
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
 
@@ -136,6 +137,41 @@ class RootController(TGController):
         return 'you can commit'
 
 
+class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
+    """Mock TG2 protected controller using the .allow_only attribute"""
+    
+    allow_only = is_user('foobar')
+    
+    @expose()
+    def index(self):
+        return 'Welcome back, foobar!'
+    
+    @classmethod
+    def _failed_authorization(self, reason):
+        # Pay first!
+        abort(402)
+
+
+class ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler(TGController):
+    """
+    Mock TG2 protected controller using the @allow_only decorator, but also
+    using .failed_authorization()
+    
+    """
+    
+    @expose()
+    def index(self):
+        return 'Welcome back, foobar!'
+    
+    @classmethod
+    def _failed_authorization(self, reason):
+        # Pay first!
+        abort(402)
+
+ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler = allow_only(
+    is_user('foobar'))(ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler)
+
+
 #{ The tests themselves
 
 
@@ -239,6 +275,25 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
         self._check_flash(resp, 'The current user must have been authenticated')
 
 
+class TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
+    """
+    Test case for the @allow_only decorator in a controller using 
+    _failed_authorization() as its denial handler.
+    
+    """
+    
+    controller = ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler
+    
+    def test_authz_granted(self):
+        environ = {'REMOTE_USER': 'foobar'}
+        resp = self.app.get('/', extra_environ=environ, status=200)
+        self.assertEqual("Welcome back, foobar!", resp.body)
+    
+    def test_authz_denied(self):
+        resp = self.app.get('/', status=402)
+        assert "Welcome back" not in resp.body
+
+
 class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
     """Test case for the .allow_only attribute in a sub-controller"""
     
@@ -276,6 +331,25 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         resp = self.app.get('/hr/hire/gustavo', status=403)
         assert "was just hired" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
+
+
+class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
+    """
+    Test case for the .allow_only attribute in a controller using 
+    _failed_authorization() as its denial handler.
+    
+    """
+    
+    controller = ControllerWithAllowOnlyAttributeAndAuthzDenialHandler
+    
+    def test_authz_granted(self):
+        environ = {'REMOTE_USER': 'foobar'}
+        resp = self.app.get('/', extra_environ=environ, status=200)
+        self.assertEqual("Welcome back, foobar!", resp.body)
+    
+    def test_authz_denied(self):
+        resp = self.app.get('/', status=402)
+        assert "Welcome back" not in resp.body
 
 
 class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
