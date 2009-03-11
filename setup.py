@@ -11,8 +11,8 @@ except ImportError:
 
 test_requirements = ['coverage',
                     'nose',
-                    'TurboKid',
-                    'zope.sqlalchemy',
+                    'TurboKid >= 1.0.4',
+                    'zope.sqlalchemy >= 0.4',
                     'jinja',
                     'chameleon.genshi',
                     'repoze.what >= 1.0.5',
@@ -34,14 +34,14 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Pylons>=0.9.7rc6',
-        'Genshi',
-        'WebFlash >= 0.1a7',
-        'ToscaWidgets>=0.9',
-        'WebError',
+        'Pylons >= 0.9.7',
+        'Genshi >= 0.5.1',
+        'WebFlash >= 0.1a8',
+        'ToscaWidgets >= 0.9.4',
+        'WebError >= 0.10.1',
         'repoze.what-pylons >= 1.0rc3',
-        'repoze.tm2',
-        'TurboJson',
+        'repoze.tm2 >= 1.0a4',
+        'TurboJson >= 1.2.1',
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
