@@ -635,8 +635,17 @@ def _find_object(obj, remainder, notfound_handlers):
             raise HTTPNotFound().exception
 
         parent = obj
-        obj = getattr(obj, remainder[0], None)
-        remainder = remainder[1:]
+
+        try:
+            obj = getattr(obj, remainder[0].encode("utf-8"), None)
+            remainder = remainder[1:]
+            # this can happen when parts of the path
+            # contain non-ascii-characters.
+            # If that's the case, we throw HTTPNotFound
+            # and let a potential default-handler deal
+            # with the issue
+        except UnicodeEncodeError:
+            raise HTTPNotFound().exception
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):

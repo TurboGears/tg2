@@ -33,7 +33,8 @@ from tg.flash import flash
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
     """
-    def __init__(self):
+    def __init__(self, controller):
+        self.controller = controller
         self.engines = {}
         self.custom_engines = {}
         self.render_custom_format = None
@@ -46,7 +47,7 @@ class Decoration(object):
 
     def get_decoration(cls, func):
         if not hasattr(func, 'decoration'):
-            func.decoration = cls()
+            func.decoration = cls(func)
         return func.decoration
     get_decoration = classmethod(get_decoration)
 
@@ -106,7 +107,7 @@ class Decoration(object):
 
         Provides a convenience method to get the proper engine,
         content_type, template, and exclude_names for a particular
-        tg_format (which is pulled off of the request headers)."
+        tg_format (which is pulled off of the request headers).
         """
         #remove this after deprecation period for tg_format
         tg_format = request.headers.get('tg_format')
@@ -130,7 +131,11 @@ class Decoration(object):
 
         else:
             content_type = best_match(self.engines.keys(), accept_types)
-            engine, template, exclude_names = self.engines[content_type]
+            # check for overridden templates
+            try:
+                engine, template, exclude_names = request._override_mapping[self.controller][content_type]
+            except (AttributeError, KeyError):
+                engine, template, exclude_names = self.engines[content_type]
 
 
         if 'charset' not in content_type and (
@@ -337,7 +342,11 @@ def override_template(controller, template):
     text_engine = engines.get('text/html')
     template = template.split(':')
     template.extend(text_engine[2:])
-    engines['text/html'] = template
+    try:
+        override_mapping = request._override_mapping
+    except AttributeError:
+        override_mapping = request._override_mapping = {}
+    override_mapping[controller.im_func] = {"text/html" : template}
 
 
 class validate(object):

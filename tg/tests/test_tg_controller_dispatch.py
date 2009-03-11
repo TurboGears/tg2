@@ -3,7 +3,7 @@
 import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, \
                            WSGIAppController, RestController
-from tg.decorators import expose, validate
+from tg.decorators import expose, validate, override_template
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from formencode import validators
@@ -65,6 +65,15 @@ class SubController(object):
     @expose()
     def hello(self, name):
         return "Why HELLO! " + name
+
+
+    @expose("genshi:tg.tests.non_overridden")
+    def template_override(self, override=False):
+        if override:
+            override_template(self.template_override, "genshi:tg.tests.overridden")
+        return dict()
+
+
 
 class SubController3(object):
     @expose()
@@ -149,6 +158,8 @@ class SubController2(object):
         @expose()
         def non_resty_thing(self):
             return "non_resty"
+
+
 
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
@@ -335,3 +346,19 @@ class TestTGController(TestWSGIController):
     def test_before_controller(self):
         r = self.app.get('/sub/before')
         assert '__my_before__' in r, r
+
+    def test_template_override(self):
+        r =self.app.get('/sub/template_override')
+        assert "Not overridden" in r
+        r = self.app.get('/sub/template_override', params=dict(override=True))
+        assert "This is overridden." in r
+        # now invoke the controller again without override,
+        # it should yield the old result
+        r =self.app.get('/sub/template_override')
+        assert "Not overridden" in r
+
+    def test_unicode_default_dispatch(self):
+        r =self.app.get('/sub/äö')
+        assert "%C3%A4%C3%B6" in r
+
+
