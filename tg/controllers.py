@@ -18,6 +18,8 @@ import formencode
 import pylons
 from pylons import url as pylons_url, config
 from pylons.controllers import WSGIController
+from pylons.controllers.util import abort
+
 from repoze.what.predicates import NotAuthorizedError
 import tw
 
@@ -26,6 +28,7 @@ from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
 from tg.render import render as tg_render
 from tg.decorators import expose, allow_only
 from tg.i18n import setup_i18n
+from tg.flash import flash
 
 from webob import Request
 from webob.exc import HTTPUnauthorized
@@ -457,7 +460,7 @@ class ObjectDispatchController(DecoratedController):
         """
         pass
 
-def _check_security(obj): 
+def _check_controller_auth(obj): 
     """this function checks if a controller has a 'alow_only' attribute and if 
     it is the case, test that this require predicate can be evaled to True. 
     It will raise a Forbidden exception if the predicate is not valid. 
@@ -468,10 +471,7 @@ def _check_security(obj):
         klass_instance = obj 
 
     if hasattr(klass_instance, "_check_security"): 
-        if not klass_instance._check_security(): 
-            if hasattr(klass_instance, "_failed_authorization"): 
-                return klass_instance._failed_authorization() 
-            raise HTTPUnauthorized().exception
+        klass_instance._check_security()
 
 def _object_dispatch(obj, url_path):
     remainder = url_path
@@ -503,9 +503,12 @@ def _object_dispatch(obj, url_path):
             log.debug("a 401 error occured for obj: %s" % obj)
             raise
 
-        except HTTPException:
+        except HTTPException, e:
+            if e.status_int != 404:
+                raise e.exception
+            
             if not notfound_handlers:
-                raise HTTPNotFound().exception
+                raise e.exception
 
             name, obj, parent, remainder = notfound_handlers.pop()
             if name == 'default':
@@ -517,7 +520,7 @@ def _object_dispatch(obj, url_path):
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
-    _check_security(obj)
+    _check_controller_auth(obj)
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
     if inspect.isclass(obj) and not issubclass(obj, RestController):
@@ -611,7 +614,7 @@ def _find_object(obj, remainder, notfound_handlers):
         if obj is None:
             raise HTTPNotFound().exception
         
-        _check_security(obj)
+        _check_controller_auth(obj)
         
         if _iscontroller(obj):
             return obj, parent, remainder
@@ -781,21 +784,32 @@ class TGController(ObjectDispatchController):
         return result
         
     def _check_security(self):
-        if not hasattr(self, "allow_only") or  self.allow_only is None:
+        if not hasattr(self, "allow_only") or self.allow_only is None:
             log.debug('No controller-wide authorization at %s',
                       pylons.request.path)
             return True
-   
-        environ = pylons.request.environ
         try:
-            self.allow_only.check_authorization(environ)
-            log.debug('Succeeded controller-wide authorization at %s',
-                      pylons.request.path)
-            return True
-        except NotAuthorizedError, error:
-            log.debug('Failed controller authorization at %s',
-                      pylons.request.path)
-            return False
+            predicate = self.allow_only
+            predicate.check_authorization(pylons.request.environ)
+        except NotAuthorizedError, e:
+            reason = unicode(e)
+            if hasattr(self, '_failed_authorization'):
+                # Should shortcircut the rest, but if not we will still
+                # deny authorization
+                self._failed_authorization(reason)
+            if pylons.request.environ.get('REMOTE_USER'):
+                # The user is authenticated but not allowed.
+                code = 403
+                status = 'error'
+            else:
+                # The user has not been not authenticated.
+                code = 401
+                status = 'warning'
+                reason = "The current user must have been authenticated"
+            pylons.response.status = code
+            flash(reason, status=status)
+            abort(code, comment=reason)
+            
 
 class WSGIAppController(TGController):
     """

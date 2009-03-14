@@ -155,7 +155,7 @@ class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
 class ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler(TGController):
     """
     Mock TG2 protected controller using the @allow_only decorator, but also
-    using .failed_authorization()
+    using ._failed_authorization()
     
     """
     
@@ -311,7 +311,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         self._check_flash(resp, 'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
-        resp = self.app.get('/hr/', status=403)
+        resp = self.app.get('/hr/', extra_environ = environ, status=403)
         assert "you can manage Human Resources" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
     
@@ -328,7 +328,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         self._check_flash(resp, 'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
-        resp = self.app.get('/hr/hire/gustavo', status=403)
+        resp = self.app.get('/hr/hire/gustavo', extra_environ = environ, status=403)
         assert "was just hired" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
@@ -387,6 +387,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
+        print resp
         self.assertEqual("you can manage Human Resources", resp.body)
     
     def test_authz_denied_without_require(self):
@@ -396,7 +397,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         self._check_flash(resp, 'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
-        resp = self.app.get('/', status=403)
+        resp = self.app.get('/', extra_environ = environ, status=403)
         assert "you can manage Human Resources" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
     
@@ -410,10 +411,11 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
+        print resp.body
         self._check_flash(resp, 'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
-        resp = self.app.get('/hire/gustavo', status=403)
+        resp = self.app.get('/hire/gustavo', extra_environ = environ, status=403)
         assert "was just hired" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
@@ -452,7 +454,7 @@ class TestProtectedWSGIApplication(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/mounted_app/da-path', status=401)
         assert "Hello from /mounted_app/" not in resp.body
-        self._check_flash(resp, r'The current user must be \"gustavo\"')
+        self._check_flash(resp, r'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'non-gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
