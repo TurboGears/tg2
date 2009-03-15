@@ -16,11 +16,11 @@ import inspect
 
 import formencode
 import pylons
-from pylons import url as pylons_url, config
+from pylons import url as pylons_url, config, request
 from pylons.controllers import WSGIController
 from pylons.controllers.util import abort
 
-from repoze.what.predicates import NotAuthorizedError
+from repoze.what.predicates import NotAuthorizedError, not_anonymous
 import tw
 
 from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
@@ -797,7 +797,7 @@ class TGController(ObjectDispatchController):
                 # Should shortcircut the rest, but if not we will still
                 # deny authorization
                 self._failed_authorization(reason)
-            if pylons.request.environ.get('REMOTE_USER'):
+            if not_anonymous().is_met(request.environ):
                 # The user is authenticated but not allowed.
                 code = 403
                 status = 'error'
