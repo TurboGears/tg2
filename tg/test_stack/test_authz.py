@@ -34,7 +34,7 @@ from repoze.what.predicates import Not, is_user, not_anonymous
 
 
 #{ AUT's setup
-
+NOT_AUTHENTICATED = "The current user must have been authenticated"
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
@@ -241,7 +241,7 @@ class TestRequire(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/cp/add_user/foo', status=401)
         assert "was just registered" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
@@ -261,7 +261,7 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
     def test_authz_denied_without_require(self):
         resp = self.app.get('/cp/', status=401)
         assert "you are in the panel" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
     
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
@@ -272,7 +272,7 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
     def test_authz_denied_with_require(self):
         resp = self.app.get('/cp/add_user/foo', status=401)
         assert "was just registered" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
 
 
 class TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
@@ -308,7 +308,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hr/', status=401)
         assert "you can manage Human Resources" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/', extra_environ = environ, status=403)
@@ -325,7 +325,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hr/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ = environ, status=403)
@@ -365,7 +365,7 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     def test_authz_denied_without_require(self):
         resp = self.app.get('/', status=401)
         assert "you are in the panel" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
     
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
@@ -376,7 +376,7 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     def test_authz_denied_with_require(self):
         resp = self.app.get('/add_user/foo', status=401)
         assert "was just registered" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
 
 
 class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
@@ -394,7 +394,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/', status=401)
         assert "you can manage Human Resources" not in resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ = environ, status=403)
@@ -412,7 +412,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         resp = self.app.get('/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
         print resp.body
-        self._check_flash(resp, 'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hire/gustavo', extra_environ = environ, status=403)
@@ -454,7 +454,7 @@ class TestProtectedWSGIApplication(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/mounted_app/da-path', status=401)
         assert "Hello from /mounted_app/" not in resp.body
-        self._check_flash(resp, r'The current user must have been authenticated')
+        self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'non-gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
