@@ -2,7 +2,6 @@
 from pylons import config
 import os, sys
 import pkg_resources
-import urlparse
 from pkg_resources import resource_filename
 
 def get_project_meta(name):
@@ -64,7 +63,7 @@ def get_partial_dict(prefix, dictionary):
 
     match = prefix + "."
 
-    new_dict = Bunch([(key.lstrip(match) ,dictionary[key])
+    new_dict = Bunch([(key.lstrip(match), dictionary[key])
                        for key in dictionary.iterkeys()
                        if key.startswith(match)])
     if new_dict:
@@ -145,7 +144,7 @@ class DottedFileNameFinder(object):
         try:
             return self.__cache[template_name]
 
-        except KeyError, e:
+        except KeyError:
             # the template name was not found in our cache
             divider = template_name.rfind('.')
             if divider >= 0:

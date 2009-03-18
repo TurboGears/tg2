@@ -10,7 +10,7 @@ from paste.deploy.converters import asbool
 
 try:
     import threading
-except:
+except ImportError:
     import dummy_threading as threading
 
 
