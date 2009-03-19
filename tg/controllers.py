@@ -512,21 +512,19 @@ def _object_dispatch(obj, url_path):
             name, obj, parent, remainder = notfound_handlers.pop()
             if name == 'default':
                 return _find_restful_dispatch(obj, parent, remainder)
-
             else:
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
+    
     _check_controller_auth(obj)
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
-    if inspect.isclass(obj) and not issubclass(obj, RestController):
-        return obj, remainder
 
     request_method = method = pylons.request.method.lower()
-
+    
     #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
@@ -591,9 +589,11 @@ def _find_restful_dispatch(obj, parent, remainder):
     if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and hasattr(obj.post_delete, 'decoration')and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
+
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
+            
             if inspect.isclass(obj):
                 obj = obj()
             #attach the parent class so the inner class has access to it's members
