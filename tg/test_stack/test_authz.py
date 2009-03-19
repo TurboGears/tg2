@@ -51,19 +51,19 @@ def make_app(controller_klass, environ={}):
     app = RegistryManager(app)
     app = SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
-    
+
     # We're not going to use groups or permissions-related predicates here:
     groups_adapters = None
     permissions_adapters = None
-    
+
     # Setting repoze.who up:
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
     identifiers = [('cookie', cookie)]
-    
-    app = setup_auth(app, groups_adapters, permissions_adapters, 
+
+    app = setup_auth(app, groups_adapters, permissions_adapters,
                      identifiers=identifiers, authenticators=[],
                      challengers=[], skip_authentication=True)
-    
+
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
@@ -80,9 +80,9 @@ def wsgi_app(environ, start_response):
 
 class DaRestController(RestController):
     """Mock REST controller"""
-    
+
     allow_only = is_user('gustavo')
-    
+
     @expose()
     def new(self):
         return "new here"
@@ -90,13 +90,13 @@ class DaRestController(RestController):
 
 class HRManagementController(TGController):
     """Mock TG2 protected controller using the .allow_only attribute"""
-    
+
     allow_only = is_user('hiring-manager')
-    
+
     @expose()
     def index(self):
         return 'you can manage Human Resources'
-    
+
     @expose()
     def hire(self, person_name):
         return "%s was just hired" % person_name
@@ -104,13 +104,13 @@ class HRManagementController(TGController):
 
 class ControlPanel(TGController):
     """Mock TG2 protected controller using @allow_only directly."""
-    
+
     hr = HRManagementController()
-    
+
     @expose()
     def index(self):
         return 'you are in the panel'
-    
+
     @expose()
     @require(is_user('admin'))
     def add_user(self, user_name):
@@ -120,17 +120,17 @@ ControlPanel = allow_only(not_anonymous())(ControlPanel)
 
 
 class RootController(TGController):
-    
+
     cp = ControlPanel()
-    
+
     rest = DaRestController()
-    
+
     mounted_app = WSGIAppController(wsgi_app, allow_only=is_user('gustavo'))
-    
+
     @expose()
     def index(self):
         return "you're in the main page"
-    
+
     @expose()
     @require(is_user('developer'))
     def commit(self):
@@ -139,13 +139,13 @@ class RootController(TGController):
 
 class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
     """Mock TG2 protected controller using the .allow_only attribute"""
-    
+
     allow_only = is_user('foobar')
-    
+
     @expose()
     def index(self):
         return 'Welcome back, foobar!'
-    
+
     @classmethod
     def _failed_authorization(self, reason):
         # Pay first!
@@ -156,13 +156,13 @@ class ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler(TGController):
     """
     Mock TG2 protected controller using the @allow_only decorator, but also
     using ._failed_authorization()
-    
+
     """
-    
+
     @expose()
     def index(self):
         return 'Welcome back, foobar!'
-    
+
     @classmethod
     def _failed_authorization(self, reason):
         # Pay first!
@@ -177,9 +177,9 @@ ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler = allow_only(
 
 class BaseIntegrationTests(TestCase):
     """Base test case for the integration tests"""
-    
+
     controller = RootController
-    
+
     def setUp(self):
         # Creating the session dir:
         if not os.path.exists(session_dir):
@@ -199,11 +199,11 @@ class BaseIntegrationTests(TestCase):
         tmpl_context._pop_object()
         # Removing the session dir:
         rmtree(session_dir, ignore_errors=True)
-    
+
     def _check_flash(self, response, *expected_messages):
         """
         Check that ``expected_messages`` are defined in the WebFlash cookie.
-        
+
         """
         assert 'webflash' in response.cookies_set, "Such no WebFlash cookie"
         flash = unquote(response.cookies_set['webflash'])
@@ -214,12 +214,12 @@ class BaseIntegrationTests(TestCase):
 
 class TestRequire(BaseIntegrationTests):
     """Test case for the @require decorator"""
-    
+
     def test_authz_granted_in_root_controller(self):
         environ = {'REMOTE_USER': 'developer'}
         resp = self.app.get('/commit', extra_environ=environ, status=200)
         self.assertEqual("you can commit", resp.body)
-    
+
     def test_authz_denied_in_root_controller(self):
         # As an anonymous user:
         resp = self.app.get('/commit', status=401)
@@ -230,13 +230,13 @@ class TestRequire(BaseIntegrationTests):
         resp = self.app.get('/commit', extra_environ=environ, status=403)
         assert "you can commit" not in resp.body
         self._check_flash(resp, r'The current user must be \"developer\"')
-    
+
     def test_authz_granted_in_sub_controller(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
         self.assertEqual("foo was just registered", resp.body)
-    
+
     def test_authz_denied_in_sub_controller(self):
         # As an anonymous user:
         resp = self.app.get('/cp/add_user/foo', status=401)
@@ -252,23 +252,23 @@ class TestRequire(BaseIntegrationTests):
 
 class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
     """Test case for the @allow_only decorator in a sub-controller"""
-    
+
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/cp/', extra_environ=environ, status=200)
         self.assertEqual("you are in the panel", resp.body)
-    
+
     def test_authz_denied_without_require(self):
         resp = self.app.get('/cp/', status=401)
         assert "you are in the panel" not in resp.body
         self._check_flash(resp, NOT_AUTHENTICATED)
-    
+
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
         self.assertEqual("foo was just registered", resp.body)
-    
+
     def test_authz_denied_with_require(self):
         resp = self.app.get('/cp/add_user/foo', status=401)
         assert "was just registered" not in resp.body
@@ -277,18 +277,18 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
 
 class TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     """
-    Test case for the @allow_only decorator in a controller using 
+    Test case for the @allow_only decorator in a controller using
     _failed_authorization() as its denial handler.
-    
+
     """
-    
+
     controller = ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler
-    
+
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/', extra_environ=environ, status=200)
         self.assertEqual("Welcome back, foobar!", resp.body)
-    
+
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
         assert "Welcome back" not in resp.body
@@ -296,36 +296,36 @@ class TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
 
 class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
     """Test case for the .allow_only attribute in a sub-controller"""
-    
+
     controller = ControlPanel
-    
+
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/', extra_environ=environ, status=200)
         self.assertEqual("you can manage Human Resources", resp.body)
-    
+
     def test_authz_denied_without_require(self):
         # As an anonymous user:
         resp = self.app.get('/hr/', status=401)
         assert "you can manage Human Resources" not in resp.body
-        self._check_flash(resp, NOT_AUTHENTICATED)
+        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/', extra_environ = environ, status=403)
         assert "you can manage Human Resources" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
-    
+
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ=environ,
                             status=200)
         self.assertEqual("gustavo was just hired", resp.body)
-    
+
     def test_authz_denied_with_require(self):
         # As an anonymous user:
         resp = self.app.get('/hr/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
-        self._check_flash(resp, NOT_AUTHENTICATED)
+        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ = environ, status=403)
@@ -335,18 +335,18 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
 
 class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     """
-    Test case for the .allow_only attribute in a controller using 
+    Test case for the .allow_only attribute in a controller using
     _failed_authorization() as its denial handler.
-    
+
     """
-    
+
     controller = ControllerWithAllowOnlyAttributeAndAuthzDenialHandler
-    
+
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/', extra_environ=environ, status=200)
         self.assertEqual("Welcome back, foobar!", resp.body)
-    
+
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
         assert "Welcome back" not in resp.body
@@ -354,25 +354,25 @@ class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
 
 class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     """Test case for application-wide authz with the @allow_only decorator"""
-    
+
     controller = ControlPanel
-    
+
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ=environ, status=200)
         self.assertEqual("you are in the panel", resp.body)
-    
+
     def test_authz_denied_without_require(self):
         resp = self.app.get('/', status=401)
         assert "you are in the panel" not in resp.body
         self._check_flash(resp, NOT_AUTHENTICATED)
-    
+
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/add_user/foo', extra_environ=environ,
                             status=200)
         self.assertEqual("foo was just registered", resp.body)
-    
+
     def test_authz_denied_with_require(self):
         resp = self.app.get('/add_user/foo', status=401)
         assert "was just registered" not in resp.body
@@ -381,38 +381,38 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
 
 class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     """Test case for application-wide authz with the .allow_only attribute"""
-    
+
     controller = HRManagementController
-    
+
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
         print resp
         self.assertEqual("you can manage Human Resources", resp.body)
-    
+
     def test_authz_denied_without_require(self):
         # As an anonymous user:
         resp = self.app.get('/', status=401)
         assert "you can manage Human Resources" not in resp.body
-        self._check_flash(resp, NOT_AUTHENTICATED)
+        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ = environ, status=403)
         assert "you can manage Human Resources" not in resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
-    
+
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hire/gustavo', extra_environ=environ,
                             status=200)
         self.assertEqual("gustavo was just hired", resp.body)
-    
+
     def test_authz_denied_with_require(self):
         # As an anonymous user:
         resp = self.app.get('/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
         print resp.body
-        self._check_flash(resp, NOT_AUTHENTICATED)
+        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hire/gustavo', extra_environ = environ, status=403)
@@ -422,13 +422,13 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
 
 class TestProtectedRESTContoller(BaseIntegrationTests):
     """Test case for protected REST controllers"""
-    
+
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/rest/new', extra_environ=environ,
                             status=200)
         self.assertEqual("new here", resp.body)
-    
+
     def test_authz_denied(self):
         # As an anonymous user:
         resp = self.app.get('/rest/new', status=401)
@@ -443,24 +443,23 @@ class TestProtectedRESTContoller(BaseIntegrationTests):
 
 class TestProtectedWSGIApplication(BaseIntegrationTests):
     """Test case for protected WSGI applications mounted on the controller"""
-    
+
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
                             status=200)
         self.assertEqual("Hello from /mounted_app/da-path", resp.body)
-    
+
     def test_authz_denied(self):
         # As an anonymous user:
         resp = self.app.get('/mounted_app/da-path', status=401)
         assert "Hello from /mounted_app/" not in resp.body
-        self._check_flash(resp, NOT_AUTHENTICATED)
+        self._check_flash(resp, r'The current user must be \"gustavo\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'non-gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
                             status=403)
         assert "Hello from /mounted_app/" not in resp.body
         self._check_flash(resp, r'The current user must be \"gustavo\"')
-
 
 #}

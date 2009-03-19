@@ -67,7 +67,7 @@ class DecoratedController(WSGIController):
         c) before the rendering takes place, and
         d) after the rendering has happened.
     """
-    
+
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'allow_only') and self.allow_only is not None:
             # Let's turn Controller.allow_only into something useful for
@@ -82,20 +82,20 @@ class DecoratedController(WSGIController):
         before the controller code is executed.  This is particularly useful
         for defining a Controller-wide specification (all methods) for things like:
         setting up variables/objects in the template context,
-        restricting access, or other tasks which should be executed 
+        restricting access, or other tasks which should be executed
         before the controller method is called.
         """
-        
+
     def __after__(self, *args, **kw):
-        """Override this method to define what you would like to run after the 
-        template has been rendered. This method will 
+        """Override this method to define what you would like to run after the
+        template has been rendered. This method will
         always be run after your method, even if it raises an Exception or redirects.
-        
+
         An example use-case would be a runtime-specific template change,
         you where would want to change the template back to the originally
         decorated template after you have temporarily changed it.
         """
-    
+
     def _perform_call(self, controller, params, remainder=None):
         """
         _perform_call is called by _inspect_call in Pylons' WSGIController.
@@ -131,7 +131,7 @@ class DecoratedController(WSGIController):
             for ignore in config.get('ignore_parameters', []):
                 if params.get(ignore):
                     del params[ignore]
-                    
+
             # Validate user input
             params = self._perform_validate(controller, params)
 
@@ -173,7 +173,7 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
-        
+
         # this is here because the params were not getting passed in on controllers that
         # were mapped with routes.  This is a fix, but it's in the wrong place.
         # we need to add better tests to ensure decorated controllers with routings work
@@ -294,7 +294,7 @@ class DecoratedController(WSGIController):
 
         #if there is an identity, push it to the pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
-        
+
         #set up the tw renderer
         if engine_name in 'genshi' or 'mako':
             tw.framework.default_view = engine_name
@@ -370,7 +370,7 @@ class DecoratedController(WSGIController):
             output = error_handler(*remainder, **dict(params))
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
-        
+
         return error_handler, output
 
     def _initialize_validation_context(self):
@@ -444,7 +444,7 @@ class ObjectDispatchController(DecoratedController):
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
         func_name = func.__name__
-        if func_name == '__before__' or func_name == '__after__': 
+        if func_name == '__before__' or func_name == '__after__':
             if hasattr(controller.im_class, '__before__'):
                 return controller.im_self.__before__(*args)
             if hasattr(controller.im_class, '__after__'):
@@ -460,17 +460,17 @@ class ObjectDispatchController(DecoratedController):
         """
         pass
 
-def _check_controller_auth(obj): 
-    """this function checks if a controller has a 'alow_only' attribute and if 
-    it is the case, test that this require predicate can be evaled to True. 
-    It will raise a Forbidden exception if the predicate is not valid. 
-    """ 
-    if hasattr(obj, "im_self"): 
-        klass_instance = obj.im_self 
-    else: 
-        klass_instance = obj 
+def _check_controller_auth(obj):
+    """this function checks if a controller has a 'alow_only' attribute and if
+    it is the case, test that this require predicate can be evaled to True.
+    It will raise a Forbidden exception if the predicate is not valid.
+    """
+    if hasattr(obj, "im_self"):
+        klass_instance = obj.im_self
+    else:
+        klass_instance = obj
 
-    if hasattr(klass_instance, "_check_security"): 
+    if hasattr(klass_instance, "_check_security"):
         klass_instance._check_security()
 
 def _object_dispatch(obj, url_path):
@@ -479,7 +479,7 @@ def _object_dispatch(obj, url_path):
     pylons.request.response_type = None
     pylons.request.response_ext = None
     # if the last item in the remainder has an extention
-    # remove the extension, and add a response content type to the 
+    # remove the extension, and add a response content type to the
     # request parameters
     if remainder and '.' in remainder[-1]:
         last_remainder = remainder[-1]
@@ -506,7 +506,7 @@ def _object_dispatch(obj, url_path):
         except HTTPException, e:
             if e.status_int != 404:
                 raise e.exception
-            
+
             if not notfound_handlers:
                 raise e.exception
 
@@ -527,7 +527,7 @@ def _find_restful_dispatch(obj, parent, remainder):
         return obj, remainder
 
     request_method = method = pylons.request.method.lower()
-    
+
     #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
@@ -550,7 +550,7 @@ def _find_restful_dispatch(obj, parent, remainder):
             method = 'delete'
             if remainder_len <= 2:
                 remainder = remainder[:-1]
-        
+
         #handles put and post for parental relations
         elif remainder_len >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
             func = getattr(obj, 'get_one')
@@ -568,7 +568,7 @@ def _find_restful_dispatch(obj, parent, remainder):
             if inspect.isclass(obj):
                 obj = obj()
             return _find_restful_dispatch(*_find_object(getattr(obj, remainder[0]), remainder[1:], []))
-        
+
     #support for get_all and get_one methods
     if not remainder and method == 'get' and hasattr(obj, 'get_all') and hasattr(obj.get_all, 'decoration') and obj.get_all.decoration.exposed:
         method = 'get_all'
@@ -613,12 +613,12 @@ def _find_object(obj, remainder, notfound_handlers):
     while True:
         if obj is None:
             raise HTTPNotFound().exception
-        
+
         _check_controller_auth(obj)
-        
+
         if _iscontroller(obj):
             return obj, parent, remainder
-        
+
         if not remainder or (len(remainder) == 1 and remainder[0] == ''):
             if isinstance(remainder, tuple):
                 remainder = list(remainder)
@@ -659,11 +659,11 @@ def _iscontroller(obj):
 
 class RestController(DecoratedController):
     """A Decorated Controller that dispatches in a RESTful Manner.
-    
+
     This controller was designed to follow Representational State Transfer protocol, also known as REST.
     The goal of this controller method is to provide the developer a way to map
     RESTful URLS to controller methods directly, while still allowing Normal Object Dispatch to occur.
-    
+
     Here is a brief rundown of the methods which are called on dispatch along with an example URL.
 
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
@@ -703,18 +703,18 @@ class RestController(DecoratedController):
     |                 |                                                              +--------------------------------------------+
     |                 |                                                              | POST /movies/delete                        |
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
-    
+
     You may note the ?_method on some of the URLs.  This is basically a hack because exiting browsers
     do not support the PUT and DELETE methods.  Just note that if you decide to use a this resource with a web browser,
     you will likely have to add a _method as a hidden field in your forms for these items.  Also note that RestController differs
-    from TGController in that it offers no index, default, or lookup.  It is intended primarily for  resource management. 
+    from TGController in that it offers no index, default, or lookup.  It is intended primarily for  resource management.
 
     :References:
-    
+
       `Controller <../main/Controllers.html>`_  A basic overview on how to write controller methods.
-      
+
       `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
-    
+
     """
     class decoration(object):
         """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
@@ -730,9 +730,9 @@ class TGController(ObjectDispatchController):
     object dispatch tree, but it MUST be used in the Root controller
     and any controller which you intend to do object dispatch from
     using Routes.
-    
+
     This controller has a few reserved method names which provide special functionality.
-    
+
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
     | Method          | Description                                                  | Example URL(s)                             |
     +=================+==============================================================+============================================+
@@ -744,9 +744,9 @@ class TGController(ObjectDispatchController):
     |                 | Controller instance for further dispatch.                    |                                            |
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
 
-    
+
     :References:
-    
+
       `Controller <../main/Controllers.html>`_  A basic overview on how to write controller methods.
 
     """
@@ -758,7 +758,7 @@ class TGController(ObjectDispatchController):
         if isinstance(args, dict) and 'url' in args:
             routingArgs = args['url']
 
-        try: 
+        try:
             controller, remainder, params = self._get_routing_info(routingArgs)
             # this has to be done before decorated controller is called because
             # otherwise the controller method will get sent, and the function name will
@@ -766,7 +766,7 @@ class TGController(ObjectDispatchController):
             func_name = func.__name__
             if not args:
                 args = []
-            if func_name == '__before__' or func_name == '__after__': 
+            if func_name == '__before__' or func_name == '__after__':
                 if hasattr(controller.im_class, '__before__'):
                     return controller.im_self.__before__(*args)
                 if hasattr(controller.im_class, '__after__'):
@@ -782,7 +782,7 @@ class TGController(ObjectDispatchController):
                 result.headers.pop('Content-Type', None)
             result._exception = True
         return result
-        
+
     def _check_security(self):
         if not hasattr(self, "allow_only") or self.allow_only is None:
             log.debug('No controller-wide authorization at %s',
@@ -805,11 +805,10 @@ class TGController(ObjectDispatchController):
                 # The user has not been not authenticated.
                 code = 401
                 status = 'warning'
-                reason = "The current user must have been authenticated"
             pylons.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-            
+
 
 class WSGIAppController(TGController):
     """
@@ -863,16 +862,16 @@ def url(*args, **kwargs):
 
     For backwards compatibility you can also pass in a params dictionary
     which is turned into url params, or you can send in a a list of
-    strings as the first argument, which will be joined with /'s to 
-    make a url string. 
+    strings as the first argument, which will be joined with /'s to
+    make a url string.
 
     In general tg.url is just a proxy for pylons.url which is in turn
     a proxy for routes url_for function.  This means that if the first
-    argument is not a basestring but a method that has been routed to, 
+    argument is not a basestring but a method that has been routed to,
     the standard routes url_for reverse lookup system will be used.
     """
     args = list(args)
-    if isinstance(args[0], list): 
+    if isinstance(args[0], list):
         args[0] = u'/'.join(args[0])
     if args and isinstance(args[0], basestring):
         #First we handle the possibility that the user passed in params
@@ -901,7 +900,7 @@ def redirect(*args, **kwargs):
     http://example.com or /myfile.html) or relative. Relative URLs are
     automatically converted to absolute URLs. Parameters may be specified,
     which are appended to the URL. This causes an external redirect via the
-    browser; if the request is POST, the browser will issue GET for the 
+    browser; if the request is POST, the browser will issue GET for the
     second request.
     """
 
