@@ -444,12 +444,11 @@ class ObjectDispatchController(DecoratedController):
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
         func_name = func.__name__
-        if func_name == '__before__' or func_name == '__after__':
-            if hasattr(controller.im_class, '__before__'):
+        if func_name == '__before__' or func_name == '__after__': 
+            if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
                 return controller.im_self.__before__(*args)
-            if hasattr(controller.im_class, '__after__'):
-                return controller.im_self.__before__(*args)
-            return
+            if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
+                return controller.im_self.__after__(*args)
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
