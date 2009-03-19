@@ -121,8 +121,7 @@ class DecoratedController(WSGIController):
         self._initialize_validation_context()
         pylons.request.start_response = self.start_response
 
-        if remainder is None:
-            remainder = []
+        remainder = remainder or []
         try:
             pylons.request.headers['tg_format'] = params.get('tg_format', None)
 
@@ -239,8 +238,8 @@ class DecoratedController(WSGIController):
             new_params = validation.validators.validate(params, state)
 
         # Theoretically this should not happen...
-        if new_params is None:
-            return params
+        #if new_params is None:
+        #    return params
 
         return new_params
 
@@ -278,6 +277,7 @@ class DecoratedController(WSGIController):
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
 
+        #what causes this condition?  there are no tests for it.
         if template_name is None:
             return response
 

@@ -42,6 +42,11 @@ class SubController(object):
     
     before = BeforeController()
     
+
+    @expose('genshi')
+    def unknown_template(self):
+        return "sub unknown template"
+    
     @expose()
     def foo(self,):
         return 'sub_foo'
@@ -195,11 +200,34 @@ class SubController2(object):
         def non_resty_thing(self):
             return "non_resty"
 
-
+class LookupHelper:
+    
+    def __init__(self, var):
+        self.var = var
+    
+    @expose()
+    def index(self):
+        return self.var
+        
+class LoookupController(TGController):
+    
+    @expose()
+    def lookup(self, a, *args):
+        return LookupHelper(a), args
+    
+        
+class RemoteErrorHandler(TGController):
+    @expose()
+    def errors_here(self, *args, **kw):
+        return "REMOTE ERROR HANDLER"
 
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
-
+    
+    error_controller = RemoteErrorHandler()
+    
+    lookup = LoookupController()
+    
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -264,6 +292,24 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(validators={"a":validators.Int()})
     def validated_and_unvalidated(self, a, b):
+        assert isinstance(a, int)
+        assert isinstance(b, unicode)
+        return dict(int=a,str=b)
+
+    @expose()
+    def error_handler(self, **kw):
+        return 'VALIDATION ERROR HANDLER'
+    
+    @expose('json')
+    @validate(validators={"a":validators.Int()}, error_handler=error_handler)
+    def validated_with_error_handler(self, a, b):
+        assert isinstance(a, int)
+        assert isinstance(b, unicode)
+        return dict(int=a,str=b)
+
+    @expose('json')
+    @validate(validators={"a":validators.Int()}, error_handler=error_controller.errors_here)
+    def validated_with_remote_error_handler(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
         return dict(int=a,str=b)
@@ -400,8 +446,29 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
+        
+        
+    def test_lookup(self):
+        r = self.app.get('/lookup/EYE')
+        msg = 'EYE'
+        assert msg in r, r
 
 
+    def test_validated_with_error_handler(self):
+        r = self.app.get('/validated_with_error_handler?a=asdf')
+        msg = 'VALIDATION ERROR HANDLER'
+        assert msg in r, r
+        
+    def test_validated_with_remote_error_handler(self):
+        r = self.app.get('/validated_with_remote_error_handler?a=asdf')
+        msg = 'REMOTE ERROR HANDLER'
+        assert msg in r, r
+        
+    def test_unknown_template(self):
+        r = self.app.get('/sub/unknown_template/')
+        msg = 'sub unknown template'
+        assert msg in r, r
+    
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
         self.failUnless('Hello from /mounted_app' in r, r)
