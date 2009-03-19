@@ -449,6 +449,7 @@ class ObjectDispatchController(DecoratedController):
                 return controller.im_self.__before__(*args)
             if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
                 return controller.im_self.__after__(*args)
+            return
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
