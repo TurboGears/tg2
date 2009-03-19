@@ -26,11 +26,12 @@ def wsgi_app(environ, start_response):
         resp = Response("Hello from %s/%s"%(req.script_name, req.path_info))
     return resp(environ, start_response)
 
-
 class BeforeController(TGController):
     
     def __before__(self, *args, **kw):
         pylons.c.var = '__my_before__'
+    def __after__(self, *args, **kw):
+        global_craziness = '__my_after__'
         
     @expose()
     def index(self):
@@ -221,6 +222,8 @@ class RemoteErrorHandler(TGController):
     def errors_here(self, *args, **kw):
         return "REMOTE ERROR HANDLER"
 
+class NotFoundController(TGController):pass
+    
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
     
@@ -441,6 +444,23 @@ class TestRestController(TestWSGIController):
     def test_subrest_post_not_found(self):
         r = self.app.delete('/sub2/rest/rest3')
         assert 'Main Default Page called' in r, r
+
+class TestNotFoundController(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(NotFoundController)
+        
+    def test_not_found(self):
+        r = self.app.get('/something', status=404)
+        assert '404 Not Found' in r, r
+
+    def test_not_found_blank(self):
+        r = self.app.get('/', status=404)
+        assert '404 Not Found' in r, r
+
+    def test_not_found_unicode(self):
+        r = self.app.get('/права', status=404)
+        assert '404 Not Found' in r, r
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):

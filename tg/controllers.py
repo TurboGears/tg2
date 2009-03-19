@@ -449,6 +449,7 @@ class ObjectDispatchController(DecoratedController):
                 return controller.im_self.__before__(*args)
             if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
                 return controller.im_self.__after__(*args)
+            return
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
@@ -633,6 +634,7 @@ def _find_object(obj, remainder, notfound_handlers):
         if remainder and not(len(remainder) == 1 and (remainder[0]=='')) and _iscontroller(lookup):
             notfound_handlers.append(('lookup', lookup, obj, remainder))
 
+        #what causes this condition?
         if not remainder:
             raise HTTPNotFound().exception
 
@@ -765,11 +767,11 @@ class TGController(ObjectDispatchController):
             func_name = func.__name__
             if not args:
                 args = []
-            if func_name == '__before__' or func_name == '__after__':
-                if hasattr(controller.im_class, '__before__'):
+            if func_name == '__before__' or func_name == '__after__': 
+                if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
                     return controller.im_self.__before__(*args)
-                if hasattr(controller.im_class, '__after__'):
-                    return controller.im_self.__before__(*args)
+                if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
+                    return controller.im_self.__after__(*args)
                 return
             result = DecoratedController._perform_call(
                 self, controller, params, remainder=remainder)
