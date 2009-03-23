@@ -121,8 +121,7 @@ class DecoratedController(WSGIController):
         self._initialize_validation_context()
         pylons.request.start_response = self.start_response
 
-        if remainder is None:
-            remainder = []
+        remainder = remainder or []
         try:
             pylons.request.headers['tg_format'] = params.get('tg_format', None)
 
@@ -239,8 +238,8 @@ class DecoratedController(WSGIController):
             new_params = validation.validators.validate(params, state)
 
         # Theoretically this should not happen...
-        if new_params is None:
-            return params
+        #if new_params is None:
+        #    return params
 
         return new_params
 
@@ -278,6 +277,7 @@ class DecoratedController(WSGIController):
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
 
+        #what causes this condition?  there are no tests for it.
         if template_name is None:
             return response
 
@@ -513,21 +513,19 @@ def _object_dispatch(obj, url_path):
             name, obj, parent, remainder = notfound_handlers.pop()
             if name == 'default':
                 return _find_restful_dispatch(obj, parent, remainder)
-
             else:
                 obj, remainder = obj(*remainder)
                 list(remainder)
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
+    
     _check_controller_auth(obj)
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
-    if inspect.isclass(obj) and not issubclass(obj, RestController):
-        return obj, remainder
 
     request_method = method = pylons.request.method.lower()
-
+    
     #conventional hack for handling methods which are not supported by most browsers
     params = pylons.request.params
     if '_method' in params:
@@ -592,9 +590,11 @@ def _find_restful_dispatch(obj, parent, remainder):
     if request_method == 'post' and method == 'delete' and hasattr(obj, 'post_delete') and hasattr(obj.post_delete, 'decoration')and obj.post_delete.decoration.exposed:
         method = 'post_delete'
 
+
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
+            
             if inspect.isclass(obj):
                 obj = obj()
             #attach the parent class so the inner class has access to it's members
@@ -634,6 +634,7 @@ def _find_object(obj, remainder, notfound_handlers):
         if remainder and not(len(remainder) == 1 and (remainder[0]=='')) and _iscontroller(lookup):
             notfound_handlers.append(('lookup', lookup, obj, remainder))
 
+        #what causes this condition?
         if not remainder:
             raise HTTPNotFound().exception
 
@@ -766,11 +767,11 @@ class TGController(ObjectDispatchController):
             func_name = func.__name__
             if not args:
                 args = []
-            if func_name == '__before__' or func_name == '__after__':
-                if hasattr(controller.im_class, '__before__'):
+            if func_name == '__before__' or func_name == '__after__': 
+                if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
                     return controller.im_self.__before__(*args)
-                if hasattr(controller.im_class, '__after__'):
-                    return controller.im_self.__before__(*args)
+                if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
+                    return controller.im_self.__after__(*args)
                 return
             result = DecoratedController._perform_call(
                 self, controller, params, remainder=remainder)

@@ -26,11 +26,12 @@ def wsgi_app(environ, start_response):
         resp = Response("Hello from %s/%s"%(req.script_name, req.path_info))
     return resp(environ, start_response)
 
-
 class BeforeController(TGController):
     
     def __before__(self, *args, **kw):
         pylons.c.var = '__my_before__'
+    def __after__(self, *args, **kw):
+        global_craziness = '__my_after__'
         
     @expose()
     def index(self):
@@ -41,6 +42,11 @@ class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
     
     before = BeforeController()
+    
+
+    @expose('genshi')
+    def unknown_template(self):
+        return "sub unknown template"
     
     @expose()
     def foo(self,):
@@ -80,22 +86,57 @@ class SubController3(object):
     def index(self):
         return 'Sub 3'
     
+class TGControllerInsideSubRestConroller:
+    @expose()
+    def index(self):
+        return "COMPLICATED"
 class SubRestController(RestController):
+    
+    inside = TGControllerInsideSubRestConroller()
     @expose()
     def new(self):
         return "SUBREST NEW"
     
     @expose()
+    def edit(self):
+        return "SUBREST EDIT"
+
+    @expose()
+    def fxn(self):
+        return "SUBREST FXN"
+
+    @expose()
     def get_one(self, id, *args):
         return "SUBREST GETONE"
+    
+    @expose()
+    def put(self, **kw):
+        return "SUBREST PUT"
+
+    @expose()
+    def post(self, **kw):
+        return "SUBREST POST"
     
     @expose()
     def get_all(self):
         return "SUBREST GETALL"
     
-    def post(self):
-        """this is intentionally not exposed"""
 
+    
+class RestController3(RestController):
+    
+    subrest = SubRestController()
+    @expose()
+    def get_all(self):
+        return "SUBREST3 GETALL"
+
+    @expose()
+    def get_one(self, id):
+        return "REST3 GETONE"
+    
+    def delete(self):
+        """this is intentionally not exposed"""
+        
 class RestController2(RestController):
 
     subrest = SubRestController()
@@ -134,6 +175,7 @@ class SubController2(object):
 
         sub3 = SubController3()
         rest2 = RestController2()
+        rest3 = RestController3()
         
         @expose()
         def get(self):
@@ -159,18 +201,43 @@ class SubController2(object):
         def non_resty_thing(self):
             return "non_resty"
 
+class LookupHelper:
+    
+    def __init__(self, var):
+        self.var = var
+    
+    @expose()
+    def index(self):
+        return self.var
+        
+class LoookupController(TGController):
+    
+    @expose()
+    def lookup(self, a, *args):
+        return LookupHelper(a), args
+    
+        
+class RemoteErrorHandler(TGController):
+    @expose()
+    def errors_here(self, *args, **kw):
+        return "REMOTE ERROR HANDLER"
 
-
+class NotFoundController(TGController):pass
+    
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
-
+    
+    error_controller = RemoteErrorHandler()
+    
+    lookup = LoookupController()
+    
     @expose()
     def index(self, **kwargs):
         return 'hello world'
 
     @expose()
-    def default(self, remainder):
-        return "Main Default Page called for url /%s"%remainder
+    def default(self, *remainder):
+        return "Main Default Page called for url /%s"%list(remainder)
 
     @expose()
     def feed(self, feed=None):
@@ -233,6 +300,24 @@ class BasicTGController(TGController):
         return dict(int=a,str=b)
 
     @expose()
+    def error_handler(self, **kw):
+        return 'VALIDATION ERROR HANDLER'
+    
+    @expose('json')
+    @validate(validators={"a":validators.Int()}, error_handler=error_handler)
+    def validated_with_error_handler(self, a, b):
+        assert isinstance(a, int)
+        assert isinstance(b, unicode)
+        return dict(int=a,str=b)
+
+    @expose('json')
+    @validate(validators={"a":validators.Int()}, error_handler=error_controller.errors_here)
+    def validated_with_remote_error_handler(self, a, b):
+        assert isinstance(a, int)
+        assert isinstance(b, unicode)
+        return dict(int=a,str=b)
+
+    @expose()
     @expose('json')
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
@@ -246,40 +331,12 @@ class BasicTGController(TGController):
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
 
-class TestTGController(TestWSGIController):
+class TestRestController(TestWSGIController):
+    
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-
-
-    def test_mounted_wsgi_app_at_root(self):
-        r = self.app.get('/mounted_app/')
-        self.failUnless('Hello from /mounted_app' in r, r)
-
-    def test_mounted_wsgi_app_at_subcontroller(self):
-        r = self.app.get('/sub/mounted_app/')
-        self.failUnless('Hello from /sub/mounted_app/' in r, r)
-
-    def test_request_for_wsgi_app_with_extension(self):
-        r = self.app.get('/sub/mounted_app/some_document.pdf')
-        self.failUnless('Hello from /sub/mounted_app//some_document.pdf' in r, r)
-
-    def test_posting_to_mounted_app(self):
-        r = self.app.post('/mounted_app/', params={'data':'Foooo'})
-        self.failUnless('Foooo' in r, r)
-
-    def test_response_type(self):
-        r = self.app.post('/stacked_expose.json')
-        assert 'got_json' in r, r
-
-    def test_deprecated_tg_format_no_mimetype(self):
-        r = self.app.post('/stacked_expose?tg_format=json')
-        assert 'got_json' in r, r
-
-    @raises(Exception)
-    def test_unknown_mimetype(self):
-        r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
-
+    
     def test_rest_post(self):
         r = self.app.post('/sub2/rest/')
         assert 'REST POST' in r, r
@@ -332,14 +389,134 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/sub2/rest/rest2/2/subrest')
         assert 'SUBREST GETALL' in r, r
 
-    def test_rest_sub_one(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/3')
-        assert 'SUBREST GETONE' in r, r
+    def test_rest_sub_put(self):
+        r = self.app.put('/sub2/rest/rest2/2/subrest')
+        assert 'SUBREST PUT' in r, r
+
+    def test_rest_sub_put_with_post_hack(self):
+        r = self.app.post('/sub2/rest/rest2/2/subrest?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+
+    def test_rest_sub_post(self):
+        r = self.app.post('/sub2/rest/rest2/2/subrest')
+        assert 'SUBREST POST' in r, r
+    
+    def test_rest_sub_post(self):
+        r = self.app.post('/sub2/rest/rest2/2/subrest')
+        assert 'SUBREST POST' in r, r
 
     def test_rest_sub_new(self):
         r = self.app.get('/sub2/rest/rest2/2/subrest/new')
         assert 'SUBREST NEW' in r, r
+    
+    def test_rest_sub_edit(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/edit')
+        assert 'SUBREST EDIT' in r, r
+
+    def test_tg_inside_subrest(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/inside')
+        assert 'COMPLICATED' in r, r
         
+    def test_fxn_inside_subrest(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/fxn')
+        assert 'SUBREST FXN' in r, r
+        
+    def test_fxn_inside_subrest_post(self):
+        r = self.app.post('/sub2/rest/rest2/subrest/fxn')
+        assert 'SUBREST FXN' in r, r
+    
+    def test_fxn_inside_subrest_post_not_found(self):
+        r = self.app.post('/sub2/rest/rest2/2/asdf')
+        assert 'Main Default Page called' in r, r
+    
+    def test_subrest_get_get_one(self):
+        r = self.app.get('/sub2/rest/rest2/2/asdf')
+        assert 'REST GETONE' in r, r
+
+    def test_subrest_get_not_found(self):
+        r = self.app.get('/sub2/rest/rest3/2/asdf')
+        assert 'Main Default Page called' in r, r
+
+    def test_fxn_inside_rest3_put_not_found(self):
+        r = self.app.put('/sub2/rest/rest3')
+        assert 'Main Default Page called' in r, r
+
+    def test_subrest_post_not_found(self):
+        r = self.app.delete('/sub2/rest/rest3')
+        assert 'Main Default Page called' in r, r
+
+class TestNotFoundController(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(NotFoundController)
+        
+    def test_not_found(self):
+        r = self.app.get('/something', status=404)
+        assert '404 Not Found' in r, r
+
+    def test_not_found_blank(self):
+        r = self.app.get('/', status=404)
+        assert '404 Not Found' in r, r
+
+    def test_not_found_unicode(self):
+        r = self.app.get('/права', status=404)
+        assert '404 Not Found' in r, r
+
+class TestTGController(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(BasicTGController)
+        
+        
+    def test_lookup(self):
+        r = self.app.get('/lookup/EYE')
+        msg = 'EYE'
+        assert msg in r, r
+
+
+    def test_validated_with_error_handler(self):
+        r = self.app.get('/validated_with_error_handler?a=asdf')
+        msg = 'VALIDATION ERROR HANDLER'
+        assert msg in r, r
+        
+    def test_validated_with_remote_error_handler(self):
+        r = self.app.get('/validated_with_remote_error_handler?a=asdf')
+        msg = 'REMOTE ERROR HANDLER'
+        assert msg in r, r
+        
+    def test_unknown_template(self):
+        r = self.app.get('/sub/unknown_template/')
+        msg = 'sub unknown template'
+        assert msg in r, r
+    
+    def test_mounted_wsgi_app_at_root(self):
+        r = self.app.get('/mounted_app/')
+        self.failUnless('Hello from /mounted_app' in r, r)
+
+    def test_mounted_wsgi_app_at_subcontroller(self):
+        r = self.app.get('/sub/mounted_app/')
+        self.failUnless('Hello from /sub/mounted_app/' in r, r)
+
+    def test_request_for_wsgi_app_with_extension(self):
+        r = self.app.get('/sub/mounted_app/some_document.pdf')
+        self.failUnless('Hello from /sub/mounted_app//some_document.pdf' in r, r)
+
+    def test_posting_to_mounted_app(self):
+        r = self.app.post('/mounted_app/', params={'data':'Foooo'})
+        self.failUnless('Foooo' in r, r)
+
+    def test_response_type(self):
+        r = self.app.post('/stacked_expose.json')
+        assert 'got_json' in r, r
+
+    def test_deprecated_tg_format_no_mimetype(self):
+        r = self.app.post('/stacked_expose?tg_format=json')
+        assert 'got_json' in r, r
+
+    @raises(Exception)
+    def test_unknown_mimetype(self):
+        r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
+
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
 
