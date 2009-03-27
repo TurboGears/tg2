@@ -360,6 +360,5 @@ def _iscontroller(obj):
     return obj.decoration.exposed
 
 __all__ = [
-    "DecoratedController", "ObjectDispatchController", "TGController",
-    "url", "redirect", "RestController"
+    "DecoratedController"
     ]

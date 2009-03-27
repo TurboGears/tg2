@@ -9,6 +9,9 @@ HTTPNotFound = HTTPNotFound().exception
 class Dispatcher(WSGIController):
 
     def _call(self, controller, params, remainder=None):
+        """
+            Override This function to define how your controller method should be called.
+        """
         response = controller(*remainder, **dict(params))
         return response
 
@@ -64,6 +67,7 @@ class ObjectDispatcher(Dispatcher):
             return True
 
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
+        orig_url_path = url_path
         if len(remainder):
             url_path = url_path[:-len(remainder)]
         for i in xrange(len(controller_path)):
@@ -71,10 +75,12 @@ class ObjectDispatcher(Dispatcher):
             if self._is_exposed(controller, 'default'):
                 controller_path.append(controller.default)
                 return self, controller_path, remainder
-#            if self._is_exposed(controller, 'lookup'):
-#                controller_path = controller_path[:i+2]
-#                controller_path.append(controller.default)
-#                return self, controller_path, url_path[-i-1:]
+            if self._is_exposed(controller, 'lookup'):
+                controller, remainder = controller.lookup(*remainder)
+                controller_path.append(controller)
+                if hasattr(controller, '__dispatch__'):
+                    return controller.__dispatch__(orig_url_path, remainder[1:], controller_path)
+                return self.__dispatch__(orig_url_path, remainder[1:], controller_path)
             controller_path.pop()
             if len(url_path):
                 remainder.insert(0,url_path[-1])
@@ -88,7 +94,7 @@ class ObjectDispatcher(Dispatcher):
         if not len(remainder):
             if hasattr(current_controller, 'index'):
                 controller_path.append(current_controller.index)
-                return  self, controller_path, url_path
+                return  self, controller_path, remainder
             #if there is no index, head up the tree 
             #to see if there is a default or lookup method we can use
             return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)

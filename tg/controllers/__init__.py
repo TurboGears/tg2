@@ -1,6 +1,7 @@
-from tg.dispatcher import ObjectDispatcher
-from base import DecoratedController
-from util import redirect, url, pylons_formencode_gettext
+from dispatcher          import ObjectDispatcher
+from decoratedcontroller import DecoratedController
+from wsgiappcontroller   import WSGIAppController
+from tgcontroller        import TGController
+#from restcontroller import RestController
 
-class TGController(ObjectDispatcher):pass
-#                   DecoratedController):pass
+from util import redirect, url, pylons_formencode_gettext
