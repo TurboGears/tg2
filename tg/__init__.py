@@ -55,7 +55,7 @@ assumptions about how things will work.
 from pylons import app_globals, request, response, tmpl_context, session
 
 from tg.wsgiapp import TGApp
-from tg.controllers import TGController, redirect, url, use_wsgi_app, WSGIAppController
+from tg.controllers import TGController, redirect, url
 from tg.configuration import config
 from tg.release import version
 from tg.decorators import (validate, expose, override_template,

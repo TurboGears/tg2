@@ -96,62 +96,6 @@ class DecoratedController(WSGIController):
         decorated template after you have temporarily changed it.
         """
 
-    def _perform_call(self, controller, params, remainder=None):
-        """
-        _perform_call is called by _inspect_call in Pylons' WSGIController.
-
-        Any of the before_validate hook, the validation, the before_call hook,
-        and the controller method can return a FormEncode Invalid exception,
-        which will give the validation error handler the opportunity to provide
-        a replacement decorated controller method and output that will
-        subsequently be rendered.
-
-        This allows for validation to display the original page or an
-        abbreviated form with validation errors shown on validation failure.
-
-        The before_render hook provides a place for functions that are called
-        before the template is rendered. For example, you could use it to
-        add and remove from the dictionary returned by the controller method,
-        before it is passed to rendering.
-
-        The after_render hook can act upon and modify the response out of
-        rendering.
-        """
-
-        self._initialize_validation_context()
-        pylons.request.start_response = self.start_response
-
-        remainder = remainder or []
-        try:
-            pylons.request.headers['tg_format'] = params.get('tg_format', None)
-
-            controller.decoration.run_hooks('before_validate', remainder,
-                                            params)
-            for ignore in config.get('ignore_parameters', []):
-                if params.get(ignore):
-                    del params[ignore]
-
-            # Validate user input
-            params = self._perform_validate(controller, params)
-
-            pylons.c.form_values = params
-
-            controller.decoration.run_hooks('before_call', remainder, params)
-            # call controller method
-            output = controller(*remainder, **dict(params))
-
-        except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller,
-                                                                remainder,
-                                                                params, inv)
-
-        # Render template
-        controller.decoration.run_hooks('before_render', remainder, params,
-                                        output)
-        response = self._render_response(controller, output)
-        controller.decoration.run_hooks('after_render', response)
-        return response
-
 
     def _perform_validate(self, controller, params):
         """
