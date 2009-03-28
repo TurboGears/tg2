@@ -34,6 +34,7 @@ from webob import Request
 from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
+from util import pylons_formencode_gettext
 
 # If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't
 # override pylons.request.content_type
@@ -101,6 +102,7 @@ class DecoratedController(object):
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
+
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:

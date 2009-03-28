@@ -1,4 +1,4 @@
-from inspect import ismethod
+from inspect import ismethod, isclass
 
 import pylons
 from pylons.controllers import WSGIController
@@ -15,9 +15,9 @@ class Dispatcher(WSGIController):
         response = controller(*remainder, **dict(params))
         return response
 
-    def __dispatch__(self, url_path, controller_path):
+    def __dispatch__(self, url_path, remainder, controller_path):
         """override this to define how your controller should dispatch.
-        returns: dispatcher, controller_path, url_path
+        returns: dispatcher, controller_path, remainder
         """
         raise NotImplementedError
     
@@ -47,6 +47,9 @@ class Dispatcher(WSGIController):
         controller = controller_path[-2]
         func = controller_path[-1]
         pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
+        if '_method' in pylons.request.params:
+            params = pylons.request.params
+            raise
         return func, controller, remainder, pylons.request.params.mixed()
 
     def _perform_call(self, func, args):
@@ -62,6 +65,12 @@ class Dispatcher(WSGIController):
 
 class ObjectDispatcher(Dispatcher):
 
+    def _find_first_exposed(self, controller, methods):
+        for method in methods:
+            if self._is_exposed(controller, method):
+                return getattr(controller, method)
+        return None
+    
     def _is_exposed(self, controller, method_name):
         if hasattr(controller, method_name) and ismethod(getattr(controller, method_name)):
             return True
@@ -79,6 +88,8 @@ class ObjectDispatcher(Dispatcher):
                 controller, remainder = controller.lookup(*remainder)
                 controller_path.append(controller)
                 if hasattr(controller, '__dispatch__'):
+                    if isclass(controller):
+                        controller = controller()
                     return controller.__dispatch__(orig_url_path, remainder[1:], controller_path)
                 return self.__dispatch__(orig_url_path, remainder[1:], controller_path)
             controller_path.pop()
@@ -111,6 +122,8 @@ class ObjectDispatcher(Dispatcher):
             current_controller = getattr(current_controller, current_path)
             controller_path.append(current_controller)
             if hasattr(current_controller, '__dispatch__'):
+                if isclass(current_controller):
+                    current_controller = current_controller()
                 return current_controller.__dispatch__(url_path, remainder[1:], controller_path)
             return self.__dispatch__(url_path, remainder[1:], controller_path)
         

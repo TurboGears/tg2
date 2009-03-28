@@ -475,6 +475,7 @@ def _find_restful_dispatch(obj, parent, remainder):
     if '_method' in params:
         if params['_method']:
             method = params['_method'].lower()
+            del pylons.request.params['_method']
 
     if remainder and remainder[-1] == '':
         remainder = remainder[:-1]

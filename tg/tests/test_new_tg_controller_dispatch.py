@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
-from tg.controllers import TGController
+from tg.controllers import TGController, RestController
+from tg.controllers.restcontroller import InvalidRequestError
 from tg.decorators import expose, validate, override_template
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -77,6 +78,62 @@ class CustomDispatchingSubController(TGController):
     def __dispatch__(self, url_path, remainder, controller_path):
         controller_path.append(self.always)
         return self, controller_path, remainder
+    
+class VariableRestController(RestController):
+
+    @expose()
+    def get_all(self):
+        return "REST GET ALL"
+    @expose()
+    def get_one(self, *args):
+        return "REST GET ONE"
+    @expose()
+    def get_delete(self, *args):
+        return "REST GET DELETE"
+    @expose()
+    def put_delete(self):
+        return "REST PUT DELETE"
+
+class ExtraRestController(RestController):
+
+    @expose()
+    def get_all(self):
+        return "REST GET ALL"
+    @expose()
+    def get_one(self, id):
+        return "REST GET ONE"
+    @expose()
+    def get_delete(self, id):
+        return "REST GET DELETE"
+    @expose()
+    def post_delete(self, id):
+        return "REST POST DELETE"
+
+class BasicRestController(RestController):
+
+    @expose()
+    def get(self):
+        return "REST GET"
+    @expose()
+    def post(self):
+        return "REST POST"
+    @expose()
+    def put(self):
+        return "REST PUT"
+    @expose()
+    def delete(self):
+        return "REST DELETE"
+    @expose()
+    def new(self):
+        return "REST NEW"
+    
+    @expose()
+    def edit(self, *args, **kw):
+        return "REST EDIT"
+    @expose()
+    def non_resty_thing(self):
+        return "non_resty"
+
 
 class BasicTGController(TGController):
     
@@ -84,6 +141,9 @@ class BasicTGController(TGController):
     custom_dispatch = CustomDispatchingSubController()
     lookup = LookupController()
     lookup_dispatch = LookupAlwaysController()
+    rest  = BasicRestController()
+    rest2 = ExtraRestController()
+    rest3 = VariableRestController()
 
     @expose()
     def index(self, **kwargs):
@@ -156,3 +216,75 @@ class TestTGController(TestWSGIController):
     def test_custom_dispatch(self):
         resp = self.app.get('/custom_dispatch/army of darkness')
         assert "always" in resp, resp
+
+class TestRestController(TestWSGIController):
+    
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(BasicTGController)
+    
+    def test_post(self):
+        r = self.app.post('/rest/')
+        assert 'REST POST' in r, r
+
+    def _test_non_resty(self):
+        r = self.app.post('/rest/non_resty_thing')
+        assert 'non_resty' in r, r
+
+    def test_get(self):
+        r = self.app.get('/rest/')
+        assert 'REST GET' in r, r
+
+    def test_put(self):
+        r = self.app.put('/rest/')
+        assert 'REST PUT' in r, r
+
+    def test_put_get_post(self):
+        r = self.app.post('/rest?_method=PUT')
+        assert 'REST PUT' in r, r
+        
+    @raises(InvalidRequestError)
+    def test_put_get_get(self):
+        r = self.app.get('/rest?_method=PUT')
+        assert 'REST PUT' in r, r
+
+    def test_put_post(self):
+        r = self.app.post('/rest', params={'_method':'PUT'})
+        assert 'REST PUT' in r, r
+
+    @raises(InvalidRequestError)
+    def test_get_delete_bad(self):
+        r = self.app.get('/rest?_method=DELETE')
+
+    def test_delete(self):
+        r = self.app.delete('/rest/')
+        assert 'REST DELETE' in r, r
+
+    def test_post_delete(self):
+        r = self.app.post('/rest/', params={'_method':'DELETE'})
+        assert 'REST DELETE' in r, r
+        
+    def test_get_all(self):
+        r = self.app.get('/rest2/')
+        assert 'REST GET ALL' in r, r
+        
+    def test_get_one(self):
+        r = self.app.get('/rest2/1')
+        assert 'REST GET ONE' in r, r
+
+    def test_get_delete(self):
+        r = self.app.get('/rest2/1/delete')
+        assert 'REST GET DELETE' in r, r
+        
+    def test_post_delete(self):
+        r = self.app.post('/rest2/1', params={'_method':'DELETE'})
+        assert 'REST POST DELETE' in r, r
+
+    def test_post_delete_var(self):
+        r = self.app.post('/rest3/a/b/c', params={'_method':'DELETE'})
+        assert 'REST POST DELETE' in r, r
+
+    def test_get_delete_var(self):
+        r = self.app.get('/rest3/a/b/c/delete')
+        assert 'REST GET DELETE' in r, r
+    
