@@ -91,8 +91,8 @@ class VariableRestController(RestController):
     def get_delete(self, *args):
         return "REST GET DELETE"
     @expose()
-    def put_delete(self):
-        return "REST PUT DELETE"
+    def post_delete(self, *args):
+        return "REST POST DELETE"
 
 class ExtraRestController(RestController):
 
@@ -126,13 +126,12 @@ class BasicRestController(RestController):
     @expose()
     def new(self):
         return "REST NEW"
-    
     @expose()
     def edit(self, *args, **kw):
         return "REST EDIT"
     @expose()
-    def non_resty_thing(self):
-        return "non_resty"
+    def other(self):
+        return "REST OTHER"
 
 
 class BasicTGController(TGController):
@@ -287,4 +286,18 @@ class TestRestController(TestWSGIController):
     def test_get_delete_var(self):
         r = self.app.get('/rest3/a/b/c/delete')
         assert 'REST GET DELETE' in r, r
-    
+
+    def test_get_method(self):
+        r = self.app.get('/rest/other')
+        assert 'REST OTHER' in r, r
+
+    def test_post_method(self):
+        r = self.app.post('/rest/other')
+        assert 'REST OTHER' in r, r
+
+    def _test_delete_method(self):
+        r = self.app.delete('/rest/other', status=405)
+
+    def _test_put_method(self):
+        r = self.app.put('/rest/other', status=405)
+

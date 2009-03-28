@@ -71,10 +71,23 @@ class ObjectDispatcher(Dispatcher):
                 return getattr(controller, method)
         return None
     
-    def _is_exposed(self, controller, method_name):
-        if hasattr(controller, method_name) and ismethod(getattr(controller, method_name)):
+    def _is_exposed(self, controller, name):
+        if hasattr(controller, name) and ismethod(getattr(controller, name)):
             return True
+        
+    def _is_controller(self, controller, name):
+        return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
+    def _dispatch_controller(self, url_path, controller, remainder, controller_path):
+        
+        if hasattr(controller, '__dispatch__'):
+            if isclass(controller):
+                controller = controller()
+            controller_path.append(controller)
+            return controller.__dispatch__(url_path, remainder, controller_path)
+        controller_path.append(controller)
+        return self.__dispatch__(url_path, remainder, controller_path)
+        
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
         orig_url_path = url_path
         if len(remainder):
@@ -86,12 +99,7 @@ class ObjectDispatcher(Dispatcher):
                 return self, controller_path, remainder
             if self._is_exposed(controller, 'lookup'):
                 controller, remainder = controller.lookup(*remainder)
-                controller_path.append(controller)
-                if hasattr(controller, '__dispatch__'):
-                    if isclass(controller):
-                        controller = controller()
-                    return controller.__dispatch__(orig_url_path, remainder[1:], controller_path)
-                return self.__dispatch__(orig_url_path, remainder[1:], controller_path)
+                return self._dispatch_controller(orig_url_path, controller, remainder[1:], controller_path)
             controller_path.pop()
             if len(url_path):
                 remainder.insert(0,url_path[-1])
@@ -120,12 +128,7 @@ class ObjectDispatcher(Dispatcher):
         #another controller is found and it has a dispatcher object
         if hasattr(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
-            controller_path.append(current_controller)
-            if hasattr(current_controller, '__dispatch__'):
-                if isclass(current_controller):
-                    current_controller = current_controller()
-                return current_controller.__dispatch__(url_path, remainder[1:], controller_path)
-            return self.__dispatch__(url_path, remainder[1:], controller_path)
+            return self._dispatch_controller(url_path, current_controller, remainder[1:], controller_path)
         
         #dispatch not found
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
