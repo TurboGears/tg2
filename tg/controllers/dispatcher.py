@@ -78,8 +78,17 @@ class ObjectDispatcher(Dispatcher):
         if hasattr(controller, '__dispatch__'):
             if isclass(controller):
                 controller = controller()
+            if hasattr(controller, "im_self"):
+                obj = controller.im_self
+            else:
+                obj = controller
+
+            if hasattr(obj, '_check_security'):
+                obj._check_security()
             controller_path.append(controller)
             return controller.__dispatch__(url_path, remainder, controller_path)
+        if hasattr(controller, '_check_security'):
+            controller._check_security()
         controller_path.append(controller)
         return self.__dispatch__(url_path, remainder, controller_path)
         

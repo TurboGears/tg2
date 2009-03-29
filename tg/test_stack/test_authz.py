@@ -387,7 +387,6 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        print resp
         self.assertEqual("you can manage Human Resources", resp.body)
 
     def test_authz_denied_without_require(self):
@@ -411,7 +410,6 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
-        print resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}

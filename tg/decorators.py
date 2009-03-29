@@ -24,7 +24,8 @@ from pylons import config, request, response
 from pylons.controllers.util import abort
 from pylons import tmpl_context as c
 from tg.util import partial
-from repoze.what.plugins.pylonshq import ActionProtector, ControllerProtector
+from repoze.what.plugins.pylonshq import ActionProtector
+from repoze.what.plugins.pylonshq.protectors import _BaseProtectionDecorator
 
 from tg.configuration import Bunch
 from tg.flash import flash
@@ -563,7 +564,7 @@ class require(ActionProtector):
         abort(response.status_int, reason)
 
 
-class allow_only(ControllerProtector):
+class allow_only(_BaseProtectionDecorator):
     """
     TurboGears-specific repoze.what-pylons controller protector.
     
@@ -580,6 +581,7 @@ class allow_only(ControllerProtector):
     protector = require
     
     def __call__(self, cls, *args, **kwargs):
+        cls.allow_only=self.protector.predicate
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
         return super(allow_only, self).__call__(cls, *args, **kwargs)

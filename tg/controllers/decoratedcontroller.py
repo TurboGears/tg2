@@ -60,7 +60,6 @@ class DecoratedController(object):
         super(DecoratedController, self).__init__(*args, **kwargs)
 
     def _is_exposed(self, controller, name):
-        self._user_is_allowed(controller)
         if hasattr(controller, name):
             method = getattr(controller, name)
             if inspect.ismethod(method) and hasattr(method, 'decoration'):
@@ -346,22 +345,20 @@ class DecoratedController(object):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
 
-    def _user_is_allowed(self, controller=None):
-        if controller is None:
-            controller = self
-        if not hasattr(controller, "allow_only") or controller.allow_only is None:
-            log.debug('No controller-wide authorization at %s',
+    def _check_security(self):
+        if not hasattr(self, "allow_only") or self.allow_only is None:
+            log.debug('No self-wide authorization at %s',
                       pylons.request.path)
             return True
         try:
-            predicate = controller.allow_only
+            predicate = self.allow_only
             predicate.check_authorization(pylons.request.environ)
         except NotAuthorizedError, e:
             reason = unicode(e)
-            if hasattr(controller, '_failed_authorization'):
+            if hasattr(self, '_failed_authorization'):
                 # Should shortcircut the rest, but if not we will still
                 # deny authorization
-                controller._failed_authorization(reason)
+                self._failed_authorization(reason)
             if not_anonymous().is_met(request.environ):
                 # The user is authenticated but not allowed.
                 code = 403

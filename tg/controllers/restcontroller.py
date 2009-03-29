@@ -55,6 +55,19 @@ class RestDispatcher(ObjectDispatcher):
                 return self, controller_path, remainder
             return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
 
+        #test for "new" and "edit"
+        if remainder[-1] == 'new' and self._is_exposed(current_controller, 'new') and len(remainder) == 1:
+            current_controller = getattr(current_controller, remainder[0])
+            return self._dispatch_controller(url_path, current_controller, remainder[1:-1], controller_path)
+
+        if remainder[-1] == 'edit' and self._is_exposed(current_controller, 'edit'):
+            args = inspect.getargspec(method)
+            fixed_arg_length = len(args[0])-1
+            var_args = args[1]
+            if fixed_arg_length == len(remainder) -1 or var_args:
+                current_controller = getattr(current_controller, remainder[0])
+                return self._dispatch_controller(url_path, current_controller, remainder[1:-1], controller_path)
+
         if self._is_exposed(current_controller, remainder[0]):
             controller_path.append(getattr(current_controller, remainder[0]))
             return self, controller_path, remainder[1:]
@@ -100,9 +113,9 @@ class RestDispatcher(ObjectDispatcher):
             if params['_method']:
                 method = params['_method'].lower()
                 if request_method == 'get' and method == 'put':
-                    raise InvalidRequestError('You may not use GET to perform a PUT request')
+                    abort(405)
                 if request_method == 'get' and method == 'delete':
-                    raise InvalidRequestError('You may not use GET to perform a DELETE request')
+                    abort(405)
                 if '_method' in pylons.request.POST:
                     del pylons.request.POST['_method']
                 if '_method' in pylons.request.GET:

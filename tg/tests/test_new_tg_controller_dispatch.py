@@ -245,18 +245,16 @@ class TestRestController(TestWSGIController):
         r = self.app.post('/rest?_method=PUT')
         assert 'REST PUT' in r, r
         
-    @raises(InvalidRequestError)
     def test_put_get_get(self):
-        r = self.app.get('/rest?_method=PUT')
+        r = self.app.get('/rest?_method=PUT', status=405)
         assert 'REST PUT' in r, r
 
     def test_put_post(self):
         r = self.app.post('/rest', params={'_method':'PUT'})
         assert 'REST PUT' in r, r
 
-    @raises(InvalidRequestError)
     def test_get_delete_bad(self):
-        r = self.app.get('/rest?_method=DELETE')
+        r = self.app.get('/rest?_method=DELETE', status=405)
 
     def test_delete(self):
         r = self.app.delete('/rest/')
@@ -325,6 +323,14 @@ class TestRestController(TestWSGIController):
     def test_post_method(self):
         r = self.app.post('/rest/other')
         assert 'REST OTHER' in r, r
+
+    def test_new_method(self):
+        r = self.app.post('/rest/new')
+        assert 'REST NEW' in r, r
+
+    def test_edit_method(self):
+        r = self.app.post('/rest/1/edit')
+        assert 'REST EDIT' in r, r
 
     def test_delete_method(self):
         r = self.app.delete('/rest/other', status=405)
