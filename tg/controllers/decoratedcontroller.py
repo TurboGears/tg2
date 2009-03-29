@@ -50,7 +50,6 @@ def _configured_engines():
         g.tg_configured_engines = set()
     return g.tg_configured_engines
 
-
 class DecoratedController(object):
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'allow_only') and self.allow_only is not None:
@@ -59,6 +58,13 @@ class DecoratedController(object):
             predicate = self.allow_only
             self = allow_only(predicate)(self)
         super(DecoratedController, self).__init__(*args, **kwargs)
+
+    def _is_exposed(self, controller, name):
+        self._user_is_allowed(controller)
+        if hasattr(controller, name):
+            method = getattr(controller, name)
+            if inspect.ismethod(method) and hasattr(method, 'decoration'):
+                return method.decoration.exposed
 
     def _call(self, controller, params, remainder=None):
         """
@@ -340,26 +346,33 @@ class DecoratedController(object):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
 
-def _check_controller_auth(obj):
-    """this function checks if a controller has a 'alow_only' attribute and if
-    it is the case, test that this require predicate can be evaled to True.
-    It will raise a Forbidden exception if the predicate is not valid.
-    """
-    if hasattr(obj, "im_self"):
-        klass_instance = obj.im_self
-    else:
-        klass_instance = obj
-
-    if hasattr(klass_instance, "_check_security"):
-        klass_instance._check_security()
-
-
-def _iscontroller(obj):
-    if not hasattr(obj, '__call__'):
-        return False
-    if not hasattr(obj, 'decoration'):
-        return False
-    return obj.decoration.exposed
+    def _user_is_allowed(self, controller=None):
+        if controller is None:
+            controller = self
+        if not hasattr(controller, "allow_only") or controller.allow_only is None:
+            log.debug('No controller-wide authorization at %s',
+                      pylons.request.path)
+            return True
+        try:
+            predicate = controller.allow_only
+            predicate.check_authorization(pylons.request.environ)
+        except NotAuthorizedError, e:
+            reason = unicode(e)
+            if hasattr(controller, '_failed_authorization'):
+                # Should shortcircut the rest, but if not we will still
+                # deny authorization
+                controller._failed_authorization(reason)
+            if not_anonymous().is_met(request.environ):
+                # The user is authenticated but not allowed.
+                code = 403
+                status = 'error'
+            else:
+                # The user has not been not authenticated.
+                code = 401
+                status = 'warning'
+            pylons.response.status = code
+            flash(reason, status=status)
+            abort(code, comment=reason)
 
 __all__ = [
     "DecoratedController"

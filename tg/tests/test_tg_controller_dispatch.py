@@ -86,7 +86,7 @@ class SubController3(object):
     def index(self):
         return 'Sub 3'
     
-class TGControllerInsideSubRestConroller:
+class TGControllerInsideSubRestConroller(TGController):
     @expose()
     def index(self):
         return "COMPLICATED"

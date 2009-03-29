@@ -95,7 +95,6 @@ class VariableRestController(RestController):
         return "REST POST DELETE"
 
 class ExtraRestController(RestController):
-
     @expose()
     def get_all(self):
         return "REST GET ALL"
@@ -108,6 +107,11 @@ class ExtraRestController(RestController):
     @expose()
     def post_delete(self, id):
         return "REST POST DELETE"
+    
+    class sub(TGController):
+        @expose()
+        def index(self):
+            return "REST SUB INDEX"
 
 class BasicRestController(RestController):
 
@@ -132,7 +136,6 @@ class BasicRestController(RestController):
     @expose()
     def other(self):
         return "REST OTHER"
-
 
 class BasicTGController(TGController):
     
@@ -291,13 +294,42 @@ class TestRestController(TestWSGIController):
         r = self.app.get('/rest/other')
         assert 'REST OTHER' in r, r
 
+    def test_get_sub_controller(self):
+        r = self.app.get('/rest2/sub')
+        assert 'REST SUB INDEX' in r, r
+
+    def test_put_sub_controller(self):
+        r = self.app.put('/rest2/sub')
+        assert 'REST SUB INDEX' in r, r
+
+    def test_post_sub_controller(self):
+        r = self.app.post('/rest2/sub')
+        assert 'REST SUB INDEX' in r, r
+
+    def test_post_miss(self):
+        r = self.app.post('/rest2/something')
+        assert "/['rest2', 'something']" in r, r
+
+    def test_put_miss(self):
+        r = self.app.put('/rest/something')
+        assert "/['rest', 'something']" in r, r
+
+    def test_delete_miss(self):
+        r = self.app.delete('/rest/something')
+        assert "/['rest', 'something']" in r, r
+
+    def test_get_miss(self):
+        r = self.app.get('/rest/something/else')
+        assert "/['rest', 'something', 'else']" in r, r
+
     def test_post_method(self):
         r = self.app.post('/rest/other')
         assert 'REST OTHER' in r, r
 
-    def _test_delete_method(self):
+    def test_delete_method(self):
         r = self.app.delete('/rest/other', status=405)
 
-    def _test_put_method(self):
-        r = self.app.put('/rest/other', status=405)
+    def test_put_method(self):
+        r = self.app.put('/rest/other')
+        assert 'REST OTHER' in r, r
 

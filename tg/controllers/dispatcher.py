@@ -47,9 +47,6 @@ class Dispatcher(WSGIController):
         controller = controller_path[-2]
         func = controller_path[-1]
         pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
-        if '_method' in pylons.request.params:
-            params = pylons.request.params
-            raise
         return func, controller, remainder, pylons.request.params.mixed()
 
     def _perform_call(self, func, args):
@@ -69,7 +66,6 @@ class ObjectDispatcher(Dispatcher):
         for method in methods:
             if self._is_exposed(controller, method):
                 return getattr(controller, method)
-        return None
     
     def _is_exposed(self, controller, name):
         if hasattr(controller, name) and ismethod(getattr(controller, name)):
@@ -79,7 +75,6 @@ class ObjectDispatcher(Dispatcher):
         return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
     def _dispatch_controller(self, url_path, controller, remainder, controller_path):
-        
         if hasattr(controller, '__dispatch__'):
             if isclass(controller):
                 controller = controller()
