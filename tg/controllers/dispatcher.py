@@ -146,7 +146,7 @@ class ObjectDispatcher(Dispatcher):
 
     def _dispatch(self, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
-        
+
         #we are plumb out of path, check for index
         if not len(remainder):
             if hasattr(current_controller, 'index'):

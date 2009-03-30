@@ -45,7 +45,21 @@ class RestDispatcher(ObjectDispatcher):
             abort(405)
 
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
-
+    
+    def _check_for_sub_controllers(self, url_path, remainder, controller_path):
+        current_controller = controller_path[-1]
+        for i, item in enumerate(remainder):
+            
+            if hasattr(current_controller, item):
+                #if self._is_exposed(current_controller, item):
+                #    method = getattr(current_controller, item)
+                #    controller_path.append(method)
+                #    return controller, remainder[i:], controller_path
+                if self._is_controller(current_controller, item):
+                    current_controller = getattr(current_controller, item)
+                    return self._dispatch_controller(url_path, current_controller, remainder[i+1:], controller_path)
+        return None, None, None
+    
     def _handle_get(self, method, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
         if not remainder:
@@ -61,12 +75,13 @@ class RestDispatcher(ObjectDispatcher):
             return self._dispatch_controller(url_path, current_controller, remainder[1:-1], controller_path)
 
         if remainder[-1] == 'edit' and self._is_exposed(current_controller, 'edit'):
-            args = inspect.getargspec(method)
+            args = inspect.getargspec(current_controller.edit)
             fixed_arg_length = len(args[0])-1
             var_args = args[1]
             if fixed_arg_length == len(remainder) -1 or var_args:
-                current_controller = getattr(current_controller, remainder[0])
-                return self._dispatch_controller(url_path, current_controller, remainder[1:-1], controller_path)
+                current_controller = current_controller.edit
+                controller_path.append(current_controller)
+                return self, controller_path, remainder
 
         if self._is_exposed(current_controller, remainder[0]):
             controller_path.append(getattr(current_controller, remainder[0]))
@@ -88,9 +103,20 @@ class RestDispatcher(ObjectDispatcher):
                     controller_path.append(current_controller.get_delete)
                     return self, controller_path, remainder
             
-            if len(remainder) == fixed_arg_length or var_args:
+            if len(remainder) == fixed_arg_length:
                 controller_path.append(method)
                 return self, controller_path, remainder
+            #if there is a get_one exposed, make sure there are no controllers left in the path
+            #before returning the controller
+            if var_args:
+                controller, controller_path, remainder = self._check_for_sub_controllers(url_path, remainder, controller_path)
+                if controller:
+                    return controller, controller_path, remainder
+                return self, controller_path, remainder
+                
+            new_controller, new_controller_path, new_remainder = self._check_for_sub_controllers(url_path, remainder, controller_path)
+            if new_controller:
+                return new_controller, new_controller_path, new_remainder
 
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
     

@@ -31,7 +31,7 @@ class LookupHelper:
     
     def __init__(self, var):
         self.var = var
-    
+
     @expose()
     def index(self):
         return self.var
@@ -93,6 +93,15 @@ class VariableRestController(RestController):
     @expose()
     def post_delete(self, *args):
         return "REST POST DELETE"
+    
+class SubRestController(RestController):
+    @expose()
+    def get_all(self):
+        return "SUBREST GET ALL"
+    
+    @expose()
+    def get_one(self, id):
+        return "SUBREST GET ONE"
 
 class ExtraRestController(RestController):
     @expose()
@@ -112,6 +121,8 @@ class ExtraRestController(RestController):
         @expose()
         def index(self):
             return "REST SUB INDEX"
+
+    subrest = SubRestController()
 
 class BasicRestController(RestController):
 
@@ -241,13 +252,12 @@ class TestRestController(TestWSGIController):
         r = self.app.put('/rest/')
         assert 'REST PUT' in r, r
 
-    def test_put_get_post(self):
+    def test_put_post(self):
         r = self.app.post('/rest?_method=PUT')
         assert 'REST PUT' in r, r
         
-    def test_put_get_get(self):
+    def test_put_get(self):
         r = self.app.get('/rest?_method=PUT', status=405)
-        assert 'REST PUT' in r, r
 
     def test_put_post(self):
         r = self.app.post('/rest', params={'_method':'PUT'})
@@ -329,7 +339,7 @@ class TestRestController(TestWSGIController):
         assert 'REST NEW' in r, r
 
     def test_edit_method(self):
-        r = self.app.post('/rest/1/edit')
+        r = self.app.get('/rest/1/edit')
         assert 'REST EDIT' in r, r
 
     def test_delete_method(self):
@@ -339,3 +349,6 @@ class TestRestController(TestWSGIController):
         r = self.app.put('/rest/other')
         assert 'REST OTHER' in r, r
 
+    def test_sub_get_all_method(self):
+        r = self.app.get('/rest2/1/subrest')
+        assert 'SUBREST GET ALL' in r, r
