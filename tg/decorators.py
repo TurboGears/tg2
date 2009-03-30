@@ -581,7 +581,8 @@ class allow_only(_BaseProtectionDecorator):
     protector = require
     
     def __call__(self, cls, *args, **kwargs):
-        cls.allow_only=self.protector.predicate
+        if hasattr(self.protector, 'predicate'):
+            cls.allow_only=self.protector.predicate
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
         return super(allow_only, self).__call__(cls, *args, **kwargs)

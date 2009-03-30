@@ -18,7 +18,7 @@ class RestDispatcher(ObjectDispatcher):
                 if fixed_arg_length == len(remainder) or var_args:
                     controller_path.append(method)
                     return self, controller_path, remainder
-                return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+            return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
 
         if self._is_exposed(current_controller, remainder[0]):
             controller_path.append(getattr(current_controller, remainder[0]))
@@ -101,7 +101,7 @@ class RestDispatcher(ObjectDispatcher):
         'get':_handle_get,
         }
 
-    def __dispatch__(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path):
         """returns: dispatcher, controller_path, remainder
         """
 

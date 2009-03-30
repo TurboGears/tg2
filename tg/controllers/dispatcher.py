@@ -1,6 +1,7 @@
 from inspect import ismethod, isclass
-
+from warnings import warn
 import pylons
+import mimetypes
 from pylons.controllers import WSGIController
 from tg.exceptions import HTTPNotFound
 
@@ -15,7 +16,7 @@ class Dispatcher(WSGIController):
         response = controller(*remainder, **dict(params))
         return response
 
-    def __dispatch__(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path):
         """override this to define how your controller should dispatch.
         returns: dispatcher, controller_path, remainder
         """
@@ -26,8 +27,8 @@ class Dispatcher(WSGIController):
         if controller_path is None:
             controller_path = [self,]
         current = controller_path[-1]
-        if hasattr(current, '__dispatch__'):
-            return current.__dispatch__(url_path, url_path, controller_path)
+        if hasattr(current, '_dispatch'):
+            return current._dispatch(url_path, url_path, controller_path)
     
     def _get_dispatchable(self, url=None):
         """
@@ -43,6 +44,17 @@ class Dispatcher(WSGIController):
         if url_path[-1] == '':
             url_path.pop()
 
+        if url_path and '.' in url_path[-1]:
+            last_remainder = url_path[-1]
+            mime_type, encoding = mimetypes.guess_type(last_remainder)
+            if mime_type:
+                extension_spot = last_remainder.rfind('.')
+                extension = last_remainder[extension_spot:]
+                url_path[-1] = last_remainder[:extension_spot]
+                pylons.request.response_type = mime_type
+                pylons.request.response_ext = extension
+
+            
         dispatcher, controller_path, remainder = self._find_dispatch(url_path)
         controller = controller_path[-2]
         func = controller_path[-1]
@@ -50,8 +62,27 @@ class Dispatcher(WSGIController):
         return func, controller, remainder, pylons.request.params.mixed()
 
     def _perform_call(self, func, args):
+        func_name = func.__name__
         func, controller, remainder, params = self._get_dispatchable(args.get('url'))
-        return self._call(func, params, remainder=remainder)
+
+        if hasattr(controller, '__before__'):
+            warn("this functionality is going to removed in the next minor version,"\
+                 " please use _before instead."
+                 )
+            controller.__before__(*args)
+        if hasattr(controller, '_before'):
+            controller._before(*args)
+            
+        r = self._call(func, params, remainder=remainder)
+
+        if hasattr(controller, '__after__'):
+            warn("this functionality is going to removed in the next minor version,"\
+                 " please use _after instead."
+                 )
+            controller.__after__(*args)
+        if hasattr(controller, '_after'):
+            controller._after(*args)
+        return r
     
     def routes_placeholder(self, url='/', start_response=None, **kwargs):
         """
@@ -75,8 +106,11 @@ class ObjectDispatcher(Dispatcher):
         return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
     def _dispatch_controller(self, url_path, controller, remainder, controller_path):
-        if hasattr(controller, '__dispatch__'):
+        if hasattr(controller, '_dispatch'):
             if isclass(controller):
+                warn("this functionality is going to removed in the next minor version,"\
+                     " please create an instance of your sub-controller instead"
+                     )
                 controller = controller()
             if hasattr(controller, "im_self"):
                 obj = controller.im_self
@@ -86,11 +120,11 @@ class ObjectDispatcher(Dispatcher):
             if hasattr(obj, '_check_security'):
                 obj._check_security()
             controller_path.append(controller)
-            return controller.__dispatch__(url_path, remainder, controller_path)
+            return controller._dispatch(url_path, remainder, controller_path)
         if hasattr(controller, '_check_security'):
             controller._check_security()
         controller_path.append(controller)
-        return self.__dispatch__(url_path, remainder, controller_path)
+        return self._dispatch(url_path, remainder, controller_path)
         
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
         orig_url_path = url_path
@@ -110,7 +144,7 @@ class ObjectDispatcher(Dispatcher):
                 url_path.pop()
         raise HTTPNotFound
 
-    def __dispatch__(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
         
         #we are plumb out of path, check for index
@@ -129,7 +163,7 @@ class ObjectDispatcher(Dispatcher):
             controller_path.append(getattr(current_controller, current_path))
             return self, controller_path, remainder[1:]
         
-        #another controller is found and it has a dispatcher object
+        #another controller is found
         if hasattr(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
             return self._dispatch_controller(url_path, current_controller, remainder[1:], controller_path)

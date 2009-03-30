@@ -370,8 +370,7 @@ class TestRestController(TestWSGIController):
         assert 'REST GETONE' in r, r
 
     def test_rest_get_delete_ugly(self):
-        r = self.app.get('/sub2/rest/rest2/1?_method=delete')
-        assert 'REST GETDEL' in r, r
+        r = self.app.get('/sub2/rest/rest2/1?_method=delete', status=405)
     
     def test_rest_get_delete(self):
         r = self.app.get('/sub2/rest/rest2/1/delete')

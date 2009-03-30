@@ -44,7 +44,7 @@ class LookupController(TGController):
         return LookupHelper(a), args
 
 class LookupAlwaysHelper:
-    """for testing __dispatch__"""
+    """for testing _dispatch"""
     
     def __init__(self, var):
         self.var = var
@@ -53,7 +53,7 @@ class LookupAlwaysHelper:
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def __dispatch__(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path):
         controller_path.append(self.always)
         return self, controller_path, remainder
 
@@ -75,7 +75,7 @@ class CustomDispatchingSubController(TGController):
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def __dispatch__(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path):
         controller_path.append(self.always)
         return self, controller_path, remainder
     
