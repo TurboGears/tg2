@@ -79,6 +79,43 @@ class CustomDispatchingSubController(TGController):
         controller_path.append(self.always)
         return self, controller_path, remainder
     
+class SubRestController(RestController):
+    @expose()
+    def get_all(self):
+        return "SUBREST GET ALL"
+    
+    @expose()
+    def get_one(self, id):
+        return "SUBREST GET ONE"
+
+    @expose()
+    def new(self):
+        return "SUBREST NEW"
+
+    @expose()
+    def edit(self, id):
+        return "SUBREST EDIT"
+
+    @expose()
+    def post(self):
+        return "SUBREST POST"
+
+    @expose()
+    def put(self, id):
+        return "SUBREST PUT"
+    
+    @expose()
+    def fxn(self):
+        return "SUBREST FXN"
+
+    @expose()
+    def get_delete(self, id):
+        return "SUBREST GET DELETE"
+
+    @expose()
+    def post_delete(self, id):
+        return "SUBREST POST DELETE"
+
 class VariableRestController(RestController):
 
     @expose()
@@ -94,15 +131,6 @@ class VariableRestController(RestController):
     def post_delete(self, *args):
         return "REST POST DELETE"
     
-class SubRestController(RestController):
-    @expose()
-    def get_all(self):
-        return "SUBREST GET ALL"
-    
-    @expose()
-    def get_one(self, id):
-        return "SUBREST GET ONE"
-
 class ExtraRestController(RestController):
     @expose()
     def get_all(self):
@@ -352,3 +380,43 @@ class TestRestController(TestWSGIController):
     def test_sub_get_all_method(self):
         r = self.app.get('/rest2/1/subrest')
         assert 'SUBREST GET ALL' in r, r
+
+    def test_sub_new(self):
+        r = self.app.get('/rest2/1/subrest/new')
+        assert 'SUBREST NEW' in r, r
+
+    def test_sub_edit(self):
+        r = self.app.get('/rest2/1/subrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+
+    def test_sub_post(self):
+        r = self.app.post('/rest2/1/subrest/')
+        assert 'SUBREST POST' in r, r
+
+    def test_sub_put(self):
+        r = self.app.put('/rest2/1/subrest/2')
+        assert 'SUBREST PUT' in r, r
+
+    def test_sub_put_hack(self):
+        r = self.app.post('/rest2/1/subrest/2?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+
+    def test_sub_delete_hack(self):
+        r = self.app.post('/rest2/1/subrest/2?_method=DELETE')
+        assert 'SUBREST POST DELETE' in r, r
+
+    def test_sub_get_delete(self):
+        r = self.app.get('/rest2/1/subrest/2/delete')
+        assert 'SUBREST GET DELETE' in r, r
+
+    def test_sub_post_delete(self):
+        r = self.app.delete('/rest2/1/subrest/2')
+        assert 'SUBREST POST DELETE' in r, r
+
+    def test_sub_get_fxn(self):
+        r = self.app.get('/rest2/1/subrest/fxn')
+        assert 'SUBREST FXN' in r, r
+
+    def test_sub_post_fxn(self):
+        r = self.app.post('/rest2/1/subrest/fxn')
+        assert 'SUBREST FXN' in r, r

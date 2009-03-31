@@ -83,13 +83,14 @@ class SubController(object):
 
 class SubController3(object):
     @expose()
-    def index(self):
+    def get_all(self):
         return 'Sub 3'
     
 class TGControllerInsideSubRestConroller(TGController):
     @expose()
     def index(self):
         return "COMPLICATED"
+
 class SubRestController(RestController):
     
     inside = TGControllerInsideSubRestConroller()
@@ -98,7 +99,7 @@ class SubRestController(RestController):
         return "SUBREST NEW"
     
     @expose()
-    def edit(self):
+    def edit(self, id):
         return "SUBREST EDIT"
 
     @expose()
@@ -106,15 +107,15 @@ class SubRestController(RestController):
         return "SUBREST FXN"
 
     @expose()
-    def get_one(self, id, *args):
+    def get_one(self, id):
         return "SUBREST GETONE"
     
     @expose()
-    def put(self, **kw):
+    def put(self, id):
         return "SUBREST PUT"
 
     @expose()
-    def post(self, **kw):
+    def post(self):
         return "SUBREST POST"
     
     @expose()
@@ -377,7 +378,7 @@ class TestRestController(TestWSGIController):
         assert 'REST GETDEL' in r, r
     
     def test_rest_post_delete(self):
-        r = self.app.post('/sub2/rest/rest2/1/delete')
+        r = self.app.post('/sub2/rest/rest2/1?_method=DELETE')
         assert 'REST POSTDEL' in r, r
         
     def test_rest_nested_new(self):
@@ -389,11 +390,11 @@ class TestRestController(TestWSGIController):
         assert 'SUBREST GETALL' in r, r
 
     def test_rest_sub_put(self):
-        r = self.app.put('/sub2/rest/rest2/2/subrest')
+        r = self.app.put('/sub2/rest/rest2/2/subrest/2')
         assert 'SUBREST PUT' in r, r
 
     def test_rest_sub_put_with_post_hack(self):
-        r = self.app.post('/sub2/rest/rest2/2/subrest?_method=PUT')
+        r = self.app.post('/sub2/rest/rest2/2/subrest/2?_method=PUT')
         assert 'SUBREST PUT' in r, r
 
     def test_rest_sub_post(self):
@@ -409,7 +410,7 @@ class TestRestController(TestWSGIController):
         assert 'SUBREST NEW' in r, r
     
     def test_rest_sub_edit(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/edit')
+        r = self.app.get('/sub2/rest/rest2/2/subrest/1/edit')
         assert 'SUBREST EDIT' in r, r
 
     def test_tg_inside_subrest(self):
@@ -429,7 +430,7 @@ class TestRestController(TestWSGIController):
         assert 'Main Default Page called' in r, r
     
     def test_subrest_get_get_one(self):
-        r = self.app.get('/sub2/rest/rest2/2/asdf')
+        r = self.app.get('/sub2/rest/rest2/2')
         assert 'REST GETONE' in r, r
 
     def test_subrest_get_not_found(self):

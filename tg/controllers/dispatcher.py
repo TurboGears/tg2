@@ -54,7 +54,6 @@ class Dispatcher(WSGIController):
                 pylons.request.response_type = mime_type
                 pylons.request.response_ext = extension
 
-            
         dispatcher, controller_path, remainder = self._find_dispatch(url_path)
         controller = controller_path[-2]
         func = controller_path[-1]
