@@ -106,6 +106,7 @@ class ControlPanel(TGController):
     """Mock TG2 protected controller using @allow_only directly."""
 
     hr = HRManagementController()
+    allow_only = not_anonymous()
 
     @expose()
     def index(self):
@@ -116,7 +117,7 @@ class ControlPanel(TGController):
     def add_user(self, user_name):
         return "%s was just registered" % user_name
 
-ControlPanel = allow_only(not_anonymous())(ControlPanel)
+#ControlPanel = allow_only(not_anonymous())(ControlPanel)
 
 
 class RootController(TGController):

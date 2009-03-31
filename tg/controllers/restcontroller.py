@@ -58,8 +58,9 @@ class RestDispatcher(ObjectDispatcher):
     def _check_for_sub_controllers(self, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
         method = None
-        for method in ('get_one', 'get'):
-            if hasattr(current_controller, method):
+        for find in ('get_one', 'get'):
+            if hasattr(current_controller, find):
+                method = find
                 break
         if method is None:
             return

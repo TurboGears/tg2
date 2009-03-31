@@ -56,7 +56,7 @@ class DecoratedController(object):
             # Let's turn Controller.allow_only into something useful for
             # the @allow_only decorator.
             predicate = self.allow_only
-            self = allow_only(predicate)(self)
+            #self = allow_only(predicate)(self)
         super(DecoratedController, self).__init__(*args, **kwargs)
 
     def _is_exposed(self, controller, name):
