@@ -346,12 +346,10 @@ class DecoratedController(object):
         pylons.c.form_values = {}
 
     def _check_security(self):
-        if not hasattr(self, "allow_only") or self.allow_only is None:
-            log.debug('No self-wide authorization at %s',
-                      pylons.request.path)
+        predicate = getattr(self, 'allow_only', None)
+        if predicate is None:
             return True
         try:
-            predicate = self.allow_only
             predicate.check_authorization(pylons.request.environ)
         except NotAuthorizedError, e:
             reason = unicode(e)
