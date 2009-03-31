@@ -113,7 +113,7 @@ class ControlPanel(TGController):
         return 'you are in the panel'
 
     @expose()
-    @require(is_user('admin'))
+    #@require(is_user('admin'))
     def add_user(self, user_name):
         return "%s was just registered" % user_name
 
