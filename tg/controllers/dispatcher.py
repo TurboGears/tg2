@@ -81,11 +81,11 @@ class Dispatcher(WSGIController):
     
     def _setup_wsgi_script_name(self, url_path, remainder, params):
         pylons.request.environ['TG_MOUNT_POINT'] = pylons.request.environ['SCRIPT_NAME']
-        pylons.request.environ['SCRIPT_NAME'] = '/'.join(url_path[:len(remainder)])
+        pylons.request.environ['NEW_SCRIPT_NAME'] = '/'.join(url_path[:len(remainder)])
         new_path = '/'.join(remainder)
         if pylons.request.environ['PATH_INFO'].endswith('/'):
             new_path +='/'
-        pylons.request.environ['PATH_INFO'] = new_path
+        pylons.request.environ['NEW_PATH_INFO'] = new_path
     
     def _perform_call(self, func, args):
         """

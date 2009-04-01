@@ -6,6 +6,7 @@ Url definition and browser redirection are defined here.
 """
 
 import pylons
+from pylons import request
 import urllib
 from warnings import warn
 
@@ -88,12 +89,13 @@ def url(base_url=None, params=None, **kwargs):
             params.update(kwargs)
 
     elif hasattr(base_url, '__iter__'):
-        base_url = u'/'+u'/'.join(base_url)
-
+        base_url = u'/'.join(base_url)
     if base_url.startswith('/'):
         base_url = pylons.request.environ['TG_MOUNT_POINT'] + base_url
     if params:
         return '?'.join((base_url, urlencode(params)))
+    print pylons.request.environ['TG_MOUNT_POINT']
+    print base_url
     return base_url
 
 def redirect(*args, **kwargs):
@@ -107,9 +109,15 @@ def redirect(*args, **kwargs):
     browser; if the request is POST, the browser will issue GET for the
     second request.
     """
+    new_url = url(*args, **kwargs)
 
-    url(*args, **kwargs)
-    found = HTTPFound(location=url(*args, **kwargs)).exception
+    #if not new_url.startswith('/'):
+        #print (request.environ['TG_MOUNT_POINT'], request.environ['SCRIPT_NAME'], new_url)
+        #new_url = '/'.join((request.environ['TG_MOUNT_POINT'], request.environ['SCRIPT_NAME'], new_url))
+
+    
+    print new_url
+    found = HTTPFound(location=new_url).exception
 
     raise found
 
