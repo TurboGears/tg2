@@ -121,8 +121,6 @@ class ObjectDispatcher(Dispatcher):
                 obj._check_security()
             controller_path.append(controller)
             return controller._dispatch(url_path, remainder, controller_path)
-        if hasattr(controller, '_check_security'):
-            controller._check_security()
         controller_path.append(controller)
         return self._dispatch(url_path, remainder, controller_path)
         

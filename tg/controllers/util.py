@@ -1,39 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Controller Classes, dispatch methods and helper functions for controller operation.
+Helper functions for controller operation.
 
-This module contains the main classes which describe Turbogears2 Controllers.
-These Controllers are handled by the Dispatch functions which are also provided here.
-
-Lastly, url definition and browser redirection are defined here.
+Url definition and browser redirection are defined here.
 """
 
-import logging
-import warnings
-import urlparse, urllib
-import mimetypes
-import inspect
-
-import formencode
 import pylons
-from pylons import url as pylons_url, config, request
-from pylons.controllers import WSGIController
-from pylons.controllers.util import abort
+from pylons import url as pylons_url
+from tg.decorators import expose
 
-from repoze.what.predicates import NotAuthorizedError, not_anonymous
-import tw
+from tg.exceptions import HTTPFound
 
-from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
-    HTTPClientError)
-from tg.render import render as tg_render
-from tg.decorators import expose, allow_only
-from tg.i18n import setup_i18n
-from tg.flash import flash
-
-from webob import Request
-from webob.exc import HTTPUnauthorized
-
-log = logging.getLogger(__name__)
 
 def url(*args, **kwargs):
     """Generate an absolute URL that's specific to this application.
@@ -119,8 +96,6 @@ def pylons_formencode_gettext(value):
 
     return trans
 
-
 __all__ = [
-    "DecoratedController", "ObjectDispatchController", "TGController",
-    "url", "redirect", "RestController"
+    "url", "redirect"
     ]

@@ -21,7 +21,7 @@ class RestDispatcher(ObjectDispatcher):
             r = self._check_for_sub_controllers(url_path, remainder, controller_path)
             if r:
                 return r
-            
+
         method = self._find_first_exposed(current_controller, [method,])
         if method:
             args = inspect.getargspec(method)
@@ -51,7 +51,6 @@ class RestDispatcher(ObjectDispatcher):
         #you may not send a delete request to a non-delete function
         if remainder and self._is_exposed(current_controller, remainder[0]):
             abort(405)
-
 
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
     
@@ -88,9 +87,6 @@ class RestDispatcher(ObjectDispatcher):
             method = 'get_delete'
 
         current_controller = controller_path[-1]
-        r = self._check_for_sub_controllers(url_path, remainder, controller_path)
-        if r:
-            return r
 
         if self._is_exposed(current_controller, method):
             method = getattr(current_controller, method)
@@ -114,6 +110,13 @@ class RestDispatcher(ObjectDispatcher):
             if method:
                 controller_path.append(method)
                 return self, controller_path, remainder
+            if self._is_exposed(current_controller, 'get_one'):
+                method = current_controller.get_one
+                args = inspect.getargspec(method)
+                var_args = args[1]
+                controller_path.append(method)
+                if var_args:
+                    return self, controller_path, remainder
             return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
 
         #test for "edit" or "new"

@@ -84,11 +84,14 @@ class VariableSubRestController(RestController):
     def get_one(self, *args):
         return "SUBREST GET ONE"
     @expose()
-    def get_post(self, *args):
-        return "SUBREST GET ONE"
+    def put(self, *args):
+        return "SUBREST PUT"
     @expose()
-    def get_put(self, *args):
-        return "SUBREST GET ONE"
+    def edit(self, *args):
+        return "SUBREST EDIT"
+    @expose()
+    def new(self, *args):
+        return "SUBREST NEW"
     @expose()
     def get_delete(self, *args):
         return "SUBREST GET DELETE"
@@ -436,13 +439,61 @@ class TestRestController(TestWSGIController):
         r = self.app.get('/rest3/subrest/1')
         assert 'SUBREST GET ONE' in r, r
 
+    def test_var_sub_edit_method(self):
+        r = self.app.get('/rest3/1/3/3/subrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/1/3/subrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/subrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+
+    def test_var_sub_edit_var_method(self):
+        r = self.app.get('/rest3/1/3/3/vsubrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/1/3/vsubrest/1/a/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/vsubrest/edit')
+        assert 'SUBREST EDIT' in r, r
+
+    def test_var_sub_edit_method(self):
+        r = self.app.get('/rest3/1/3/3/subrest/1/delete')
+        assert 'SUBREST GET DELETE' in r, r
+        r = self.app.get('/rest3/1/3/subrest/1/delete')
+        assert 'SUBREST GET DELETE' in r, r
+        r = self.app.get('/rest3/subrest/1/delete')
+        assert 'SUBREST GET DELETE' in r, r
+
+    def test_var_sub_edit_var_method(self):
+        r = self.app.get('/rest3/1/3/3/vsubrest/1/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/1/3/vsubrest/1/a/edit')
+        assert 'SUBREST EDIT' in r, r
+        r = self.app.get('/rest3/vsubrest/edit')
+        assert 'SUBREST EDIT' in r, r
+
+    def test_var_sub_new_method(self):
+        r = self.app.get('/rest3/1/3/3/subrest/new')
+        assert 'SUBREST NEW' in r, r
+        r = self.app.get('/rest3/1/3/subrest/new')
+        assert 'SUBREST NEW' in r, r
+        r = self.app.get('/rest3/subrest/new')
+        assert 'SUBREST NEW' in r, r
+
     def test_var_sub_var_get_one_method(self):
         r = self.app.get('/rest3/1/3/3/vsubrest/1')
         assert 'SUBREST GET ONE' in r, r
-        r = self.app.get('/rest3/1/3/vsubrest/1')
+        r = self.app.get('/rest3/1/3/vsubrest/1/a')
         assert 'SUBREST GET ONE' in r, r
-        r = self.app.get('/rest3/vsubrest/1')
+        r = self.app.get('/rest3/vsubrest/')
         assert 'SUBREST GET ONE' in r, r
+
+    def test_var_sub_var_put_method(self):
+        r = self.app.put('/rest3/1/3/3/vsubrest/1')
+        assert 'SUBREST PUT' in r, r
+        r = self.app.put('/rest3/1/3/vsubrest/1/asdf')
+        assert 'SUBREST PUT' in r, r
+        r = self.app.put('/rest3/vsubrest/')
+        assert 'SUBREST PUT' in r, r
 
     def test_var_sub_post_method(self):
         r = self.app.post('/rest3/1/3/3/subrest/')
@@ -466,6 +517,30 @@ class TestRestController(TestWSGIController):
         r = self.app.post('/rest3/1/3/subrest/1?_method=PUT')
         assert 'SUBREST PUT' in r, r
         r = self.app.post('/rest3/subrest/1?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+
+    def test_var_sub_var_delete_method(self):
+        r = self.app.delete('/rest3/1/3/3/vsubrest/1')
+        assert 'SUBREST POST DELETE' in r, r
+        r = self.app.delete('/rest3/1/3/vsubrest/1')
+        assert 'SUBREST POST DELETE' in r, r
+        r = self.app.delete('/rest3/vsubrest/')
+        assert 'SUBREST POST DELETE' in r, r
+
+    def test_var_sub_delete_var_hack_method(self):
+        r = self.app.post('/rest3/1/3/3/vsubrest/1?_method=DELETE')
+        assert 'SUBREST POST DELETE' in r, r
+        r = self.app.post('/rest3/1/3/vsubrest/1?_method=DELETE')
+        assert 'SUBREST POST DELETE' in r, r
+        r = self.app.post('/rest3/vsubrest?_method=DELETE')
+        assert 'SUBREST POST DELETE' in r, r
+
+    def _test_var_sub_var_put_hack_method(self):
+        r = self.app.post('/rest3/1/3/3/vsubrest/1?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+        r = self.app.post('/rest3/1/3/vsubrest/1/a?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+        r = self.app.post('/rest3/vsubrest/?_method=PUT')
         assert 'SUBREST PUT' in r, r
 
     def test_var_sub_delete_hack_method(self):
