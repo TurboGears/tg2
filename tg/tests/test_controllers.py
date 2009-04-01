@@ -32,10 +32,12 @@ def test_lowerapproots():
 
 def test_multi_values():
     create_request('/')
-    assert url("/foo", bar=[1,2]) in \
-            ["/foo?bar=1&bar=2", "/foo?bar=2&bar=1"]
-    assert url("/foo", bar=("asdf","qwer")) in \
-            ["/foo?bar=qwer&bar=asdf", "/foo?bar=asdf&bar=qwer"]
+    r = url("/foo", bar=(u"asdf",u"qwer"))
+    assert r in \
+            ["/foo?bar=qwer&bar=asdf", "/foo?bar=asdf&bar=qwer"], r
+    r = url("/foo", bar=[1,2])
+    assert  r in \
+            ["/foo?bar=1&bar=2", "/foo?bar=2&bar=1"], r
 
 def test_unicode():
     """url() can handle unicode parameters"""
@@ -54,7 +56,7 @@ def test_list():
     """url() can handle list parameters, with unicode too"""
     create_request("/")
     value = url('/', foo=['bar', u'\N{LATIN SMALL LETTER A WITH GRAVE}']),
-    assert '/?foo=bar&foo=%C3%A0' in value
+    assert '/?foo=bar&foo=%C3%A0' in value, value
 
 def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}

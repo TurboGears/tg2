@@ -6,13 +6,61 @@ Url definition and browser redirection are defined here.
 """
 
 import pylons
-from pylons import url as pylons_url
-from tg.decorators import expose
+import urllib
+from warnings import warn
 
 from tg.exceptions import HTTPFound
 
+def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
+    """
+    Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
-def url(*args, **kwargs):
+    If strings_only is True, don't convert (some) non-string-like objects.
+    
+    This function was borrowed from Django
+    """
+    if strings_only and isinstance(s, (types.NoneType, int)):
+        return s
+    elif not isinstance(s, basestring):
+        try:
+            return str(s)
+        except UnicodeEncodeError:
+            if isinstance(s, Exception):
+                # An Exception subclass containing non-ASCII data that doesn't
+                # know how to print itself properly. We shouldn't raise a
+                # further exception.
+                return ' '.join([smart_str(arg, encoding, strings_only,
+                        errors) for arg in s])
+            return unicode(s).encode(encoding, errors)
+    elif isinstance(s, unicode):
+        r = s.encode(encoding, errors)
+        return r
+    elif s and encoding != 'utf-8':
+        return s.decode('utf-8', errors).encode(encoding, errors)
+    else:
+        return s
+
+def generate_smart_str(params):
+    for key, value in params.iteritems():
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                yield smart_str(key), smart_str(item)
+        else:
+            yield smart_str(key), smart_str(value)
+    
+def urlencode(params):
+    """
+    A version of Python's urllib.urlencode() function that can operate on
+    unicode strings. The parameters are first case to UTF-8 encoded strings and
+    then encoded as per normal.
+    """
+    l = [i for i in generate_smart_str(params)]
+    print l
+    encoded =  urllib.urlencode(l)
+    print encoded
+    return encoded
+
+def url(base_url=None, params=None, **kwargs):
     """Generate an absolute URL that's specific to this application.
 
     The URL function takes a string, appends the SCRIPT_NAME and adds url
@@ -28,27 +76,25 @@ def url(*args, **kwargs):
     argument is not a basestring but a method that has been routed to,
     the standard routes url_for reverse lookup system will be used.
     """
-    args = list(args)
-    if isinstance(args[0], list):
-        args[0] = u'/'.join(args[0])
-    if args and isinstance(args[0], basestring):
-        #First we handle the possibility that the user passed in params
-        if isinstance(kwargs.get('params'), dict):
-            params = kwargs['params'].copy()
-            del kwargs['params']
+    #remove in 2.2
+    if base_url is None:
+        base_url = '/'
+    if params is None:
+        params = {}
+        
+    #First we handle the possibility that the user passed in params
+    if base_url and isinstance(base_url, basestring):
+        #remove in 2.2
+        if kwargs.keys():
+            warn('passing in keyword arguments as url components is deprecated please pass\
+                  your arguments as a dictionary to the params argument.')
+            params = params.copy()
             params.update(kwargs)
-            kwargs = params
 
-        if len(args) >= 2 and isinstance(args[1], dict):
-            params = args[1].copy()
-            if kwargs:
-                params.update(kwargs)
-            kwargs = params
-            args.pop(1)
+    elif hasattr(base_url, '__iter__'):
+        base_url = pylons.request.environ.get('TG_MOUNT_POINT', '/') + u'/'.join(base_url)
 
-        if isinstance(args[0], unicode):
-            args[0] = args[0].encode('utf8')
-    return pylons_url(*args, **kwargs)
+    return '?'.join((base_url, urlencode(params)))
 
 def redirect(*args, **kwargs):
     """Generate an HTTP redirect.

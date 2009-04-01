@@ -80,6 +80,7 @@ class Dispatcher(WSGIController):
         pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
     
     def _setup_wsgi_script_name(self, url_path, remainder, params):
+        pylons.request.environ['TG_MOUNT_POINT'] = pylons.request.environ['SCRIPT_NAME']
         pylons.request.environ['SCRIPT_NAME'] = '/'.join(url_path[:len(remainder)])
         new_path = '/'.join(remainder)
         if pylons.request.environ['PATH_INFO'].endswith('/'):
@@ -109,7 +110,7 @@ class Dispatcher(WSGIController):
             controller._before(*args)
             
         self._setup_wsgiorg_routing_args(url_path, remainder, params)
-        #self._setup_wsgi_script_name(url_path, remainder, params)
+        self._setup_wsgi_script_name(url_path, remainder, params)
 
         r = self._call(func, params, remainder=remainder)
 
