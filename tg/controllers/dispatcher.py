@@ -51,7 +51,7 @@ class Dispatcher(WSGIController):
         if hasattr(current, '_dispatch'):
             return current._dispatch(url_path, url_path, controller_path)
     
-    def _get_dispatchable(self, url=None):
+    def _get_dispatchable(self, url_path):
         """
         Returns a tuple (controller, remainder, params)
 
@@ -60,11 +60,6 @@ class Dispatcher(WSGIController):
             url as string
         """
         
-        url_path = pylons.request.path.split('/')[1:]
-
-        if url_path[-1] == '':
-            url_path.pop()
-
         if url_path and '.' in url_path[-1]:
             last_remainder = url_path[-1]
             mime_type, encoding = mimetypes.guess_type(last_remainder)
@@ -81,12 +76,29 @@ class Dispatcher(WSGIController):
         pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
         return func, controller, remainder, pylons.request.params.mixed()
 
+    def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
+        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
+    
+    def _setup_wsgi_script_name(self, url_path, remainder, params):
+        pylons.request.environ['SCRIPT_NAME'] = '/'.join(url_path[:len(remainder)])
+        new_path = '/'.join(remainder)
+        if pylons.request.environ['PATH_INFO'].endswith('/'):
+            new_path +='/'
+        pylons.request.environ['PATH_INFO'] = new_path
+    
     def _perform_call(self, func, args):
         """
         This function is called from within Pylons and should not be overidden.
         """
         func_name = func.__name__
-        func, controller, remainder, params = self._get_dispatchable(args.get('url'))
+        pylons.request.path.split('/')[1:]
+
+        url_path = pylons.request.path.split('/')[1:]
+
+        if url_path[-1] == '':
+            url_path.pop()
+
+        func, controller, remainder, params = self._get_dispatchable(url_path)
 
         if hasattr(controller, '__before__'):
             warn("this functionality is going to removed in the next minor version,"\
@@ -96,6 +108,9 @@ class Dispatcher(WSGIController):
         if hasattr(controller, '_before'):
             controller._before(*args)
             
+        self._setup_wsgiorg_routing_args(url_path, remainder, params)
+        #self._setup_wsgi_script_name(url_path, remainder, params)
+
         r = self._call(func, params, remainder=remainder)
 
         if hasattr(controller, '__after__'):

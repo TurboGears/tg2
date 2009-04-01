@@ -3,7 +3,7 @@
 """
 import pylons
 from tgcontroller import TGController
-from util import expose
+from util import expose, redirect
 
 class WSGIAppController(TGController):
     """
