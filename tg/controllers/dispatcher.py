@@ -116,6 +116,7 @@ class ObjectDispatcher(Dispatcher):
             else:
                 obj = controller
 
+                
             if hasattr(obj, '_check_security'):
                 obj._check_security()
             controller_path.append(controller)
@@ -146,6 +147,8 @@ class ObjectDispatcher(Dispatcher):
     def _dispatch(self, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
 
+        if hasattr(current_controller, '_check_security'):
+            current_controller._check_security()
         #we are plumb out of path, check for index
         if not len(remainder):
             if hasattr(current_controller, 'index'):

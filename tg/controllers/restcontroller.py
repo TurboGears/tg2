@@ -39,7 +39,7 @@ class RestDispatcher(ObjectDispatcher):
             return r
 
         current_controller = controller_path[-1]
-        method = self._find_first_exposed(current_controller, ['post_delete', 'delete'])
+        method = self._find_first_exposed(current_controller, ('post_delete', 'delete'))
         if method:
             args = inspect.getargspec(method)
             fixed_arg_length = len(args[0])-1
@@ -82,7 +82,7 @@ class RestDispatcher(ObjectDispatcher):
 
     def _handle_delete_edit_or_new(self, url_path, remainder, controller_path):
         method = remainder[-1]
-        if method not in ['new', 'edit', 'delete']:
+        if method not in ('new', 'edit', 'delete'):
             return
         if method == 'delete':
             method = 'get_delete'
@@ -105,7 +105,7 @@ class RestDispatcher(ObjectDispatcher):
     def _handle_get(self, method, url_path, remainder, controller_path):
         current_controller = controller_path[-1]
         if not remainder:
-            method = self._find_first_exposed(current_controller, ['get_all', 'get'])
+            method = self._find_first_exposed(current_controller, ('get_all', 'get'))
             if method:
                 controller_path.append(method)
                 return self, controller_path, remainder
