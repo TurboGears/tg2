@@ -91,9 +91,12 @@ def create_request(path, environ=None):
     reg.prepare()
     # setup pylons.request to point to our Registry
     reg.register(pylons.request, req)
+    
+    
     # setup tmpl context
     tmpl_context._push_object(ContextObj())
     url._push_object(URLGenerator(default_map, environ))
+    pylons.request.environ['TG_MOUNT_POINT'] = environ['SCRIPT_NAME']
     return req
 
 class TestWSGIController(TestCase):

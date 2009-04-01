@@ -47,7 +47,6 @@ def test_unicode():
         u'\N{LATIN SMALL LETTER I WITH GRAVE}'
         u'\N{LATIN SMALL LETTER O WITH GRAVE}'
         u'\N{LATIN SMALL LETTER U WITH GRAVE}')
-    print url(unicodestring)
     eq_(url('/', x=unicodestring),
         '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
         )

@@ -54,11 +54,7 @@ def urlencode(params):
     unicode strings. The parameters are first case to UTF-8 encoded strings and
     then encoded as per normal.
     """
-    l = [i for i in generate_smart_str(params)]
-    print l
-    encoded =  urllib.urlencode(l)
-    print encoded
-    return encoded
+    return urllib.urlencode([i for i in generate_smart_str(params)])
 
 def url(base_url=None, params=None, **kwargs):
     """Generate an absolute URL that's specific to this application.
@@ -92,9 +88,13 @@ def url(base_url=None, params=None, **kwargs):
             params.update(kwargs)
 
     elif hasattr(base_url, '__iter__'):
-        base_url = pylons.request.environ.get('TG_MOUNT_POINT', '/') + u'/'.join(base_url)
+        base_url = u'/'+u'/'.join(base_url)
 
-    return '?'.join((base_url, urlencode(params)))
+    if base_url.startswith('/'):
+        base_url = pylons.request.environ['TG_MOUNT_POINT'] + base_url
+    if params:
+        return '?'.join((base_url, urlencode(params)))
+    return base_url
 
 def redirect(*args, **kwargs):
     """Generate an HTTP redirect.
