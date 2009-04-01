@@ -2,7 +2,6 @@
 
 import tg, pylons
 from tg.controllers import TGController, RestController
-from tg.controllers.restcontroller import InvalidRequestError
 from tg.decorators import expose, validate, override_template
 from routes import Mapper
 from routes.middleware import RoutesMiddleware

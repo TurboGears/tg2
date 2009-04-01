@@ -1,3 +1,21 @@
+"""
+This is the main dispatcher module.
+
+Dispatch works as follows:
+Start at the RootController, the root controller must
+have a _dispatch function, which defines how we move
+from object to object in the system.
+Continue following the dispatch mechanism for a given
+controller until you reach another controller with a 
+_dispatch method defined.  Use the new _dispatch
+method until anther controller with _dispatch defined
+or until the url has been traversed to entirety.
+
+This module also contains the standard ObjectDispatch
+class which provides the ordinary TurboGears mechanism.
+
+"""
+
 from inspect import ismethod, isclass
 from warnings import warn
 import pylons
@@ -8,6 +26,9 @@ from tg.exceptions import HTTPNotFound
 HTTPNotFound = HTTPNotFound().exception
 
 class Dispatcher(WSGIController):
+    """
+       Extend this class to define your own mechanism for dispatch.
+    """
 
     def _call(self, controller, params, remainder=None):
         """
@@ -23,7 +44,7 @@ class Dispatcher(WSGIController):
         raise NotImplementedError
     
     def _find_dispatch(self, url_path, controller_path=None):
-        """Returns dispatcher, controller_path, remainder"""
+        """Returns a tuple (dispatcher, controller_path, remainder)"""
         if controller_path is None:
             controller_path = [self,]
         current = controller_path[-1]
@@ -61,6 +82,9 @@ class Dispatcher(WSGIController):
         return func, controller, remainder, pylons.request.params.mixed()
 
     def _perform_call(self, func, args):
+        """
+        This function is called from within Pylons and should not be overidden.
+        """
         func_name = func.__name__
         func, controller, remainder, params = self._get_dispatchable(args.get('url'))
 
@@ -91,20 +115,79 @@ class Dispatcher(WSGIController):
         pass
 
 class ObjectDispatcher(Dispatcher):
+    """
+    Object dispatch (also "object publishing") means that each portion of the
+    URL becomes a lookup on an object.  The next part of the URL applies to the
+    next object, until you run out of URL.  Processing starts on a "Root"
+    object.
 
+    Thus, /foo/bar/baz become URL portion "foo", "bar", and "baz".  The
+    dispatch looks for the "foo" attribute on the Root URL, which returns
+    another object.  The "bar" attribute is looked for on the new object, which
+    returns another object.  The "baz" attribute is similarly looked for on
+    this object.
+
+    Dispatch does not have to be directly on attribute lookup, objects can also
+    have other methods to explain how to dispatch from them.  The search ends
+    when a decorated controller method is found.
+
+    The rules work as follows:
+
+    1) If the current object under consideration is a decorated controller
+       method, the search is ended.
+
+    2) If the current object under consideration has a "default" method, keep a
+       record of that method.  If we fail in our search, and the most recent
+       method recorded is a "default" method, then the search is ended with
+       that method returned.
+
+    3) If the current object under consideration has a "lookup" method, keep a
+       record of that method.  If we fail in our search, and the most recent
+       method recorded is a "lookup" method, then execute the "lookup" method,
+       and start the search again on the return value of that method.
+
+    4) If the URL portion exists as an attribute on the object in question,
+       start searching again on that attribute.
+
+    5) If we fail our search, try the most recent recorded methods as per 2 and
+       3.
+    """
     def _find_first_exposed(self, controller, methods):
         for method in methods:
             if self._is_exposed(controller, method):
                 return getattr(controller, method)
     
     def _is_exposed(self, controller, name):
+        """Override this function to define how a controller method is
+        determined to be exposed.
+        
+        :Arguments:
+          controller - controller with methods that may or may not be exposed.
+          name - name of the method that is tested.
+        
+        :Returns:
+           True or None
+        """
         if hasattr(controller, name) and ismethod(getattr(controller, name)):
             return True
         
     def _is_controller(self, controller, name):
+        """
+        Override this function to define how an object is determined to be a
+        controller.
+        """
         return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
     def _dispatch_controller(self, url_path, controller, remainder, controller_path):
+        """
+           Essentially, this method defines what to do when we move to the next
+           layer in the url chain, if a new controller is needed.  If the new
+           controller has a _dispatch method, dispatch proceeds to the new controller's
+           mechanism.
+           
+           Also, this is the place where the controller is checked for controller-level
+           security.
+        """
         if hasattr(controller, '_dispatch'):
             if isclass(controller):
                 warn("this functionality is going to removed in the next minor version,"\
@@ -125,6 +208,11 @@ class ObjectDispatcher(Dispatcher):
         return self._dispatch(url_path, remainder, controller_path)
         
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
+        """
+           When the dispatch has reached the end of the tree but not found an applicable method, 
+           so therefore we head back up the branches of the tree until we found a method which
+           matches with a default or lookup method.
+        """
         orig_url_path = url_path
         if len(remainder):
             url_path = url_path[:-len(remainder)]
@@ -143,6 +231,10 @@ class ObjectDispatcher(Dispatcher):
         raise HTTPNotFound
 
     def _dispatch(self, url_path, remainder, controller_path):
+        """
+        This method defines how the object dispatch mechanism works, including
+        checking for security along the way.
+        """
         current_controller = controller_path[-1]
 
         if hasattr(current_controller, '_check_security'):

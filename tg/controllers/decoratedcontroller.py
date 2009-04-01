@@ -1,56 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-Controller Classes, dispatch methods and helper functions for controller operation.
-
-This module contains the main classes which describe Turbogears2 Controllers.
-These Controllers are handled by the Dispatch functions which are also provided here.
-
-Lastly, url definition and browser redirection are defined here.
+This module defines the class for decorating controller methods so that on
+call the methods can be expressed using expose, validate, and other
+decorators to effect a rendered page.
 """
 
-import logging
-import warnings
-import urlparse, urllib
-import mimetypes
 import inspect
 
 import formencode
 import pylons
-from pylons import url as pylons_url, config, request
-from pylons.controllers import WSGIController
+from pylons import config, request
 from pylons.controllers.util import abort
 
 from repoze.what.predicates import NotAuthorizedError, not_anonymous
 import tw
 
-from tg.exceptions import (HTTPFound, HTTPNotFound, HTTPException,
-    HTTPClientError)
 from tg.render import render as tg_render
-from tg.decorators import expose, allow_only
-from tg.i18n import setup_i18n
+from tg.decorators import expose
 from tg.flash import flash
 
-from webob import Request
-from webob.exc import HTTPUnauthorized
-
-log = logging.getLogger(__name__)
 from util import pylons_formencode_gettext
 
-# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't
+# @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
-def _configured_engines():
-    """
-    Returns a set containing the names of the currently configured template
-    engines from the active application's globals
-    """
-    g = pylons.app_globals._current_obj()
-    if not hasattr(g, 'tg_configured_engines'):
-        g.tg_configured_engines = set()
-    return g.tg_configured_engines
-
 class DecoratedController(object):
+    """Creates an interface to hang decoration attributes on
+    controller methods for the purpose of rendering web content.
+    """
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'allow_only') and self.allow_only is not None:
             # Let's turn Controller.allow_only into something useful for
@@ -67,7 +45,7 @@ class DecoratedController(object):
 
     def _call(self, controller, params, remainder=None):
         """
-        _perform_call is called by _inspect_call in Pylons' WSGIController.
+        _call is called by _perform_call in Pylons' WSGIController.
 
         Any of the before_validate hook, the validation, the before_call hook,
         and the controller method can return a FormEncode Invalid exception,
@@ -368,6 +346,16 @@ class DecoratedController(object):
             pylons.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
+
+def _configured_engines():
+    """
+    Returns a set containing the names of the currently configured template
+    engines from the active application's globals
+    """
+    g = pylons.app_globals._current_obj()
+    if not hasattr(g, 'tg_configured_engines'):
+        g.tg_configured_engines = set()
+    return g.tg_configured_engines
 
 __all__ = [
     "DecoratedController"
