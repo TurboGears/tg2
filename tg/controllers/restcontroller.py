@@ -103,6 +103,11 @@ class RestDispatcher(ObjectDispatcher):
                 return self, controller_path, remainder[:-1]
 
     def _handle_get(self, method, url_path, remainder, controller_path):
+        
+        r = self._check_for_sub_controllers(url_path, remainder, controller_path)
+        if r:
+            return r
+
         current_controller = controller_path[-1]
         if not remainder:
             method = self._find_first_exposed(current_controller, ('get_all', 'get'))
@@ -130,14 +135,11 @@ class RestDispatcher(ObjectDispatcher):
             fixed_arg_length = len(args[0])-1
             var_args = args[1]
 
-            if len(remainder) == fixed_arg_length:
+            if len(remainder) == fixed_arg_length or var_args:
                 controller_path.append(method)
                 return self, controller_path, remainder
                 
-            r = self._check_for_sub_controllers(url_path, remainder, controller_path)
-            if r:
-                return r
-
+            
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
     
     _handler_lookup = {
