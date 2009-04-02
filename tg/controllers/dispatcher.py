@@ -80,13 +80,8 @@ class Dispatcher(WSGIController):
         pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
     
     def _setup_wsgi_script_name(self, url_path, remainder, params):
-        pylons.request.environ['TG_MOUNT_POINT'] = pylons.request.environ['SCRIPT_NAME']
-        pylons.request.environ['NEW_SCRIPT_NAME'] = '/'.join(url_path[:len(remainder)])
-        new_path = '/'.join(remainder)
-        if pylons.request.environ['PATH_INFO'].endswith('/'):
-            new_path +='/'
-        pylons.request.environ['NEW_PATH_INFO'] = new_path
-    
+        pass
+
     def _perform_call(self, func, args):
         """
         This function is called from within Pylons and should not be overidden.
