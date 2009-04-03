@@ -204,3 +204,6 @@ class odict(dict):
         item = self._ordering[-1]
         del self[item]
         self._ordering.remove(item)
+        
+    def __str__(self):
+        return str(self.items())

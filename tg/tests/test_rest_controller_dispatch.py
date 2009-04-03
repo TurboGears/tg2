@@ -53,7 +53,7 @@ class LookupAlwaysHelper:
         return 'always go here'
 
     def _dispatch(self, url_path, remainder, controller_path):
-        controller_path.append(self.always)
+        controller_path['/'+'/'.join(url_path)] = self.always
         return self, controller_path, remainder
 
 class LookupAlwaysController(TGController):
@@ -75,7 +75,7 @@ class CustomDispatchingSubController(TGController):
         return 'always go here'
 
     def _dispatch(self, url_path, remainder, controller_path):
-        controller_path.append(self.always)
+        controller_path['/'+'/'.join(url_path)] = self.always
         return self, controller_path, remainder
     
 class VariableSubRestController(RestController):

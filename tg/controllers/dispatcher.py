@@ -191,7 +191,7 @@ class ObjectDispatcher(Dispatcher):
         """
         return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
-    def _dispatch_controller(self, url_path, controller, remainder, controller_path):
+    def _dispatch_controller(self, url_path, current_path, controller, remainder, controller_path):
         """
            Essentially, this method defines what to do when we move to the next
            layer in the url chain, if a new controller is needed.  If the new
@@ -215,10 +215,10 @@ class ObjectDispatcher(Dispatcher):
                 
             if hasattr(obj, '_check_security'):
                 obj._check_security()
-            controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller
+            controller_path[current_path] = controller
             return controller._dispatch(url_path, remainder, controller_path)
 
-        controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller
+        controller_path[current_path] = controller
         return self._dispatch(url_path, remainder, controller_path)
         
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
@@ -233,11 +233,11 @@ class ObjectDispatcher(Dispatcher):
         for i in xrange(len(controller_path)):
             controller = controller_path.getitem(-1)
             if self._is_exposed(controller, 'default'):
-                controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller.default
+                controller_path['default'] = controller.default
                 return self, controller_path, remainder
             if self._is_exposed(controller, 'lookup'):
                 controller, remainder = controller.lookup(*remainder)
-                return self._dispatch_controller(orig_url_path, controller, remainder[1:], controller_path)
+                return self._dispatch_controller(orig_url_path, 'lookup', controller, remainder[1:], controller_path)
             controller_path.pop()
             if len(url_path):
                 remainder.insert(0,url_path[-1])
@@ -256,7 +256,7 @@ class ObjectDispatcher(Dispatcher):
         #we are plumb out of path, check for index
         if not remainder:
             if hasattr(current_controller, 'index'):
-                controller_path['/'+'/'.join(url_path)+'/'] = current_controller.index
+                controller_path['index'] = current_controller.index
                 return  self, controller_path, remainder
             #if there is no index, head up the tree 
             #to see if there is a default or lookup method we can use
@@ -266,13 +266,13 @@ class ObjectDispatcher(Dispatcher):
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
-            controller_path['/'+'/'.join(url_path[:-len(remainder)])] = getattr(current_controller, current_path)
+            controller_path[current_path] = getattr(current_controller, current_path)
             return self, controller_path, remainder[1:]
         
         #another controller is found
         if hasattr(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
-            return self._dispatch_controller(url_path, current_controller, remainder[1:], controller_path)
+            return self._dispatch_controller(url_path, current_path, current_controller, remainder[1:], controller_path)
         
         #dispatch not found
         return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
