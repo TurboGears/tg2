@@ -22,6 +22,7 @@ import pylons
 import mimetypes
 from pylons.controllers import WSGIController
 from tg.exceptions import HTTPNotFound
+from tg.util import odict
 
 HTTPNotFound = HTTPNotFound().exception
 
@@ -46,8 +47,9 @@ class Dispatcher(WSGIController):
     def _find_dispatch(self, url_path, controller_path=None):
         """Returns a tuple (dispatcher, controller_path, remainder)"""
         if controller_path is None:
-            controller_path = [self,]
-        current = controller_path[-1]
+            controller_path = odict()
+            controller_path['/'] = self
+        current = controller_path.getitem(-1)
         if hasattr(current, '_dispatch'):
             return current._dispatch(url_path, url_path, controller_path)
     
@@ -71,8 +73,8 @@ class Dispatcher(WSGIController):
                 pylons.request.response_ext = extension
 
         dispatcher, controller_path, remainder = self._find_dispatch(url_path)
-        controller = controller_path[-2]
-        func = controller_path[-1]
+        controller = controller_path.getitem(-2)
+        func = controller_path.getitem(-1)
         pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
         return func, controller, remainder, pylons.request.params.mixed()
 
@@ -213,9 +215,10 @@ class ObjectDispatcher(Dispatcher):
                 
             if hasattr(obj, '_check_security'):
                 obj._check_security()
-            controller_path.append(controller)
+            controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller
             return controller._dispatch(url_path, remainder, controller_path)
-        controller_path.append(controller)
+
+        controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller
         return self._dispatch(url_path, remainder, controller_path)
         
     def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
@@ -228,9 +231,9 @@ class ObjectDispatcher(Dispatcher):
         if len(remainder):
             url_path = url_path[:-len(remainder)]
         for i in xrange(len(controller_path)):
-            controller = controller_path[-1]
+            controller = controller_path.getitem(-1)
             if self._is_exposed(controller, 'default'):
-                controller_path.append(controller.default)
+                controller_path['/'+'/'.join(url_path[:-len(remainder)])] = controller.default
                 return self, controller_path, remainder
             if self._is_exposed(controller, 'lookup'):
                 controller, remainder = controller.lookup(*remainder)
@@ -246,14 +249,14 @@ class ObjectDispatcher(Dispatcher):
         This method defines how the object dispatch mechanism works, including
         checking for security along the way.
         """
-        current_controller = controller_path[-1]
+        current_controller = controller_path.getitem(-1)
 
         if hasattr(current_controller, '_check_security'):
             current_controller._check_security()
         #we are plumb out of path, check for index
-        if not len(remainder):
+        if not remainder:
             if hasattr(current_controller, 'index'):
-                controller_path.append(current_controller.index)
+                controller_path['/'+'/'.join(url_path)+'/'] = current_controller.index
                 return  self, controller_path, remainder
             #if there is no index, head up the tree 
             #to see if there is a default or lookup method we can use
@@ -263,7 +266,7 @@ class ObjectDispatcher(Dispatcher):
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
-            controller_path.append(getattr(current_controller, current_path))
+            controller_path['/'+'/'.join(url_path[:-len(remainder)])] = getattr(current_controller, current_path)
             return self, controller_path, remainder[1:]
         
         #another controller is found
