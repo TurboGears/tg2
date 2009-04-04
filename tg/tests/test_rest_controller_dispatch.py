@@ -421,6 +421,8 @@ class TestRestController(TestWSGIController):
     def test_sub_get_all_method(self):
         r = self.app.get('/rest2/1/subrest')
         assert 'SUBREST GET ALL' in r, r
+#        args = pylons.request.environ['wsgiorg.routing_args']
+#        assert args == {}, args
 
     def test_var_sub_get_all_method(self):
         r = self.app.get('/rest3/1/3/3/subrest')

@@ -67,17 +67,20 @@ class RestDispatcher(ObjectDispatcher):
         if method is None:
             return
         args = inspect.getargspec(getattr(current_controller, method))
-        fixed_arg_length = len(args[0])-1
+        fixed_args = args[0][1:]
+        fixed_arg_length = len(fixed_args)
         var_args = args[1]
         if var_args:
             for i, item in enumerate(remainder):
                 if hasattr(current_controller, item) and self._is_controller(current_controller, item):
                     current_controller = getattr(current_controller, item)
+                    state.add_routing_args(item, remainder[:i], fixed_args, var_args)
                     return self._dispatch_controller(item, current_controller, state, remainder[i+1:])
         elif fixed_arg_length< len(remainder) and hasattr(current_controller, remainder[fixed_arg_length]):
             item = remainder[fixed_arg_length]
             if hasattr(current_controller, item):
                 if self._is_controller(current_controller, item):
+                    state.add_routing_args(item, remainder, fixed_args, var_args)
                     return self._dispatch_controller(item, getattr(current_controller, item), state, remainder[fixed_arg_length+1:])
 
     def _handle_delete_edit_or_new(self, state, remainder):

@@ -54,6 +54,15 @@ class DispatchState(object):
         self.method = method
         self.remainder = remainder
 
+    def add_routing_args(self, current_path, remainder, fixed_args, var_args):
+        """adds the "intermediate" routing args for a given controller mounted at the current_path"""
+        i = 0
+        for i, arg in enumerate(fixed_args):
+            self.routing_args[arg] = remainder[i]
+        remainder = remainder[i:]
+        if var_args and remainder:
+            self.routing_args[current_path] = remainder
+        
     @property
     def controller(self):
         """returns the current controller"""
@@ -103,7 +112,9 @@ class Dispatcher(WSGIController):
         pylons.c.controller_url = '/'.join(url_path[:-len(state.remainder)])
         
         params = pylons.request.params.mixed()
-        params.update(state.routing_args)
+
+        state.routing_args.update(params)
+        self._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
 
         return state.method, state.controller, state.remainder, params
 
@@ -135,7 +146,6 @@ class Dispatcher(WSGIController):
         if hasattr(controller, '_before'):
             controller._before(*args)
             
-        self._setup_wsgiorg_routing_args(url_path, remainder, params)
         self._setup_wsgi_script_name(url_path, remainder, params)
 
         r = self._call(func, params, remainder=remainder)
