@@ -28,7 +28,6 @@ def wsgi_app(environ, start_response):
 
 
 class LookupHelper:
-    
     def __init__(self, var):
         self.var = var
 

@@ -27,7 +27,12 @@ from tg.util import odict
 HTTPNotFound = HTTPNotFound().exception
 
 class DispatchState(object):
-    
+    """
+    This class keeps around all the pertainent info for the state
+    of the dispatch as it traverses through the tree.  This allows
+    us to attach things like routing args and to keep track of the
+    path the controller takes along the system.
+    """
     def __init__(self, url_path, controller_path=None, routing_args=None):
         if controller_path is None:
             controller_path = odict()
@@ -41,14 +46,17 @@ class DispatchState(object):
         self.dispatcher = None
 
     def add_controller(self, location, controller):
+        """Adds a controller object to the stack"""
         self.controller_path[location] = controller
 
     def add_method(self, method, remainder):
+        """Adds the final method that will be called in the _call method"""
         self.method = method
         self.remainder = remainder
 
     @property
     def controller(self):
+        """returns the current controller"""
         return self.controller_path.getitem(-1)
     
 class Dispatcher(WSGIController):
