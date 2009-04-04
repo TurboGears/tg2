@@ -2,6 +2,7 @@
 
 import tg, pylons
 from tg.controllers import TGController, RestController
+from tg.controllers.dispatcher import DispatchState
 from tg.decorators import expose, validate, override_template
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -52,9 +53,9 @@ class LookupAlwaysHelper:
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def _dispatch(self, url_path, remainder, controller_path, routing_args):
-        controller_path['/'+'/'.join(url_path)] = self.always
-        return self, controller_path, remainder, routing_args
+    def _dispatch(self, state, remainder):
+        state.add_method(self.always, remainder)
+        return state
 
 class LookupAlwaysController(TGController):
     
@@ -74,9 +75,9 @@ class CustomDispatchingSubController(TGController):
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def _dispatch(self, url_path, remainder, controller_path, routing_args):
-        controller_path['/'+'/'.join(url_path)] = self.always
-        return self, controller_path, remainder, routing_args
+    def _dispatch(self, state, remainder):
+        state.add_method(self.always, remainder)
+        return state
     
 class VariableSubRestController(RestController):
     @expose()
@@ -534,7 +535,7 @@ class TestRestController(TestWSGIController):
         r = self.app.post('/rest3/vsubrest?_method=DELETE')
         assert 'SUBREST POST DELETE' in r, r
 
-    def _test_var_sub_var_put_hack_method(self):
+    def test_var_sub_var_put_hack_method(self):
         r = self.app.post('/rest3/1/3/3/vsubrest/1?_method=PUT')
         assert 'SUBREST PUT' in r, r
         r = self.app.post('/rest3/1/3/vsubrest/1/a?_method=PUT')
