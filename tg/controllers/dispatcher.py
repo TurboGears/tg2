@@ -26,6 +26,29 @@ from tg.util import odict
 
 HTTPNotFound = HTTPNotFound().exception
 
+class DispatchState(object):
+    
+    def __init__(self, url_path, remainder, controller_path=None, routing_args=None):
+        if controller_path is None:
+            controller_path = odict()
+        if routing_args is None:
+            routing_args = {}
+        self.url_path = url_path
+        self.remainder = remainder
+        self.controller_path = controller_path
+        self.routing_args = routing_args
+        self.method = None
+
+    def add_controller(self, location, controller):
+        self.controller_path[location] = controller
+
+    def add_method(self, method):
+        self.method = method
+    
+    @property
+    def controller(self):
+        return self.controller_path.getitem(-1)
+    
 class Dispatcher(WSGIController):
     """
        Extend this class to define your own mechanism for dispatch.
@@ -38,20 +61,11 @@ class Dispatcher(WSGIController):
         response = controller(*remainder, **dict(params))
         return response
 
-    def _dispatch(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path, routing_args):
         """override this to define how your controller should dispatch.
         returns: dispatcher, controller_path, remainder
         """
         raise NotImplementedError
-    
-    def _find_dispatch(self, url_path, controller_path=None):
-        """Returns a tuple (dispatcher, controller_path, remainder)"""
-        if controller_path is None:
-            controller_path = odict()
-            controller_path['/'] = self
-        current = controller_path.getitem(-1)
-        if hasattr(current, '_dispatch'):
-            return current._dispatch(url_path, url_path, controller_path)
     
     def _get_dispatchable(self, url_path):
         """
@@ -72,11 +86,16 @@ class Dispatcher(WSGIController):
                 pylons.request.response_type = mime_type
                 pylons.request.response_ext = extension
 
-        dispatcher, controller_path, remainder = self._find_dispatch(url_path)
-        controller = controller_path.getitem(-2)
-        func = controller_path.getitem(-1)
-        pylons.c.controller_url = '/'.join(url_path[:-len(remainder)])
-        return func, controller, remainder, pylons.request.params.mixed()
+        state = DispatchState(url_path, url_path)
+        state.add_controller('/', self)
+        dispatcher, state =  state.controller._dispatch(state)
+        
+        pylons.c.controller_url = '/'.join(url_path[:-len(state.remainder)])
+        
+        params = pylons.request.params.mixed()
+        params.update(state.routing_args)
+
+        return state.method, state.controller, state.remainder, params
 
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
@@ -191,7 +210,7 @@ class ObjectDispatcher(Dispatcher):
         """
         return hasattr(controller, name) and not ismethod(getattr(controller, name))
 
-    def _dispatch_controller(self, url_path, current_path, controller, remainder, controller_path):
+    def _dispatch_controller(self, current_path, controller, state):
         """
            Essentially, this method defines what to do when we move to the next
            layer in the url chain, if a new controller is needed.  If the new
@@ -201,6 +220,8 @@ class ObjectDispatcher(Dispatcher):
            Also, this is the place where the controller is checked for controller-level
            security.
         """
+        state.add_controller(current_path, controller)
+
         if hasattr(controller, '_dispatch'):
             if isclass(controller):
                 warn("this functionality is going to removed in the next minor version,"\
@@ -212,67 +233,68 @@ class ObjectDispatcher(Dispatcher):
             else:
                 obj = controller
 
-                
             if hasattr(obj, '_check_security'):
                 obj._check_security()
-            controller_path[current_path] = controller
-            return controller._dispatch(url_path, remainder, controller_path)
-
-        controller_path[current_path] = controller
-        return self._dispatch(url_path, remainder, controller_path)
+            return controller._dispatch(state)
+        return self._dispatch(state)
         
-    def _dispatch_first_found_default_or_lookup(self, url_path, remainder, controller_path):
+    def _dispatch_first_found_default_or_lookup(self, state):
         """
            When the dispatch has reached the end of the tree but not found an applicable method, 
            so therefore we head back up the branches of the tree until we found a method which
            matches with a default or lookup method.
         """
-        orig_url_path = url_path
-        if len(remainder):
-            url_path = url_path[:-len(remainder)]
-        for i in xrange(len(controller_path)):
-            controller = controller_path.getitem(-1)
+        orig_url_path = state.url_path
+        if len(state.remainder):
+            state.url_path = state.url_path[:-len(state.remainder)]
+        for i in xrange(len(state.controller_path)):
+            controller = state.controller
             if self._is_exposed(controller, 'default'):
-                controller_path['default'] = controller.default
-                return self, controller_path, remainder
+                state.add_method(controller.default)
+                return self, state
             if self._is_exposed(controller, 'lookup'):
-                controller, remainder = controller.lookup(*remainder)
-                return self._dispatch_controller(orig_url_path, 'lookup', controller, remainder[1:], controller_path)
-            controller_path.pop()
-            if len(url_path):
-                remainder.insert(0,url_path[-1])
-                url_path.pop()
+                controller, remainder = controller.lookup(*state.remainder)
+                state.url_path = orig_url_path
+                state.remainder.pop(0)
+                return self._dispatch_controller('lookup', controller, state)
+            state.controller_path.pop()
+            if len(state.url_path):
+                state.remainder.insert(0,state.url_path[-1])
+                state.url_path.pop()
         raise HTTPNotFound
 
-    def _dispatch(self, url_path, remainder, controller_path):
+    def _dispatch(self, state):
         """
         This method defines how the object dispatch mechanism works, including
         checking for security along the way.
         """
-        current_controller = controller_path.getitem(-1)
+        current_controller = state.controller
+        remainder = state.remainder
 
         if hasattr(current_controller, '_check_security'):
             current_controller._check_security()
         #we are plumb out of path, check for index
         if not remainder:
             if hasattr(current_controller, 'index'):
-                controller_path['index'] = current_controller.index
-                return  self, controller_path, remainder
+                state.add_method(current_controller.index)
+                return  self, state
             #if there is no index, head up the tree 
             #to see if there is a default or lookup method we can use
-            return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+            return self._dispatch_first_found_default_or_lookup(state)
 
-        current_path = remainder[0]
+        current_path = state.remainder[0]
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
-            controller_path[current_path] = getattr(current_controller, current_path)
-            return self, controller_path, remainder[1:]
+            state.add_method(getattr(current_controller, current_path))
+            state.remainder.pop(0)
+            return self, state
         
         #another controller is found
         if hasattr(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
-            return self._dispatch_controller(url_path, current_path, current_controller, remainder[1:], controller_path)
+            state.remainder.pop(0)
+            return self._dispatch_controller(current_path, current_controller, state)
         
         #dispatch not found
-        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+        return self._dispatch_first_found_default_or_lookup(state)

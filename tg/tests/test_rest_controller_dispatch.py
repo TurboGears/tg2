@@ -52,9 +52,9 @@ class LookupAlwaysHelper:
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def _dispatch(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path, routing_args):
         controller_path['/'+'/'.join(url_path)] = self.always
-        return self, controller_path, remainder
+        return self, controller_path, remainder, routing_args
 
 class LookupAlwaysController(TGController):
     
@@ -74,9 +74,9 @@ class CustomDispatchingSubController(TGController):
     def always(self, *args, **kwargs):
         return 'always go here'
 
-    def _dispatch(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path, routing_args):
         controller_path['/'+'/'.join(url_path)] = self.always
-        return self, controller_path, remainder
+        return self, controller_path, remainder, routing_args
     
 class VariableSubRestController(RestController):
     @expose()

@@ -15,19 +15,19 @@ class RestDispatcher(ObjectDispatcher):
     Please see RestController for a rundown of of the controller
     methods used.
     """
-    def _handle_put_or_post(self, method, url_path, remainder, controller_path):
+    def _handle_put_or_post(self, method, url_path, remainder, controller_path, routing_args):
         current_controller = controller_path.getitem(-1)
         if remainder:
             if self._is_exposed(current_controller, remainder[0]):
                 controller_path[remainder[0]] = getattr(current_controller, remainder[0])
 
-                return self, controller_path, remainder[1:]
+                return self, controller_path, remainder[1:], routing_args
 
             if self._is_controller(current_controller, remainder[0]):
                 current_controller = getattr(current_controller, remainder[0])
-                return self._dispatch_controller(url_path, remainder[0], current_controller, remainder[1:], controller_path)
+                return self._dispatch_controller(url_path, remainder[0], current_controller, remainder[1:], controller_path, routing_args)
 
-            r = self._check_for_sub_controllers(url_path, remainder, controller_path)
+            r = self._check_for_sub_controllers(url_path, remainder, controller_path, routing_args)
             if r:
                 return r
         
@@ -39,12 +39,12 @@ class RestDispatcher(ObjectDispatcher):
             var_args = args[1]
             if fixed_arg_length == len(remainder) or var_args:
                 controller_path[method_name] = method
-                return self, controller_path, remainder
+                return self, controller_path, remainder, routing_args
 
-        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path, routing_args)
 
-    def _handle_delete(self, method, url_path, remainder, controller_path):
-        r = self._check_for_sub_controllers(url_path, remainder, controller_path)
+    def _handle_delete(self, method, url_path, remainder, controller_path, routing_args):
+        r = self._check_for_sub_controllers(url_path, remainder, controller_path, routing_args)
         if r:
             return r
 
@@ -57,15 +57,15 @@ class RestDispatcher(ObjectDispatcher):
             var_args = args[1]
             if fixed_arg_length == len(remainder) or var_args:
                 controller_path[method_name] = method
-                return self, controller_path, remainder
+                return self, controller_path, remainder, routing_args
 
         #you may not send a delete request to a non-delete function
         if remainder and self._is_exposed(current_controller, remainder[0]):
             abort(405)
 
-        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path, routing_args)
     
-    def _check_for_sub_controllers(self, url_path, remainder, controller_path):
+    def _check_for_sub_controllers(self, url_path, remainder, controller_path, routing_args):
         current_controller = controller_path.getitem(-1)
         method = None
         for find in ('get_one', 'get'):
@@ -81,16 +81,16 @@ class RestDispatcher(ObjectDispatcher):
             for i, item in enumerate(remainder):
                 if hasattr(current_controller, item) and self._is_controller(current_controller, item):
                     current_controller = getattr(current_controller, item)
-                    return self._dispatch_controller(url_path, item, current_controller, remainder[i+1:], controller_path)
+                    return self._dispatch_controller(url_path, item, current_controller, remainder[i+1:], controller_path, routing_args)
         elif fixed_arg_length< len(remainder) and hasattr(current_controller, remainder[fixed_arg_length]):
             item = remainder[fixed_arg_length]
             if hasattr(current_controller, item):
                 if self._is_controller(current_controller, item):
                     current_controller = getattr(current_controller, item)
                     controller_path[item] = current_controller
-                    return self._dispatch_controller(url_path, 'get', current_controller, remainder[fixed_arg_length+1:], controller_path)
+                    return self._dispatch_controller(url_path, 'get', current_controller, remainder[fixed_arg_length+1:], controller_path, routing_args)
 
-    def _handle_delete_edit_or_new(self, url_path, remainder, controller_path):
+    def _handle_delete_edit_or_new(self, url_path, remainder, controller_path, routing_args):
         method = remainder[-1]
         if method not in ('new', 'edit', 'delete'):
             return
@@ -108,11 +108,11 @@ class RestDispatcher(ObjectDispatcher):
             if fixed_arg_length == len(remainder) -1 or var_args:
                 controller_path[method_name] = method
 
-                return self, controller_path, remainder[:-1]
+                return self, controller_path, remainder[:-1], routing_args
 
-    def _handle_get(self, method, url_path, remainder, controller_path):
+    def _handle_get(self, method, url_path, remainder, controller_path, routing_args):
         
-        r = self._check_for_sub_controllers(url_path, remainder, controller_path)
+        r = self._check_for_sub_controllers(url_path, remainder, controller_path, routing_args)
         if r:
             return r
 
@@ -121,7 +121,7 @@ class RestDispatcher(ObjectDispatcher):
             method = self._find_first_exposed(current_controller, ('get_all', 'get'))
             if method:
                 controller_path['get'] = method
-                return self, controller_path, remainder
+                return self, controller_path, remainder, routing_args
             if self._is_exposed(current_controller, 'get_one'):
                 method = current_controller.get_one
                 args = inspect.getargspec(method)
@@ -129,22 +129,22 @@ class RestDispatcher(ObjectDispatcher):
                 controller_path['get_one'] = method
 
                 if var_args:
-                    return self, controller_path, remainder
-            return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+                    return self, controller_path, remainder, routing_args
+            return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path, routing_args)
 
         #test for "edit" or "new"
-        r = self._handle_delete_edit_or_new(url_path, remainder, controller_path)
+        r = self._handle_delete_edit_or_new(url_path, remainder, controller_path, routing_args)
         if r: 
             return r
         
         if self._is_exposed(current_controller, remainder[0]):
             controller_path[remainder[0]] = getattr(current_controller, remainder[0])
 
-            return self, controller_path, remainder[1:]
+            return self, controller_path, remainder[1:], routing_args
         
         if self._is_controller(current_controller, remainder[0]):
             current_controller = getattr(current_controller, remainder[0])
-            return self._dispatch_controller(url_path, remainder[0], current_controller, remainder[1:], controller_path)
+            return self._dispatch_controller(url_path, remainder[0], current_controller, remainder[1:], controller_path, routing_args)
         
         if self._is_exposed(current_controller, 'get_one'):
             method = current_controller.get_one
@@ -154,10 +154,10 @@ class RestDispatcher(ObjectDispatcher):
 
             if len(remainder) == fixed_arg_length or var_args:
                 controller_path['get_one'] = method
-                return self, controller_path, remainder
+                return self, controller_path, remainder, routing_args
                 
             
-        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path)
+        return self._dispatch_first_found_default_or_lookup(url_path, remainder, controller_path, routing_args)
     
     _handler_lookup = {
         'put':_handle_put_or_post,
@@ -166,7 +166,7 @@ class RestDispatcher(ObjectDispatcher):
         'get':_handle_get,
         }
 
-    def _dispatch(self, url_path, remainder, controller_path):
+    def _dispatch(self, url_path, remainder, controller_path, routing_args):
         """returns: dispatcher, controller_path, remainder
         """
         method = pylons.request.method.lower()
@@ -182,7 +182,7 @@ class RestDispatcher(ObjectDispatcher):
                 abort(405)
             method = request_method
            
-        r = self._handler_lookup[method](self, method, url_path, remainder, controller_path)
+        r = self._handler_lookup[method](self, method, url_path, remainder, controller_path, routing_args)
         
         #clear out the method hack
         if '_method' in pylons.request.POST:
