@@ -95,7 +95,18 @@ class DecoratedController(WSGIController):
         you where would want to change the template back to the originally
         decorated template after you have temporarily changed it.
         """
-
+    def _get_argspec(self, func):
+        try:
+            cached_argspecs = self.__class__._cached_argspecs
+        except AttributeError:
+            self.__class__._cached_argspecs = cached_argspecs = {}
+        
+        try:
+            argspec = cached_argspecs[func.im_func]
+        except KeyError:
+            argspec = cached_argspecs[func.im_func] = inspect.getargspec(func)
+        return argspec
+    
     def _perform_call(self, controller, params, remainder=None):
         """
         _perform_call is called by _inspect_call in Pylons' WSGIController.
@@ -131,6 +142,14 @@ class DecoratedController(WSGIController):
                 if params.get(ignore):
                     del params[ignore]
 
+            argspec = self._get_argspec(controller)
+            argvars = argspec[0][1:]
+            if argvars and remainder:
+                i = 0
+                for i, var in enumerate(argvars):
+                    params[var] = remainder[0]
+                    remainder.pop(0)
+
             # Validate user input
             params = self._perform_validate(controller, params)
 
@@ -138,6 +157,8 @@ class DecoratedController(WSGIController):
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
+            
+            
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
