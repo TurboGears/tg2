@@ -254,12 +254,14 @@ class TestTGController(TestWSGIController):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
         
-        
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
 
+    def test_validated_int(self):
+        r = self.app.get('/validated_int/1')
+        assert '{"response": 1}' in r, r
 
     def test_validated_with_error_handler(self):
         r = self.app.get('/validated_with_error_handler?a=asdf')

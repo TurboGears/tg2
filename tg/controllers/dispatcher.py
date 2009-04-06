@@ -16,7 +16,7 @@ class which provides the ordinary TurboGears mechanism.
 
 """
 
-from inspect import ismethod, isclass
+from inspect import ismethod, isclass, getargspec
 from warnings import warn
 import pylons
 import mimetypes
@@ -79,6 +79,19 @@ class Dispatcher(WSGIController):
         """
         response = controller(*remainder, **dict(params))
         return response
+    
+    def _get_argspec(self, func):
+        try:
+            cached_argspecs = self.__class__._cached_argspecs
+        except AttributeError:
+            self.__class__._cached_argspecs = cached_argspecs = {}
+        
+        try:
+            argspec = cached_argspecs[func.im_func]
+        except KeyError:
+            argspec = cached_argspecs[func.im_func] = getargspec(func)
+        return argspec
+ 
 
     def _dispatch(self, state, remainder):
         """override this to define how your controller should dispatch.
@@ -148,6 +161,14 @@ class Dispatcher(WSGIController):
             
         self._setup_wsgi_script_name(url_path, remainder, params)
 
+        argspec = self._get_argspec(func)
+        argvars = argspec[0][1:]
+        if argvars and remainder:
+            i = 0
+            for i, var in enumerate(argvars):
+                params[var] = remainder[0]
+                remainder.pop(0)
+        
         r = self._call(func, params, remainder=remainder)
 
         if hasattr(controller, '__after__'):
