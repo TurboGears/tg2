@@ -86,7 +86,7 @@ class DecoratedController(object):
 
             # Validate user input
             params = self._perform_validate(controller, params)
-
+            
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)

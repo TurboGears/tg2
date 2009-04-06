@@ -33,14 +33,11 @@ class DispatchState(object):
     us to attach things like routing args and to keep track of the
     path the controller takes along the system.
     """
-    def __init__(self, url_path, controller_path=None, routing_args=None):
-        if controller_path is None:
-            controller_path = odict()
-        if routing_args is None:
-            routing_args = {}
+    def __init__(self, url_path, params):
         self.url_path = url_path
-        self.controller_path = controller_path
-        self.routing_args = routing_args
+        self.params = params
+        self.controller_path = odict()
+        self.routing_args = {}
         self.method = None
         self.remainder = None
         self.dispatcher = None
@@ -167,13 +164,14 @@ class Dispatcher(WSGIController):
                 pylons.request.response_type = mime_type
                 pylons.request.response_ext = extension
 
-        state = DispatchState(url_path)
+        params = pylons.request.params.mixed()
+
+        state = DispatchState(url_path, params)
         state.add_controller('/', self)
         state =  state.controller._dispatch(state, url_path)
         
         pylons.c.controller_url = '/'.join(url_path[:-len(state.remainder)])
         
-        params = pylons.request.params.mixed()
 
         state.routing_args.update(params)
         self._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)

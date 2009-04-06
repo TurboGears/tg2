@@ -30,12 +30,44 @@ class RestDispatcher(ObjectDispatcher):
         method_name = method
         method = self._find_first_exposed(current_controller, [method,])
         if method:
-            args = inspect.getargspec(method)
-            fixed_arg_length = len(args[0])-1
-            var_args = args[1]
-            if fixed_arg_length == len(remainder) or var_args:
-                state.add_method(method, remainder)
-                return state
+            argspec = self._get_argspec(method)
+            #skip self,
+            argvars = argspec[0][1:]
+            argvals = argspec[3]
+            if argvals is None:
+                argvals = []
+            
+            required_vars = argvars[:-len(argvals)]
+            
+            #remove the appropriate remainder quotient
+            if len(remainder)<len(required_vars):
+                #pull the first few off with the remainder
+                required_vars = required_vars[len(remainder):]
+                new_remainder = []
+            else:
+                #there is more of a remainder than there is non optional vars
+                new_remainder = remainder[len(required_vars):]
+                required_vars = []
+            
+            #remove vars found in the params list
+            params = state.params
+            for var in required_vars:
+                if var in params:
+                    required_vars.pop(0)
+                else:
+                    break;
+
+            var_in_params = 0
+            for var in argvars:
+                if var in params:
+                    var_in_params+=1
+
+            #make sure all of the non-optional-vars are 
+            if not required_vars:
+                var_args = argspec[1]
+                if (len(remainder)+var_in_params) == len(argvars) or var_args:
+                    state.add_method(method, remainder)
+                    return state
 
         return self._dispatch_first_found_default_or_lookup(state, remainder)
 
@@ -44,7 +76,7 @@ class RestDispatcher(ObjectDispatcher):
         method_name = method
         method = self._find_first_exposed(current_controller, ('post_delete', 'delete'))
         if method:
-            args = inspect.getargspec(method)
+            args = self._get_argspec(method)
             fixed_arg_length = len(args[0])-1
             var_args = args[1]
             if fixed_arg_length == len(remainder) or var_args:
@@ -66,7 +98,7 @@ class RestDispatcher(ObjectDispatcher):
                 break
         if method is None:
             return
-        args = inspect.getargspec(getattr(current_controller, method))
+        args = self._get_argspec(getattr(current_controller, method))
         fixed_args = args[0][1:]
         fixed_arg_length = len(fixed_args)
         var_args = args[1]
@@ -94,7 +126,7 @@ class RestDispatcher(ObjectDispatcher):
 
         if self._is_exposed(current_controller, method_name):
             method = getattr(current_controller, method_name)
-            args = inspect.getargspec(method)
+            args = self._get_argspec(method)
             fixed_arg_length = len(args[0])-1
             var_args = args[1]
             if fixed_arg_length == len(remainder) -1 or var_args:
@@ -110,7 +142,7 @@ class RestDispatcher(ObjectDispatcher):
                 return state
             if self._is_exposed(current_controller, 'get_one'):
                 method = current_controller.get_one
-                args = inspect.getargspec(method)
+                args = self._get_argspec(method)
                 var_args = args[1]
                 state.add_method(method, remainder)
 
@@ -134,7 +166,7 @@ class RestDispatcher(ObjectDispatcher):
         
         if self._is_exposed(current_controller, 'get_one'):
             method = current_controller.get_one
-            args = inspect.getargspec(method)
+            args = self._get_argspec(method)
             fixed_arg_length = len(args[0])-1
             var_args = args[1]
 
@@ -155,9 +187,10 @@ class RestDispatcher(ObjectDispatcher):
         """
         if not hasattr(state, 'http_method'):
             method = pylons.request.method.lower()
+            params = state.params
             
             #conventional hack for handling methods which are not supported by most browsers
-            request_method = pylons.request.params.get('_method', None)
+            request_method = params.get('_method', None)
             if request_method:
                 request_method = request_method.lower()
                 #make certain that DELETE and PUT requests are not sent with GET
@@ -177,8 +210,10 @@ class RestDispatcher(ObjectDispatcher):
         #clear out the method hack
         if '_method' in pylons.request.POST:
             del pylons.request.POST['_method']
+            del state.params['_method']
         if '_method' in pylons.request.GET:
             del pylons.request.GET['_method']
+            del state.params['_method']
 
         return r
 
