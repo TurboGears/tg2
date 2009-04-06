@@ -127,10 +127,6 @@ def test_flash_status():
     resp = app.get('/flash_status')
     assert 'ok' in resp
 
-def test_tg_format_param():
-    resp = app.get('/stacked_expose/?tg_format=application/json')
-    assert '{"got_json' in resp.body
-
 def test_custom_content_type():
     resp = app.get('/custom_content_type')
     assert 'image/png' == dict(resp.headers)['content-type']

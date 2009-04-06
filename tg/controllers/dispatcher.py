@@ -58,6 +58,8 @@ class DispatchState(object):
         """adds the "intermediate" routing args for a given controller mounted at the current_path"""
         i = 0
         for i, arg in enumerate(fixed_args):
+            if i>=len(remainder):
+                break;
             self.routing_args[arg] = remainder[i]
         remainder = remainder[i:]
         if var_args and remainder:
@@ -92,7 +94,53 @@ class Dispatcher(WSGIController):
             argspec = cached_argspecs[func.im_func] = getargspec(func)
         return argspec
  
+    def _get_params_with_argspec(self, func, params, remainder):
+        params = params.copy()
+        argspec = self._get_argspec(func)
+        argvars = argspec[0][1:]
+        if argvars and enumerate(remainder):
+            for i, var in enumerate(argvars):
+                if i >= len(remainder):
+                    break;
+                params[var] = remainder[i]
+        return params
+    
+    def _remove_argspec_params_from_params(self, func, params, remainder):
+        """Remove parameters from the argument list that are
+           not named parameters
+           Returns: params, remainder"""
+        
+        # figure out which of the vars in the argspec are required
+        argspec = self._get_argspec(func)
+        argvals = argspec[3]
+        required_vars = argspec[0][1:]
+        if argvals:
+            required_vars = required_vars[:-len(argvals)]
+            
+        # if there are no required variables, or the remainder is none, we can
+        # have nothing to do
+        if not required_vars or not remainder:
+            return params, remainder
+        
+        #make a copy of the params so that we don't modify the existing one
+        params=params.copy()
+        
+        #this is a work around for a crappy api choice in getargspec
+        if argvals is None:
+            argvals = []
+        required_vars = required_vars[:-len(argvals)]
+        
+        # chop off the optional parameters (they will be passed in through params)
+        remainder = remainder[:-len(argvals)]
+        
+        # replace the existing required variables with the values that come in from params
+        # these could be the parameters that come off of validation.
+        for i,var in enumerate(required_vars):
+            remainder[i] = params[var]
+            del params[var]
 
+        return params, remainder
+    
     def _dispatch(self, state, remainder):
         """override this to define how your controller should dispatch.
         returns: dispatcher, controller_path, remainder
@@ -108,6 +156,7 @@ class Dispatcher(WSGIController):
             url as string
         """
         
+        pylons.request.response_type = None
         if url_path and '.' in url_path[-1]:
             last_remainder = url_path[-1]
             mime_type, encoding = mimetypes.guess_type(last_remainder)
@@ -161,14 +210,6 @@ class Dispatcher(WSGIController):
             
         self._setup_wsgi_script_name(url_path, remainder, params)
 
-        argspec = self._get_argspec(func)
-        argvars = argspec[0][1:]
-        if argvars and remainder:
-            for var in argvars:
-                if not remainder:
-                    break
-                params[var] = remainder.pop(0)
-        
         r = self._call(func, params, remainder=remainder)
 
         if hasattr(controller, '__after__'):

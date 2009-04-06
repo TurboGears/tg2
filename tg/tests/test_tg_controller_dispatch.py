@@ -220,7 +220,7 @@ class BasicTGController(TGController):
 
     @expose()
     @expose('json')
-    def stacked_expose(self, tg_format=None):
+    def stacked_expose(self):
         return dict(got_json=True)
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
@@ -297,14 +297,6 @@ class TestTGController(TestWSGIController):
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')
         assert 'got_json' in r, r
-
-    def test_deprecated_tg_format_no_mimetype(self):
-        r = self.app.post('/stacked_expose?tg_format=json')
-        assert 'got_json' in r, r
-
-    @raises(Exception)
-    def test_unknown_mimetype(self):
-        r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
 
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')

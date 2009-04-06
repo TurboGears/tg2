@@ -43,6 +43,8 @@ class DecoratedController(object):
             if inspect.ismethod(method) and hasattr(method, 'decoration'):
                 return method.decoration.exposed
 
+
+    
     def _call(self, controller, params, remainder=None):
         """
         _call is called by _perform_call in Pylons' WSGIController.
@@ -63,6 +65,7 @@ class DecoratedController(object):
 
         The after_render hook can act upon and modify the response out of
         rendering.
+        
         """
         
         self._initialize_validation_context()
@@ -74,6 +77,9 @@ class DecoratedController(object):
 
             controller.decoration.run_hooks('before_validate', remainder,
                                             params)
+
+            params = self._get_params_with_argspec(controller, params, remainder)
+
             for ignore in config.get('ignore_parameters', []):
                 if params.get(ignore):
                     del params[ignore]
@@ -85,6 +91,8 @@ class DecoratedController(object):
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
+
+            params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
 
             output = controller(*remainder, **dict(params))
 
