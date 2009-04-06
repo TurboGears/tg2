@@ -164,10 +164,10 @@ class Dispatcher(WSGIController):
         argspec = self._get_argspec(func)
         argvars = argspec[0][1:]
         if argvars and remainder:
-            i = 0
-            for i, var in enumerate(argvars):
-                params[var] = remainder[0]
-                remainder.pop(0)
+            for var in argvars:
+                if not remainder:
+                    break
+                params[var] = remainder.pop(0)
         
         r = self._call(func, params, remainder=remainder)
 
