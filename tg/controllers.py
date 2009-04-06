@@ -145,10 +145,10 @@ class DecoratedController(WSGIController):
             argspec = self._get_argspec(controller)
             argvars = argspec[0][1:]
             if argvars and remainder:
-                i = 0
-                for i, var in enumerate(argvars):
-                    params[var] = remainder[0]
-                    remainder.pop(0)
+                for var in argvars:
+                    if not remainder:
+                        break;
+                    params[var] = remainder.pop(0)
 
             # Validate user input
             params = self._perform_validate(controller, params)
