@@ -27,19 +27,19 @@ class RestDispatcher(ObjectDispatcher):
         #skip self,
         argvars = argspec[0][1:]
         argvals = argspec[3]
-        if argvals is None:
+        
+        required_vars = argvars
+        if argvals:
+            required_vars = argvars[:-len(argvals)]
+        else:
             argvals = []
-        
-        required_vars = argvars[:-len(argvals)]
-        
+            
         #remove the appropriate remainder quotient
         if len(remainder)<len(required_vars):
             #pull the first few off with the remainder
             required_vars = required_vars[len(remainder):]
-            new_remainder = []
         else:
             #there is more of a remainder than there is non optional vars
-            new_remainder = remainder[len(required_vars):]
             required_vars = []
         
         #remove vars found in the params list
@@ -58,7 +58,9 @@ class RestDispatcher(ObjectDispatcher):
         #make sure all of the non-optional-vars are 
         if not required_vars:
             var_args = argspec[1]
-            if (len(remainder)+var_in_params) == len(argvars) or var_args:
+            len_rem = len(remainder) + var_in_params
+            if (len_rem >= len(required_vars) and len_rem <= len(argvars)) or\
+               (len_rem >= len(required_vars) and var_args):
                 return True
         return False
             

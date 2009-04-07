@@ -109,32 +109,37 @@ class Dispatcher(WSGIController):
         
         # figure out which of the vars in the argspec are required
         argspec = self._get_argspec(func)
-        argvals = argspec[3]
-        required_vars = argspec[0][1:]
-        if argvals:
-            required_vars = required_vars[:-len(argvals)]
+        argvars = argspec[0][1:]
             
-        # if there are no required variables, or the remainder is none, we can
+        # if there are no required variables, or the remainder is none, we
         # have nothing to do
-        if not required_vars or not remainder:
+        if not argvars or not remainder:
             return params, remainder
         
-        #make a copy of the params so that we don't modify the existing one
-        params=params.copy()
-        
         #this is a work around for a crappy api choice in getargspec
+        argvals = argspec[3]
         if argvals is None:
             argvals = []
-        required_vars = required_vars[:-len(argvals)]
-        
-        # chop off the optional parameters (they will be passed in through params)
-        remainder = remainder[:-len(argvals)]
+
+        required_vars = argvars[:len(argvals)-1]
+        optional_vars = argvars[len(argvals)-1:]
+
+        #make a copy of the params so that we don't modify the existing one
+        params=params.copy()
         
         # replace the existing required variables with the values that come in from params
         # these could be the parameters that come off of validation.
         for i,var in enumerate(required_vars):
             remainder[i] = params[var]
             del params[var]
+        
+        #add the optional vars into the params
+        for i, var in enumerate(optional_vars):
+            if not params.get(var, None):
+                params[var] = remainder[len(required_vars)+i-1]
+        
+        # chop off the optional parameters (they will be passed in through params)
+        remainder = remainder[:len(required_vars)]
 
         return params, remainder
     

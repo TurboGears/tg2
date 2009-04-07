@@ -77,7 +77,53 @@ class CustomDispatchingSubController(TGController):
     def _dispatch(self, state, remainder):
         state.add_method(self.always, remainder)
         return state
-    
+
+class OptionalArgumentRestController(RestController):
+    @expose()
+    def get_one(self, optional=None):
+        return "SUBREST GET ONE"
+    @expose()
+    def put(self, optional=None):
+        return "SUBREST PUT"
+    @expose()
+    def post(self, optional=None):
+        return "SUBREST POST"
+    @expose()
+    def edit(self, optional=None):
+        return "SUBREST EDIT"
+    @expose()
+    def new(self, optional=None):
+        return "SUBREST NEW"
+    @expose()
+    def get_delete(self, optional=None):
+        return "SUBREST GET DELETE"
+    @expose()
+    def post_delete(self, optional=None):
+        return "SUBREST POST DELETE"
+
+class RequiredArgumentRestController(RestController):
+    @expose()
+    def get_one(self, something):
+        return "SUBREST GET ONE"
+    @expose()
+    def put(self, something):
+        return "SUBREST PUT"
+    @expose()
+    def post(self, something):
+        return "SUBREST POST"
+    @expose()
+    def edit(self, something):
+        return "SUBREST EDIT"
+    @expose()
+    def new(self):
+        return "SUBREST NEW"
+    @expose()
+    def get_delete(self, something):
+        return "SUBREST GET DELETE"
+    @expose()
+    def post_delete(self, something):
+        return "SUBREST POST DELETE"
+
 class VariableSubRestController(RestController):
     @expose()
     def get_one(self, *args):
@@ -102,35 +148,27 @@ class SubRestController(RestController):
     @expose()
     def get_all(self):
         return "SUBREST GET ALL"
-    
     @expose()
     def get_one(self, id):
         return "SUBREST GET ONE"
-
     @expose()
     def new(self):
         return "SUBREST NEW"
-
     @expose()
     def edit(self, id):
         return "SUBREST EDIT"
-
     @expose()
     def post(self):
         return "SUBREST POST"
-
     @expose()
     def put(self, id):
         return "SUBREST PUT"
-    
     @expose()
     def fxn(self):
         return "SUBREST FXN"
-
     @expose()
     def get_delete(self, id):
         return "SUBREST GET DELETE"
-
     @expose()
     def post_delete(self, id):
         return "SUBREST POST DELETE"
@@ -172,6 +210,8 @@ class ExtraRestController(RestController):
             return "REST SUB INDEX"
 
     subrest = SubRestController()
+    optsubrest = OptionalArgumentRestController()
+    reqsubrest = RequiredArgumentRestController()
 
 class BasicRestController(RestController):
 
@@ -572,9 +612,35 @@ class TestRestController(TestWSGIController):
         r = self.app.put('/rest2/1/subrest/2')
         assert 'SUBREST PUT' in r, r
 
-    def test_sub_put_hack(self):
-        r = self.app.post('/rest2/1/subrest/2?_method=PUT')
+    def test_sub_post(self):
+        r = self.app.post('/rest2/1/subrest/')
+        assert 'SUBREST POST' in r, r
+
+    def test_sub_post_opt(self):
+        r = self.app.post('/rest2/1/optsubrest/1')
+        assert 'SUBREST POST' in r, r
+    def test_sub_put_opt(self):
+        r = self.app.put('/rest2/1/optsubrest/1')
         assert 'SUBREST PUT' in r, r
+    def test_sub_put_opt_hack(self):
+        r = self.app.post('/rest2/1/optsubrest/1?_method=PUT')
+        assert 'SUBREST PUT' in r, r
+    def test_sub_delete_opt_hack(self):
+        r = self.app.post('/rest2/1/optsubrest/1?_method=DELETE')
+        assert 'SUBREST ' in r, r
+        
+    def test_put_post_req(self):
+        r = self.app.post('/rest2/reqsubrest', params={'something':'required'})
+        assert 'SUBREST POST' in r, r
+
+    def test_sub_put_req(self):
+        r = self.app.post('/rest2/reqsubrest', params={'_method':'PUT', 'something':'required'})
+        assert 'SUBREST PUT' in r, r
+
+    def test_sub_post_req_bad(self):
+        r = self.app.post('/rest2/reqsubrest',)
+        assert "['rest2', 'reqsubrest']" in r, r
+
 
     def test_sub_delete_hack(self):
         r = self.app.post('/rest2/1/subrest/2?_method=DELETE')
