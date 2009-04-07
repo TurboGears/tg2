@@ -44,7 +44,7 @@ class RestDispatcher(ObjectDispatcher):
         
         #remove vars found in the params list
         params = state.params
-        for var in required_vars:
+        for var in required_vars[:]:
             if var in params:
                 required_vars.pop(0)
             else:
