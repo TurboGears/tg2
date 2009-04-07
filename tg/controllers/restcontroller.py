@@ -15,21 +15,8 @@ class RestDispatcher(ObjectDispatcher):
     Please see RestController for a rundown of of the controller
     methods used.
     """
-    def _handle_put_or_post(self, method, state, remainder):
-        current_controller = state.controller
-        if remainder:
-            current_path = remainder[0]
-            if self._is_exposed(current_controller, current_path):
-                state.add_method(getattr(current_controller, current_path), remainder[1:])
-                return state
-
-            if self._is_controller(current_controller, current_path):
-                current_controller = getattr(current_controller, current_path)
-                return self._dispatch_controller(current_path, current_controller, state, remainder[1:])
-
-        method_name = method
-        method = self._find_first_exposed(current_controller, [method,])
-        if method:
+    
+    def _method_matches_args(self, method, state, remainder):
             argspec = self._get_argspec(method)
             #skip self,
             argvars = argspec[0][1:]
@@ -66,8 +53,27 @@ class RestDispatcher(ObjectDispatcher):
             if not required_vars:
                 var_args = argspec[1]
                 if (len(remainder)+var_in_params) == len(argvars) or var_args:
-                    state.add_method(method, remainder)
-                    return state
+                    return True
+            return False
+            
+    def _handle_put_or_post(self, method, state, remainder):
+        current_controller = state.controller
+        if remainder:
+            current_path = remainder[0]
+            if self._is_exposed(current_controller, current_path):
+                state.add_method(getattr(current_controller, current_path), remainder[1:])
+                return state
+
+            if self._is_controller(current_controller, current_path):
+                current_controller = getattr(current_controller, current_path)
+                return self._dispatch_controller(current_path, current_controller, state, remainder[1:])
+
+        method_name = method
+        method = self._find_first_exposed(current_controller, [method,])
+        if method and self._method_matches_args(method, state, remainder):
+            state.add_method(method, remainder)
+            return state
+        
 
         return self._dispatch_first_found_default_or_lookup(state, remainder)
 
@@ -75,13 +81,10 @@ class RestDispatcher(ObjectDispatcher):
         current_controller = state.controller
         method_name = method
         method = self._find_first_exposed(current_controller, ('post_delete', 'delete'))
-        if method:
-            args = self._get_argspec(method)
-            fixed_arg_length = len(args[0])-1
-            var_args = args[1]
-            if fixed_arg_length == len(remainder) or var_args:
-                state.add_method(method, remainder)
-                return state
+
+        if method and self._method_matches_args(method, state, remainder):
+            state.add_method(method, remainder)
+            return state
 
         #you may not send a delete request to a non-delete function
         if remainder and self._is_exposed(current_controller, remainder[0]):
@@ -126,11 +129,9 @@ class RestDispatcher(ObjectDispatcher):
 
         if self._is_exposed(current_controller, method_name):
             method = getattr(current_controller, method_name)
-            args = self._get_argspec(method)
-            fixed_arg_length = len(args[0])-1
-            var_args = args[1]
-            if fixed_arg_length == len(remainder) -1 or var_args:
-                state.add_method(method, remainder[:-1])
+            new_remainder = remainder[:-1]
+            if method and self._method_matches_args(method, state, new_remainder):
+                state.add_method(method, new_remainder)
                 return state
 
     def _handle_get(self, method, state, remainder):
@@ -142,11 +143,8 @@ class RestDispatcher(ObjectDispatcher):
                 return state
             if self._is_exposed(current_controller, 'get_one'):
                 method = current_controller.get_one
-                args = self._get_argspec(method)
-                var_args = args[1]
-                state.add_method(method, remainder)
-
-                if var_args:
+                if method and self._method_matches_args(method, state, remainder):
+                    state.add_method(method, remainder)
                     return state
             return self._dispatch_first_found_default_or_lookup(state, remainder)
 
@@ -166,13 +164,10 @@ class RestDispatcher(ObjectDispatcher):
         
         if self._is_exposed(current_controller, 'get_one'):
             method = current_controller.get_one
-            args = self._get_argspec(method)
-            fixed_arg_length = len(args[0])-1
-            var_args = args[1]
-
-            if len(remainder) == fixed_arg_length or var_args:
+            if method and self._method_matches_args(method, state, remainder):
                 state.add_method(method, remainder)
                 return state
+
         return self._dispatch_first_found_default_or_lookup(state, remainder)
     
     _handler_lookup = {
