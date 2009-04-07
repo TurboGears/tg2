@@ -17,44 +17,50 @@ class RestDispatcher(ObjectDispatcher):
     """
     
     def _method_matches_args(self, method, state, remainder):
-            argspec = self._get_argspec(method)
-            #skip self,
-            argvars = argspec[0][1:]
-            argvals = argspec[3]
-            if argvals is None:
-                argvals = []
-            
-            required_vars = argvars[:-len(argvals)]
-            
-            #remove the appropriate remainder quotient
-            if len(remainder)<len(required_vars):
-                #pull the first few off with the remainder
-                required_vars = required_vars[len(remainder):]
-                new_remainder = []
+        """
+        This method matches the params from the request along with the remainder to the 
+        method's function signiture.  If the two jive, it returns true.
+        
+        It is very likely that this method would go into ObjectDispatch in the future.
+        """
+        argspec = self._get_argspec(method)
+        #skip self,
+        argvars = argspec[0][1:]
+        argvals = argspec[3]
+        if argvals is None:
+            argvals = []
+        
+        required_vars = argvars[:-len(argvals)]
+        
+        #remove the appropriate remainder quotient
+        if len(remainder)<len(required_vars):
+            #pull the first few off with the remainder
+            required_vars = required_vars[len(remainder):]
+            new_remainder = []
+        else:
+            #there is more of a remainder than there is non optional vars
+            new_remainder = remainder[len(required_vars):]
+            required_vars = []
+        
+        #remove vars found in the params list
+        params = state.params
+        for var in required_vars:
+            if var in params:
+                required_vars.pop(0)
             else:
-                #there is more of a remainder than there is non optional vars
-                new_remainder = remainder[len(required_vars):]
-                required_vars = []
-            
-            #remove vars found in the params list
-            params = state.params
-            for var in required_vars:
-                if var in params:
-                    required_vars.pop(0)
-                else:
-                    break;
+                break;
 
-            var_in_params = 0
-            for var in argvars:
-                if var in params:
-                    var_in_params+=1
+        var_in_params = 0
+        for var in argvars:
+            if var in params:
+                var_in_params+=1
 
-            #make sure all of the non-optional-vars are 
-            if not required_vars:
-                var_args = argspec[1]
-                if (len(remainder)+var_in_params) == len(argvars) or var_args:
-                    return True
-            return False
+        #make sure all of the non-optional-vars are 
+        if not required_vars:
+            var_args = argspec[1]
+            if (len(remainder)+var_in_params) == len(argvars) or var_args:
+                return True
+        return False
             
     def _handle_put_or_post(self, method, state, remainder):
         current_controller = state.controller
@@ -73,7 +79,6 @@ class RestDispatcher(ObjectDispatcher):
         if method and self._method_matches_args(method, state, remainder):
             state.add_method(method, remainder)
             return state
-        
 
         return self._dispatch_first_found_default_or_lookup(state, remainder)
 
