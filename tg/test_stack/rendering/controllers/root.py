@@ -10,7 +10,7 @@ class MovieForm(TableForm):
     # This WidgetsList is just a container
     class fields(WidgetsList):
         title = TextField()
-        year = TextField(size=4)
+        year = TextField(size=4, default=1984)
         description = TextArea()
 
 #then, we create an instance of this form
