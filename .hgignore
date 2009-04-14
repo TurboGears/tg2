@@ -1,19 +1,26 @@
-syntax: glob
-**/*.pyc
-*.swp
-*.mak.py
-dist/*
-build/*
-lib/*
-TurboGears2.egg-info/*
-zope*
-lxml*
-pytz*
-sourcecodegen*
-kid*
-chameleon*
-SQLAlchemy*
-Jinja*
-TurboKid*
-coverage*
 
+syntax: glob
+*~
+*.egg-info
+*.mak.py
+*.pyc
+*.pyo
+*.swp
+.coverage
+
+syntax: regexp
+^build
+^chameleon
+^coverage
+^dist
+^Genshi
+^Jinja
+^kid
+^lib
+^lxml
+^pytz
+^repoze
+^source
+^SQL
+^Turbo
+^zope
