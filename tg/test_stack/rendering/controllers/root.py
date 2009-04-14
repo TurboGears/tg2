@@ -1,7 +1,7 @@
 """Main Controller"""
 
 from tg import expose, redirect, config, validate
-from tg.decorators import use_custom_format
+from tg.decorators import paginate, use_custom_format
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -31,6 +31,11 @@ class RootController(TGController):
         #add error messages to the kwargs dictionary and return it
         kwargs['errors'] = pylons.tmpl_context.form_errors
         return dict(kwargs)
+
+    @expose('genshi:genshi_paginated.html')
+    @paginate('testdata')
+    def paginated(self):
+        return dict(testdata=range(42))
 
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
