@@ -1,6 +1,7 @@
 syntax: glob
 **/*.pyc
 *.swp
+*.mak.py
 dist/*
 build/*
 lib/*
