@@ -34,6 +34,19 @@ def test_genshi_inheritance():
     resp = app.get('/genshi_inherits_dotted')
     assert "Inheritance template" in resp
     assert "Master template" in resp
+ 
+def test_genshi_sub_inheritance():
+    app = setup_noDB()
+    resp = app.get('/genshi_inherits_sub_dotted')
+    assert "Inheritance template" in resp
+    assert "Master template" in resp
+    assert "from sub-template: sub.tobeincluded" in resp
+
+def test_genshi_sub_inheritance_frombottom():
+    app = setup_noDB()
+    resp = app.get('/genshi_inherits_sub_dotted_from_bottom')
+    assert "Master template" in resp
+    assert "from sub-template: sub.frombottom_dotted" in resp
 
 def test_mako_renderer():
     app = setup_noDB()

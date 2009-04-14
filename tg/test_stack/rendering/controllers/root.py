@@ -36,6 +36,14 @@ class RootController(TGController):
     def genshi_inherits(self):
         return {}
 
+    @expose('genshi:genshi_inherits_sub.html')
+    def genshi_inherits_sub(self):
+        return {}
+
+    @expose('genshi:sub/frombottom.html')
+    def genshi_inherits_sub_from_bottom(self):
+        return {}
+
     @expose('jinja:jinja_noop.html')
     def jinja_index(self):
         return {}
@@ -70,6 +78,14 @@ class RootController(TGController):
 
     @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits')
     def genshi_inherits_dotted(self):
+        return {}
+
+    @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits_sub_dotted')
+    def genshi_inherits_sub_dotted(self):
+        return {}
+
+    @expose('genshi:tg.test_stack.rendering.templates.sub.frombottom_dotted')
+    def genshi_inherits_sub_dotted_from_bottom(self):
         return {}
 
     @expose('mako:tg.test_stack.rendering.templates.mako_noop')

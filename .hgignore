@@ -1,0 +1,18 @@
+syntax: glob
+**/*.pyc
+*.swp
+dist/*
+build/*
+lib/*
+TurboGears2.egg-info/*
+zope*
+lxml*
+pytz*
+sourcecodegen*
+kid*
+chameleon*
+SQLAlchemy*
+Jinja*
+TurboKid*
+coverage*
+

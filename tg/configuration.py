@@ -316,7 +316,7 @@ class AppConfig(Bunch):
         filter, template loader
 
         """
-        from genshi.template import TemplateLoader
+        from tg.dottednamesupport import GenshiTemplateLoader
         from tg.render import render_genshi
 
         def template_loaded(template):
@@ -328,7 +328,7 @@ class AppConfig(Bunch):
             """
             template.filters.insert(0, Translator(ugettext))
 
-        loader = TemplateLoader(search_path=self.paths.templates,
+        loader = GenshiTemplateLoader(search_path=self.paths.templates,
                                 auto_reload=self.auto_reload_templates,
                                 callback=template_loaded)
 

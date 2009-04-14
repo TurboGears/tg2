@@ -27,6 +27,19 @@ def test_genshi_inheritance():
     assert "Inheritance template" in resp
     assert "Master template" in resp
 
+def test_genshi_sub_inheritance():
+    app = setup_noDB()
+    resp = app.get('/genshi_inherits_sub')
+    assert "Inheritance template" in resp
+    assert "Master template" in resp
+    assert "from sub-template: sub.tobeincluded" in resp
+
+def test_genshi_sub_inheritance_from_bottom():
+    app = setup_noDB()
+    resp = app.get('/genshi_inherits_sub_from_bottom')
+    assert "from sub-template: sub.frombottom" in resp
+    assert "Master template" in resp
+
 def test_chameleon_genshi_base():
     app = setup_noDB()
     resp = app.get('/chameleon_genshi_index')
