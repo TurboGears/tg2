@@ -2,7 +2,6 @@ import sys
 from pylons.wsgiapp import PylonsApp, class_name_from_module_name
 from pylons.util import class_name_from_module_name
 import logging
-
 log = logging.getLogger(__name__)
 
 
@@ -15,8 +14,10 @@ class TGApp(PylonsApp):
         the URL has been resolved.
 
         """
+        
         # Check to see if we've cached the class instance for this name
         if controller in self.controller_classes:
+#            print self.controller_classes[controller]
             return self.controller_classes[controller]
 
         root_module_path = self.config['paths']['root']
@@ -41,6 +42,9 @@ class TGApp(PylonsApp):
         if self.log_debug:
             log.debug("Found controller, module: '%s', class: '%s'",
                       full_module_name, class_name)
-        self.controller_classes[controller] = mycontroller = \
-            getattr(sys.modules[full_module_name], class_name)
+        mycontroller = getattr(sys.modules[full_module_name], class_name)
+#        if isinstance(mycontroller, ObjectDispatcher):
+ #           print 'here'
+ #       mycontroller = mycontroller()
+        self.controller_classes[controller] = mycontroller
         return mycontroller

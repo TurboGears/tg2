@@ -121,8 +121,11 @@ class Dispatcher(WSGIController):
         if argvals is None:
             argvals = []
 
-        required_vars = argvars[:len(argvals)-1]
-        optional_vars = argvars[len(argvals)-1:]
+        required_vars = argvars
+        optional_vars = []
+        if argvals:
+            required_vars = argvars[:len(argvals)-1]
+            optional_vars = argvars[len(argvals)-1:]
 
         #make a copy of the params so that we don't modify the existing one
         params=params.copy()
@@ -132,14 +135,11 @@ class Dispatcher(WSGIController):
         for i,var in enumerate(required_vars):
             remainder[i] = params[var]
             del params[var]
-        
-        #add the optional vars into the params
-        for i, var in enumerate(optional_vars):
-            if not params.get(var, None):
-                params[var] = remainder[len(required_vars)+i-1]
-        
-        # chop off the optional parameters (they will be passed in through params)
-        remainder = remainder[:len(required_vars)]
+            
+        #remove the optional vars from the params until we run out of remainder
+        for var in optional_vars:
+            if var in params:
+                del params[var]
 
         return params, remainder
     

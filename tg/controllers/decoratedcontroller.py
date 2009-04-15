@@ -78,14 +78,14 @@ class DecoratedController(object):
             controller.decoration.run_hooks('before_validate', remainder,
                                             params)
 
-            params = self._get_params_with_argspec(controller, params, remainder)
+            validate_params = self._get_params_with_argspec(controller, params, remainder)
 
             for ignore in config.get('ignore_parameters', []):
                 if params.get(ignore):
                     del params[ignore]
 
             # Validate user input
-            params = self._perform_validate(controller, params)
+            params = self._perform_validate(controller, validate_params)
             
             pylons.c.form_values = params
 
