@@ -159,6 +159,7 @@ class Dispatcher(WSGIController):
         """
         
         pylons.request.response_type = None
+        pylons.request.response_ext = None
         if url_path and '.' in url_path[-1]:
             last_remainder = url_path[-1]
             mime_type, encoding = mimetypes.guess_type(last_remainder)
