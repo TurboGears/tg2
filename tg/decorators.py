@@ -8,7 +8,7 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-
+import inspect
 import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
@@ -440,7 +440,17 @@ def paginate(name, items_per_page=10, use_prefix=False):
                     kwargs.pop(
                             own_parameters['items_per_page'],
                             items_per_page))
-
+            argvars = inspect.getargspec(f)[0][1:]
+            if argvars:
+                args = list(args)
+                for i, var in enumerate(args):
+                    if i>=len(argvars):
+                        break;
+                    var = argvars[i]
+                    if var in kwargs:
+                        args[i] = kwargs[var]
+                        del kwargs[var]
+            
             res = f(*args, **kwargs)
             if isinstance(res, dict) and name in res:
                 additional_parameters = MultiDict()

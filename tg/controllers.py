@@ -207,8 +207,6 @@ class DecoratedController(WSGIController):
         # were mapped with routes.  This is a fix, but it's in the wrong place.
         # we need to add better tests to ensure decorated controllers with routings work
         # properly.
-        if isinstance(controller.im_self, DecoratedController):
-            params.update(pylons.request.params.mixed())
 
         validation = getattr(controller.decoration, 'validation', None)
 
