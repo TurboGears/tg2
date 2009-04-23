@@ -142,23 +142,32 @@ class DecoratedController(WSGIController):
                 if params.get(ignore):
                     del params[ignore]
 
+            validate_params = params.copy()
             argspec = self._get_argspec(controller)
             argvars = argspec[0][1:]
-            if argvars and remainder:
-                for var in argvars:
-                    if not remainder:
-                        break;
-                    params[var] = remainder.pop(0)
-
+            if argvars and enumerate(remainder):
+                for i, var in enumerate(argvars):
+                    if i>= len(remainder):
+                        break
+                    validate_params[var] = remainder[i]
+            
             # Validate user input
-            params = self._perform_validate(controller, params)
+            params = self._perform_validate(controller, validate_params)
 
             pylons.c.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
             
-            
+            argvars = argspec[0][1:]
+            if argvars:
+                for i, var in enumerate(remainder):
+                    if i>=len(argvars):
+                        break;
+                    name = argvars[i]
+                    if name in params:
+                        remainder[i] = params[name]
+                        del params[name]
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
