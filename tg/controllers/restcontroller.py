@@ -15,7 +15,9 @@ class RestDispatcher(ObjectDispatcher):
     Please see RestController for a rundown of of the controller
     methods used.
     """
-    
+    def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
+        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
+
     def _method_matches_args(self, method, state, remainder):
         """
         This method matches the params from the request along with the remainder to the 

@@ -185,7 +185,8 @@ class Dispatcher(WSGIController):
         return state.method, state.controller, state.remainder, params
 
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
-        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
+        pass
+#        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
     
     def _setup_wsgi_script_name(self, url_path, remainder, params):
         pass
