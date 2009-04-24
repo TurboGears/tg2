@@ -35,21 +35,21 @@ class RootController(TGController):
 
     @expose('genshi:genshi_paginated.html')
     @paginate('testdata')
-    def paginated(self):
-        return dict(testdata=range(42))
+    def paginated(self, n):
+        return dict(testdata=range(int(n)))
 
     @expose('genshi:genshi_paginated.html')
     @paginate('testdata')
-    @validate({'i':validators.Int()})
-    def paginated_validated(self, i=None):
-        return dict(testdata=range(42))
+    @validate(dict(n=validators.Int()))
+    def paginated_validated(self, n):
+        return dict(testdata=range(n))
 
     @expose('genshi:genshi_paginated.html')
-    @validate({'i':validators.Int()})
+    @validate(dict(n=validators.Int()))
     @paginate('testdata')
-    def validated_paginated(self, i=None):
-        return dict(testdata=range(42))
-    
+    def validated_paginated(self, n):
+        return dict(testdata=range(n))
+
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
         return {}

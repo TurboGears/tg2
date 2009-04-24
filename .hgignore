@@ -1,13 +1,12 @@
+
 syntax: glob
 *~
-*.pyc
-*egg-info
+*.egg-info
 *.mak.py
 *.pyc
 *.pyo
 *.swp
 .coverage
-dist
 
 syntax: regexp
 ^build
@@ -25,4 +24,3 @@ syntax: regexp
 ^SQL
 ^Turbo
 ^zope
-=======
