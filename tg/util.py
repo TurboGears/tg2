@@ -4,6 +4,8 @@ import os, sys
 import pkg_resources
 from pkg_resources import resource_filename
 
+class DottedFileLocatorError(Exception):pass
+
 def get_project_meta(name):
     for dirname in os.listdir("./"):
         if dirname.lower().endswith("egg-info"):
@@ -150,8 +152,10 @@ class DottedFileNameFinder(object):
             if divider >= 0:
                 package = template_name[:divider]
                 basename = template_name[divider + 1:] + template_extension
-                result = resource_filename(package, basename)
-
+                try:
+                    result = resource_filename(package, basename)
+                except ImportError, e:
+                    raise DottedFileLocatorError(e.message +". Perhaps you have forgotten an __init__.py in that folder.")
             else:
                 result = template_name
 
