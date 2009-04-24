@@ -186,6 +186,7 @@ class Dispatcher(WSGIController):
 
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         pass
+        #this needs to get added back in after we understand why it breaks pagination.
 #        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
     
     def _setup_wsgi_script_name(self, url_path, remainder, params):

@@ -32,3 +32,10 @@ class TestPagination:
             in page), page
         assert '<ul id="data"><li>0</li><li>1</li>' in page, page
         assert '<li>8</li><li>9</li></ul>' in page, page
+
+    def test_validation_with_pagination(self):
+        page = self.app.get('/validated_paginated/1')
+        assert ('<title>Pagination Test</title>'
+            in page), page
+        assert '<ul id="data"><li>0</li><li>1</li>' in page, page
+        assert '<li>8</li><li>9</li></ul>' in page, page

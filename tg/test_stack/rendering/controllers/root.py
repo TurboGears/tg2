@@ -43,6 +43,12 @@ class RootController(TGController):
     @validate({'i':validators.Int()})
     def paginated_validated(self, i=None):
         return dict(testdata=range(42))
+
+    @expose('genshi:genshi_paginated.html')
+    @validate({'i':validators.Int()})
+    @paginate('testdata')
+    def validated_paginated(self, i=None):
+        return dict(testdata=range(42))
     
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
