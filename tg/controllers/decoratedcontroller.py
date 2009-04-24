@@ -93,7 +93,7 @@ class DecoratedController(object):
             # call controller method
 
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
-
+            
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
@@ -215,16 +215,18 @@ class DecoratedController(object):
         expose decorator.
         """
 
-        # skip all the complicated stuff if we're don't have a response dict
-        # to work with.
-        if not isinstance(response, dict):
-            return response
 
 
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
-        pylons.response.headers['Content-Type'] = content_type
+        if content_type != CUSTOM_CONTENT_TYPE:
+            pylons.response.headers['Content-Type'] = content_type
+
+        # skip all the complicated stuff if we're don't have a response dict
+        # to work with.
+        if not isinstance(response, dict):
+            return response
 
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()

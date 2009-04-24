@@ -73,7 +73,6 @@ class Decoration(object):
         from JSONification, and other 'automatic' engines which don't
         require a template.
         """
-
         if content_type is None:
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
@@ -116,7 +115,6 @@ class Decoration(object):
 
         if self.render_custom_format:
             content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
-
         else:
             content_type = best_match(self.engines.keys(), accept_types)
             # check for overridden templates
@@ -282,7 +280,6 @@ class expose(object):
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-
         if self.custom_format:
             deco.register_custom_template_engine(
                 self.custom_format, self.content_type, self.engine,

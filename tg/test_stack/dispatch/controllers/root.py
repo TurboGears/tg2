@@ -76,7 +76,6 @@ class RootController(TGController):
 
     @expose()
     def redirect_me(self, target, **kw):
-        #print tg.url(target, kw)
         tg.redirect(target, kw)
 
     @expose()
@@ -133,10 +132,18 @@ class RootController(TGController):
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
 
-    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    @expose(content_type='image/png')
     def custom_content_type(self):
-        pylons.response.headers['content-type'] = 'image/png'
         return 'PNG'
+    
+    @expose(content_type='text/plain')
+    def custom_content_text_plain_type(self):
+        return 'a<br/>bx'
+
+    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    def custom_content_type2(self):
+        pylons.response.headers['Content-Type'] = 'image/png'
+        return 'PNG2'
     
     @expose()
     def check_params(self, *args, **kwargs):
@@ -150,6 +157,7 @@ class RootController(TGController):
         from tg import url
         eq_('/foo', url('/foo'))
 
-        print url("/foo", bar=1, baz=2)
-        assert url("/foo", bar=1, baz=2) in \
-                ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"]
+        
+        u = url("/foo", bar=1, baz=2)
+        assert u in \
+                ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"], u
