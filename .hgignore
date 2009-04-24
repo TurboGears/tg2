@@ -1,3 +1,5 @@
 syntax: glob
 *.pyc
 *egg-info
+*.mak.py
+dist/
