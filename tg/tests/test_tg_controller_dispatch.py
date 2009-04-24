@@ -32,6 +32,17 @@ class BeforeController(TGController):
         pylons.c.var = '__my_before__'
     def __after__(self, *args, **kw):
         global_craziness = '__my_after__'
+
+    @expose()
+    def index(self):
+        assert pylons.c.var
+        return pylons.c.var
+
+class NewBeforeController(TGController):
+    def _before(self, *args, **kw):
+        pylons.c.var = '__my_before__'
+    def _after(self, *args, **kw):
+        global_craziness = '__my_after__'
         
     @expose()
     def index(self):
@@ -42,7 +53,7 @@ class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
     
     before = BeforeController()
-    
+    newbefore = NewBeforeController()
 
     @expose('genshi')
     def unknown_template(self):
@@ -72,95 +83,16 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
-
     @expose("genshi:tg.tests.non_overridden")
     def template_override(self, override=False):
         if override:
             override_template(self.template_override, "genshi:tg.tests.overridden")
         return dict()
 
-
-
 class SubController3(object):
     @expose()
-    def index(self):
+    def get_all(self):
         return 'Sub 3'
-    
-class TGControllerInsideSubRestConroller:
-    @expose()
-    def index(self):
-        return "COMPLICATED"
-class SubRestController(RestController):
-    
-    inside = TGControllerInsideSubRestConroller()
-    @expose()
-    def new(self):
-        return "SUBREST NEW"
-    
-    @expose()
-    def edit(self):
-        return "SUBREST EDIT"
-
-    @expose()
-    def fxn(self):
-        return "SUBREST FXN"
-
-    @expose()
-    def get_one(self, id, *args):
-        return "SUBREST GETONE"
-    
-    @expose()
-    def put(self, **kw):
-        return "SUBREST PUT"
-
-    @expose()
-    def post(self, **kw):
-        return "SUBREST POST"
-    
-    @expose()
-    def get_all(self):
-        return "SUBREST GETALL"
-    
-
-    
-class RestController3(RestController):
-    
-    subrest = SubRestController()
-    @expose()
-    def get_all(self):
-        return "SUBREST3 GETALL"
-
-    @expose()
-    def get_one(self, id):
-        return "REST3 GETONE"
-    
-    def delete(self):
-        """this is intentionally not exposed"""
-        
-class RestController2(RestController):
-
-    subrest = SubRestController()
-    
-    @expose()
-    def new(self):
-        return "REST NEW"
-    
-    @expose()
-    def get_one(self, id, *args):
-        return "REST GETONE"
-    @expose()
-    def get_all(self):
-        return "REST GETALL"
-    
-    def post(self):
-        """this is intentionally not exposed"""
-        
-    @expose()
-    def get_delete(self, *args, **kw):
-        return "REST GETDEL"
-    @expose()
-    def post_delete(self, *args):
-        return "REST POSTDEL"
 
 class SubController2(object):
     @expose()
@@ -170,36 +102,6 @@ class SubController2(object):
     @expose()
     def list(self, **kw):
         return "hello list"
-
-    class rest(RestController):
-
-        sub3 = SubController3()
-        rest2 = RestController2()
-        rest3 = RestController3()
-        
-        @expose()
-        def get(self):
-            return "REST GET"
-        @expose()
-        def post(self):
-            return "REST POST"
-        @expose()
-        def put(self):
-            return "REST PUT"
-        @expose()
-        def delete(self):
-            return "REST DELETE"
-        @expose()
-        def new(self):
-            return "REST NEW"
-        
-        @expose()
-        def edit(self, *args, **kw):
-            return "REST EDIT"
-        
-        @expose()
-        def non_resty_thing(self):
-            return "non_resty"
 
 class LookupHelper:
     
@@ -215,8 +117,7 @@ class LoookupController(TGController):
     @expose()
     def lookup(self, a, *args):
         return LookupHelper(a), args
-    
-        
+
 class RemoteErrorHandler(TGController):
     @expose()
     def errors_here(self, *args, **kw):
@@ -319,7 +220,7 @@ class BasicTGController(TGController):
 
     @expose()
     @expose('json')
-    def stacked_expose(self, tg_format=None):
+    def stacked_expose(self):
         return dict(got_json=True)
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
@@ -330,120 +231,6 @@ class BasicTGController(TGController):
     @expose()
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
-
-class TestRestController(TestWSGIController):
-    
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
-        self.app = make_app(BasicTGController)
-    
-    def test_rest_post(self):
-        r = self.app.post('/sub2/rest/')
-        assert 'REST POST' in r, r
-
-    def test_rest_non_resty(self):
-        r = self.app.post('/sub2/rest/non_resty_thing')
-        assert 'non_resty' in r, r
-        
-    def test_rest_sub_controller(self):
-        r = self.app.get('/sub2/rest/sub3')
-        assert 'Sub 3' in r, r
-
-    def test_rest_get(self):
-        r = self.app.get('/sub2/rest/')
-        assert 'REST GET' in r, r
-
-    def test_rest_delete(self):
-        r = self.app.delete('/sub2/rest/')
-        assert 'REST DELETE' in r, r
-
-    def test_rest_put(self):
-        r = self.app.put('/sub2/rest/')
-        assert 'REST PUT' in r, r
-
-    def test_rest_get_all(self):
-        r = self.app.get('/sub2/rest/rest2/')
-        assert 'REST GETALL' in r, r
-
-    def test_rest_get_one(self):
-        r = self.app.get('/sub2/rest/rest2/1')
-        assert 'REST GETONE' in r, r
-
-    def test_rest_get_delete_ugly(self):
-        r = self.app.get('/sub2/rest/rest2/1?_method=delete')
-        assert 'REST GETDEL' in r, r
-    
-    def test_rest_get_delete(self):
-        r = self.app.get('/sub2/rest/rest2/1/delete')
-        assert 'REST GETDEL' in r, r
-    
-    def test_rest_post_delete(self):
-        r = self.app.post('/sub2/rest/rest2/1/delete')
-        assert 'REST POSTDEL' in r, r
-        
-    def test_rest_nested_new(self):
-        r = self.app.get('/sub2/rest/rest2/new')
-        assert 'REST NEW' in r, r
-
-    def test_rest_sub_all(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest')
-        assert 'SUBREST GETALL' in r, r
-
-    def test_rest_sub_put(self):
-        r = self.app.put('/sub2/rest/rest2/2/subrest')
-        assert 'SUBREST PUT' in r, r
-
-    def test_rest_sub_put_with_post_hack(self):
-        r = self.app.post('/sub2/rest/rest2/2/subrest?_method=PUT')
-        assert 'SUBREST PUT' in r, r
-
-    def test_rest_sub_post(self):
-        r = self.app.post('/sub2/rest/rest2/2/subrest')
-        assert 'SUBREST POST' in r, r
-    
-    def test_rest_sub_post(self):
-        r = self.app.post('/sub2/rest/rest2/2/subrest')
-        assert 'SUBREST POST' in r, r
-
-    def test_rest_sub_new(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/new')
-        assert 'SUBREST NEW' in r, r
-    
-    def test_rest_sub_edit(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/edit')
-        assert 'SUBREST EDIT' in r, r
-
-    def test_tg_inside_subrest(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/inside')
-        assert 'COMPLICATED' in r, r
-        
-    def test_fxn_inside_subrest(self):
-        r = self.app.get('/sub2/rest/rest2/2/subrest/fxn')
-        assert 'SUBREST FXN' in r, r
-        
-    def test_fxn_inside_subrest_post(self):
-        r = self.app.post('/sub2/rest/rest2/subrest/fxn')
-        assert 'SUBREST FXN' in r, r
-    
-    def test_fxn_inside_subrest_post_not_found(self):
-        r = self.app.post('/sub2/rest/rest2/2/asdf')
-        assert 'Main Default Page called' in r, r
-    
-    def test_subrest_get_get_one(self):
-        r = self.app.get('/sub2/rest/rest2/2/asdf')
-        assert 'REST GETONE' in r, r
-
-    def test_subrest_get_not_found(self):
-        r = self.app.get('/sub2/rest/rest3/2/asdf')
-        assert 'Main Default Page called' in r, r
-
-    def test_fxn_inside_rest3_put_not_found(self):
-        r = self.app.put('/sub2/rest/rest3')
-        assert 'Main Default Page called' in r, r
-
-    def test_subrest_post_not_found(self):
-        r = self.app.delete('/sub2/rest/rest3')
-        assert 'Main Default Page called' in r, r
 
 class TestNotFoundController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -467,12 +254,14 @@ class TestTGController(TestWSGIController):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
         
-        
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
 
+    def test_validated_int(self):
+        r = self.app.get('/validated_int/1')
+        assert '{"response": 1}' in r, r
 
     def test_validated_with_error_handler(self):
         r = self.app.get('/validated_with_error_handler?a=asdf')
@@ -509,19 +298,15 @@ class TestTGController(TestWSGIController):
         r = self.app.post('/stacked_expose.json')
         assert 'got_json' in r, r
 
-    def test_deprecated_tg_format_no_mimetype(self):
-        r = self.app.post('/stacked_expose?tg_format=json')
-        assert 'got_json' in r, r
-
-    @raises(Exception)
-    def test_unknown_mimetype(self):
-        r = self.app.post('stacket_expose?tg_format=crazy_unknown_thing')
-
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
 
     def test_before_controller(self):
         r = self.app.get('/sub/before')
+        assert '__my_before__' in r, r
+
+    def test_new_before_controller(self):
+        r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
 
     def test_template_override(self):

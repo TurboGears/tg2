@@ -51,11 +51,6 @@ def test_chameleon_genshi_inheritance():
     assert "Inheritance template" in resp
     assert "Master template" in resp
 
-def test_jinja_base():
-    app = setup_noDB()
-    resp = app.get('/jinja_index')
-    assert "move along" in resp
-
 def _test_jinja_inherits():
     app = setup_noDB()
     resp = app.get('/jinja_inherits')

@@ -106,6 +106,7 @@ class ControlPanel(TGController):
     """Mock TG2 protected controller using @allow_only directly."""
 
     hr = HRManagementController()
+    allow_only = not_anonymous()
 
     @expose()
     def index(self):
@@ -115,9 +116,6 @@ class ControlPanel(TGController):
     @require(is_user('admin'))
     def add_user(self, user_name):
         return "%s was just registered" % user_name
-
-ControlPanel = allow_only(not_anonymous())(ControlPanel)
-
 
 class RootController(TGController):
 
@@ -275,7 +273,7 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
         self._check_flash(resp, NOT_AUTHENTICATED)
 
 
-class TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
+class _TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     """
     Test case for the @allow_only decorator in a controller using
     _failed_authorization() as its denial handler.
@@ -308,7 +306,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hr/', status=401)
         assert "you can manage Human Resources" not in resp.body
-        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
+        self._check_flash(resp, r'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/', extra_environ = environ, status=403)
@@ -325,7 +323,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hr/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
-        self._check_flash(resp, r'The current user must be \"hiring-manager\"')
+        self._check_flash(resp, r'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ = environ, status=403)
@@ -387,7 +385,6 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        print resp
         self.assertEqual("you can manage Human Resources", resp.body)
 
     def test_authz_denied_without_require(self):
@@ -411,7 +408,6 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         # As an anonymous user:
         resp = self.app.get('/hire/gustavo', status=401)
         assert "was just hired" not in resp.body
-        print resp.body
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}

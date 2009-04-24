@@ -9,26 +9,25 @@ needed to support these decorators.
 
 """
 
+import inspect
 import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
-
-#this can be removed after tg_format is removed
-import mimetypes
-import warnings
 
 from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from pylons import config, request, response
 from pylons.controllers.util import abort
-from pylons import tmpl_context as c
+from tg import tmpl_context
 from tg.util import partial
-from repoze.what.plugins.pylonshq import ActionProtector, ControllerProtector
+from repoze.what.plugins.pylonshq import ActionProtector
+from repoze.what.plugins.pylonshq.protectors import _BaseProtectionDecorator
 
 from tg.configuration import Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
+
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -109,20 +108,9 @@ class Decoration(object):
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers).
         """
-        #remove this after deprecation period for tg_format
-        tg_format = request.headers.get('tg_format')
 
         if hasattr(request, 'response_type') and request.response_type in self.engines:
             accept_types = request.response_type
-
-        elif tg_format:
-            warnings.warn('tg_format is now deprecated.  Use .mimetype in your URL to create the same behavior')
-            if '/' not in tg_format:
-                accept_types = mimetypes.guess_type('.'+tg_format)[0]
-                if accept_types is None:
-                    raise Exception('Unknown mimetype: %s'%tg_format)
-            else:
-                accept_types = tg_format
         else:
             accept_types = request.headers.get('accept', '*/*')
 
@@ -304,6 +292,7 @@ class expose(object):
                 self.content_type, self.engine, self.template, self.exclude_names)
         return func
 
+
 def use_custom_format(controller, custom_format):
     """Use use_custom_format in a controller in order to change
     the active @expose decorator when available."""
@@ -314,6 +303,7 @@ def use_custom_format(controller, custom_format):
         raise ValueError("'%s' is not a valid custom_format" % custom_format)
 
     deco.render_custom_format = custom_format
+
 
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the
@@ -384,9 +374,8 @@ class validate(object):
         return func
 
 
-def paginate(name, items_per_page=10, use_prefix=False):
-    """
-    Paginate a given collection.
+class paginate(object):
+    """Paginate a given collection.
 
     This decorator is mainly exposing the functionality
     of :func:`webhelpers.paginate`.
@@ -405,9 +394,7 @@ def paginate(name, items_per_page=10, use_prefix=False):
 
     To render the actual pager, use::
 
-      ${c.paginators.<name>.pager()}
-
-    where c is the tmpl_context.
+      ${tmpl_context.paginators.<name>.pager()}
 
     It is possible to have several :func:`paginate`-decorators for
     one controller action to paginate several collections independently
@@ -419,59 +406,73 @@ def paginate(name, items_per_page=10, use_prefix=False):
         the collection to be paginated.
       items_per_page
         the number of items to be rendered. Defaults to 10
+      max_items_per_page
+        the maximum number of items allowed to be set via parameter.
+        Defaults to 0 (does not allow to change that value).
       use_prefix
         if True, the parameters the paginate
         decorator renders and reacts to are prefixed with
         "<name>_". This allows for multi-pagination.
 
     """
-    prefix = ""
-    if use_prefix:
-        prefix = name + "_"
-    own_parameters = dict(
-        page="%spage" % prefix,
-        items_per_page="%sitems_per_page" % prefix
-        )
-    #@decorator
-    def _d(f):
-        def _w(*args, **kwargs):
-            page = int(kwargs.pop(own_parameters["page"], 1))
-            real_items_per_page = int(
-                    kwargs.pop(
-                            own_parameters['items_per_page'],
-                            items_per_page))
 
-            res = f(*args, **kwargs)
-            if isinstance(res, dict) and name in res:
-                additional_parameters = MultiDict()
-                for key, value in request.str_params.iteritems():
-                    if key not in own_parameters:
-                        additional_parameters.add(key, value)
+    def __init__(self, name, use_prefix=False, 
+        items_per_page=10, max_items_per_page=0): 
+        self.name = name 
+        prefix = use_prefix and name + '_' or '' 
+        self.page_param = prefix + 'page' 
+        self.items_per_page_param = prefix + 'items_per_page' 
+        self.items_per_page = items_per_page 
+        self.max_items_per_page = max_items_per_page 
 
-                collection = res[name]
-                page = Page(
-                    collection,
-                    page,
-                    items_per_page=real_items_per_page,
-                    **additional_parameters.dict_of_lists()
-                    )
-                # wrap the pager so that it will render
-                # the proper page-parameter
-                page.pager = partial(page.pager,
-                        page_param=own_parameters["page"])
-                res[name] = page
-                # this is a bit strange - it appears
-                # as if c returns an empty
-                # string for everything it dosen't know.
-                # I didn't find that documented, so I
-                # just put this in here and hope it works.
-                if not hasattr(c, 'paginators') or type(c.paginators) == str:
-                    c.paginators = Bunch()
-                c.paginators[name] = page
-            return res
-        return _w
-    return _d
+    def __call__(self, func):
+        decoration = Decoration.get_decoration(func)
+        decoration.register_hook('before_validate', self.before_validate)
+        decoration.register_hook('before_render', self.before_render)
+        return func
+ 
+    def before_validate(self, remainder, params):
+        page = params.pop(self.page_param, None)
+        if page:
+            try:
+                page = int(page)
+                if page < 1:
+                    raise ValueError
+            except ValueError:
+                page = 1
+        else:
+            page = 1
+        request.paginate_page = page or 1
+        items_per_page = params.pop(self.items_per_page_param, None)
+        if items_per_page:
+            try:
+                items_per_page = min(
+                    int(items_per_page), self.max_items_per_page)
+                if items_per_page < 1:
+                    raise ValueError
+            except ValueError:
+                items_per_page = self.items_per_page
+        else:
+            items_per_page = self.items_per_page
+        request.paginate_items_per_page = items_per_page
+        request.paginate_params = params.copy()
+        if items_per_page != self.items_per_page:
+            request.paginate_params[self.items_per_page_param] = items_per_page
 
+    def before_render(self, remainder, params, output):
+        if not isinstance(output, dict) or not self.name in output:
+            return
+        collection = output[self.name]
+        page = Page(collection, request.paginate_page,
+            request.paginate_items_per_page)
+        page.kwargs = request.paginate_params
+        if self.page_param != 'name':
+            page.pager = partial(page.pager, page_param=self.page_param)
+        if not getattr(tmpl_context, 'paginators', None):
+            tmpl_context.paginators = Bunch()
+        tmpl_context.paginators[self.name] = output[self.name] = page
+ 
+ 
 @decorator
 def postpone_commits(func, *args, **kwargs):
     """Turns sqlalchemy commits into flushes in the decorated method
@@ -487,6 +488,7 @@ def postpone_commits(func, *args, **kwargs):
     retval = func(*args, **kwargs)
     s.commit = old_commit
     return retval
+
 
 @decorator
 def without_trailing_slash(func, *args, **kwargs):
@@ -511,6 +513,7 @@ def without_trailing_slash(func, *args, **kwargs):
         from tg.controllers import redirect
         redirect(request.url[:-1])
     return func(*args, **kwargs)
+
 
 @decorator
 def with_trailing_slash(func, *args, **kwargs):
@@ -543,15 +546,15 @@ def with_trailing_slash(func, *args, **kwargs):
 class require(ActionProtector):
     """
     TurboGears-specific repoze.what-pylons action protector.
-    
+
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
     flash status if the HTTP status code is 401 or 403, respectively.
-    
+
     See :class:`allow_only` for controller-wide authorization.
-    
+
     """
-    
+
     def default_denial_handler(self, reason):
         """Authorization denial handler for repoze.what-pylons protectors."""
         if response.status_int == 401:
@@ -563,26 +566,30 @@ class require(ActionProtector):
         abort(response.status_int, reason)
 
 
-class allow_only(ControllerProtector):
+class allow_only(_BaseProtectionDecorator):
     """
     TurboGears-specific repoze.what-pylons controller protector.
-    
+
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
     flash status if the HTTP status code is 401 or 403, respectively, since
     by default the ``__before__`` method of the controller is decorated with
     :class:`require`.
-    
+
     If the controller class has the ``_failed_authorization`` *class method*,
     it will replace the default denial handler.
-    
+
     """
     protector = require
-    
+
     def __call__(self, cls, *args, **kwargs):
+        if hasattr(self.protector, 'predicate'):
+            cls.allow_only=self.protector.predicate
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
-        return super(allow_only, self).__call__(cls, *args, **kwargs)
+        sup = super(allow_only, self)
+        if hasattr(sup, '__call__'):
+            return super(allow_only, self).__call__(cls, *args, **kwargs)
 
 
 #}

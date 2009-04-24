@@ -66,8 +66,7 @@ def test_redirect_relative():
 
 def test_redirect_external():
     resp = app.get('/redirect_me?target=http://example.com')
-    print resp
-    assert resp.status == "302 Found" and dict(resp.headers)['location'] == 'http://example.com'
+    assert resp.status == "302 Found" and dict(resp.headers)['location'] == 'http://example.com', resp
 
 def test_redirect_param():
     resp = app.get('/redirect_me?target=/hello&name=paj')
@@ -127,10 +126,6 @@ def test_flash_unicode():
 def test_flash_status():
     resp = app.get('/flash_status')
     assert 'ok' in resp
-
-def test_tg_format_param():
-    resp = app.get('/stacked_expose/?tg_format=application/json')
-    assert '{"got_json' in resp.body
 
 def test_custom_content_type():
     resp = app.get('/custom_content_type')
