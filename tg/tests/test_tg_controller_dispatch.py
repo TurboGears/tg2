@@ -112,6 +112,18 @@ class LookupHelper:
     def index(self):
         return self.var
         
+class LookupHelperWithArgs:
+    
+    @expose()
+    def get_here(self, *args):
+        return "%s"%args
+
+class LoookupControllerWithArgs(TGController):
+    
+    @expose()
+    def lookup(self, *args):
+        return LookupHelperWithArgs(), args
+
 class LoookupController(TGController):
     
     @expose()
@@ -131,6 +143,7 @@ class BasicTGController(TGController):
     error_controller = RemoteErrorHandler()
     
     lookup = LoookupController()
+    lookup_with_args = LoookupControllerWithArgs()
     
     @expose()
     def index(self, **kwargs):
@@ -258,6 +271,11 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
+
+    def test_lookup_with_args(self):
+        r = self.app.get('/lookup_with_args/get_here/got_here')
+        msg = 'got_here'
+        assert r.body==msg, r
 
     def test_validated_int(self):
         r = self.app.get('/validated_int/1')

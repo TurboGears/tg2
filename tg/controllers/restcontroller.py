@@ -43,7 +43,7 @@ class RestDispatcher(ObjectDispatcher):
         else:
             #there is more of a remainder than there is non optional vars
             required_vars = []
-        
+
         #remove vars found in the params list
         params = state.params
         for var in required_vars[:]:
@@ -135,7 +135,7 @@ class RestDispatcher(ObjectDispatcher):
             method_name = 'get_delete'
 
         current_controller = state.controller
-
+        
         if self._is_exposed(current_controller, method_name):
             method = getattr(current_controller, method_name)
             new_remainder = remainder[:-1]

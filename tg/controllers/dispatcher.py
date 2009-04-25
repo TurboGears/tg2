@@ -344,9 +344,10 @@ class ObjectDispatcher(Dispatcher):
             if self._is_exposed(controller, 'lookup'):
                 controller, remainder = controller.lookup(*remainder)
                 state.url_path = orig_url_path
-                return self._dispatch_controller('lookup', controller, state, remainder[1:])
+                return self._dispatch_controller('lookup', controller, state, remainder)
             state.controller_path.pop()
             if len(state.url_path):
+                remainder = list(remainder)
                 remainder.insert(0,state.url_path[-1])
                 state.url_path.pop()
         raise HTTPNotFound
