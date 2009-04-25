@@ -13,6 +13,9 @@ from nose.tools import raises
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, \
                           teardown_session_dir
 
+from wsgiref.simple_server import demo_app
+from wsgiref.validate import validator
+
 def setup():
     setup_session_dir()
 def teardown():
@@ -461,6 +464,25 @@ class TestNotFoundController(TestWSGIController):
     def test_not_found_unicode(self):
         r = self.app.get('/права', status=404)
         assert '404 Not Found' in r, r
+
+class TestWSGIAppController(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        class TestedWSGIAppController(WSGIAppController):
+            def __init__(self):
+                def test_app(environ, start_response):
+                    if environ['CONTENT_LENGTH'] in (-1, '-1'):
+                        del environ['CONTENT_LENGTH']
+                    return validator(demo_app)(environ, start_response)
+                super(TestedWSGIAppController, self).__init__(test_app)
+        self.app = make_app(TestedWSGIAppController)
+
+    def test_valid_wsgi(self):
+        try:
+            r = self.app.get('/some_url')
+        except Exception, e:
+            raise AssertionError(str(e))
+        assert 'some_url' in r
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
