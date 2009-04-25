@@ -48,11 +48,11 @@ class RootController(TGController):
     def genshi_inherits(self):
         return {}
 
-    @expose('jinja:tg/test_stack/rendering/templates/jinja_noop.html')
+    @expose('jinja:jinja_noop.html')
     def jinja_index(self):
         return {}
 
-    @expose('jinja:tg/test_stack/rendering/templates/jinja_inherits.html')
+    @expose('jinja:jinja_inherits.html')
     def jinja_inherits(self):
         return {}
 

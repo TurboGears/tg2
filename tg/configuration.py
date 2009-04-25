@@ -337,13 +337,13 @@ class AppConfig(Bunch):
         self.render_functions.genshi = render_genshi
 
     def setup_jinja_renderer(self):
-        """Setup a renderer and loader for Jinja templates."""
-        from jinja import ChoiceLoader, Environment, FileSystemLoader
+        """Setup a renderer and loader for Jinja2 templates."""
+        from jinja2 import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
         config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
-                [FileSystemLoader(path, auto_reload=self.auto_reload_templates)
-                 for path in self.paths['templates']]))
+                [FileSystemLoader(path) for path in self.paths['templates']]),
+                auto_reload=self.auto_reload_templates)
 
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
