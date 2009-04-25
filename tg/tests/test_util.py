@@ -23,7 +23,7 @@ def test_get_project_name():
     eq_(get_project_name(), 'TurboGears2')
 
 def test_get_project_meta():
-    eq_(get_project_meta('requires.txt'), 'TurboGears2.egg-info/requires.txt')
+    eq_(get_project_meta('requires.txt'), 'TurboGears2.egg-info'+os.sep+'requires.txt')
 
 def test_get_model():
     eq_(get_model(), None)

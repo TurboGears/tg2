@@ -1,3 +1,4 @@
+import os
 import sys
 from pylons.wsgiapp import PylonsApp, class_name_from_module_name
 from pylons.util import class_name_from_module_name
@@ -28,9 +29,8 @@ class TGApp(PylonsApp):
 
         #attach the package
         pylons_package = self.config['pylons.package']
-        full_module_name = (pylons_package+'.' +
-                            controller_path.replace('/', '.') +
-                            '.' + controller.replace('/', '.'))
+        full_module_name = '.'.join([pylons_package] +
+            controller_path.split(os.sep) + controller.split('/'))
 
         # Hide the traceback here if the import fails (bad syntax and such)
         __traceback_hide__ = 'before_and_this'
