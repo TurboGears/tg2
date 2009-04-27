@@ -174,13 +174,14 @@ class Dispatcher(WSGIController):
 
         state = DispatchState(url_path, params)
         state.add_controller('/', self)
+        state.dispatcher = self
         state =  state.controller._dispatch(state, url_path)
         
         pylons.c.controller_url = '/'.join(url_path[:-len(state.remainder)])
         
 
         state.routing_args.update(params)
-        state.controller._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
+        state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
 
         return state.method, state.controller, state.remainder, params
 
@@ -322,6 +323,7 @@ class ObjectDispatcher(Dispatcher):
             if hasattr(obj, '_check_security'):
                 obj._check_security()
             state.add_controller(current_path, controller)
+            state.dispatcher = controller
             return controller._dispatch(state, remainder)
         state.add_controller(current_path, controller)
         return self._dispatch(state, remainder)
