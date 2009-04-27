@@ -180,7 +180,7 @@ class Dispatcher(WSGIController):
         
 
         state.routing_args.update(params)
-        self._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
+        state.controller._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
 
         return state.method, state.controller, state.remainder, params
 
