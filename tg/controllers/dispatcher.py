@@ -207,10 +207,11 @@ class Dispatcher(WSGIController):
 
         func, controller, remainder, params = self._get_dispatchable(url_path)
 
-        if hasattr(controller, '__before__'):
+        if hasattr(controller, '__before__') and not hasattr(controller, '_before'):
             warn("this functionality is going to removed in the next minor version,"\
                  " please use _before instead."
                  )
+            print controller
             controller.__before__(*args)
         if hasattr(controller, '_before'):
             controller._before(*args)

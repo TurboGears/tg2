@@ -143,6 +143,8 @@ class DottedFileNameFinder(object):
         be '.html'
         @type template_extension: string
         """
+        if template_name.startswith('app:'):
+            template_name = '.'.join((get_package_name(), template_name[4:]))
         try:
             return self.__cache[template_name]
 
