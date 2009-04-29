@@ -9,7 +9,8 @@ import inspect
 
 import formencode
 import pylons
-from pylons import config, request
+from pylons.configuration import config
+from pylons import request
 from pylons.controllers.util import abort
 
 from repoze.what.predicates import NotAuthorizedError, not_anonymous
@@ -231,7 +232,7 @@ class DecoratedController(object):
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
-        use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
+        use_legacy_renderer = pylons.configuration.config.get("use_legacy_renderer", True)
 
         #what causes this condition?  there are no tests for it.
         if template_name is None:

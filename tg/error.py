@@ -87,7 +87,7 @@ def ErrorHandler(app, global_conf, **errorware):
     """
 
     if asbool(global_conf.get('debug')):
-        footer = footer_html % (pylons.config.get('traceback_host', 
+        footer = footer_html % (pylons.configuration.config.get('traceback_host', 
                                                   'beta.pylonshq.com'),
                                 pylons.__version__)
                                 

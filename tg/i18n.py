@@ -4,7 +4,8 @@ import formencode
 import pylons
 import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
-from pylons import config, session
+from pylons.configuration import config
+from pylons import session
 
 log = logging.getLogger(__name__)
 
