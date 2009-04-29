@@ -189,7 +189,7 @@ class BaseIntegrationTests(TestCase):
         py_obj.request = py_obj.response = None
         environ = {'pylons.routes_dict': dict(action='index'),
                    'pylons.pylons': py_obj}
-        pylons.c._push_object(c)
+        pylons.tmpl_context._push_object(c)
         # Finally, the app:
         self.app = make_app(self.controller, environ)
 

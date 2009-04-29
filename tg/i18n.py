@@ -107,7 +107,7 @@ def set_formencode_translation(languages):
     except IOError, ioe:
         raise LanguageError('IOError: %s' % ioe)
 
-    pylons.c.formencode_translation = t
+    pylons.tmpl_context.formencode_translation = t
     
     
 __all__ = [

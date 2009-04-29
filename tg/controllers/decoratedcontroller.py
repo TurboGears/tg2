@@ -87,7 +87,7 @@ class DecoratedController(object):
             # Validate user input
             params = self._perform_validate(controller, validate_params)
             
-            pylons.c.form_values = params
+            pylons.tmpl_context.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
@@ -288,8 +288,8 @@ class DecoratedController(object):
 
     def _handle_validation_errors(self, controller, remainder, params, exception):
         """
-        Sets up pylons.c.form_values and pylons.c.form_errors to assist
-        generating a form with given values and the validation failure
+        Sets up pylons.tmpl_context.form_values and pylons.tmpl_context.form_errors
+        to assist generating a form with given values and the validation failure
         messages.
 
         The error handler in decoration.validation.error_handler is called. If
@@ -297,8 +297,8 @@ class DecoratedController(object):
         error handler instead.
         """
 
-        pylons.c.validation_exception = exception
-        pylons.c.form_errors = {}
+        pylons.tmpl_context.validation_exception = exception
+        pylons.tmpl_context.form_errors = {}
 
         # Most Invalid objects come back with a list of errors in the format:
         #"fieldname1: error\nfieldname2: error"
@@ -311,12 +311,12 @@ class DecoratedController(object):
             #if the error has no field associated with it,
             #return the error as a global form error
             if len(field_value) == 1:
-                pylons.c.form_errors['_the_form'] = field_value[0].strip()
+                pylons.tmpl_context.form_errors['_the_form'] = field_value[0].strip()
                 continue
 
-            pylons.c.form_errors[field_value[0]] = field_value[1].strip()
+            pylons.tmpl_context.form_errors[field_value[0]] = field_value[1].strip()
 
-        pylons.c.form_values = exception.value
+        pylons.tmpl_context.form_values = exception.value
 
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
@@ -330,8 +330,8 @@ class DecoratedController(object):
         return error_handler, output
 
     def _initialize_validation_context(self):
-        pylons.c.form_errors = {}
-        pylons.c.form_values = {}
+        pylons.tmpl_context.form_errors = {}
+        pylons.tmpl_context.form_values = {}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
