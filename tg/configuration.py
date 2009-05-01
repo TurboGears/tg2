@@ -609,8 +609,8 @@ class AppConfig(Bunch):
                     self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
 
-            app = maybe_make_body_seekable(app)
-
+            if pylons_config.get('make_body_seekable'):
+                app = maybe_make_body_seekable(app)
 
             if asbool(full_stack):
                 if (self.auth_backend is None
@@ -619,7 +619,7 @@ class AppConfig(Bunch):
                     # responses we redirect those responses to a nicely
                     # formatted error page
                     self.handle_status_codes.append(401)
-                # This should nevery be true for internal nested apps
+                # This should never be true for internal nested apps
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
@@ -636,8 +636,7 @@ class AppConfig(Bunch):
 
 def maybe_make_body_seekable(app):
     def wrapper(environ, start_response):
-        if pylons_config.get('make_body_seekable'):
-            log.debug("Making request body seekable")
-            Request(environ).make_body_seekable()
+        log.debug("Making request body seekable")
+        Request(environ).make_body_seekable()
         return app(environ, start_response)
     return wrapper
