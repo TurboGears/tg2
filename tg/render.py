@@ -1,7 +1,8 @@
 from urllib import quote_plus
 
 from genshi import XML
-from pylons import (app_globals, config, session, tmpl_context, request,
+from pylons.configuration import config
+from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
 

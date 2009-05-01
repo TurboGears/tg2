@@ -9,7 +9,7 @@ from UserDict import DictMixin
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 
-from pylons import config as pylons_config
+from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
@@ -183,11 +183,13 @@ class AppConfig(Bunch):
     def init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
-        tg.config is a proxy for pylons.config that allows attribute style
-        access, so it's automatically setup when we create the pylons config.
+        tg.config is a proxy for pylons.configuration.config that allows 
+        attribute style access, so it's automatically setup when we create 
+        the pylons config.
 
         Besides basic initialization, this method copies all the values
-        in base_config into the ``pylons.config`` and ``tg.config`` objects.
+        in base_config into the ``pylons.configuration.config`` and
+        ``tg.config`` objects.
 
         """
         pylons_config.init_app(global_conf, app_conf,
@@ -402,7 +404,7 @@ class AppConfig(Bunch):
         """
 
         def load_environment(global_conf, app_conf):
-            """Configure the Pylons environment via ``pylons.config``."""
+            """Configure the Pylons environment via ``pylons.configuration.config``."""
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
             #Regesters functions to be called at startup and shutdown

@@ -1,5 +1,5 @@
 """Utilities"""
-from pylons import config
+from pylons.configuration import config
 import os, sys
 import pkg_resources
 from pkg_resources import resource_filename

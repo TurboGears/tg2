@@ -65,8 +65,8 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(validators={"a":validators.Int(), "someemail":validators.Email})
     def two_validators(self, a=None, someemail=None, *args):
-        errors = pylons.c.form_errors
-        values =  pylons.c.form_values
+        errors = pylons.tmpl_context.form_errors
+        values =  pylons.tmpl_context.form_values
         return dict(a=a, someemail=someemail,
                 errors=str(errors), values=str(values))
 
@@ -77,19 +77,19 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(form=myform)
     def process_form(self, **kwargs):
-        kwargs['errors'] = pylons.c.form_errors
+        kwargs['errors'] = pylons.tmpl_context.form_errors
         return dict(kwargs)
 
     @expose('json')
     @validate(form=myform, error_handler=process_form)
     def send_to_error_handler(self, **kwargs):
-        kwargs['errors'] = pylons.c.form_errors
+        kwargs['errors'] = pylons.tmpl_context.form_errors
         return dict(kwargs)
 
     @expose()
     @validate(validators=Pwd())
     def password(self, pwd1, pwd2):
-        if pylons.c.form_errors:
+        if pylons.tmpl_context.form_errors:
             return "There was an error"
         else:
             return "Password ok!"
