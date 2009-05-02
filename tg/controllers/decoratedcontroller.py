@@ -239,8 +239,7 @@ class DecoratedController(object):
             return response
 
         # Prepare the engine, if it's not already been prepared.
-        # json is a buffet engine ATM
-        if use_legacy_renderer or 'json' == engine_name:
+        if use_legacy_renderer == engine_name:
             # get the buffet handler
             buffet = pylons.buffet._current_obj()
 
@@ -275,7 +274,7 @@ class DecoratedController(object):
             testing_variables['controller_output'] = response
 
         # Render the result.
-        if use_legacy_renderer or 'json' == engine_name:
+        if use_legacy_renderer == engine_name:
             result = buffet.render(engine_name=engine_name,
                                template_name=template_name,
                                include_pylons_variables=False,

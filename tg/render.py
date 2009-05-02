@@ -6,6 +6,7 @@ from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
 
+import turbojson
 import tg
 from tg.configuration import Bunch
 
@@ -123,16 +124,17 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
         if render_function is None:
             # engine was forced in @expose() but is not present in the
-            # engine list, warn developper
+            # engine list, warn developer
             raise MissingRendererError(template_engine)
 
     if not template_vars:
         template_vars={}
 
-    #Get the extra vars, and merge in the vars from the controller
-    tg_vars = _get_tg_vars()
-    tg_vars.update(template_vars)
-    template_vars = tg_vars
+    if template_engine != "json":
+        #Get the extra vars, and merge in the vars from the controller
+        tg_vars = _get_tg_vars()
+        tg_vars.update(template_vars)
+        template_vars = tg_vars
 
     if not render_function:
         # getting the default renderer. (this is only if no engine was defined
@@ -183,3 +185,5 @@ def render_jinja(template_name, template_vars, **kwargs):
     return templating.render_jinja2(template_name, extra_vars=template_vars,
                                    **kwargs)
 
+def render_json(template_name, template_vars, **kwargs):
+    return turbojson.jsonify.encode(template_vars)
