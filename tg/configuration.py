@@ -349,6 +349,9 @@ class AppConfig(Bunch):
 
         self.render_functions.jinja = render_jinja
 
+    def setup_json_renderer(self):
+        from tg.render import render_json
+        self.render_functions.json = render_json
 
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin.
@@ -417,6 +420,9 @@ class AppConfig(Bunch):
 
             if self.auth_backend == "sqlalchemy":
                 self.setup_sa_auth_backend()
+
+            if 'json' in self.renderers:
+                self.setup_json_renderer()
 
             if 'genshi' in self.renderers:
                 self.setup_genshi_renderer()

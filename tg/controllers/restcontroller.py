@@ -12,7 +12,7 @@ from decoratedcontroller import DecoratedController
 
 class RestDispatcher(ObjectDispatcher):
     """Defines a restful interface for a set of HTTP verbs.
-    Please see RestController for a rundown of of the controller
+    Please see RestController for a rundown of the controller
     methods used.
     """
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):

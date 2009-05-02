@@ -7,6 +7,7 @@ from tg.controllers import TGController
 from tg.decorators import expose
 
 from turbojson.jsonify import jsonify
+from peak.rules.core import NoApplicableMethods
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
@@ -22,6 +23,13 @@ class MyClass(object):
 @jsonify.when('isinstance(obj, MyClass)')
 def jsonify_myclass(obj):
     return {'result':'wo-hoo!'}
+
+class GoodJsonObject(object):
+    def __json__(self):
+        return {'Json':'Rocks'} 
+
+class BadJsonObject(object):
+    pass
 
 class BasicTGController(TGController):
 
@@ -41,6 +49,14 @@ class BasicTGController(TGController):
     @expose('genshi:test', content_type='application/xml')
     def xml_or_json(self):
         return dict(name="John Carter", title='officer', status='missing')
+
+    @expose('json')
+    def json_with_object(self):
+        return dict(obj=GoodJsonObject())
+
+    @expose('json')
+    def json_with_bad_object(self):
+        return dict(obj=BadJsonObject())
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -65,3 +81,11 @@ class TestTGController(TestWSGIController):
     
     #TODO: Add tests for 
 
+    def test_json_with_object(self):
+        resp = self.app.get('/json_with_object')
+        assert '''"Json": "Rocks"''' in resp.body
+    def test_json_with_bad_object(self):
+        try:
+            resp = self.app.get('/json_with_bad_object')
+        except NoApplicableMethods:
+            pass
