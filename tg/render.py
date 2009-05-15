@@ -6,10 +6,8 @@ from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
 
-import turbojson
 import tg
 from tg.configuration import Bunch
-
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -186,4 +184,4 @@ def render_jinja(template_name, template_vars, **kwargs):
                                    **kwargs)
 
 def render_json(template_name, template_vars, **kwargs):
-    return turbojson.jsonify.encode(template_vars)
+    return tg.json_encode(template_vars)

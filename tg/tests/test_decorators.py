@@ -6,9 +6,6 @@ import pylons
 from tg.controllers import TGController
 from tg.decorators import expose
 
-from turbojson.jsonify import jsonify
-from peak.rules.core import NoApplicableMethods
-
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
 
@@ -16,13 +13,6 @@ def setup():
     setup_session_dir()
 def teardown():
     teardown_session_dir()
-
-class MyClass(object):
-    pass
-
-@jsonify.when('isinstance(obj, MyClass)')
-def jsonify_myclass(obj):
-    return {'result':'wo-hoo!'}
 
 class GoodJsonObject(object):
     def __json__(self):
@@ -40,10 +30,6 @@ class BasicTGController(TGController):
     @expose('json', exclude_names=["b"])
     def excluded_b(self):
         return dict(a="visible", b="invisible")
-
-    @expose('json')
-    def custom(self):
-        return dict(custom=MyClass())
 
     @expose('json')
     @expose('genshi:test', content_type='application/xml')
@@ -67,10 +53,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/json')
         assert '{"a": "hello world", "b": true}' in resp.body
 
-    def test_custom_jsonification(self):
-        resp = self.app.get('/custom')
-        assert "wo-hoo!" in resp.body
-    
     def test_multi_dispatch_json(self):
         resp = self.app.get('/xml_or_json', headers={'accept':'application/json'})
         assert '''"status": "missing"''' in resp
@@ -84,8 +66,10 @@ class TestTGController(TestWSGIController):
     def test_json_with_object(self):
         resp = self.app.get('/json_with_object')
         assert '''"Json": "Rocks"''' in resp.body
+    
     def test_json_with_bad_object(self):
         try:
             resp = self.app.get('/json_with_bad_object')
-        except NoApplicableMethods:
+        except TypeError, e:
             pass
+        assert "is not JSON serializable" in e.message
