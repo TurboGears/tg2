@@ -1,6 +1,6 @@
 from urllib import quote_plus
 
-from genshi import XML
+from genshi import HTML, XML
 from pylons.configuration import config
 from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
@@ -8,6 +8,7 @@ from repoze.what import predicates
 
 import tg
 from tg.configuration import Bunch
+
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -17,6 +18,7 @@ class MissingRendererError(Exception):
             "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
             template_engine=template_engine))
         self.template_engine = template_engine
+
 
 class DeprecatedFlashVariable(object):
     def __init__(self, callable, msg):
@@ -32,6 +34,7 @@ class DeprecatedFlashVariable(object):
         import warnings
         warnings.warn(self.msg, DeprecationWarning, 2)
         return bool(self.callable())
+
 
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
@@ -114,6 +117,7 @@ def _get_tg_vars():
         root_vars.update(variable_provider())
     return root_vars
 
+
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     if template_engine is not None:
@@ -143,27 +147,24 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
 def render_chameleon_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the chameleon.genshi template"""
-    template_vars['XML'] = XML
-
-    if config.get('use_dotted_templatenames', False):
-        template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                        template_name,
-                        template_extension='.html')
-
     # here we use the render genshi function because it should be api compliant
-    return templating.render_genshi(template_name, extra_vars=template_vars,
-                                    **kwargs)
+    return render_genshi(template_name, template_vars, **kwargs)
+
 
 def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
-    template_vars['XML'] = XML
+    template_vars.update(HTML=HTML, XML=XML)
 
     if config.get('use_dotted_templatenames', False):
         template_name = tg.config['pylons.app_globals'
                 ].dotted_filename_finder.get_dotted_filename(
                         template_name,
                         template_extension='.html')
+
+    if 'method' not in kwargs and 'templating.genshi.method' in config:
+        kwargs['method'] = config['templating.genshi.method']
+    # (in a similar way, we could pass other serialization options when they
+    # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
     return templating.render_genshi(template_name, extra_vars=template_vars,
                                     **kwargs)
