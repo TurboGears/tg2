@@ -245,7 +245,7 @@ class expose(object):
                  custom_format=None):
         if exclude_names is None:
             exclude_names = []
-
+        
         if template == 'json':
             engine, template = 'json', ''
 

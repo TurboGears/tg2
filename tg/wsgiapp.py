@@ -15,7 +15,6 @@ class TGApp(PylonsApp):
         the URL has been resolved.
 
         """
-        
         # Check to see if we've cached the class instance for this name
         if controller in self.controller_classes:
 #            print self.controller_classes[controller]

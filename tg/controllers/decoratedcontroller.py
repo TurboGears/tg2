@@ -233,7 +233,9 @@ class DecoratedController(object):
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
 
-        #what causes this condition?  there are no tests for it.
+        # what causes this condition?  there are no tests for it.
+        # this is caused when someone specifies a content_type, but no template
+        # because their controller returns a string.
         if template_name is None:
             return response
 
@@ -272,7 +274,7 @@ class DecoratedController(object):
             testing_variables['template_name'] = template_name
             testing_variables['exclude_names'] = exclude_names
             testing_variables['controller_output'] = response
-
+            
         # Render the result.
         if use_legacy_renderer or 'json' == engine_name:
             result = buffet.render(engine_name=engine_name,
@@ -283,7 +285,9 @@ class DecoratedController(object):
             result = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
-
+            
+        if isinstance(result, unicode) and not pylons.response.charset:
+            pylons.response.charset = 'UTF-8'
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):
