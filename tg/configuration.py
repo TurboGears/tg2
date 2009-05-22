@@ -9,7 +9,7 @@ from UserDict import DictMixin
 from pylons.i18n import ugettext
 from genshi.filters import Translator
 
-from pylons import config as pylons_config
+from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
@@ -183,11 +183,13 @@ class AppConfig(Bunch):
     def init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
-        tg.config is a proxy for pylons.config that allows attribute style
-        access, so it's automatically setup when we create the pylons config.
+        tg.config is a proxy for pylons.configuration.config that allows 
+        attribute style access, so it's automatically setup when we create 
+        the pylons config.
 
         Besides basic initialization, this method copies all the values
-        in base_config into the ``pylons.config`` and ``tg.config`` objects.
+        in base_config into the ``pylons.configuration.config`` and
+        ``tg.config`` objects.
 
         """
         pylons_config.init_app(global_conf, app_conf,
@@ -349,6 +351,9 @@ class AppConfig(Bunch):
 
         self.render_functions.jinja = render_jinja
 
+    def setup_json_renderer(self):
+        from tg.render import render_json
+        self.render_functions.json = render_json
 
     def setup_default_renderer(self):
         """Setup template defaults in the buffed plugin.
@@ -402,7 +407,7 @@ class AppConfig(Bunch):
         """
 
         def load_environment(global_conf, app_conf):
-            """Configure the Pylons environment via ``pylons.config``."""
+            """Configure the Pylons environment via ``pylons.configuration.config``."""
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
             #Regesters functions to be called at startup and shutdown
@@ -417,6 +422,9 @@ class AppConfig(Bunch):
 
             if self.auth_backend == "sqlalchemy":
                 self.setup_sa_auth_backend()
+
+            if 'json' in self.renderers:
+                self.setup_json_renderer()
 
             if 'genshi' in self.renderers:
                 self.setup_genshi_renderer()
@@ -609,8 +617,8 @@ class AppConfig(Bunch):
                     self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
 
-            app = maybe_make_body_seekable(app)
-
+            if pylons_config.get('make_body_seekable'):
+                app = maybe_make_body_seekable(app)
 
             if asbool(full_stack):
                 if (self.auth_backend is None
@@ -619,7 +627,7 @@ class AppConfig(Bunch):
                     # responses we redirect those responses to a nicely
                     # formatted error page
                     self.handle_status_codes.append(401)
-                # This should nevery be true for internal nested apps
+                # This should never be true for internal nested apps
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
@@ -636,8 +644,7 @@ class AppConfig(Bunch):
 
 def maybe_make_body_seekable(app):
     def wrapper(environ, start_response):
-        if pylons_config.get('make_body_seekable'):
-            log.debug("Making request body seekable")
-            Request(environ).make_body_seekable()
+        log.debug("Making request body seekable")
+        Request(environ).make_body_seekable()
         return app(environ, start_response)
     return wrapper

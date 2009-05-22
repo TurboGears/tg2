@@ -6,8 +6,6 @@ import pylons
 from tg.controllers import TGController
 from tg.decorators import expose
 
-from turbojson.jsonify import jsonify
-
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
 
@@ -16,12 +14,12 @@ def setup():
 def teardown():
     teardown_session_dir()
 
-class MyClass(object):
-    pass
+class GoodJsonObject(object):
+    def __json__(self):
+        return {'Json':'Rocks'} 
 
-@jsonify.when('isinstance(obj, MyClass)')
-def jsonify_myclass(obj):
-    return {'result':'wo-hoo!'}
+class BadJsonObject(object):
+    pass
 
 class BasicTGController(TGController):
 
@@ -34,13 +32,17 @@ class BasicTGController(TGController):
         return dict(a="visible", b="invisible")
 
     @expose('json')
-    def custom(self):
-        return dict(custom=MyClass())
-
-    @expose('json')
     @expose('genshi:test', content_type='application/xml')
     def xml_or_json(self):
         return dict(name="John Carter", title='officer', status='missing')
+
+    @expose('json')
+    def json_with_object(self):
+        return dict(obj=GoodJsonObject())
+
+    @expose('json')
+    def json_with_bad_object(self):
+        return dict(obj=BadJsonObject())
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -51,10 +53,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/json')
         assert '{"a": "hello world", "b": true}' in resp.body
 
-    def test_custom_jsonification(self):
-        resp = self.app.get('/custom')
-        assert "wo-hoo!" in resp.body
-    
     def test_multi_dispatch_json(self):
         resp = self.app.get('/xml_or_json', headers={'accept':'application/json'})
         assert '''"status": "missing"''' in resp
@@ -65,3 +63,13 @@ class TestTGController(TestWSGIController):
     
     #TODO: Add tests for 
 
+    def test_json_with_object(self):
+        resp = self.app.get('/json_with_object')
+        assert '''"Json": "Rocks"''' in resp.body
+    
+    def test_json_with_bad_object(self):
+        try:
+            resp = self.app.get('/json_with_bad_object')
+        except TypeError, e:
+            pass
+        assert "is not JSON serializable" in e.message

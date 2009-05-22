@@ -1,7 +1,8 @@
 from urllib import quote_plus
 
-from genshi import XML
-from pylons import (app_globals, config, session, tmpl_context, request,
+from genshi import HTML, XML
+from pylons.configuration import config
+from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
 
@@ -18,6 +19,7 @@ class MissingRendererError(Exception):
             template_engine=template_engine))
         self.template_engine = template_engine
 
+
 class DeprecatedFlashVariable(object):
     def __init__(self, callable, msg):
         self.callable = callable
@@ -32,6 +34,7 @@ class DeprecatedFlashVariable(object):
         import warnings
         warnings.warn(self.msg, DeprecationWarning, 2)
         return bool(self.callable())
+
 
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
@@ -114,6 +117,7 @@ def _get_tg_vars():
         root_vars.update(variable_provider())
     return root_vars
 
+
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     if template_engine is not None:
@@ -122,16 +126,17 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
         if render_function is None:
             # engine was forced in @expose() but is not present in the
-            # engine list, warn developper
+            # engine list, warn developer
             raise MissingRendererError(template_engine)
 
     if not template_vars:
         template_vars={}
 
-    #Get the extra vars, and merge in the vars from the controller
-    tg_vars = _get_tg_vars()
-    tg_vars.update(template_vars)
-    template_vars = tg_vars
+    if template_engine != "json":
+        #Get the extra vars, and merge in the vars from the controller
+        tg_vars = _get_tg_vars()
+        tg_vars.update(template_vars)
+        template_vars = tg_vars
 
     if not render_function:
         # getting the default renderer. (this is only if no engine was defined
@@ -142,27 +147,24 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
 def render_chameleon_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the chameleon.genshi template"""
-    template_vars['XML'] = XML
-
-    if config.get('use_dotted_templatenames', False):
-        template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                        template_name,
-                        template_extension='.html')
-
     # here we use the render genshi function because it should be api compliant
-    return templating.render_genshi(template_name, extra_vars=template_vars,
-                                    **kwargs)
+    return render_genshi(template_name, template_vars, **kwargs)
+
 
 def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
-    template_vars['XML'] = XML
+    template_vars.update(HTML=HTML, XML=XML)
 
     if config.get('use_dotted_templatenames', False):
         template_name = tg.config['pylons.app_globals'
                 ].dotted_filename_finder.get_dotted_filename(
                         template_name,
                         template_extension='.html')
+
+    if 'method' not in kwargs and 'templating.genshi.method' in config:
+        kwargs['method'] = config['templating.genshi.method']
+    # (in a similar way, we could pass other serialization options when they
+    # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
     return templating.render_genshi(template_name, extra_vars=template_vars,
                                     **kwargs)
@@ -182,3 +184,5 @@ def render_jinja(template_name, template_vars, **kwargs):
     return templating.render_jinja2(template_name, extra_vars=template_vars,
                                    **kwargs)
 
+def render_json(template_name, template_vars, **kwargs):
+    return tg.json_encode(template_vars)

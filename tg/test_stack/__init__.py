@@ -9,7 +9,7 @@ class TestConfig(AppConfig):
     def __init__(self, folder, values=None):
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja']
+        self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja','json']
         self.render_functions = tg.util.Bunch()
         self.package = tg.test_stack
         self.default_renderer = 'genshi'

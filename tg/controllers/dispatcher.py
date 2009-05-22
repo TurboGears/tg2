@@ -177,7 +177,7 @@ class Dispatcher(WSGIController):
         state.dispatcher = self
         state =  state.controller._dispatch(state, url_path)
         
-        pylons.c.controller_url = '/'.join(url_path[:-len(state.remainder)])
+        pylons.tmpl_context.controller_url = '/'.join(url_path[:-len(state.remainder)])
         
 
         state.routing_args.update(params)

@@ -17,7 +17,8 @@ from decorator import decorator
 from webob.exc import HTTPUnauthorized
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
-from pylons import config, request, response
+from pylons.configuration import config
+from pylons import request, response
 from pylons.controllers.util import abort
 from tg import tmpl_context
 from tg.util import partial

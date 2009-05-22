@@ -29,25 +29,25 @@ def wsgi_app(environ, start_response):
 class BeforeController(TGController):
     
     def __before__(self, *args, **kw):
-        pylons.c.var = '__my_before__'
+        pylons.tmpl_context.var = '__my_before__'
     def __after__(self, *args, **kw):
         global_craziness = '__my_after__'
 
     @expose()
     def index(self):
-        assert pylons.c.var
-        return pylons.c.var
+        assert pylons.tmpl_context.var
+        return pylons.tmpl_context.var
 
 class NewBeforeController(TGController):
     def _before(self, *args, **kw):
-        pylons.c.var = '__my_before__'
+        pylons.tmpl_context.var = '__my_before__'
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
         
     @expose()
     def index(self):
-        assert pylons.c.var
-        return pylons.c.var
+        assert pylons.tmpl_context.var
+        return pylons.tmpl_context.var
 
 class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
