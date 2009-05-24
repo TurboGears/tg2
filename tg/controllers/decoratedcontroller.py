@@ -74,7 +74,8 @@ class DecoratedController(object):
 
         remainder = remainder or []
         try:
-            pylons.request.headers['tg_format'] = params.get('tg_format', None)
+            if 'tg_format' in params:
+                pylons.request.headers['tg_format'] = params['tg_format']
 
             controller.decoration.run_hooks('before_validate', remainder,
                                             params)
