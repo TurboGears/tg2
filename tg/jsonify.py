@@ -17,7 +17,7 @@ from sqlalchemy.engine.base import ResultProxy, RowProxy
 
 class GenericJSON(JSONEncoder):
     def default(self, obj):
-        if hasattr(obj, '__json__'):
+        if hasattr(obj, '__json__') and callable(obj.__json__):
             return obj.__json__()
         elif isinstance(obj, (datetime.date, datetime.datetime)):
             return str(obj)
