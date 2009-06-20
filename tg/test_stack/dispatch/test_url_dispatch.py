@@ -134,8 +134,18 @@ def test_tg_format_param():
 
 def test_custom_content_type():
     resp = app.get('/custom_content_type')
-    assert 'image/png' == dict(resp.headers)['content-type']
-    assert resp.body == 'PNG'
+    assert 'image/png' == dict(resp.headers)['Content-Type'], resp
+    assert resp.body == 'PNG', resp
+
+def test_custom_text_plain_content_type():
+    resp = app.get('/custom_content_text_plain_type')
+    assert 'text/plain; charset=utf-8' == dict(resp.headers)['Content-Type'], resp
+    assert resp.body == """a<br/>bx""", resp
+
+def test_custom_content_type2():
+    resp = app.get('/custom_content_type2')
+    assert 'image/png' == dict(resp.headers)['Content-Type'], resp
+    assert resp.body == 'PNG2', resp
 
 def test_basicurls():
     resp = app.get("/test_url_sop")
