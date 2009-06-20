@@ -497,6 +497,7 @@ def _check_controller_auth(obj):
     if hasattr(obj, "im_self"):
         klass_instance = obj.im_self
     else:
+        print obj
         klass_instance = obj
 
     if hasattr(klass_instance, "_check_security"):
@@ -749,21 +750,22 @@ class RestController(DecoratedController):
     class decoration(object):
         """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
         exposed = True
-
-    def _check_security(self):
-        if not hasattr(self, "allow_only") or self.allow_only is None:
+    
+    @classmethod
+    def _check_security(cls):
+        if not hasattr(cls, "allow_only") or cls.allow_only is None:
             log.debug('No controller-wide authorization at %s',
                       pylons.request.path)
             return True
         try:
-            predicate = self.allow_only
+            predicate = cls.allow_only
             predicate.check_authorization(pylons.request.environ)
         except NotAuthorizedError, e:
             reason = unicode(e)
-            if hasattr(self, '_failed_authorization'):
+            if hasattr(cls, '_failed_authorization'):
                 # Should shortcircut the rest, but if not we will still
                 # deny authorization
-                self._failed_authorization(reason)
+                cls._failed_authorization(reason)
             if not_anonymous().is_met(request.environ):
                 # The user is authenticated but not allowed.
                 code = 403
