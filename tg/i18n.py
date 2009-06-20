@@ -24,19 +24,19 @@ def setup_i18n():
         lang_session_key = config.get('lang_session_key', 'tg_lang')
         
         if lang_session_key in pylons.session:
-            log.info("Language %s found in session",
+            log.debug("Language %s found in session",
                          pylons.session[lang_session_key])
             
             try:
                 pylons.i18n.set_lang(pylons.session[lang_session_key])
             except LanguageError:
-                log.info("Language %s: not supported",
+                log.debug("Language %s: not supported",
                          pylons.session[lang_session_key])
             else:
                 # if there is a resource bundle for this language
                 # stop the best match search
                 use_session_lang = True
-                log.info("Set request language to %s",
+                log.debug("Set request language to %s",
                          pylons.session[lang_session_key])
         
 
@@ -50,7 +50,7 @@ def setup_i18n():
                 # if there is no resource bundle for this language
                 # remove the language from the list
                 languages.remove(lang)
-                log.info("Skip language %s: not supported", lang)
+                log.debug("Skip language %s: not supported", lang)
 
         # if any language is left, set the best match as a default
         # TODO : Move it upper or add the fallbacks again after,
