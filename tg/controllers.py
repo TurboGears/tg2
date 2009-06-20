@@ -750,6 +750,34 @@ class RestController(DecoratedController):
         """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
         exposed = True
 
+    def _check_security(self):
+        if not hasattr(self, "allow_only") or self.allow_only is None:
+            log.debug('No controller-wide authorization at %s',
+                      pylons.request.path)
+            return True
+        try:
+            predicate = self.allow_only
+            predicate.check_authorization(pylons.request.environ)
+        except NotAuthorizedError, e:
+            reason = unicode(e)
+            if hasattr(self, '_failed_authorization'):
+                # Should shortcircut the rest, but if not we will still
+                # deny authorization
+                self._failed_authorization(reason)
+            if not_anonymous().is_met(request.environ):
+                # The user is authenticated but not allowed.
+                code = 403
+                status = 'error'
+            else:
+                # The user has not been not authenticated.
+                code = 401
+                status = 'warning'
+            pylons.response.status = code
+            flash(reason, status=status)
+            abort(code, comment=reason)
+
+
+
 class TGController(ObjectDispatchController):
     """
     TGController is a specialized form of ObjectDispatchController that forms the
