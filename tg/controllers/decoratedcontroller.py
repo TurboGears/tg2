@@ -26,10 +26,12 @@ from util import pylons_formencode_gettext
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
+
 class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
     controller methods for the purpose of rendering web content.
     """
+
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'allow_only') and self.allow_only is not None:
             # Let's turn Controller.allow_only into something useful for
@@ -44,8 +46,6 @@ class DecoratedController(object):
             if inspect.ismethod(method) and hasattr(method, 'decoration'):
                 return method.decoration.exposed
 
-
-    
     def _call(self, controller, params, remainder=None):
         """
         _call is called by _perform_call in Pylons' WSGIController.
@@ -66,10 +66,11 @@ class DecoratedController(object):
 
         The after_render hook can act upon and modify the response out of
         rendering.
-        
+
         """
-        
+
         self._initialize_validation_context()
+
         pylons.request.start_response = self.start_response
 
         remainder = remainder or []
@@ -88,14 +89,14 @@ class DecoratedController(object):
 
             # Validate user input
             params = self._perform_validate(controller, validate_params)
-            
+
             pylons.tmpl_context.form_values = params
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
 
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
-            
+
             output = controller(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
@@ -131,13 +132,6 @@ class DecoratedController(object):
         be FormEncode Invalid objects.
         """
 
-        # this is here because the params were not getting passed in on controllers that
-        # were mapped with routes.  This is a fix, but it's in the wrong place.
-        # we need to add better tests to ensure decorated controllers with routings work
-        # properly.
-        if isinstance(controller.im_self, DecoratedController):
-            params.update(pylons.request.params.mixed())
-
         validation = getattr(controller.decoration, 'validation', None)
 
         if validation is None:
@@ -149,7 +143,6 @@ class DecoratedController(object):
 
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
-
 
         # The validator may be a dictionary, a FormEncode Schema object, or any
         # object with a "validate" method.
@@ -217,8 +210,6 @@ class DecoratedController(object):
         expose decorator.
         """
 
-
-
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
@@ -275,7 +266,7 @@ class DecoratedController(object):
             testing_variables['template_name'] = template_name
             testing_variables['exclude_names'] = exclude_names
             testing_variables['controller_output'] = response
-            
+
         # Render the result.
         if use_legacy_renderer == engine_name:
             result = buffet.render(engine_name=engine_name,
@@ -286,7 +277,7 @@ class DecoratedController(object):
             result = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
-            
+
         if isinstance(result, unicode) and not pylons.response.charset:
             pylons.response.charset = 'UTF-8'
         return result
@@ -361,6 +352,7 @@ class DecoratedController(object):
             pylons.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
+
 
 def _configured_engines():
     """

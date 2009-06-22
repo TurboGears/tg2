@@ -29,15 +29,27 @@ class TestPagination:
         page = self.app.get(url)
         assert _pager % locals() in page, page
         assert _data in page, page
+        url = '/paginated/42?page=2'
+        page = self.app.get(url)
+        assert '<li>0</li>' not in page
+        assert '<li>10</li>' in page
 
     def test_pagination_with_validation(self):
         url = '/paginated_validated/42'
         page = self.app.get(url)
         assert _pager % locals() in page, page
         assert _data in page, page
+        url = '/paginated_validated/42?page=2'
+        page = self.app.get(url)
+        assert '<li>0</li>' not in page
+        assert '<li>10</li>' in page
 
     def test_validation_with_pagination(self):
         url = '/validated_paginated/42'
         page = self.app.get(url)
         assert _pager % locals() in page, page
         assert _data in page, page
+        url = '/validated_paginated/42?page=2'
+        page = self.app.get(url)
+        assert '<li>0</li>' not in page
+        assert '<li>10</li>' in page
