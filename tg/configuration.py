@@ -144,6 +144,7 @@ class AppConfig(Bunch):
 
         self.use_toscawidgets = True
         self.use_transaction_manager = True
+        self.use_toscawidgets2 = False
 
         #Registy for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -505,6 +506,16 @@ class AppConfig(Bunch):
             })
         return app
 
+    def add_tosca2_middleware(self, app):
+        """Configure the ToscaWidgets middleware."""
+        from tw2.core.middleware import Config, TwMiddleware
+
+        app = TwMiddleware(app, 
+            default_engine=self.default_renderer,
+            translator=ugettext,
+            )
+        return app
+
     def add_static_file_middleware(self, app):
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
         app = Cascade([static_app, app])
@@ -600,6 +611,9 @@ class AppConfig(Bunch):
 
             if self.use_toscawidgets:
                 app = self.add_tosca_middleware(app)
+
+            if self.use_toscawidgets2:
+                app = self.add_tosca2_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
                 # Skipping authentication if explicitly requested. Used by 

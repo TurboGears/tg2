@@ -246,7 +246,7 @@ class DecoratedController(object):
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         #set up the tw renderer
-        if engine_name in 'genshi' or 'mako':
+        if engine_name in ('genshi','mako') and config.use_toscawidgets:
             tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
