@@ -497,7 +497,6 @@ def _check_controller_auth(obj):
     if hasattr(obj, "im_self"):
         klass_instance = obj.im_self
     else:
-        print obj
         klass_instance = obj
 
     if hasattr(klass_instance, "_check_security"):
