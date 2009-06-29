@@ -128,12 +128,12 @@ class TestTGController(TestWSGIController):
 
     @raises(AssertionError)
     def test_validation_fails_with_no_error_handler(self):
-        form_values = {'a':'asdf', 'b':"string"}
+        form_values = {'a': 'asdf', 'b': "string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
 
     def test_two_validators_errors(self):
         """Ensure that multiple validators are applied correctly"""
-        form_values = {'a':'1', 'someemail':"guido@google.com"}
+        form_values = {'a': '1', 'someemail': "guido@google.com"}
         resp = self.app.post('/two_validators', form_values)
         content = loads(resp.body)
         assert content['a'] == 1
@@ -164,15 +164,22 @@ class TestTGController(TestWSGIController):
 
     def test_form_validation_error(self):
         """Test form validation (with errors)"""
-        form_values = {'title':'Razer', 'year':"t007"}
+        form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values)
+        values = loads(resp.body)
+        assert  "Please enter an integer value" in values['errors']['year']
+
+    def test_form_validation_redirect(self):
+        """Test form validation (with errors)"""
+        form_values = {'title': 'Razer', 'year': "t007"}
+        resp = self.app.post('/send_to_error_handler', form_values)
         values = loads(resp.body)
         assert  "Please enter an integer value" in values['errors']['year']
 
     def test_form_validation_translation(self):
         """Test translation of form validation error messages"""
-        form_values = {'title':'Razer', 'year':"t007"}
-        resp = self.app.post('/send_to_error_handler', form_values,
+        form_values = {'title': 'Razer', 'year': "t007"}
+        resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'ru'})
         values = loads(resp.body)
         assert u"Введите числовое значение" in values['errors']['year']
@@ -187,5 +194,6 @@ class TestTGController(TestWSGIController):
         assert "Password ok!" in resp
 
     def test_controller_based_validator(self):
+        """Test controller based validation"""
         resp = self.app.post('/validate_controller_based_validator')
         assert 'ok' in resp
