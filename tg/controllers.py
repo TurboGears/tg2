@@ -35,8 +35,8 @@ from webob.exc import HTTPUnauthorized
 
 log = logging.getLogger(__name__)
 
-# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE) then we won't
-# override pylons.request.content_type
+# If someone goes @expose(content_type=CUSTOM_CONTENT_TYPE)
+# then we won't override request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
 def _configured_engines():
@@ -100,13 +100,13 @@ class DecoratedController(WSGIController):
             cached_argspecs = self.__class__._cached_argspecs
         except AttributeError:
             self.__class__._cached_argspecs = cached_argspecs = {}
-        
+
         try:
             argspec = cached_argspecs[func.im_func]
         except KeyError:
             argspec = cached_argspecs[func.im_func] = inspect.getargspec(func)
         return argspec
-    
+
     def _perform_call(self, controller, params, remainder=None):
         """
         _perform_call is called by _inspect_call in Pylons' WSGIController.
@@ -130,12 +130,12 @@ class DecoratedController(WSGIController):
         """
 
         self._initialize_validation_context()
-        pylons.request.start_response = self.start_response
+        request.start_response = self.start_response
 
         remainder = remainder or []
         try:
             if 'tg_format' in params:
-                pylons.request.headers['tg_format'] = params['tg_format']
+                request.headers['tg_format'] = params['tg_format']
 
             controller.decoration.run_hooks('before_validate', remainder,
                                             params)
@@ -151,7 +151,7 @@ class DecoratedController(WSGIController):
                     if i>= len(remainder):
                         break
                     validate_params[var] = remainder[i]
-            
+
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 
@@ -159,7 +159,7 @@ class DecoratedController(WSGIController):
 
             controller.decoration.run_hooks('before_call', remainder, params)
             # call controller method
-            
+
             argvars = argspec[0][1:]
             if argvars:
                 for i, var in enumerate(remainder):
@@ -291,7 +291,7 @@ class DecoratedController(WSGIController):
         """
 
         content_type, engine_name, template_name, exclude_names = \
-            controller.decoration.lookup_template_engine(pylons.request)
+            controller.decoration.lookup_template_engine(request)
 
         if content_type != CUSTOM_CONTENT_TYPE:
             pylons.response.headers['Content-Type'] = content_type
@@ -302,11 +302,11 @@ class DecoratedController(WSGIController):
             return response
 
         # Save these objeccts as locals from the SOP to avoid expensive lookups
-        req = pylons.request._current_obj()
+        req = request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
-        use_legacy_renderer = pylons.config.get("use_legacy_renderer", True)
+        use_legacy_renderer = config.get("use_legacy_renderer", True)
 
-        #what causes this condition?  there are no tests for it.
+        # what causes this condition?  there are no tests for it.
         if template_name is None:
             return response
 
@@ -321,11 +321,11 @@ class DecoratedController(WSGIController):
                 buffet.prepare(engine_name, **template_options)
                 _configured_engines().add(engine_name)
 
-        #if there is an identity, push it to the pylons template context
+        # if there is an identity, push it to the pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
-        #set up the tw renderer
-        if pylons.config['use_toscawidgets'] and engine_name in 'genshi' or 'mako':
+        # set up the tw renderer
+        if config.get('use_toscawidgets', True) and engine_name in ('genshi', 'mako'):
             tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
@@ -455,7 +455,7 @@ class ObjectDispatchController(DecoratedController):
         """
 
         if url is None:
-            url_path = pylons.request.path.split('/')[1:]
+            url_path = request.path.split('/')[1:]
         else:
             url_path = url.split('/')
 
@@ -468,12 +468,12 @@ class ObjectDispatchController(DecoratedController):
             pylons.c.controller_url = url
         if remainder and remainder[-1] == '':
             remainder.pop()
-        return controller, remainder, pylons.request.params.mixed()
+        return controller, remainder, request.params.mixed()
 
     def _perform_call(self, func, args):
         controller, remainder, params = self._get_routing_info(args.get('url'))
         func_name = func.__name__
-        if func_name == '__before__' or func_name == '__after__': 
+        if func_name == '__before__' or func_name == '__after__':
             if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
                 return controller.im_self.__before__(*args)
             if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
@@ -505,8 +505,8 @@ def _check_controller_auth(obj):
 def _object_dispatch(obj, url_path):
     remainder = url_path
 
-    pylons.request.response_type = None
-    pylons.request.response_ext = None
+    request.response_type = None
+    request.response_ext = None
     # if the last item in the remainder has an extention
     # remove the extension, and add a response content type to the
     # request parameters
@@ -517,8 +517,8 @@ def _object_dispatch(obj, url_path):
             extension_spot = last_remainder.rfind('.')
             extension = last_remainder[extension_spot:]
             remainder[-1] = last_remainder[:extension_spot]
-            pylons.request.response_type = mime_type
-            pylons.request.response_ext = extension
+            request.response_type = mime_type
+            request.response_ext = extension
 
     notfound_handlers = []
     while True:
@@ -548,15 +548,15 @@ def _object_dispatch(obj, url_path):
                 continue
 
 def _find_restful_dispatch(obj, parent, remainder):
-    
+
     _check_controller_auth(obj)
     if not inspect.isclass(obj) and not isinstance(obj, RestController):
         return obj, remainder
 
-    request_method = method = pylons.request.method.lower()
-    
+    request_method = method = request.method.lower()
+
     #conventional hack for handling methods which are not supported by most browsers
-    params = pylons.request.params
+    params = request.params
     if '_method' in params:
         if params['_method']:
             method = params['_method'].lower()
@@ -623,7 +623,7 @@ def _find_restful_dispatch(obj, parent, remainder):
     if hasattr(obj, method):
         possible_rest_method = getattr(obj, method)
         if hasattr(possible_rest_method, 'decoration') and possible_rest_method.decoration.exposed:
-            
+
             if inspect.isclass(obj):
                 obj = obj()
             #attach the parent class so the inner class has access to it's members
@@ -749,16 +749,15 @@ class RestController(DecoratedController):
     class decoration(object):
         """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
         exposed = True
-    
+
     @classmethod
     def _check_security(cls):
         if not hasattr(cls, "allow_only") or cls.allow_only is None:
-            log.debug('No controller-wide authorization at %s',
-                      pylons.request.path)
+            log.debug('No controller-wide authorization at %s', request.path)
             return True
         try:
             predicate = cls.allow_only
-            predicate.check_authorization(pylons.request.environ)
+            predicate.check_authorization(request.environ)
         except NotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(cls, '_failed_authorization'):
@@ -825,7 +824,7 @@ class TGController(ObjectDispatchController):
             func_name = func.__name__
             if not args:
                 args = []
-            if func_name == '__before__' or func_name == '__after__': 
+            if func_name == '__before__' or func_name == '__after__':
                 if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
                     return controller.im_self.__before__(*args)
                 if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
@@ -844,12 +843,11 @@ class TGController(ObjectDispatchController):
 
     def _check_security(self):
         if not hasattr(self, "allow_only") or self.allow_only is None:
-            log.debug('No controller-wide authorization at %s',
-                      pylons.request.path)
+            log.debug('No controller-wide authorization at %s', request.path)
             return True
         try:
             predicate = self.allow_only
-            predicate.check_authorization(pylons.request.environ)
+            predicate.check_authorization(request.environ)
         except NotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
@@ -878,7 +876,7 @@ class WSGIAppController(TGController):
         self.allow_only = allow_only
         # Signal tg.configuration.maybe_make_body_seekable which is wrapping
         # The stack to make the body seekable so default() can rewind it.
-        pylons.config['make_body_seekable'] = True
+        config['make_body_seekable'] = True
         # Calling the parent's contructor, to enable controller-wide auth:
         super(WSGIAppController, self).__init__()
 
@@ -890,7 +888,7 @@ class WSGIAppController(TGController):
         WSGI app.
         """
         # Push into SCRIPT_NAME the path components that have been consumed,
-        request = pylons.request._current_obj()
+        request = request._current_obj()
         new_req = request.copy()
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
         for i in xrange(to_pop):
@@ -966,7 +964,7 @@ def redirect(*args, **kwargs):
     raise found
 
 def use_wsgi_app(wsgi_app):
-    return wsgi_app(pylons.request.environ, pylons.request.start_response)
+    return wsgi_app(request.environ, request.start_response)
 
 
 # Idea stolen from Pylons
