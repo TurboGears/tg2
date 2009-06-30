@@ -181,7 +181,8 @@ class Dispatcher(WSGIController):
         
 
         state.routing_args.update(params)
-        state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
+        if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
+            state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
 
         return state.method, state.controller, state.remainder, params
 
@@ -387,3 +388,8 @@ class ObjectDispatcher(Dispatcher):
         
         #dispatch not found
         return self._dispatch_first_found_default_or_lookup(state, remainder)
+
+    def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
+        """This is expected to be overridden by any subclass that wants to set the routing_args (RestController)
+           Do not delete.
+        """
