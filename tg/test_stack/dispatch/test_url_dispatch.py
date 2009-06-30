@@ -148,3 +148,4 @@ def test_basicurls():
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
     assert "None Recieved"
+
