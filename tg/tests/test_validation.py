@@ -177,7 +177,7 @@ class TestTGController(TestWSGIController):
         assert  "Please enter an integer value" in values['errors']['year']
 
     def test_form_validation_translation(self):
-        """Test translation of form validation error messages"""
+        #"""Test translation of form validation error messages"""
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'ru'})

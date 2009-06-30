@@ -61,7 +61,7 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TGController
 
     app = ControllerWrap(controller_klass)
-    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)    
+    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
