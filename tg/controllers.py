@@ -888,6 +888,7 @@ class WSGIAppController(TGController):
         WSGI app.
         """
         # Push into SCRIPT_NAME the path components that have been consumed,
+        from pylons import request
         request = request._current_obj()
         new_req = request.copy()
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)

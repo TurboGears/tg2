@@ -28,7 +28,7 @@ class TGApp(PylonsApp):
         controller_path = base_controller_path[len(root_module_path)+1:]
 
         #attach the package
-        pylons_package = self.config['pylons.package']
+        pylons_package = self.config['package'].__name__
         full_module_name = '.'.join([pylons_package] +
             controller_path.split(os.sep) + controller.split('/'))
 

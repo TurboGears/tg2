@@ -4,10 +4,11 @@ from tg.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 from nose.tools import eq_
 
+import tg
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch', 
                              values = {'use_sqlalchemy': False,
-                             'ignore_parameters': ["ignore", "ignore_me"]
+                             'ignore_parameters': ["ignore", "ignore_me"],
                              }
                              )
     return app_from_config(base_config) 
@@ -25,49 +26,43 @@ def test_url_encoded_param_passing():
 
 def test_tg_style_index():
     resp = app.get('/index/')
-    print resp
-    assert 'hello' in resp.body
+    assert 'hello' in resp.body, resp.body
 
 def test_tg_style_subcontroller_index():
     resp = app.get('/sub/index')
-    assert "sub index" in resp.body
+    assert "sub index" in resp.body, resp.body
 
 def test_tg_style_subcontroller_default():
     resp=app.get('/sub/bob/tim/joe')
-    assert "bob" in resp.body
-    assert 'tim' in resp.body
-    assert 'joe' in resp.body
+    assert "bob" in resp.body, resp.body
+    assert 'tim' in resp.body, resp.body
+    assert 'joe' in resp.body, resp.body
 
 def test_redirect_absolute():
     resp = app.get('/redirect_me?target=/')
-    print resp.status
     assert resp.status == "302 Found", resp.status
-    assert 'http://localhost/' in resp.headers['location']
-    print resp
+    assert 'http://localhost/' in resp.headers['location'], resp.body
     resp = resp.follow()
-    print resp
-    assert 'hello world' in resp
+    assert 'hello world' in resp, resp
 
 def test_redirect_relative():
     resp = app.get('/redirect_me?target=hello&name=abc')
-    print resp
     resp = resp.follow()
-    assert'Hello abc' in resp
+    assert'Hello abc' in resp, resp
     resp = app.get('/sub/redirect_me?target=hello&name=def')
-    print resp
     resp = resp.follow()
-    print resp
-    assert'Why HELLO! def' in resp
+#    print resp
+    assert'Why HELLO! def' in resp, resp
     resp = app.get('/sub/redirect_me?target=../hello&name=ghi')
-    print resp
+#    print resp
     resp = resp.follow()
-    print resp
-    assert'Hello ghi' in resp
+#    print resp
+    assert'Hello ghi' in resp, resp
 
 def test_redirect_external():
     resp = app.get('/redirect_me?target=http://example.com')
-    print resp
-    assert resp.status == "302 Found" and dict(resp.headers)['location'] == 'http://example.com'
+#    print resp
+    assert resp.status == "302 Found" and dict(resp.headers)['location'] == 'http://example.com', resp
 
 def test_redirect_param():
     resp = app.get('/redirect_me?target=/hello&name=paj')
@@ -152,4 +147,4 @@ def test_basicurls():
     
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
-    assert "None Recieved"
+    assert "None Recieved", resp.body
