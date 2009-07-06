@@ -30,9 +30,9 @@ class TestConfig(AppConfig):
                     root=test_base_path,
                     controllers=os.path.join(test_config_path, 'controllers'),
                     static_files=os.path.join(test_config_path, 'public'),
-                    templates=[os.path.join(test_config_path, 'templates')]
+                    templates=[os.path.join(test_config_path, 'templates')],
+                    i18n=os.path.join(test_config_path, 'i18n')
                     )
-        print self.package
 
         #Then we overide those values with what was passed in
         for key, value in values.items():

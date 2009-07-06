@@ -513,6 +513,7 @@ class AppConfig(Bunch):
         app = TwMiddleware(app, 
             default_engine=self.default_renderer,
             translator=ugettext,
+            auto_reload_templates = asbool(self.get('templating.mako.reloadfromdisk', 'false'))
             )
         return app
 
