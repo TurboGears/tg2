@@ -103,12 +103,13 @@ class BasicTGController(TGController):
 
 
 class TestTGController(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
-        self.app = make_app(BasicTGController)
+
+    def setUp(self):
+        TestWSGIController.setUp(self)
         pylons.config.update({
             'pylons.paths': {'root': data_dir},
             'pylons.package': 'tests'})
+        self.app = make_app(BasicTGController)
 
     def test_basic_validation_and_jsonification(self):
         """Ensure you can pass in a dictionary of validators"""
