@@ -49,6 +49,7 @@ class controller_based_validate(validate):
 
         self.validators = Validators()
 
+
 class BasicTGController(TGController):
 
     @expose('json')
@@ -92,6 +93,12 @@ class BasicTGController(TGController):
     def send_to_error_handler(self, **kwargs):
         kwargs['errors'] = pylons.tmpl_context.form_errors
         return dict(kwargs)
+
+    @expose()
+    def set_lang(self, lang=None):
+        pylons.session['tg_lang'] = lang
+        pylons.session.save()
+        return 'ok'
 
     @expose()
     @validate(validators=Pwd())
@@ -165,24 +172,38 @@ class TestTGController(TestWSGIController):
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values)
         values = loads(resp.body)
-        assert  "Please enter an integer value" in values['errors']['year']
+        assert "Please enter an integer value" in values['errors']['year'], \
+            'Error message not found: %r' % values['errors']
 
     def test_form_validation_redirect(self):
         """Test form validation error message with redirect"""
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_to_error_handler', form_values)
         values = loads(resp.body)
-        assert  "Please enter an integer value" in values['errors']['year']
+        assert "Please enter an integer value" in values['errors']['year'], \
+            'Error message not found: %r' % values['errors']
 
     def test_form_validation_translation(self):
         """Test translation of form validation error messages"""
-        # currently broken, but worked in 2.0 (see ticket #2335)
         form_values = {'title': 'Razer', 'year': "t007"}
+        # check with language set in request header
         resp = self.app.post('/process_form', form_values,
-            headers={'Accept-Language': 'ru'})
+            headers={'Accept-Language': 'de,ru,it'})
+        values = loads(resp.body)
+        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+            'No German error message: %r' % values['errors']
+        resp = self.app.post('/process_form', form_values,
+            headers={'Accept-Language': 'ru,de,it'})
         values = loads(resp.body)
         assert u"Введите числовое значение" in values['errors']['year'], \
-            'Error message not translated: "%s"' % values['errors']['year']
+            'No Russian error message: %r' % values['errors']
+        # check with language set in session
+        self.app.post('/set_lang/de')
+        resp = self.app.post('/process_form', form_values,
+            headers={'Accept-Language': 'ru,it'})
+        values = loads(resp.body)
+        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+            'No German error message: %r' % values['errors']
 
     def test_form_validation_error(self):
         """Test schema validation"""
