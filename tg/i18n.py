@@ -37,7 +37,7 @@ def set_temporary_lang(languages):
     """Set the current language(s) used for translations without touching
     the session language.
 
-    languages should be a list.
+    languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
     """
     try:
@@ -58,14 +58,13 @@ def set_lang(languages, **kwargs):
     """Set the current language(s) used for translations
     in current call and session.
 
-    languages should be a list.
+    languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
     """
     set_temporary_lang(languages)
 
     if pylons.session:
-        lang_session_key = config.get('lang_session_key', 'tg_lang')
-        session[lang_session_key] = languages
+        session[config.get('lang_session_key', 'tg_lang')] = languages
         session.save()
 
 
@@ -73,13 +72,13 @@ def set_formencode_translation(languages):
     """Set request specific translation of FormEncode."""
     from gettext import translation
     try:
-        t = translation('FormEncode', languages=languages,
-                localedir=formencode.api.get_localedir())
-    except IOError, ioe:
-        raise LanguageError('IOError: %s' % ioe)
-    pylons.tmpl_context.formencode_translation = t
+        formencode_translation = translation('FormEncode',
+            languages=languages, localedir=formencode.api.get_localedir())
+    except IOError, error:
+        raise LanguageError('IOError: %s' % error)
+    pylons.tmpl_context.formencode_translation = formencode_translation
 
 
 __all__ = [
-    "setup_i18n", "set_lang", "get_lang", "set_temporary_lang"
+    "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang"
 ]
