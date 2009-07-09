@@ -1,0 +1,19 @@
+# German translations for tests.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tests 0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2009-07-07 07:07+0700\n"
+"PO-Revision-Date: 2009-07-07 07:17+0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.4\n"
+
+#: tests/controllers/root.py:13
+msgid "Your application is now running"
+msgstr "Ihre Anwendung läuft jetzt einwandfrei"
