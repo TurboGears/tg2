@@ -1,46 +1,54 @@
 # -*- coding: utf-8 -*-
-from nose.tools import eq_, raises
 
-import tg, pylons
-from tg.controllers import TGController
-from tg.decorators import expose, validate
-from routes import Mapper
-from routes.middleware import RoutesMiddleware
+from nose.tools import raises
+
+import pylons
 from formencode import validators, Schema
 from simplejson import loads
 
-from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+from tg.controllers import TGController
+from tg.decorators import expose, validate
+from tg.tests.base import (TestWSGIController, data_dir,
+    make_app, setup_session_dir, teardown_session_dir)
+
+from tw.forms import TableForm, TextField
+from tw.api import WidgetsList
 
 def setup():
     setup_session_dir()
+
 def teardown():
     teardown_session_dir()
 
-from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
-from tw.api import WidgetsList
-
 class MyForm(TableForm):
-    # This WidgetsList is just a container
+
     class fields(WidgetsList):
-        title=TextField(validator=validators.NotEmpty())
+        """This WidgetsList is just a container."""
+        title=TextField(validator = validators.NotEmpty())
         year = TextField(size=4, validator=validators.Int())
 
-#then, we create an instance of this form
+# then, we create an instance of this form
 myform = MyForm("my_form", action='create')
+
 
 class Pwd(Schema):
     pwd1 = validators.String(not_empty=True)
     pwd2 = validators.String(not_empty=True)
     chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
+
 class controller_based_validate(validate):
-    def __init__(self, error_handler=None, *args,**kw):
+
+    def __init__(self, error_handler=None, *args, **kw):
         self.error_handler = error_handler
         self.needs_controller = True
+
         class Validators(object):
             def validate(self, controller, params, state):
                 return params
+
         self.validators = Validators()
+
 
 class BasicTGController(TGController):
 
@@ -51,11 +59,11 @@ class BasicTGController(TGController):
         return dict(response=some_int)
 
     @expose('json')
-    @validate(validators={"a":validators.Int()})
+    @validate(validators={"a": validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode)
-        return dict(int=a,str=b)
+        return dict(int=a, str=b)
 
     @expose()
     @controller_based_validate()
@@ -63,7 +71,7 @@ class BasicTGController(TGController):
         return 'ok'
 
     @expose('json')
-    @validate(validators={"a":validators.Int(), "someemail":validators.Email})
+    @validate(validators={"a": validators.Int(), "someemail": validators.Email})
     def two_validators(self, a=None, someemail=None, *args):
         errors = pylons.tmpl_context.form_errors
         values =  pylons.tmpl_context.form_values
@@ -87,6 +95,12 @@ class BasicTGController(TGController):
         return dict(kwargs)
 
     @expose()
+    def set_lang(self, lang=None):
+        pylons.session['tg_lang'] = lang
+        pylons.session.save()
+        return 'ok'
+
+    @expose()
     @validate(validators=Pwd())
     def password(self, pwd1, pwd2):
         if pylons.tmpl_context.form_errors:
@@ -94,20 +108,25 @@ class BasicTGController(TGController):
         else:
             return "Password ok!"
 
+
 class TestTGController(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+
+    def setUp(self):
+        TestWSGIController.setUp(self)
+        pylons.config.update({
+            'pylons.paths': {'root': data_dir},
+            'pylons.package': 'tests'})
         self.app = make_app(BasicTGController)
 
     def test_basic_validation_and_jsonification(self):
-        "Ensure you can pass in a dictionary of validators"
-        form_values = {"some_int":22}
+        """Ensure you can pass in a dictionary of validators"""
+        form_values = {"some_int": 22}
         resp = self.app.post('/validated_int', form_values)
         assert '{"response": 22}'in resp
 
     def test_for_other_params_after_validation(self):
-        "Ensure that both validated and unvalidated data make it through"
-        form_values = {'a':1, 'b':"string"}
+        """Ensure that both validated and unvalidated data make it through"""
+        form_values = {'a': 1, 'b': "string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp
         assert '"str": "string"' in resp
@@ -117,66 +136,85 @@ class TestTGController(TestWSGIController):
         form_values = {'a':'asdf', 'b':"string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
 
-
     def test_two_validators_errors(self):
-        "Ensure that multiple validators are applied correctly"
-        form_values = {'a':'1', 'someemail':"guido@google.com"}
+        """Ensure that multiple validators are applied correctly"""
+        form_values = {'a': '1', 'someemail': "guido@google.com"}
         resp = self.app.post('/two_validators', form_values)
         content = loads(resp.body)
         assert content['a'] == 1
 
     def test_validation_errors(self):
-        "Ensure that dict validation produces a full set of errors"
-        form_values = {'a':'1', 'someemail':"guido~google.com"}
+        """Ensure that dict validation produces a full set of errors"""
+        form_values = {'a': '1', 'someemail': "guido~google.com"}
         resp = self.app.post('/two_validators', form_values)
-
         content = loads(resp.body)
         errors = content.get('errors', None)
-
         assert errors, 'There should have been at least one error'
-        assert 'someemail' in errors, 'The email was invalid and should have been reported in the errors'
+        assert 'someemail' in errors, \
+            'The email was invalid and should have been reported in the errors'
 
     def test_form_validation(self):
-        "Check @validate's handing of ToscaWidget forms instances"
-        form_values = {'title':'Razer', 'year':"2007"}
+        """Check @validate's handing of ToscaWidget forms instances"""
+        form_values = {'title': 'Razer', 'year': "2007"}
         resp = self.app.post('/process_form', form_values)
-        print resp
         values = loads(resp.body)
         assert values['year'] == 2007
 
     def test_form_render(self):
-        'Test that myform renders properly'
+        """Test that myform renders properly"""
         resp = self.app.post('/display_form')
-        print resp
         assert 'id="my_form_title.label"' in resp
         assert 'class="fieldlabel required"' in resp
         assert "Title" in resp
 
     def test_form_validation_error(self):
-        "Test validation form vaidation (with errors)"
-        form_values = {'title':'Razer', 'year':"t007"}
+        """Test form validation with error message"""
+        form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values)
         values = loads(resp.body)
-        print values['errors']
-        assert  "Please enter an integer value" in values['errors']['year']
+        assert "Please enter an integer value" in values['errors']['year'], \
+            'Error message not found: %r' % values['errors']
 
-    def test_form_validation_error(self):
-        "Test validation form vaidation (with errors)"
-        form_values = {'title':'Razer', 'year':"t007"}
+    def test_form_validation_redirect(self):
+        """Test form validation error message with redirect"""
+        form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_to_error_handler', form_values)
         values = loads(resp.body)
-        print values['errors']
-        assert  "Please enter an integer value" in values['errors']['year']
+        assert "Please enter an integer value" in values['errors']['year'], \
+            'Error message not found: %r' % values['errors']
+
+    def test_form_validation_translation(self):
+        """Test translation of form validation error messages"""
+        form_values = {'title': 'Razer', 'year': "t007"}
+        # check with language set in request header
+        resp = self.app.post('/process_form', form_values,
+            headers={'Accept-Language': 'de,ru,it'})
+        values = loads(resp.body)
+        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+            'No German error message: %r' % values['errors']
+        resp = self.app.post('/process_form', form_values,
+            headers={'Accept-Language': 'ru,de,it'})
+        values = loads(resp.body)
+        assert u"Введите числовое значение" in values['errors']['year'], \
+            'No Russian error message: %r' % values['errors']
+        # check with language set in session
+        self.app.post('/set_lang/de')
+        resp = self.app.post('/process_form', form_values,
+            headers={'Accept-Language': 'ru,it'})
+        values = loads(resp.body)
+        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+            'No German error message: %r' % values['errors']
 
     def test_form_validation_error(self):
-        "Test schema vaidation"
-        form_values = {'pwd1':'me', 'pwd2':"you"}
+        """Test schema validation"""
+        form_values = {'pwd1': 'me', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
         assert "There was an error" in resp
-        form_values = {'pwd1':'you', 'pwd2':"you"}
+        form_values = {'pwd1': 'you', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
         assert "Password ok!" in resp
 
     def test_controller_based_validator(self):
+        """Test controller based validation"""
         resp = self.app.post('/validate_controller_based_validator')
         assert 'ok' in resp
