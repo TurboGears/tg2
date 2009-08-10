@@ -32,7 +32,6 @@ class TestConfig(AppConfig):
                     static_files=os.path.join(test_config_path, 'public'),
                     templates=[os.path.join(test_config_path, 'templates')]
                     )
-        print self.package
 
         #Then we overide those values with what was passed in
         for key, value in values.items():

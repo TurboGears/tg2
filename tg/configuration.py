@@ -30,6 +30,12 @@ from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
+class ConfigurationError(Exception):
+    """Exception raised for errors in the configuration."""
+
+    def __init__(self, message):
+        self.message = message
+
 class PylonsConfigWrapper(DictMixin):
     """Wrapper for the Pylons configuration.
 
@@ -477,7 +483,12 @@ class AppConfig(Bunch):
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
-
+        if not 'skip_authentication' or 'cookie_secret' in auth_args.keys():
+            msg =  "base_config.sa_auth.cookie_secret is required " \
+            "you must define it in app_cfg.py or set " \
+            "sa_auth.cookie_secret in development.ini"
+            print msg
+            raise ConfigurationError(msg)
         app = setup_sql_auth(app, skip_authentication=skip_authentication,
                              **auth_args)
         return app
