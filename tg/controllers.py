@@ -636,7 +636,6 @@ def _find_restful_dispatch(obj, parent, remainder):
 
     return obj, remainder
 
-
 def _find_object(obj, remainder, notfound_handlers):
     parent = None
     while True:
@@ -655,12 +654,12 @@ def _find_object(obj, remainder, notfound_handlers):
             if _iscontroller(index):
                 return index, obj, remainder
 
-        default = getattr(obj, 'default', None)
-        if _iscontroller(default):
+        default, lookup = _get_notfound_handlers(obj)
+
+        if default:
             notfound_handlers.append(('default', default, obj, remainder))
 
-        lookup = getattr(obj, 'lookup', None)
-        if remainder and not(len(remainder) == 1 and (remainder[0]=='')) and _iscontroller(lookup):
+        if lookup and remainder and not(len(remainder) == 1 and (remainder[0]=='')):
             notfound_handlers.append(('lookup', lookup, obj, remainder))
 
         #what causes this condition?
@@ -679,6 +678,29 @@ def _find_object(obj, remainder, notfound_handlers):
             # with the issue
         except UnicodeEncodeError:
             raise HTTPNotFound().exception
+
+def _get_notfound_handlers(obj):
+    '''Return (default,lookup) notfound handlers for this object'''
+    # First search for is_default and is_lookup decoration
+    default = lookup = None
+    for name in dir(obj):
+        meth = getattr(obj, name)
+        if hasattr(meth, 'decoration'):
+            if not hasattr(meth.decoration, 'is_default_controller'):
+                import pdb; pdb.set_trace()
+            if meth.decoration.is_default_controller:
+                default = meth
+            elif meth.decoration.is_lookup_controller:
+                lookup = meth
+    if default is None:
+        meth = getattr(obj, 'default', None)
+        if meth and _iscontroller(meth):
+            default = meth
+    if lookup is None:
+        meth = getattr(obj, 'lookup', None)
+        if meth and _iscontroller(meth):
+            lookup = meth
+    return default, lookup
 
 def _iscontroller(obj):
     if not hasattr(obj, '__call__'):
@@ -749,6 +771,7 @@ class RestController(DecoratedController):
     class decoration(object):
         """This is here so that the Object Dispatcher will recognize this class as an exposed controller."""
         exposed = True
+        is_default_controller = is_lookup_controller = None
 
     @classmethod
     def _check_security(cls):
