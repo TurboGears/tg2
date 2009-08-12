@@ -507,16 +507,14 @@ class TestTGController(TestWSGIController):
         msg = 'EYE'
         assert msg in r, r
 
-<<<<<<< .working
     def test_validated_int(self):
         r = self.app.get('/validated_int/1')
         assert '{"response": 1}' in r, r
-=======
+
     def test_new_lookup(self):
         r = self.app.get('/deco_lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
->>>>>>> .merge-right.r6607
 
     def test_new_default(self):
         r = self.app.get('/deco_default/EYE')
