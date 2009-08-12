@@ -483,12 +483,13 @@ class AppConfig(Bunch):
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
-        if not 'skip_authentication' or 'cookie_secret' in auth_args.keys():
-            msg =  "base_config.sa_auth.cookie_secret is required " \
-            "you must define it in app_cfg.py or set " \
-            "sa_auth.cookie_secret in development.ini"
-            print msg
-            raise ConfigurationError(msg)
+        if not skip_authentication:
+            if not 'cookie_secret' in auth_args.keys():
+                msg = "base_config.sa_auth.cookie_secret is required " \
+                "you must define it in app_cfg.py or set " \
+                "sa_auth.cookie_secret in development.ini"
+                print msg
+                raise ConfigurationError(message=msg)
         app = setup_sql_auth(app, skip_authentication=skip_authentication,
                              **auth_args)
         return app
@@ -608,7 +609,7 @@ class AppConfig(Bunch):
             if self.auth_backend == "sqlalchemy":
                 # Skipping authentication if explicitly requested. Used by 
                 # repoze.who-testutil:
-                skip_authentication = app_conf.get('skip_authentication')
+                skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
 
             if self.use_transaction_manager:

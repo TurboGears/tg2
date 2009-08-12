@@ -116,8 +116,9 @@ class TestAppConfig:
         self.config.sa_auth.group_class = Dummy
         self.config.sa_auth.permission_class = Dummy
         self.config.sa_auth.password_encryption_method = 'sha'
+        self.config.sa_auth.cookie_secret = "foomatic"
 
-        self.config.add_auth_middleware(None, None)
+        self.config.add_auth_middleware(None, False)
 
     def test_add_static_file_middleware(self):
         self.config.add_static_file_middleware(None)
