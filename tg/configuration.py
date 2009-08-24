@@ -30,11 +30,10 @@ from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
+
 class ConfigurationError(Exception):
     """Exception raised for errors in the configuration."""
 
-    def __init__(self, message):
-        self.message = message
 
 class PylonsConfigWrapper(DictMixin):
     """Wrapper for the Pylons configuration.
@@ -462,16 +461,16 @@ class AppConfig(Bunch):
     def add_auth_middleware(self, app, skip_authentication):
         """
         Configure authentication and authorization.
-        
+
         :param app: The TG2 application.
         :param skip_authentication: Should authentication be skipped if
             explicitly requested? (used by repoze.who-testutil)
         :type skip_authentication: bool
-        
+
         """
         from repoze.what.plugins.quickstart import setup_sql_auth
         from repoze.what.plugins.pylonshq import booleanize_predicates
-        
+
         # Predicates booleanized:
         booleanize_predicates()
 
@@ -488,8 +487,7 @@ class AppConfig(Bunch):
                 msg = "base_config.sa_auth.cookie_secret is required " \
                 "you must define it in app_cfg.py or set " \
                 "sa_auth.cookie_secret in development.ini"
-                print msg
-                raise ConfigurationError(message=msg)
+                raise ConfigurationError(msg)
         app = setup_sql_auth(app, skip_authentication=skip_authentication,
                              **auth_args)
         return app
@@ -607,7 +605,7 @@ class AppConfig(Bunch):
                 app = self.add_tosca_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
-                # Skipping authentication if explicitly requested. Used by 
+                # Skipping authentication if explicitly requested. Used by
                 # repoze.who-testutil:
                 skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
