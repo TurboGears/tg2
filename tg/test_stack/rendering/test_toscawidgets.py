@@ -17,13 +17,15 @@ def setup_noDB():
     return app_from_config(base_config)
 
 
-expected_field = """<input type="text" name="year" class="textfield" id="movie_form_year" value="1984" size="4" />"""
+expected_field = """\
+<td class="fieldcol">
+                <input xmlns="http://www.w3.org/1999/xhtml" type="text" name="year" class="textfield" id="movie_form_year" value="1984" size="4"/>
+            </td>"""
 
 def test_basic_form_rendering():
     app = setup_noDB()
     resp = app.get('/form')
-    print resp.body
     assert "form" in resp
-    assert expected_field in resp
+    assert expected_field in resp, resp
 
 

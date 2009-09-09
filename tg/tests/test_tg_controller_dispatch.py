@@ -86,11 +86,6 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
-    @expose("genshi:tg.tests.non_overridden")
-    def template_override(self, override=False):
-        if override:
-            override_template(self.template_override, "genshi:tg.tests.overridden")
-        return dict()
 
 class SubController3(object):
     @expose()
@@ -348,16 +343,6 @@ class TestTGController(TestWSGIController):
     def test_new_before_controller(self):
         r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
-
-    def test_template_override(self):
-        r =self.app.get('/sub/template_override')
-        assert "Not overridden" in r
-        r = self.app.get('/sub/template_override', params=dict(override=True))
-        assert "This is overridden." in r
-        # now invoke the controller again without override,
-        # it should yield the old result
-        r =self.app.get('/sub/template_override')
-        assert "Not overridden" in r
 
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/äö')

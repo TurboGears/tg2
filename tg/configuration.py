@@ -352,6 +352,10 @@ class AppConfig(Bunch):
 
         self.render_functions.jinja = render_jinja
 
+    def setup_amf_renderer(self):
+        from tg.amfify import render_amf
+        self.render_functions.amf = render_amf
+
     def setup_json_renderer(self):
         from tg.render import render_json
         self.render_functions.json = render_json
@@ -438,6 +442,9 @@ class AppConfig(Bunch):
 
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
+
+            if 'amf' in self.renderers:
+                self.setup_amf_renderer()
 
             if self.use_legacy_renderer:
                 self.setup_default_renderer()

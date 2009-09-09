@@ -1,7 +1,7 @@
 """Main Controller"""
 
 from tg import expose, redirect, config, validate
-from tg.decorators import paginate, use_custom_format
+from tg.decorators import paginate, use_custom_format, override_template
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -120,3 +120,10 @@ class RootController(TGController):
     def custom_format(self, format):
         use_custom_format(self.custom_format, format)
         return dict(format=format, status="ok")
+    
+    @expose("genshi:tg.tests.non_overridden")
+    def template_override(self, override=False):
+        if override:
+            override_template(self.template_override, "genshi:tg.tests.overridden")
+        return dict()
+

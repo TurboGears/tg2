@@ -132,7 +132,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     if not template_vars:
         template_vars={}
 
-    if template_engine != "json":
+    if template_engine != "json" and template_engine!= 'amf':
         #Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)

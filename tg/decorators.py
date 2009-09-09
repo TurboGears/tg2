@@ -82,7 +82,7 @@ class Decoration(object):
                                         exclude_names):
         """Registers a custom engine on the controller.
 
-        Mulitple engines can be registered, but only one engine per
+        Multiple engines can be registered, but only one engine per
         custom_format.
 
         The engine is registered when @expose is used with the
@@ -246,9 +246,9 @@ class expose(object):
                  custom_format=None):
         if exclude_names is None:
             exclude_names = []
-        
-        if template == 'json':
-            engine, template = 'json', ''
+
+        if template in config.get('renderers', []):
+            engine, template = template, ''
 
         elif ':' in template:
             engine, template = template.split(':', 1)
@@ -270,7 +270,7 @@ class expose(object):
             else:
                 content_type = 'text/html'
 
-        if engine == 'json' and 'tmpl_context' not in exclude_names:
+        if (engine == 'json' or engine == 'amf') and 'tmpl_context' not in exclude_names:
             exclude_names.append('tmpl_context')
 
         self.engine = engine

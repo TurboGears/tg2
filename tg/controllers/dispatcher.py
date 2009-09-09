@@ -278,6 +278,9 @@ class ObjectDispatcher(Dispatcher):
             if self._is_exposed(controller, method):
                 return getattr(controller, method)
     
+    def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
+        pass
+
     def _is_exposed(self, controller, name):
         """Override this function to define how a controller method is
         determined to be exposed.
