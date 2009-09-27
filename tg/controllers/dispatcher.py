@@ -223,8 +223,8 @@ class Dispatcher(WSGIController):
             warn("this functionality is going to removed in the next minor version,"\
                  " please use _before instead."
                  )
+            controller.__before__(*args)
 
-        controller.__before__(*args)
         if hasattr(controller, '_before'):
             controller._before(*args)
 

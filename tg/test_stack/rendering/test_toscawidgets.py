@@ -19,7 +19,7 @@ def setup_noDB():
 
 expected_field = """\
 <td class="fieldcol">
-                <input xmlns="http://www.w3.org/1999/xhtml" type="text" name="year" class="textfield" id="movie_form_year" value="1984" size="4"/>
+                <input type="text" name="year" class="textfield" id="movie_form_year" value="1984" size="4" />
             </td>"""
 
 def test_basic_form_rendering():
