@@ -43,15 +43,11 @@ def set_temporary_lang(languages):
     try:
         pylons.i18n.set_lang(languages)
     except LanguageError:
-        log.info("Language %s: not supported", languages)
-    else:
-        log.info("Set request language to %s", languages)
+        log.warn("Language %s: not supported", languages)
     try:
         set_formencode_translation(languages)
     except LanguageError:
-        log.info("Language %s: not supported by FormEncode", languages)
-    else:
-        log.info("Set request language for FormEncode to %s", languages)
+        log.warn("Language %s: not supported by FormEncode", languages)
 
 
 def set_lang(languages, **kwargs):
