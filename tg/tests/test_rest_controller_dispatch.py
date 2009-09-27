@@ -48,6 +48,9 @@ class LookupAlwaysHelper:
     def __init__(self, var):
         self.var = var
     
+    def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
+        pass
+
     @expose()
     def always(self, *args, **kwargs):
         return 'always go here'
@@ -58,6 +61,7 @@ class LookupAlwaysHelper:
 
 class LookupAlwaysController(TGController):
     
+
     @expose()
     def lookup(self, a, *args):
         return LookupAlwaysHelper(a), args

@@ -343,7 +343,6 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
 
-
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/äö')
         assert "%C3%A4%C3%B6" in r

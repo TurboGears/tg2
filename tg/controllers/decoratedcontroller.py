@@ -103,6 +103,18 @@ class DecoratedController(object):
             controller, output = self._handle_validation_errors(controller,
                                                                 remainder,
                                                                 params, inv)
+        except Exception, e:
+            if config.use_toscawidgets2:
+                from tw2.core import ValidationError
+                if isinstance(e, ValidationError):
+                    controller, output = self._handle_validation_errors(controller,
+                                                                remainder,
+                                                                params, e)
+                else:
+                    raise
+            else:
+                raise
+            
 
         # Render template
         controller.decoration.run_hooks('before_render', remainder, params,
@@ -246,7 +258,7 @@ class DecoratedController(object):
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         #set up the tw renderer
-        if engine_name in 'genshi' or 'mako':
+        if engine_name in ('genshi','mako') and config.use_toscawidgets:
             tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
@@ -312,7 +324,7 @@ class DecoratedController(object):
 
             pylons.tmpl_context.form_errors[field_value[0]] = field_value[1].strip()
 
-        pylons.tmpl_context.form_values = exception.value
+        pylons.tmpl_context.form_values = getattr(exception, 'value', {})
 
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:

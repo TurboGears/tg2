@@ -69,10 +69,9 @@ def test_mako_inheritance():
     print resp
     assert "inherited mako page" in resp
     assert "Inside parent template" in resp
-
 def test_template_override():
     app = setup_noDB()
-    r = app.get('/template_override')
+    r =app.get('/template_override')
     assert "Not overridden" in r, r
     r = app.get('/template_override', params=dict(override=True))
     assert "This is overridden." in r, r

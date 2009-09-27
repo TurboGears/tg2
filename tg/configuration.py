@@ -144,6 +144,7 @@ class AppConfig(Bunch):
 
         self.use_toscawidgets = True
         self.use_transaction_manager = True
+        self.use_toscawidgets2 = False
 
         #Registy for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -351,6 +352,10 @@ class AppConfig(Bunch):
 
         self.render_functions.jinja = render_jinja
 
+    def setup_amf_renderer(self):
+        from tg.amfify import render_amf
+        self.render_functions.amf = render_amf
+
     def setup_json_renderer(self):
         from tg.render import render_json
         self.render_functions.json = render_json
@@ -438,6 +443,9 @@ class AppConfig(Bunch):
             if 'jinja' in self.renderers:
                 self.setup_jinja_renderer()
 
+            if 'amf' in self.renderers:
+                self.setup_amf_renderer()
+
             if self.use_legacy_renderer:
                 self.setup_default_renderer()
 
@@ -503,6 +511,17 @@ class AppConfig(Bunch):
             'toscawidgets.framework.translator': ugettext,
             'toscawidgets.middleware.inject_resources': True,
             })
+        return app
+
+    def add_tosca2_middleware(self, app):
+        """Configure the ToscaWidgets middleware."""
+        from tw2.core.middleware import Config, TwMiddleware
+
+        app = TwMiddleware(app, 
+            default_engine=self.default_renderer,
+            translator=ugettext,
+            auto_reload_templates = asbool(self.get('templating.mako.reloadfromdisk', 'false'))
+            )
         return app
 
     def add_static_file_middleware(self, app):
@@ -600,6 +619,9 @@ class AppConfig(Bunch):
 
             if self.use_toscawidgets:
                 app = self.add_tosca_middleware(app)
+
+            if self.use_toscawidgets2:
+                app = self.add_tosca2_middleware(app)
 
             if self.auth_backend == "sqlalchemy":
                 # Skipping authentication if explicitly requested. Used by 
