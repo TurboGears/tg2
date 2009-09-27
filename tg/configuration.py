@@ -419,7 +419,38 @@ class AppConfig(Bunch):
             mimetypes.add_type(value, key)
 
     def setup_sqlalchemy(self):
-        """Setup SQLAlchemy database engine."""
+        """Setup SQLAlchemy database engine.
+        
+        The most common reason for modifying this method is to add
+        multiple database support.  To do this you might modify your
+        app_cfg.py file in the following manner::
+        
+            from tg.configuration import AppConfig, config
+            from pylons import config as pylons_config
+            from myapp.model import init_model
+            
+            # add this before base_config =
+            class MultiDBAppConfig(AppConfig):
+                def setup_sqlalchemy(self):
+                    '''Setup SQLAlchemy database engine(s)'''
+                    from sqlalchemy import engine_from_config
+                    engine1 = engine_from_config(pylons_config, 'sqlalchemy.first.')
+                    engine2 = engine_from_config(pylons_config, 'sqlalchemy.second.')
+                    # engine1 should be assigned to sa_engine as well as your first engine's name
+                    config['pylons.app_globals'].sa_engine = engine1
+                    config['pylons.app_globals'].sa_engine_first = engine1
+                    config['pylons.app_globals'].sa_engine_second = engine2
+                    # Pass the engines to init_model, to be able to introspect tables
+                    init_model(engine1, engine2)
+            
+            #base_config = AppConfig()
+            base_config = MultiDBAppConfig()
+            
+        This will pull the config settings from your .ini files to create the necessary
+        engines for use within your application.  Make sure you have a look at :ref:`multidatabase`
+        for more information.
+
+        """
         from sqlalchemy import engine_from_config
         engine = engine_from_config(pylons_config, 'sqlalchemy.')
         config['pylons.app_globals'].sa_engine = engine
