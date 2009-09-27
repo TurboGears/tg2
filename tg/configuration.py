@@ -498,14 +498,59 @@ class AppConfig(Bunch):
         return app
 
     def add_core_middleware(self, app):
-        """Add support for routes dispatch, sessions, and caching."""
+        """Add support for routes dispatch, sessions, and caching.
+        This is where you would want to override if you wanted to provide your
+        own routing, session, or caching middleware.  Your app_cfg.py might look something
+        like this::
+         
+            from tg.configuration import AppConfig
+            from routes.middleware import RoutesMiddleware
+            from beaker.middleware import CacheMiddleware
+            from mysessionier.middleware import SessionMiddleware
+     
+            class MyAppConfig(AppConfig):
+                def add_core_middleware(self, app):
+                    app = RoutesMiddleware(app, config['routes.map'])
+                    app = SessionMiddleware(app, config)
+                    app = CacheMiddleware(app, config)
+                    return app
+            base_config = MyAppConfig()
+        """
         app = RoutesMiddleware(app, config['routes.map'])
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app
 
     def add_tosca_middleware(self, app):
-        """Configure the ToscaWidgets middleware."""
+        """Configure the ToscaWidgets middleware.
+        
+        If you would like to override the way the TW middleware works, you might do something like::
+        
+            from tg.configuration import AppConfig
+            from tw.api import make_middleware as tw_middleware
+
+            class MyAppConfig(AppConfig):
+
+                def add_tosca2_middleware(self, app):
+
+                    app = tw_middleware(app, {
+                        'toscawidgets.framework.default_view': self.default_renderer,
+                        'toscawidgets.framework.translator': ugettext,
+                        'toscawidgets.middleware.inject_resources': False,
+                        })
+                    return app
+            
+            base_config = MyAppConfig()
+            
+            
+
+        The above example would disable resource injection.
+    
+        There is more information about the settings you can change
+        in the ToscaWidgets `middleware. <http://toscawidgets.org/documentation/ToscaWidgets/modules/middleware.html>`
+        
+        
+        """
         app = tw_middleware(app, {
             'toscawidgets.framework.default_view': self.default_renderer,
             'toscawidgets.framework.translator': ugettext,
@@ -514,7 +559,32 @@ class AppConfig(Bunch):
         return app
 
     def add_tosca2_middleware(self, app):
-        """Configure the ToscaWidgets middleware."""
+        """Configure the ToscaWidgets2 middleware.
+        
+        If you would like to override the way the TW2 middleware works, 
+        you might do change your app_cfg.py to add something like::
+        
+            from tg.configuration import AppConfig
+            from tw2.core.middleware import TwMiddleware
+
+            class MyAppConfig(AppConfig):
+        
+                def add_tosca2_middleware(self, app):
+
+                    app = TwMiddleware(app, 
+                        default_engine=self.default_renderer,
+                        translator=ugettext,
+                        auto_reload_templates = False
+                        )
+                    
+                    return app
+            base_config = MyAppConfig()
+            
+            
+        
+        The above example would always set the template auto reloading off. (This is normally an
+        option that is set within your application's ini file.)
+        """
         from tw2.core.middleware import Config, TwMiddleware
 
         app = TwMiddleware(app, 
