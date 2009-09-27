@@ -300,7 +300,7 @@ class AppConfig(Bunch):
 
         self.render_functions.mako = render_mako
 
-    def setup_chameleongenshi_renderer(self):
+    def setup_chameleon_genshi_renderer(self):
         """Setup a renderer and loader for the chameleon.genshi engine."""
         from chameleon.genshi.loader import TemplateLoader as ChameleonLoader
         from tg.render import render_chameleon_genshi
@@ -428,24 +428,14 @@ class AppConfig(Bunch):
             if self.auth_backend == "sqlalchemy":
                 self.setup_sa_auth_backend()
 
-            if 'json' in self.renderers:
-                self.setup_json_renderer()
-
-            if 'genshi' in self.renderers:
-                self.setup_genshi_renderer()
-
-            if 'chameleon_genshi' in self.renderers:
-                self.setup_chameleongenshi_renderer()
-
-            if 'mako' in self.renderers:
-                self.setup_mako_renderer()
-
-            if 'jinja' in self.renderers:
-                self.setup_jinja_renderer()
-
-            if 'amf' in self.renderers:
-                self.setup_amf_renderer()
-
+            for renderer in self.renderers:
+                setup = getattr(self, 'setup_%s_renderer'%renderer, None)
+                if setup:
+                    setup()
+                else:
+                    raise Exception('This configuration object does not support the %s renderer'%renderer)
+                
+        
             if self.use_legacy_renderer:
                 self.setup_default_renderer()
 

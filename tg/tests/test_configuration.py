@@ -84,7 +84,7 @@ class TestAppConfig:
 
     def test_setup_chameleon_genshi_renderer(self):
         self.config.paths.templates = 'template_path'
-        self.config.setup_chameleongenshi_renderer()
+        self.config.setup_chameleon_genshi_renderer()
 
     def test_setup_genshi_renderer(self):
         self.config.paths.templates = 'template_path'
