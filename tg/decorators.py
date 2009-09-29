@@ -40,6 +40,8 @@ class Decoration(object):
         self.render_custom_format = None
         self.validation = None
         self.error_handler = None
+        self.is_default_controller = False
+        self.is_lookup_controller = False
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -53,7 +55,7 @@ class Decoration(object):
 
     def exposed(self):
         return bool(self.engines)
-    expose = property(exposed)
+    exposed = property(exposed)
 
     def run_hooks(self, hook, *l, **kw):
         for func in self.hooks[hook]:
@@ -371,6 +373,17 @@ class validate(object):
         deco.validation = self
         return func
 
+def default(func):
+    '''Registers a method as the "default" controller method'''
+    deco = Decoration.get_decoration(func)
+    deco.is_default_controller = True
+    return func
+        
+def lookup(func):
+    '''Registers a method as the "lookup" controller method'''
+    deco = Decoration.get_decoration(func)
+    deco.is_lookup_controller = True
+    return func
 
 class paginate(object):
     """Paginate a given collection.
@@ -536,7 +549,6 @@ def with_trailing_slash(func, *args, **kwargs):
         from tg.controllers import redirect
         redirect(request.url+'/')
     return func(*args, **kwargs)
-
 
 #{ Authorization decorators
 
