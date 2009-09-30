@@ -58,6 +58,8 @@ class DottedTemplateLookup(object):
         the value we are given without any change.
 
         """
+        if uri.startswith('local:'):
+            uri = uri.replace('local:', tg.config['pylons.package']+'.')
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
@@ -91,6 +93,7 @@ class DottedTemplateLookup(object):
         """
         if template.filename is None:
             return template
+        
 
         if not os.path.exists(template.filename):
             # remove from cache.

@@ -40,14 +40,19 @@ def set_temporary_lang(languages):
     languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
     """
+    # the logging to the screen was removed because
+    # the printing to the screen for every problem causes serious slow down.
+    
     try:
         pylons.i18n.set_lang(languages)
     except LanguageError:
-        log.warn("Language %s: not supported", languages)
+        pass
+        #log.warn("Language %s: not supported", languages)
     try:
         set_formencode_translation(languages)
     except LanguageError:
-        log.warn("Language %s: not supported by FormEncode", languages)
+        pass
+        #log.warn("Language %s: not supported by FormEncode", languages)
 
 
 def set_lang(languages, **kwargs):

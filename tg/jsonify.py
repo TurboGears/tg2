@@ -11,7 +11,7 @@ def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
 
 from sqlalchemy.engine.base import ResultProxy, RowProxy
-
+from webob import MultiDict
 
 # JSON Encoder class
 
@@ -31,6 +31,8 @@ class GenericJSON(JSONEncoder):
             return props
         elif isinstance(obj, ResultProxy):
             return list(obj)
+        elif isinstance(obj, MultiDict):
+            return obj.mixed()
         elif isinstance(obj, RowProxy):
             return dict(obj)
         else:
