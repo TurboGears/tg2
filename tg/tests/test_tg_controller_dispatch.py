@@ -146,6 +146,28 @@ class RemoteErrorHandler(TGController):
 
 class NotFoundController(TGController):pass
     
+class DefaultWithArgsController(TGController):
+    @expose()
+    def default(self, a, b=None, **kw):
+        return "DEFAULT WITH ARGS %s %s"%(a, b)
+
+class DefaultWithArgsAndValidatorsController(TGController):
+    @expose()
+    def failure(self, **kw):
+        return "FAILURE"
+    
+    @expose()
+    @validate({'a': validators.Int(),
+              'b': validators.StringBool()}, error_handler=failure)
+    def default(self, a, b=None, **kw):
+        return "DEFAULT WITH ARGS AND VALIDATORS %s %s"%(a, b)
+
+class SubController4:
+    default_with_args = DefaultWithArgsController()
+
+class SubController5:
+    default_with_args = DefaultWithArgsAndValidatorsController()
+    
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
     
@@ -170,6 +192,8 @@ class BasicTGController(TGController):
 
     sub = SubController()
     sub2 = SubController2()
+    sub4 = SubController4()
+    sub5 = SubController5()
 
     @expose()
     def redirect_me(self, target, **kw):
@@ -371,4 +395,23 @@ class TestTGController(TestWSGIController):
         r =self.app.get('/sub/äö')
         assert "%C3%A4%C3%B6" in r
 
+    def test_defalt_with_empty_second_arg(self):
+        r =self.app.get('/sub4/default_with_args/a')
+        assert "DEFAULT WITH ARGS a None" in r.body, r
 
+    def test_defalt_with_args_a_b(self):
+        r =self.app.get('/sub4/default_with_args/a/b')
+        assert "DEFAULT WITH ARGS a b" in r.body, r
+
+    def test_defalt_with_query_arg(self):
+        r =self.app.get('/sub4/default_with_args?a=a')
+        assert "DEFAULT WITH ARGS a None" in r.body, r
+
+    def test_default_with_validator_fail(self):
+        r =self.app.get('/sub5/default_with_args?a=True')
+        assert "FAILURE" in r.body, r
+
+    def test_default_with_validator_pass(self):
+        r =self.app.get('/sub5/default_with_args?a=66')
+        assert "DEFAULT WITH ARGS AND VALIDATORS 66 None" in r.body, r
+        
