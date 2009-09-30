@@ -104,7 +104,7 @@ class DecoratedController(object):
                                                                 remainder,
                                                                 params, inv)
         except Exception, e:
-            if config.use_toscawidgets2:
+            if config['use_toscawidgets2']:
                 from tw2.core import ValidationError
                 if isinstance(e, ValidationError):
                     controller, output = self._handle_validation_errors(controller,
@@ -258,7 +258,7 @@ class DecoratedController(object):
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         #set up the tw renderer
-        if engine_name in ('genshi','mako') and config.use_toscawidgets:
+        if engine_name in ('genshi','mako') and config['use_toscawidgets']:
             tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
