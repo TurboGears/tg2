@@ -153,7 +153,7 @@ class DefaultWithArgsController(TGController):
 
 class DefaultWithArgsAndValidatorsController(TGController):
     @expose()
-    def failure(self, **kw):
+    def failure(self, *args, **kw):
         return "FAILURE"
     
     @expose()
@@ -414,4 +414,12 @@ class TestTGController(TestWSGIController):
     def test_default_with_validator_pass(self):
         r =self.app.get('/sub5/default_with_args?a=66')
         assert "DEFAULT WITH ARGS AND VALIDATORS 66 None" in r.body, r
+
+    def test_default_with_validator_pass2(self):
+        r =self.app.get('/sub5/default_with_args/66')
+        assert "DEFAULT WITH ARGS AND VALIDATORS 66 None" in r.body, r
+
+    def test_default_with_validator_fail2(self):
+        r =self.app.get('/sub5/default_with_args/True/more')
+        assert "FAILURE" in r.body, r
         
