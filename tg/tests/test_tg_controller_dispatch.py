@@ -3,7 +3,7 @@
 import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, \
                            WSGIAppController, RestController
-from tg.decorators import expose, validate, override_template, lookup, default
+from tg.decorators import expose, validate, override_template
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from formencode import validators
@@ -127,18 +127,6 @@ class LoookupController(TGController):
     def lookup(self, a, *args):
         return LookupHelper(a), args
 
-class DecoDefaultController(TGController):
-
-    @default
-    def __0(self, *args):
-        return ("recieved the following args (from the url): %s" %list(args))
-          
-class DecoLookupController(TGController):
-
-    @lookup
-    def __0(self, a, *args):
-        return LookupHelper(a), args
-        
 class RemoteErrorHandler(TGController):
     @expose()
     def errors_here(self, *args, **kw):
@@ -152,8 +140,6 @@ class BasicTGController(TGController):
     error_controller = RemoteErrorHandler()
     
     lookup = LoookupController()
-    deco_lookup = DecoLookupController()
-    deco_default = DecoDefaultController()
     lookup_with_args = LoookupControllerWithArgs()
     
     @expose()
@@ -306,16 +292,6 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/lookup_with_args/get_here/got_here')
         msg = 'got_here'
         assert r.body==msg, r
-
-    def test_new_lookup(self):
-        r = self.app.get('/deco_lookup/EYE')
-        msg = 'EYE'
-        assert msg in r, r
-
-    def test_new_default(self):
-        r = self.app.get('/deco_default/EYE')
-        msg = 'EYE'
-        assert msg in r, r
 
     def test_validated_int(self):
         r = self.app.get('/validated_int/1')
