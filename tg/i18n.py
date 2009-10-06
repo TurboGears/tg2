@@ -6,9 +6,9 @@ import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
 from pylons.configuration import config
 from pylons import session
+from gettext import translation
 
 log = logging.getLogger(__name__)
-
 
 def setup_i18n():
     """Set languages from the request header and the session.
@@ -68,16 +68,16 @@ def set_lang(languages, **kwargs):
         session[config.get('lang_session_key', 'tg_lang')] = languages
         session.save()
 
+_localdir = formencode.api.get_localedir()
 
 def set_formencode_translation(languages):
     """Set request specific translation of FormEncode."""
-    from gettext import translation
     try:
-        formencode_translation = translation('FormEncode',
-            languages=languages, localedir=formencode.api.get_localedir())
+        formencode_translation = translation('FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
     pylons.tmpl_context.formencode_translation = formencode_translation
+
 
 
 __all__ = [
