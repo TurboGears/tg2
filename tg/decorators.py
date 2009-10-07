@@ -8,7 +8,7 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-
+from warnings import warn
 import inspect
 import formencode
 from paste.util.mimeparse import best_match
@@ -119,6 +119,10 @@ class Decoration(object):
         else:
             content_type = best_match(self.engines.keys(), accept_types)
             
+            if content_type == 'CUSTOM/LEAVE':
+                warn('@expose(CUSTOM_CONTENT_TYPE) is no longer needed and should be replaced with @expose()')
+
+
             # check for overridden content type from the controller call
             controller_content_type = response.headers.get('Content-Type')
             

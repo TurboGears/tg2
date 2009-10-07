@@ -257,9 +257,13 @@ class BasicTGController(TGController):
     def stacked_expose(self):
         return dict(got_json=True)
 
-#    @expose(content_type=CUSTOM_CONTENT_TYPE)
     @expose()
     def custom_content_type_in_controller(self):
+        pylons.response.headers['content-type'] = 'image/png'
+        return 'PNG'
+
+    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    def custom_content_type_with_ugliness(self):
         pylons.response.headers['content-type'] = 'image/png'
         return 'PNG'
 
@@ -411,6 +415,12 @@ class TestTGController(TestWSGIController):
 
     def test_custom_content_type_in_decorator(self):
         resp = self.app.get('/custom_content_type_in_decorator')
+        assert 'PNG' in resp, resp
+        assert resp.headers['Content-Type'] == 'image/png', resp
+
+    def test_custom_content_type_with_ugliness(self):
+        #in 2.2 this test can be removed for CUSTOM_CONTENT_TYPE will be removed
+        resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
         

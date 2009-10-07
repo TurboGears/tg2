@@ -6,7 +6,7 @@ decorators to effect a rendered page.
 """
 
 import inspect
-
+from warnings import warn
 import formencode
 import pylons
 from pylons.configuration import config
@@ -225,7 +225,7 @@ class DecoratedController(object):
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
-        if content_type is not None: #CUSTOM_CONTENT_TYPE:
+        if content_type is not None: 
             pylons.response.headers['Content-Type'] = content_type
 
         # skip all the complicated stuff if we're don't have a response dict
