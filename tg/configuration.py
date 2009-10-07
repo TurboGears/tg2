@@ -256,7 +256,8 @@ class AppConfig(Bunch):
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
         defaults = {
-                    'form_plugin': None
+                    'form_plugin': None,
+                    'cookie_secret': config['beaker.session.secret']
                    }
         # The developer must have defined a 'sa_auth' section, because
         # values such as the User, Group or Permission classes must be
