@@ -13,6 +13,7 @@ from webtest import TestApp
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
+
 import tg
 from tg import tmpl_context
 from pylons import url
@@ -21,10 +22,13 @@ from tg.util import Bunch
 from pylons.util import ContextObj, PylonsContext
 from pylons.controllers.util import Request, Response
 from tg.controllers import TGController
+
+from pylons.configuration import response_defaults
+response_defaults['headers']['Content-Type'] = None
+
 from pylons.testutil import ControllerWrap, SetupCacheGlobal
 
 from beaker.middleware import CacheMiddleware
-
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
@@ -57,6 +61,7 @@ def make_app(controller_klass=None, environ=None):
     environ['pylons.routes_dict'] = {}
     environ['pylons.routes_dict']['action'] = "routes_placeholder"
 
+    
     if controller_klass is None:
         controller_klass = TGController
 
@@ -89,6 +94,7 @@ def create_request(path, environ=None):
     # setup a Registry
     reg = environ.setdefault('paste.registry', Registry())
     reg.prepare()
+
     # setup pylons.request to point to our Registry
     reg.register(pylons.request, req)
     

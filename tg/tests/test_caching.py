@@ -16,6 +16,7 @@ from pylons.decorators.cache import beaker_cache
 from pylons.controllers.util import etag_cache
 from pylons import cache
 from routes import Mapper
+import pylons
 from routes.middleware import RoutesMiddleware
 from webob.exc import HTTPNotModified
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
@@ -136,6 +137,10 @@ class EtagController(TGController):
 
     @expose()
     def etagged(self, etag):
+        # this is needed because the default content type is overridden within the config
+        # etag_cache should probably do this, in order that the content-type header is popped
+        # if it is None
+        pylons.response.headers.pop('Content-Type')
         etag_cache(etag)
         return "bar"
     
@@ -156,6 +161,5 @@ class TestEtagCaching(TestWSGIController):
         
     def test_304(self):
         resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': 'foo'})
-        print resp.status_int
-        assert "304" in resp.status
+        assert "304" in resp.status, resp
 

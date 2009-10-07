@@ -257,9 +257,14 @@ class BasicTGController(TGController):
     def stacked_expose(self):
         return dict(got_json=True)
 
-    @expose(content_type=CUSTOM_CONTENT_TYPE)
-    def custom_content_type(self):
+#    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    @expose()
+    def custom_content_type_in_controller(self):
         pylons.response.headers['content-type'] = 'image/png'
+        return 'PNG'
+
+    @expose(content_type='image/png')
+    def custom_content_type_in_decorator(self):
         return 'PNG'
 
     @expose()
@@ -398,4 +403,14 @@ class TestTGController(TestWSGIController):
     def test_default_with_validator_fail2(self):
         r =self.app.get('/sub5/default_with_args/True/more')
         assert "FAILURE" in r.body, r
+        
+    def test_custom_content_type_in_controller(self):
+        resp = self.app.get('/custom_content_type_in_controller')
+        assert 'PNG' in resp, resp
+        assert resp.headers['Content-Type'] == 'image/png', resp
+
+    def test_custom_content_type_in_decorator(self):
+        resp = self.app.get('/custom_content_type_in_decorator')
+        assert 'PNG' in resp, resp
+        assert resp.headers['Content-Type'] == 'image/png', resp
         

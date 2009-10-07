@@ -104,7 +104,7 @@ class DecoratedController(object):
                                                                 remainder,
                                                                 params, inv)
         except Exception, e:
-            if config['use_toscawidgets2']:
+            if config.get('use_toscawidgets2'):
                 from tw2.core import ValidationError
                 if isinstance(e, ValidationError):
                     controller, output = self._handle_validation_errors(controller,
@@ -225,7 +225,7 @@ class DecoratedController(object):
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
-        if content_type != CUSTOM_CONTENT_TYPE:
+        if content_type is not None: #CUSTOM_CONTENT_TYPE:
             pylons.response.headers['Content-Type'] = content_type
 
         # skip all the complicated stuff if we're don't have a response dict
@@ -292,6 +292,7 @@ class DecoratedController(object):
 
         if isinstance(result, unicode) and not pylons.response.charset:
             pylons.response.charset = 'UTF-8'
+
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):

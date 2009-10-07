@@ -122,14 +122,14 @@ class TestTGController(TestWSGIController):
         """Ensure you can pass in a dictionary of validators"""
         form_values = {"some_int": 22}
         resp = self.app.post('/validated_int', form_values)
-        assert '{"response": 22}'in resp
+        assert '{"response": 22}'in resp, resp
 
     def test_for_other_params_after_validation(self):
         """Ensure that both validated and unvalidated data make it through"""
         form_values = {'a': 1, 'b': "string"}
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp
-        assert '"str": "string"' in resp
+        assert '"str": "string"' in resp, resp
 
     @raises(AssertionError)
     def test_validation_fails_with_no_error_handler(self):
@@ -163,9 +163,9 @@ class TestTGController(TestWSGIController):
     def test_form_render(self):
         """Test that myform renders properly"""
         resp = self.app.post('/display_form')
-        assert 'id="my_form_title.label"' in resp
-        assert 'class="fieldlabel required"' in resp
-        assert "Title" in resp
+        assert 'id="my_form_title.label"' in resp, resp
+        assert 'class="fieldlabel required"' in resp, resp
+        assert "Title" in resp, resp
 
     def test_form_validation_error(self):
         """Test form validation with error message"""
@@ -209,12 +209,12 @@ class TestTGController(TestWSGIController):
         """Test schema validation"""
         form_values = {'pwd1': 'me', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
-        assert "There was an error" in resp
+        assert "There was an error" in resp, resp
         form_values = {'pwd1': 'you', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
-        assert "Password ok!" in resp
+        assert "Password ok!" in resp, resp
 
     def test_controller_based_validator(self):
         """Test controller based validation"""
         resp = self.app.post('/validate_controller_based_validator')
-        assert 'ok' in resp
+        assert 'ok' in resp, resp

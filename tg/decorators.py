@@ -113,16 +113,23 @@ class Decoration(object):
             accept_types = request.response_type
         else:
             accept_types = request.headers.get('accept', '*/*')
-
+        
         if self.render_custom_format:
             content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
         else:
             content_type = best_match(self.engines.keys(), accept_types)
+            
+            # check for overridden content type from the controller call
+            controller_content_type = response.headers.get('Content-Type')
+            
+            if controller_content_type:
+                content_type = controller_content_type
+            
             # check for overridden templates
             try:
                 engine, template, exclude_names = request._override_mapping[self.controller][content_type]
             except (AttributeError, KeyError):
-                engine, template, exclude_names = self.engines[content_type]
+                    engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
 
 
         if 'charset' not in content_type and (

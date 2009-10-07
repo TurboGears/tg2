@@ -197,6 +197,10 @@ class AppConfig(Bunch):
                         package=self.package.__name__,
                         paths=self.paths)
         config.update(self)
+        # set up the response options to None.  This allows 
+        # you to set the proper content type within a controller method
+        # if you choose.
+        pylons_config['pylons.response_options']['headers']['Content-Type'] = None
 
     def setup_routes(self):
         """Setup the default TG2 routes
