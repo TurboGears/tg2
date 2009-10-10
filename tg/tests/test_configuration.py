@@ -7,6 +7,8 @@ import atexit
 from tg.configuration import AppConfig, config
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
+
+
 def setup():
     setup_session_dir()
 def teardown():
@@ -44,6 +46,7 @@ class TestPylonsConfigWrapper:
 class TestAppConfig:
     def setup(self):
         self.config = AppConfig()
+        config['beaker.session.secret'] = 'some_secret'
 
     def test_create(self):
         pass
@@ -98,6 +101,7 @@ class TestAppConfig:
         self.config.paths.templates = 'template_path'
         self.config.setup_mako_renderer()
 
+    
     def test_setup_sqlalchemy(self):
         config['sqlalchemy.url'] = 'sqlite://'
         class Package:

@@ -30,6 +30,8 @@ from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
+class TGConfigError(Exception):pass
+
 class PylonsConfigWrapper(DictMixin):
     """Wrapper for the Pylons configuration.
 
@@ -263,9 +265,16 @@ class AppConfig(Bunch):
 
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
+        
+        if 'beaker.session.secret' not in config:
+            raise TGConfigError("You must provide a value for 'beaker.session.secret'  If this is a project quickstarted with TG 2.0.2 or earlier \
+double check that you have base_config['beaker.session.secret'] = 'mysecretsecret' in your app_cfg.py file.")
+
         defaults = {
-                    'form_plugin': None
+                    'form_plugin': None,
+                    'cookie_secret': config['beaker.session.secret']
                    }
+
         # The developer must have defined a 'sa_auth' section, because
         # values such as the User, Group or Permission classes must be
         # explicitly defined.
