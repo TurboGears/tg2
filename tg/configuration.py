@@ -201,6 +201,10 @@ class AppConfig(Bunch):
         # you to set the proper content type within a controller method
         # if you choose.
         pylons_config['pylons.response_options']['headers']['Content-Type'] = None
+        
+        #see http://trac.turbogears.org/ticket/2247
+        if asbool(config['debug']):
+            config['pylons.strict_c'] = True
 
     def setup_routes(self):
         """Setup the default TG2 routes
