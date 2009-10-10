@@ -614,11 +614,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         
         
         """
-        app = tw_middleware(app, {
-            'toscawidgets.framework.default_view': self.default_renderer,
-            'toscawidgets.framework.translator': ugettext,
-            'toscawidgets.middleware.inject_resources': True,
-            })
+        
+        twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
+                    'toscawidgets.framework.translator': ugettext,
+                    'toscawidgets.middleware.inject_resources': True,
+                    }
+        for k,v in config.iteritems(): 
+            if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'): 
+                twconfig[k] = v 
+        app = tw_middleware(app, twconfig)
         return app
 
     def add_tosca2_middleware(self, app):
@@ -649,7 +653,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         option that is set within your application's ini file.)
         """
         from tw2.core.middleware import Config, TwMiddleware
-
         app = TwMiddleware(app, 
             default_engine=self.default_renderer,
             translator=ugettext,
