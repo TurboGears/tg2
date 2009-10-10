@@ -256,6 +256,10 @@ class BasicTGController(TGController):
     @expose('json')
     def stacked_expose(self):
         return dict(got_json=True)
+    
+    @expose('json')
+    def bad_json(self):
+        return [(1, 'a'), 'b']
 
     @expose()
     def custom_content_type_in_controller(self):
@@ -423,4 +427,8 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
-        
+    
+    @raises(tg.jsonify.JsonEncodeError)
+    def test_bad_json(self):
+        resp = self.app.get('/bad_json')
+        assert 'ab' not in resp.body, resp

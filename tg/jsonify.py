@@ -13,8 +13,9 @@ def is_saobject(obj):
 from sqlalchemy.engine.base import ResultProxy, RowProxy
 from webob import MultiDict
 
-# JSON Encoder class
+class JsonEncodeError(Exception):pass
 
+# JSON Encoder class
 class GenericJSON(JSONEncoder):
     def default(self, obj):
         if hasattr(obj, '__json__') and callable(obj.__json__):
@@ -30,11 +31,11 @@ class GenericJSON(JSONEncoder):
                     props[key] = getattr(obj, key)
             return props
         elif isinstance(obj, ResultProxy):
-            return list(obj)
+            return dict(rows=list(obj), count=obj.rowcount)
+        elif isinstance(obj, RowProxy):
+            return dict(rows=dict(obj), count=1)
         elif isinstance(obj, MultiDict):
             return obj.mixed()
-        elif isinstance(obj, RowProxy):
-            return dict(obj)
         else:
             return JSONEncoder.default(self, obj)
 
@@ -44,6 +45,15 @@ _instance = GenericJSON()
 # General encoding functions
 
 def encode(obj):
+    if isinstance(obj, basestring):
+        return _instance.encode(obj)
+    try:
+        value = obj['test']
+    except TypeError:
+        if not hasattr(obj, '__json__') and not is_saobject(obj):
+            raise JsonEncodeError('Your Encoded object must be dict-like.')
+    except:
+        pass
     """Return a JSON string representation of a Python object."""
     return _instance.encode(obj)
 

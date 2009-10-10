@@ -19,13 +19,13 @@ import tw
 from tg.render import render as tg_render
 from tg.decorators import expose
 from tg.flash import flash
+from tg.jsonify import JsonEncodeError, is_saobject
 
 from util import pylons_formencode_gettext
 
 # @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
-
 
 class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
@@ -228,10 +228,19 @@ class DecoratedController(object):
         if content_type is not None: 
             pylons.response.headers['Content-Type'] = content_type
 
-        # skip all the complicated stuff if we're don't have a response dict
+        # skip all the complicated stuff if we're don't have a dict-like object
         # to work with.
-        if not isinstance(response, dict):
+        try:
+            value = response['test']
+        except TypeError:
+            #json-defined objects must be dict-like
+            if engine_name == 'json' and not hasattr(response, '__json__') and not isinstance(response, basestring) and not is_saobject(response):
+                raise JsonEncodeError('Your Encoded object must be dict-like.')
             return response
+        except:
+            pass
+
+        """Return a JSON string representation of a Python object."""
 
         # Save these objeccts as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()

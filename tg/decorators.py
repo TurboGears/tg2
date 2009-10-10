@@ -122,7 +122,6 @@ class Decoration(object):
             if content_type == 'CUSTOM/LEAVE':
                 warn('@expose(CUSTOM_CONTENT_TYPE) is no longer needed and should be replaced with @expose()')
 
-
             # check for overridden content type from the controller call
             controller_content_type = response.headers.get('Content-Type')
             

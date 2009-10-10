@@ -17,7 +17,6 @@ class TGApp(PylonsApp):
         """
         # Check to see if we've cached the class instance for this name
         if controller in self.controller_classes:
-#            print self.controller_classes[controller]
             return self.controller_classes[controller]
 
         root_module_path = self.config['paths']['root']
@@ -42,8 +41,5 @@ class TGApp(PylonsApp):
             log.debug("Found controller, module: '%s', class: '%s'",
                       full_module_name, class_name)
         mycontroller = getattr(sys.modules[full_module_name], class_name)
-#        if isinstance(mycontroller, ObjectDispatcher):
- #           print 'here'
- #       mycontroller = mycontroller()
         self.controller_classes[controller] = mycontroller
         return mycontroller

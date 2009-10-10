@@ -156,8 +156,6 @@ def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
     template_vars.update(HTML=HTML, XML=XML)
 
-    method = config.get('genshi.method', 'xhtml')
-    
     if config.get('use_dotted_templatenames', False):
         template_name = tg.config['pylons.app_globals'
                 ].dotted_filename_finder.get_dotted_filename(
@@ -169,7 +167,7 @@ def render_genshi(template_name, template_vars, **kwargs):
     # (in a similar way, we could pass other serialization options when they
     # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
-    return templating.render_genshi(template_name, extra_vars=template_vars, method=method,
+    return templating.render_genshi(template_name, extra_vars=template_vars,
                                     **kwargs)
 
 

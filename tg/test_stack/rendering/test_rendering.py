@@ -54,21 +54,18 @@ def test_chameleon_genshi_inheritance():
 def _test_jinja_inherits():
     app = setup_noDB()
     resp = app.get('/jinja_inherits')
-    print resp
-    assert "Welcome on my awsome homepage" in resp
+    assert "Welcome on my awsome homepage" in resp, resp
 
 def test_mako_renderer():
     app = setup_noDB()
     resp = app.get('/mako_index')
-    print resp
-    assert "<p>This is the mako index page</p>" in resp
+    assert "<p>This is the mako index page</p>" in resp, resp
 
 def test_mako_inheritance():
     app = setup_noDB()
     resp = app.get('/mako_inherits')
-    print resp
-    assert "inherited mako page" in resp
-    assert "Inside parent template" in resp
+    assert "inherited mako page" in resp, resp
+    assert "Inside parent template" in resp, resp
 def test_template_override():
     app = setup_noDB()
     r =app.get('/template_override')

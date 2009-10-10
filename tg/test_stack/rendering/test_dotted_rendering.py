@@ -20,44 +20,42 @@ def setup_noDB():
 def test_default_chameleon_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/chameleon_index_dotted')
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
+    assert "Welcome" in resp, resp
+    assert "TurboGears" in resp, resp
 
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/index_dotted')
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
+    assert "Welcome" in resp, resp
+    assert "TurboGears" in resp, resp
 
 def test_genshi_inheritance():
     app = setup_noDB()
     resp = app.get('/genshi_inherits_dotted')
-    assert "Inheritance template" in resp
-    assert "Master template" in resp
+    assert "Inheritance template" in resp, resp
+    assert "Master template" in resp, resp
  
 def test_genshi_sub_inheritance():
     app = setup_noDB()
     resp = app.get('/genshi_inherits_sub_dotted')
-    assert "Inheritance template" in resp
-    assert "Master template" in resp
-    assert "from sub-template: sub.tobeincluded" in resp
+    assert "Inheritance template" in resp, resp
+    assert "Master template" in resp, resp
+    assert "from sub-template: sub.tobeincluded" in resp, resp
 
 def test_genshi_sub_inheritance_frombottom():
     app = setup_noDB()
     resp = app.get('/genshi_inherits_sub_dotted_from_bottom')
-    assert "Master template" in resp
-    assert "from sub-template: sub.frombottom_dotted" in resp
+    assert "Master template" in resp, resp
+    assert "from sub-template: sub.frombottom_dotted" in resp, resp
 
 def test_mako_renderer():
     app = setup_noDB()
     resp = app.get('/mako_index_dotted')
-    print resp
-    assert "<p>This is the mako index page</p>" in resp
+    assert "<p>This is the mako index page</p>" in resp, resp
 
 def test_mako_inheritance():
     app = setup_noDB()
     resp = app.get('/mako_inherits_dotted')
-    print resp
-    assert "inherited mako page" in resp
-    assert "Inside parent template" in resp
+    assert "inherited mako page" in resp, resp
+    assert "Inside parent template" in resp, resp
 
