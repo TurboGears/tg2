@@ -488,12 +488,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             """Configure the Pylons environment via ``pylons.configuration.config``."""
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
-            #Regesters functions to be called at startup and shutdown
-            #from self.call_on_startup and shutdown respectively.
-            self.setup_startup_and_shutdown()
 
             self.setup_paths()
             self.init_config(global_conf, app_conf)
+
+            #Registers functions to be called at startup and shutdown
+            #from self.call_on_startup and shutdown respectively.
+            self.setup_startup_and_shutdown()
+
             self.setup_routes()
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
