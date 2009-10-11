@@ -154,7 +154,7 @@ class AppConfig(Bunch):
         # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
-
+        
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
             if callable(cmd):
@@ -207,11 +207,31 @@ class AppConfig(Bunch):
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
             config['pylons.strict_c'] = True
+            
+        self.after_init_config()
 
+    def after_init_config(self):
+        """
+        Override this method to set up configuration variables at the application
+        level.  This method will be called after your configuration object has
+        been initialized on startup.  Here is how you would use it to override
+        the default setting of pylons.strict_c ::
+        
+            from tg.configuration import AppConfig
+            from pylons import config
+     
+            class MyAppConfig(AppConfig):
+                def after_init_config(self):
+                    config['pylons.strict_c'] = False
+                    
+            base_config = MyAppConfig()
+        
+        """
+            
     def setup_routes(self):
         """Setup the default TG2 routes
 
-        Overide this and setup your own routes maps if you want to use
+        Override this and setup your own routes maps if you want to use
         custom routes.
         
         It is recommended that you keep the existing application routing in
