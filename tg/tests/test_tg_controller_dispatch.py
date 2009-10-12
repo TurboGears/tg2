@@ -256,6 +256,17 @@ class BasicTGController(TGController):
     @expose('json')
     def stacked_expose(self):
         return dict(got_json=True)
+
+    @expose('json')
+    def json_expose(self):
+        return dict(got_json=True)
+
+    @expose('json')
+    def json_expose_obj(self):
+        class A(object):
+            def __json__(self):
+                return {'a':1, 'b':2}
+        return A()
     
     @expose('json')
     def bad_json(self):
@@ -432,3 +443,11 @@ class TestTGController(TestWSGIController):
     def test_bad_json(self):
         resp = self.app.get('/bad_json')
         assert 'ab' not in resp.body, resp
+
+    def test_json_expose(self):
+        resp = self.app.get('/json_expose')
+        assert '{"got_json": true}' in resp, resp.body
+        
+    def test_json_expose_obj(self):
+        resp = self.app.get('/json_expose_obj')
+        assert '{"got_json": true}' in resp, resp.body
