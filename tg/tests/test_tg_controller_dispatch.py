@@ -16,6 +16,9 @@ from tg.tests.base import TestWSGIController, make_app, setup_session_dir, \
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 
+from pylons import config
+config['renderers'] = ['genshi', 'mako', 'json']
+
 def setup():
     setup_session_dir()
 def teardown():

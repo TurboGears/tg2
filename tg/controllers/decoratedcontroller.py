@@ -71,7 +71,7 @@ class DecoratedController(object):
 
         self._initialize_validation_context()
 
-        pylons.request.start_response = self.start_response
+        pylons.request.start_response = getattr(self, 'start_response', None)
 
         remainder = remainder or []
         try:
@@ -341,7 +341,7 @@ class DecoratedController(object):
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
         elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
-            output = error_handler(*remainder, **dict(params))
+            output = error_handler(error_handler.im_self, *remainder, **dict(params))
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
 
