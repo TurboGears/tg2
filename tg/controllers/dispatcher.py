@@ -212,7 +212,11 @@ class Dispatcher(WSGIController):
         if pylons.config.get('i18n_enabled', True):
             setup_i18n()
 
-        url_path = pylons.request.path.split('/')[1:]
+        script_name = pylons.request.environ.get('SCRIPT_NAME', '')
+        url_path = pylons.request.path
+        if url_path.startswith(script_name):
+            url_path = url_path[len(script_name):]
+        url_path = url_path.split('/')[1:]
 
         if url_path[-1] == '':
             url_path.pop()
