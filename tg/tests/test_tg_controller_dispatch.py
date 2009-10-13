@@ -453,4 +453,4 @@ class TestTGController(TestWSGIController):
         
     def test_json_expose_obj(self):
         resp = self.app.get('/json_expose_obj')
-        assert '{"got_json": true}' in resp, resp.body
+        assert '{"a": 1, "b": 2}' in resp, resp.body

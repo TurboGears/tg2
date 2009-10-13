@@ -237,7 +237,7 @@ class DecoratedController(object):
             if engine_name == 'json' and not hasattr(response, '__json__') and not isinstance(response, basestring) and not is_saobject(response):
                 raise JsonEncodeError('Your Encoded object must be dict-like.')
             return response
-        except:
+        except KeyError:
             pass
 
         """Return a JSON string representation of a Python object."""
