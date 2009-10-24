@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from nose.tools import raises
 import os
 from tg.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 from nose.tools import eq_
+from tg.jsonify import JsonEncodeError
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch', 
@@ -133,4 +135,10 @@ def test_basicurls():
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
     assert "None Recieved"
+
+@raises(JsonEncodeError)
+def test_json_return_list():
+    resp = app.get("/json_return_list")
+    assert "None Recieved"
+    
 

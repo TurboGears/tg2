@@ -19,7 +19,7 @@ import tw
 from tg.render import render as tg_render
 from tg.decorators import expose
 from tg.flash import flash
-from tg.jsonify import is_saobject
+from tg.jsonify import is_saobject, JsonEncodeError
 
 from util import pylons_formencode_gettext
 
@@ -230,6 +230,9 @@ class DecoratedController(object):
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
+            if engine_name == 'json' and isinstance(response, list):
+                raise JsonEncodeError('You may not expose with json a list return value.  This is because'\
+                                      ' it leaves your application open to CSRF attacks')
             return response
         """Return a JSON string representation of a Python object."""
 

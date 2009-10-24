@@ -132,6 +132,10 @@ class RootController(TGController):
     def stacked_expose(self, tg_format=None):
         return dict(got_json=True)
 
+    @expose('json')
+    def json_return_list(self):
+        return [1,2,3]
+
     @expose(content_type='image/png')
     def custom_content_type(self):
         return 'PNG'
