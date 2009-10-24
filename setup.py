@@ -13,11 +13,13 @@ test_requirements = ['coverage',
                     'nose',
                     'TurboKid >= 1.0.4',
                     'zope.sqlalchemy >= 0.4',
-                    'jinja',
+                    'jinja2',
                     'chameleon.genshi',
                     'repoze.what >= 1.0.5',
+                    'repoze.what-quickstart',
                     'repoze.who-testutil >= 1.0rc1',
                     'wsgiref',
+                    'tw.forms',
                     ]
 
 setup(

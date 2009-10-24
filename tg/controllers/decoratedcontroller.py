@@ -231,7 +231,6 @@ class DecoratedController(object):
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
             return response
-
         """Return a JSON string representation of a Python object."""
 
         # Save these objeccts as locals from the SOP to avoid expensive lookups

@@ -430,4 +430,3 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
-    
