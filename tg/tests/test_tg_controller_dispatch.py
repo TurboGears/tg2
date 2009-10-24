@@ -16,6 +16,9 @@ from tg.tests.base import TestWSGIController, make_app, setup_session_dir, \
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 
+from pylons import config
+config['renderers'] = ['genshi', 'mako', 'json']
+
 def setup():
     setup_session_dir()
 def teardown():
@@ -256,7 +259,7 @@ class BasicTGController(TGController):
     @expose('json')
     def stacked_expose(self):
         return dict(got_json=True)
-    
+
     @expose('json')
     def bad_json(self):
         return [(1, 'a'), 'b']
@@ -367,7 +370,7 @@ class TestTGController(TestWSGIController):
 
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')
-        assert 'got_json' in r, r
+        assert 'got_json' in r.body, r
 
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
@@ -428,7 +431,3 @@ class TestTGController(TestWSGIController):
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
     
-    @raises(tg.jsonify.JsonEncodeError)
-    def test_bad_json(self):
-        resp = self.app.get('/bad_json')
-        assert 'ab' not in resp.body, resp

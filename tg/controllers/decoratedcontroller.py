@@ -19,7 +19,7 @@ import tw
 from tg.render import render as tg_render
 from tg.decorators import expose
 from tg.flash import flash
-from tg.jsonify import JsonEncodeError, is_saobject
+from tg.jsonify import is_saobject
 
 from util import pylons_formencode_gettext
 
@@ -71,7 +71,7 @@ class DecoratedController(object):
 
         self._initialize_validation_context()
 
-        pylons.request.start_response = self.start_response
+        pylons.request.start_response = getattr(self, 'start_response', None)
 
         remainder = remainder or []
         try:
@@ -228,17 +228,9 @@ class DecoratedController(object):
         if content_type is not None: 
             pylons.response.headers['Content-Type'] = content_type
 
-        # skip all the complicated stuff if we're don't have a dict-like object
-        # to work with.
-        try:
-            value = response['test']
-        except TypeError:
-            #json-defined objects must be dict-like
-            if engine_name == 'json' and not hasattr(response, '__json__') and not isinstance(response, basestring) and not is_saobject(response):
-                raise JsonEncodeError('Your Encoded object must be dict-like.')
+        # if it's a string return that string and skip all the stuff
+        if not isinstance(response, dict):
             return response
-        except:
-            pass
 
         """Return a JSON string representation of a Python object."""
 
@@ -341,7 +333,7 @@ class DecoratedController(object):
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
         elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
-            output = error_handler(*remainder, **dict(params))
+            output = error_handler(error_handler.im_self, *remainder, **dict(params))
         else:
             output = error_handler(controller.im_self, *remainder, **dict(params))
 

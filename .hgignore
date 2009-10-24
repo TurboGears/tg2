@@ -7,6 +7,7 @@ syntax: glob
 *.pyo
 *.swp
 .coverage
+.noseids
 
 syntax: regexp
 ^build
