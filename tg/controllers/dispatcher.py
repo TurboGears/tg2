@@ -361,7 +361,7 @@ class ObjectDispatcher(Dispatcher):
                 return state
             if self._is_exposed(controller, 'lookup'):
                 controller, remainder = controller.lookup(*remainder)
-                state.url_path = orig_url_path
+                state.url_path = '/'.join(remainder)
                 return self._dispatch_controller(
                     'lookup', controller, state, remainder)
             state.controller_path.pop()
