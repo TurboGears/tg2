@@ -493,6 +493,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
+        
+    def setup_auth(self):
+        """
+           Override this method to define how you would like the auth to be set up for your app.
+           
+           For the standard TurboGears App, this will set up the auth with SQLAlchemy.
+        """
+        if self.auth_backend == "sqlalchemy":
+            self.setup_sa_auth_backend()
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -519,9 +528,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             self.setup_routes()
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
-
-            if self.auth_backend == "sqlalchemy":
-                self.setup_sa_auth_backend()
+            self.setup_auth()
 
             for renderer in self.renderers:
                 setup = getattr(self, 'setup_%s_renderer'%renderer, None)
@@ -781,10 +788,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             if self.use_toscawidgets2:
                 app = self.add_tosca2_middleware(app)
 
-            if self.auth_backend == "sqlalchemy":
+            if self.auth_backend:
                 # Skipping authentication if explicitly requested. Used by 
                 # repoze.who-testutil:
-                skip_authentication = app_conf.get('skip_authentication')
+                skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
 
             if self.use_transaction_manager:
