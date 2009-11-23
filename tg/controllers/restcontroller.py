@@ -98,7 +98,17 @@ class RestDispatcher(ObjectDispatcher):
         #you may not send a delete request to a non-delete function
         if remainder and self._is_exposed(current_controller, remainder[0]):
             abort(405)
-
+            
+        # there might be a sub-controller with a delete method, let's go see
+        if remainder:
+            sub_controller = getattr(current_controller, remainder[0], None)
+            if sub_controller:
+                remainder = remainder[1:]
+                state.current_controller = sub_controller
+                state.url_path = '/'.join(remainder)
+                r = self._dispatch_controller(state.url_path, sub_controller, state, remainder)
+                if r:
+                    return r
         return self._dispatch_first_found_default_or_lookup(state, remainder)
     
     def _check_for_sub_controllers(self, state, remainder):
