@@ -394,10 +394,13 @@ class DecoratedController(WSGIController):
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
             error_handler = controller
+            error_handler.decoration.run_hooks('before_call', remainder, params)
             output = error_handler(*remainder, **dict(params))
         elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
+            error_handler.decoration.run_hooks('before_call', remainder, params)
             output = error_handler(*remainder, **dict(params))
         else:
+            error_handler.decoration.run_hooks('before_call', remainder, params)
             output = error_handler(controller.im_self, *remainder, **dict(params))
 
         return error_handler, output

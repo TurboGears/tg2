@@ -4,8 +4,17 @@ import paste.httpexceptions as httpexceptions
 import tg
 import pylons
 from tg.controllers import TGController
-from tg.decorators import expose
+from tg.decorators import (
+    expose,
+    before_call,
+    before_render,
+    after_render,
+    validate,
+    before_validate,
+    )
 
+
+from formencode.validators import NotEmpty
 from turbojson.jsonify import jsonify
 
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
@@ -22,6 +31,18 @@ class MyClass(object):
 @jsonify.when('isinstance(obj, MyClass)')
 def jsonify_myclass(obj):
     return {'result':'wo-hoo!'}
+
+
+HOOKS = []
+
+def hook_factory(kind):
+
+    def _hook(*args, **kwargs):
+        global HOOKS
+        HOOKS.append(kind)
+
+    return _hook
+
 
 class BasicTGController(TGController):
 
@@ -42,6 +63,24 @@ class BasicTGController(TGController):
     def xml_or_json(self):
         return dict(name="John Carter", title='officer', status='missing')
 
+
+    @expose()
+    @before_call(hook_factory("before_call"))
+    @before_render(hook_factory("before_render"))
+    @after_render(hook_factory("after_render"))
+    def hooks_are_called(self):
+        return "ok"
+
+
+    @expose()
+    @before_validate(hook_factory("before_validate"))
+    @validate(dict(foo=NotEmpty()), error_handler=hooks_are_called)
+    def hooks_called_through_validation(self, foo=None):
+        raise Exception("I'm not supposed to be called")
+
+
+
+
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
@@ -54,14 +93,34 @@ class TestTGController(TestWSGIController):
     def test_custom_jsonification(self):
         resp = self.app.get('/custom')
         assert "wo-hoo!" in resp.body
-    
+
     def test_multi_dispatch_json(self):
         resp = self.app.get('/xml_or_json', headers={'accept':'application/json'})
         assert '''"status": "missing"''' in resp
         assert '''"name": "John Carter"''' in resp
         assert '''"title": "officer"''' in resp
-    
+
+
+    def test_before_call_before_render_after_render(self):
+        global HOOKS
+        HOOKS = []
+        self.app.get("/hooks_are_called")
+        assert "before_call" in HOOKS
+        assert "before_render" in HOOKS
+        assert "after_render" in HOOKS
+
+        # now test that when the call is made implicit because
+        # the action being a validation-error-handler,
+        # the hooks are still called
+        HOOKS = []
+
+        self.app.get("/hooks_called_through_validation")
+        assert "before_validate" in HOOKS
+        assert "before_call" in HOOKS
+        assert "before_render" in HOOKS
+        assert "after_render" in HOOKS
+
     #TODO: Setup genshi search path, and test genshi rendering
-    
-    #TODO: Add tests for 
+
+    #TODO: Add tests for
 

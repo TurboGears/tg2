@@ -1,0 +1,4 @@
+.hgignore
+.*pyc
+.*egg-info.*
+tg/test_stack/.*\.mak.py
