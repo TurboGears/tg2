@@ -686,15 +686,21 @@ def _get_notfound_handlers(obj):
     '''Return (default,lookup) notfound handlers for this object'''
     # First search for is_default and is_lookup decoration
     default = lookup = None
-    for name in dir(obj):
-        meth = getattr(obj, name)
+    # we first work on the class because
+    # we don't want properties to be evaluated,
+    # and the decoration is on the unbound method
+    # anyway.
+    for name in dir(obj.__class__):
+        meth = getattr(obj.__class__, name)
         if hasattr(meth, 'decoration'):
-            if not hasattr(meth.decoration, 'is_default_controller'):
-                import pdb; pdb.set_trace()
+            # deets - no idea what this is meant to do,
+            # but it certainly isn't working.
+            # if not hasattr(meth.decoration, 'is_default_controller'):
+            #     import pdb; pdb.set_trace()
             if meth.decoration.is_default_controller:
-                default = meth
+                default = getattr(obj, name)
             elif meth.decoration.is_lookup_controller:
-                lookup = meth
+                lookup = getattr(obj, name)
     if default is None:
         meth = getattr(obj, 'default', None)
         if meth and _iscontroller(meth):
