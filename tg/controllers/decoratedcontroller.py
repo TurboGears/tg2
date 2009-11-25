@@ -13,7 +13,7 @@ from pylons.configuration import config
 from pylons import request
 from pylons.controllers.util import abort
 
-from repoze.what.predicates import NotAuthorizedError, not_anonymous
+from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
 import tw
 
 from tg.render import render as tg_render
@@ -26,6 +26,8 @@ from util import pylons_formencode_gettext
 # @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
+
+class NotAuthorizedError(Exception):pass
 
 class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
@@ -351,7 +353,7 @@ class DecoratedController(object):
             return True
         try:
             predicate.check_authorization(pylons.request.environ)
-        except NotAuthorizedError, e:
+        except WhatNotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircut the rest, but if not we will still
@@ -368,7 +370,13 @@ class DecoratedController(object):
             pylons.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-
+        except NotAuthorizedError, e:
+            reason = getattr(e, 'msg', 'You are not Authorized to access this Resource')
+            code   = getattr(e, 'code', 401)
+            status = getattr(e, 'status', 'error')
+            pylons.response.status = code
+            flash(reason, status=status)
+            abort(code, comment=reason)
 
 def _configured_engines():
     """
