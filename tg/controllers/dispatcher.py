@@ -326,6 +326,8 @@ class ObjectDispatcher(Dispatcher):
            Also, this is the place where the controller is checked for
            controller-level security.
         """
+        #xxx: add logging?
+        #print current_path, controller, remainder
         if hasattr(controller, '_dispatch'):
             if isclass(controller):
                 warn("this functionality is going to removed in the next minor version,"
