@@ -492,12 +492,11 @@ class ObjectDispatchController(DecoratedController):
         # the controller method will get sent and the function name will be
         # lost.
         func_name = func.__name__
-        if func_name == '__before__' or func_name == '__after__':
-            if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
-                return controller.im_self.__before__(*args)
-            if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
-                return controller.im_self.__after__(*args)
+        if func_name in ['__before__', '__after__']:
+            if hasattr(controller.im_class, func_name):
+                return getattr(controller.im_self, func_name)(*args)
             return
+
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
