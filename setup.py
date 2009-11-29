@@ -38,7 +38,7 @@ setup(
         'Pylons >= 0.9.7',
         'Genshi >= 0.5.1',
         'WebFlash >= 0.1a8',
-        'ToscaWidgets >= 0.9.4',
+        'ToscaWidgets >= 0.9.7',
         'WebError >= 0.10.1',
         'repoze.what-pylons >= 1.0rc3',
         'repoze.tm2 >= 1.0a4',
