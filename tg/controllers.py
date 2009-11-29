@@ -129,6 +129,9 @@ class DecoratedController(WSGIController):
         rendering.
         """
 
+        # Add the GET/POST request params to our params dict, overriding any defaults passed in.
+        params.update(pylons.request.params.mixed())
+
         self._initialize_validation_context()
         request.start_response = self.start_response
 
@@ -203,11 +206,6 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
-
-        # this is here because the params were not getting passed in on controllers that
-        # were mapped with routes.  This is a fix, but it's in the wrong place.
-        # we need to add better tests to ensure decorated controllers with routings work
-        # properly.
 
         validation = getattr(controller.decoration, 'validation', None)
 
@@ -526,7 +524,7 @@ class ObjectDispatchController(DecoratedController):
             pylons.c.controller_url = url
         if remainder and remainder[-1] == '':
             remainder.pop()
-        return controller, remainder, request.params.mixed()
+        return controller, remainder, {}
 
     def _perform_call(self, func, args):
         """
