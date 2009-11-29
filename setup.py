@@ -18,6 +18,8 @@ test_requirements = ['coverage',
                     'repoze.what >= 1.0.5',
                     'repoze.who-testutil >= 1.0rc1',
                     'wsgiref',
+                    'tw.forms',
+                    'repoze.what-quickstart',
                     ]
 
 setup(
