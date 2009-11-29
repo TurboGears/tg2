@@ -60,3 +60,10 @@ def test_dynamic_route_using_default_values():
     assert resp.body.startswith('Routingtest.dynamic')
     assert 'name=[%s]' % name in resp.body
     assert 'page=[%s]' % page in resp.body
+
+def test_kwargs():
+    # test for http://trac.turbogears.org/ticket/2303#comment:12
+    resp = app.get('/routingtest/kwargs?firstkeyword=1&secondkeyword=blah')
+    assert "'firstkeyword': u'1'" in resp.body
+    assert "'secondkeyword': u'blah'" in resp.body
+

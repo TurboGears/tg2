@@ -15,3 +15,7 @@ class RoutingtestController(RoutingController):
     def dynamic(self, name, page=1):
         return 'Routingtest.dynamic name=[%s] page=[%s]' % (name, page)
 
+    @expose()
+    def kwargs(self, **kwargs):
+        return str(kwargs)
+
