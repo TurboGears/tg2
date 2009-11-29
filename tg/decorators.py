@@ -54,7 +54,7 @@ class Decoration(object):
     get_decoration = classmethod(get_decoration)
 
     def exposed(self):
-        return bool(self.engines)
+        return bool(self.engines) or bool(self.custom_engines)
     exposed = property(exposed)
 
     def run_hooks(self, hook, *l, **kw):
