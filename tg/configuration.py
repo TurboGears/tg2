@@ -598,7 +598,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
-
+        if not skip_authentication: 
+            if not 'cookie_secret' in auth_args.keys(): 
+                msg = "base_config.sa_auth.cookie_secret is required "\
+                "you must define it in app_cfg.py or set "\
+                "sa_auth.cookie_secret in development.ini"
+                raise TGConfigError(msg) 
         app = setup_sql_auth(app, skip_authentication=skip_authentication,
                              **auth_args)
         return app

@@ -119,6 +119,7 @@ class TestAppConfig:
         self.config.sa_auth.user_class = Dummy
         self.config.sa_auth.group_class = Dummy
         self.config.sa_auth.permission_class = Dummy
+        self.config.sa_auth.cookie_secret = 'dummy'
         self.config.sa_auth.password_encryption_method = 'sha'
 
         self.config.add_auth_middleware(None, None)
