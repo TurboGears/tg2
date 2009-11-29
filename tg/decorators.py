@@ -453,6 +453,11 @@ def paginate(name, items_per_page=10, use_prefix=False):
                     kwargs.pop(
                             own_parameters['items_per_page'],
                             items_per_page))
+
+            # Iterate over all of the named arguments expected by the function f
+            # if any of those arguments have values present in the kwargs dict,
+            # add the value to the positional args list, and remove it from the
+            # kwargs dict
             argvars = inspect.getargspec(f)[0][1:]
             if argvars:
                 args = list(args)
@@ -461,9 +466,12 @@ def paginate(name, items_per_page=10, use_prefix=False):
                         break;
                     var = argvars[i]
                     if var in kwargs:
-                        args[i] = kwargs[var]
+                        if i+1 >= len(args):
+                            args.append(kwargs[var])
+                        else:
+                            args[i+1] = kargs[var]
                         del kwargs[var]
-            
+
             res = f(*args, **kwargs)
             if isinstance(res, dict) and name in res:
                 additional_parameters = MultiDict()
