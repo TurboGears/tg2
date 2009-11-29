@@ -471,7 +471,26 @@ class ObjectDispatchController(DecoratedController):
         return controller, remainder, request.params.mixed()
 
     def _perform_call(self, func, args):
+        """
+        A wrapper for :meth:`DecoratedController._perform_call`
+
+        This method is called three times during dispatch by
+        :meth:`pylons.controllers.WSGIController._inspect_call`.
+        First, for :meth:`__before__`, then for dispatch, then for
+        :meth:`__after__`
+
+        The __before__ or __after__ methods will have no decoration property.
+        This will make the :meth:`DecoratedController._perform_call` method
+        choke, so we avoid calling it for these methods.
+        """
+
+        # NOTE: It can be assumed that 'args' is a dict.
+        #       See :mod:`pylons.controllers.core`
         controller, remainder, params = self._get_routing_info(args.get('url'))
+
+        # This check has to be done before we call DecoratedController, or else
+        # the controller method will get sent and the function name will be
+        # lost.
         func_name = func.__name__
         if func_name == '__before__' or func_name == '__after__':
             if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
@@ -834,28 +853,9 @@ class TGController(ObjectDispatchController):
 
     def _perform_call(self, func, args):
         setup_i18n()
-        routingArgs = None
-
-        if isinstance(args, dict) and 'url' in args:
-            routingArgs = args['url']
 
         try:
-            controller, remainder, params = self._get_routing_info(routingArgs)
-            # this has to be done before decorated controller is called because
-            # otherwise the controller method will get sent, and the function name will
-            # be lost.
-            func_name = func.__name__
-            if not args:
-                args = []
-            if func_name == '__before__' or func_name == '__after__':
-                if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
-                    return controller.im_self.__before__(*args)
-                if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
-                    return controller.im_self.__after__(*args)
-                return
-            result = DecoratedController._perform_call(
-                self, controller, params, remainder=remainder)
-
+            result = ObjectDispatchController._perform_call(self, func, args)
         except HTTPException, httpe:
             result = httpe
             # 304 Not Modified's shouldn't have a content-type set
