@@ -39,6 +39,11 @@ class LookupHelper:
 class LookupController(TGController):
     
     @expose()
+    def _lookup(self, a, *args):
+        return LookupHelper(a), args
+
+class DeprecatedLookupController(TGController):
+    @expose()
     def lookup(self, a, *args):
         return LookupHelper(a), args
 
@@ -63,7 +68,7 @@ class LookupAlwaysController(TGController):
     
 
     @expose()
-    def lookup(self, a, *args):
+    def _lookup(self, a, *args):
         return LookupAlwaysHelper(a), args
 
 class SubController:
@@ -249,6 +254,7 @@ class BasicTGController(TGController):
     sub = SubController()
     custom_dispatch = CustomDispatchingSubController()
     lookup = LookupController()
+    deprecated_lookup = LookupController()
     lookup_dispatch = LookupAlwaysController()
     rest  = BasicRestController()
     rest2 = ExtraRestController()
@@ -287,6 +293,11 @@ class TestTGController(TestWSGIController):
         
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')
+        msg = 'EYE'
+        assert msg in r, r
+
+    def test_deprecated_lookup(self):
+        r = self.app.get('/deprecated_lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
 

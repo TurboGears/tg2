@@ -121,13 +121,13 @@ class LookupHelperWithArgs:
 class LoookupControllerWithArgs(TGController):
     
     @expose()
-    def lookup(self, *args):
+    def _lookup(self, *args):
         return LookupHelperWithArgs(), args
 
 class LoookupController(TGController):
     
     @expose()
-    def lookup(self, a, *args):
+    def _lookup(self, a, *args):
         return LookupHelper(a), args
 
 class RemoteErrorHandler(TGController):

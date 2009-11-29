@@ -361,7 +361,13 @@ class ObjectDispatcher(Dispatcher):
                 state.add_method(controller.default, remainder)
                 state.dispatcher = self
                 return state
+            if self._is_exposed(controller, '_lookup'):
+                controller, remainder = controller._lookup(*remainder)
+                state.url_path = '/'.join(remainder)
+                return self._dispatch_controller(
+                    '_lookup', controller, state, remainder)
             if self._is_exposed(controller, 'lookup'):
+                warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
                 controller, remainder = controller.lookup(*remainder)
                 state.url_path = '/'.join(remainder)
                 return self._dispatch_controller(
