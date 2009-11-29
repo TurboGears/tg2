@@ -148,3 +148,19 @@ def test_basicurls():
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
     assert "None Recieved", resp.body
+
+def test_paginated_positional_args1():
+    # first test for http://trac.turbogears.org/ticket/2313#comment:3
+    resp = app.get('/paginated_positional_args?alpha=1&beta=2&gamma=3')
+    assert '"alpha": "1"' in resp.body
+    assert '"beta": "2"' in resp.body
+    assert '"gamma": "3"' in resp.body
+
+def test_paginated_positional_args2():
+    # second test for http://trac.turbogears.org/ticket/2313#comment:3
+    resp = app.get('/paginated_positional_args/1/?beta=2&gamma=3')
+    print resp.body
+    assert '"alpha": "1"' in resp.body
+    assert '"beta": "2"' in resp.body
+    assert '"gamma": "3"' in resp.body
+

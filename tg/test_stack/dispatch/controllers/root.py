@@ -2,7 +2,7 @@
 
 import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
-from tg.decorators import expose, validate
+from tg.decorators import expose, validate, paginate
 from formencode import validators
 
 from tg import expose, redirect, config
@@ -161,3 +161,14 @@ class RootController(TGController):
         u = url("/foo", bar=1, baz=2)
         assert u in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"], u
+
+    @expose('json')
+    @paginate('nothing')
+    def paginated_positional_args(self, alpha, beta=None, **kwargs):
+        result = dict()
+        for x in kwargs:
+            result[x] = kwargs[x]
+        result['alpha'] = alpha
+        result['beta'] = beta
+        return result
+
