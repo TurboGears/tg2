@@ -596,6 +596,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # Removing keywords not used by repoze.who:
         auth_args = copy(self.sa_auth)
+        if 'sa_auth' in config:
+            auth_args.update(config.sa_auth)
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
         if not skip_authentication: 
