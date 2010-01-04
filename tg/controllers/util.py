@@ -17,7 +17,7 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
     If strings_only is True, don't convert (some) non-string-like objects.
-    
+
     This function was borrowed from Django
     """
     if strings_only and isinstance(s, (types.NoneType, int)):
@@ -48,7 +48,7 @@ def generate_smart_str(params):
                 yield smart_str(key), smart_str(item)
         else:
             yield smart_str(key), smart_str(value)
-    
+
 def urlencode(params):
     """
     A version of Python's urllib.urlencode() function that can operate on
@@ -78,13 +78,14 @@ def url(base_url=None, params=None, **kwargs):
         base_url = '/'
     if params is None:
         params = {}
-        
+
     #First we handle the possibility that the user passed in params
     if base_url and isinstance(base_url, basestring):
         #remove in 2.2
         if kwargs.keys():
-            warn('passing in keyword arguments as url components is deprecated please pass\
-                  your arguments as a dictionary to the params argument.')
+            warn('Passing in keyword arguments as url components is deprecated.'
+                ' Please pass arguments as a dictionary to the params argument.',
+                DeprecationWarning, stacklevel=2)
             params = params.copy()
             params.update(kwargs)
 
@@ -107,7 +108,7 @@ def redirect(*args, **kwargs):
     browser; if the request is POST, the browser will issue GET for the
     second request.
     """
-    
+
     new_url = url(*args, **kwargs)
     found = HTTPFound(location=new_url).exception
     raise found
