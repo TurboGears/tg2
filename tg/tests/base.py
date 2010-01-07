@@ -17,6 +17,8 @@ import tg
 from tg import tmpl_context
 from pylons import url
 from routes import URLGenerator, Mapper
+from routes.middleware import RoutesMiddleware
+
 from tg.util import Bunch
 from pylons.util import ContextObj, PylonsContext
 from pylons.controllers.util import Request, Response
@@ -61,6 +63,7 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TGController
 
     app = ControllerWrap(controller_klass)
+    app = RoutesMiddleware(app, default_map)
     app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)

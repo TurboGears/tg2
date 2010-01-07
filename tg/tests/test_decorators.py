@@ -11,6 +11,7 @@ from tg.decorators import (
     after_render,
     validate,
     before_validate,
+    paginate,
     )
 
 
@@ -80,6 +81,17 @@ class BasicTGController(TGController):
 
 
 
+    @expose("genshi:tg.tests.paginate_test")
+    @paginate("collection")
+    def paginate_test(self, filter=None):
+        collection = range(0, 100)
+        if filter is not None:
+            filter = int(filter)
+            collection = [i for i in collection if i > filter]
+        return dict(collection=collection)
+    
+
+
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -120,7 +132,10 @@ class TestTGController(TestWSGIController):
         assert "before_render" in HOOKS
         assert "after_render" in HOOKS
 
-    #TODO: Setup genshi search path, and test genshi rendering
 
-    #TODO: Add tests for
-
+    def test_pagination(self):
+        res = self.app.get("/paginate_test")
+        assert "/paginate_test?page=10" in res
+        res = self.app.get("/paginate_test", params=dict(filter=50))
+        assert "/paginate_test?filter=50&amp;page=5" in res
+        
