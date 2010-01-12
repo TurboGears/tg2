@@ -357,8 +357,8 @@ class ObjectDispatcher(Dispatcher):
             state.url_path = state.url_path[:-len(remainder)]
         for i in xrange(len(state.controller_path)):
             controller = state.controller
-            if self._is_exposed(controller, 'default'):
-                state.add_method(controller.default, remainder)
+            if self._is_exposed(controller, '_default'):
+                state.add_method(controller._default, remainder)
                 state.dispatcher = self
                 return state
             if self._is_exposed(controller, '_lookup'):
@@ -366,6 +366,11 @@ class ObjectDispatcher(Dispatcher):
                 state.url_path = '/'.join(remainder)
                 return self._dispatch_controller(
                     '_lookup', controller, state, remainder)
+            if self._is_exposed(controller, 'default'):
+                warn('default method is deprecated, please replace with _default', DeprecationWarning)
+                state.add_method(controller.default, remainder)
+                state.dispatcher = self
+                return state
             if self._is_exposed(controller, 'lookup'):
                 warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
                 controller, remainder = controller.lookup(*remainder)
