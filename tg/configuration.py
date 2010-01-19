@@ -154,7 +154,11 @@ class AppConfig(Bunch):
         # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
-        
+
+        #override this variable to customize how the tw2 middleware is set up
+        self.custom_tw2_config = {}
+
+
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
             if callable(cmd):
@@ -186,8 +190,8 @@ class AppConfig(Bunch):
     def init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
-        tg.config is a proxy for pylons.configuration.config that allows 
-        attribute style access, so it's automatically setup when we create 
+        tg.config is a proxy for pylons.configuration.config that allows
+        attribute style access, so it's automatically setup when we create
         the pylons config.
 
         Besides basic initialization, this method copies all the values
@@ -199,15 +203,15 @@ class AppConfig(Bunch):
                         package=self.package.__name__,
                         paths=self.paths)
         config.update(self)
-        # set up the response options to None.  This allows 
+        # set up the response options to None.  This allows
         # you to set the proper content type within a controller method
         # if you choose.
         pylons_config['pylons.response_options']['headers']['Content-Type'] = None
-        
+
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
             config['pylons.strict_c'] = True
-            
+
         self.after_init_config()
 
     def after_init_config(self):
@@ -216,24 +220,24 @@ class AppConfig(Bunch):
         level.  This method will be called after your configuration object has
         been initialized on startup.  Here is how you would use it to override
         the default setting of pylons.strict_c ::
-        
+
             from tg.configuration import AppConfig
             from pylons import config
-     
+
             class MyAppConfig(AppConfig):
                 def after_init_config(self):
                     config['pylons.strict_c'] = False
-                    
+
             base_config = MyAppConfig()
-        
+
         """
-            
+
     def setup_routes(self):
         """Setup the default TG2 routes
 
         Override this and setup your own routes maps if you want to use
         custom routes.
-        
+
         It is recommended that you keep the existing application routing in
         tact, and just add new connections to the mapper above the routes_placeholder
         connection.  Lets say you want to add a pylons controller SamplesController,
@@ -242,22 +246,22 @@ class AppConfig(Bunch):
 
             from routes import Mapper
             from tg.configuration import AppConfig
-     
+
             class MyAppConfig(AppConfig):
                 def setup_routes(self):
                     map = Mapper(directory=config['pylons.paths']['controllers'],
                                 always_scan=config['debug'])
-                    
+
                     # Add a Samples route
                     map.connect('/samples/', controller='samples', action=index)
 
                     # Setup a default route for the root of object dispatch
                     map.connect('*url', controller='root', action='routes_placeholder')
-        
+
                     config['routes.map'] = map
 
-                    
-            base_config = MyAppConfig()       
+
+            base_config = MyAppConfig()
 
         """
 
@@ -285,7 +289,7 @@ class AppConfig(Bunch):
 
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
-        
+
         if 'beaker.session.secret' not in config:
             raise TGConfigError("You must provide a value for 'beaker.session.secret'  If this is a project quickstarted with TG 2.0.2 or earlier \
 double check that you have base_config['beaker.session.secret'] = 'mysecretsecret' in your app_cfg.py file.")
@@ -406,9 +410,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from jinja2 import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
-        config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader( 
-                 [FileSystemLoader(path) for path in self.paths['templates']]), 
-                 auto_reload=self.auto_reload_templates) 
+        config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
+                 [FileSystemLoader(path) for path in self.paths['templates']]),
+                 auto_reload=self.auto_reload_templates)
         # Jinja's unable to request c's attributes without strict_c
         config['pylons.strict_c'] = True
 
@@ -460,7 +464,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
            the default is to setup sqlalchemy from the cofiguration file, but you might choose
            to set up a persistance system other than sqlalchemy, or add an additional persistance
            layer.  Here is how you would go about setting up a ming (mongo) persistance layer::
-           
+
             class MingAppConfig(AppConfig):
                 def setup_persistance(self):
                     self.ming_ds = DataStore(config['mongo.url'])
@@ -472,15 +476,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_sqlalchemy(self):
         """Setup SQLAlchemy database engine.
-        
+
         The most common reason for modifying this method is to add
         multiple database support.  To do this you might modify your
         app_cfg.py file in the following manner::
-        
+
             from tg.configuration import AppConfig, config
             from pylons import config as pylons_config
             from myapp.model import init_model
-            
+
             # add this before base_config =
             class MultiDBAppConfig(AppConfig):
                 def setup_sqlalchemy(self):
@@ -494,10 +498,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     config['pylons.app_globals'].sa_engine_second = engine2
                     # Pass the engines to init_model, to be able to introspect tables
                     init_model(engine1, engine2)
-            
+
             #base_config = AppConfig()
             base_config = MultiDBAppConfig()
-            
+
         This will pull the config settings from your .ini files to create the necessary
         engines for use within your application.  Make sure you have a look at :ref:`multidatabase`
         for more information.
@@ -508,11 +512,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         config['pylons.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
-        
+
     def setup_auth(self):
         """
            Override this method to define how you would like the auth to be set up for your app.
-           
+
            For the standard TurboGears App, this will set up the auth with SQLAlchemy.
         """
         if self.auth_backend == "sqlalchemy":
@@ -551,8 +555,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     setup()
                 else:
                     raise Exception('This configuration object does not support the %s renderer'%renderer)
-                
-        
+
+
             if self.use_legacy_renderer:
                 self.setup_default_renderer()
 
@@ -577,16 +581,16 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def add_auth_middleware(self, app, skip_authentication):
         """
         Configure authentication and authorization.
-        
+
         :param app: The TG2 application.
         :param skip_authentication: Should authentication be skipped if
             explicitly requested? (used by repoze.who-testutil)
         :type skip_authentication: bool
-        
+
         """
         from repoze.what.plugins.quickstart import setup_sql_auth
         from repoze.what.plugins.pylonshq import booleanize_predicates
-        
+
         # Predicates booleanized:
         booleanize_predicates()
 
@@ -598,12 +602,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         auth_args = copy(self.sa_auth)
         if 'password_encryption_method' in auth_args:
             del auth_args['password_encryption_method']
-        if not skip_authentication: 
-            if not 'cookie_secret' in auth_args.keys(): 
+        if not skip_authentication:
+            if not 'cookie_secret' in auth_args.keys():
                 msg = "base_config.sa_auth.cookie_secret is required "\
                 "you must define it in app_cfg.py or set "\
                 "sa_auth.cookie_secret in development.ini"
-                raise TGConfigError(msg) 
+                raise TGConfigError(msg)
         app = setup_sql_auth(app, skip_authentication=skip_authentication,
                              **auth_args)
         return app
@@ -613,12 +617,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         This is where you would want to override if you wanted to provide your
         own routing, session, or caching middleware.  Your app_cfg.py might look something
         like this::
-         
+
             from tg.configuration import AppConfig
             from routes.middleware import RoutesMiddleware
             from beaker.middleware import CacheMiddleware
             from mysessionier.middleware import SessionMiddleware
-     
+
             class MyAppConfig(AppConfig):
                 def add_core_middleware(self, app):
                     app = RoutesMiddleware(app, config['routes.map'])
@@ -634,9 +638,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def add_tosca_middleware(self, app):
         """Configure the ToscaWidgets middleware.
-        
+
         If you would like to override the way the TW middleware works, you might do something like::
-        
+
             from tg.configuration import AppConfig
             from tw.api import make_middleware as tw_middleware
 
@@ -650,62 +654,63 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                         'toscawidgets.middleware.inject_resources': False,
                         })
                     return app
-            
+
             base_config = MyAppConfig()
-            
-            
+
+
 
         The above example would disable resource injection.
-    
+
         There is more information about the settings you can change
         in the ToscaWidgets `middleware. <http://toscawidgets.org/documentation/ToscaWidgets/modules/middleware.html>`
-        
-        
+
+
         """
-        
+
         twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
                     'toscawidgets.framework.translator': ugettext,
                     'toscawidgets.middleware.inject_resources': True,
                     }
-        for k,v in config.iteritems(): 
-            if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'): 
-                twconfig[k] = v 
+        for k,v in config.iteritems():
+            if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'):
+                twconfig[k] = v
         app = tw_middleware(app, twconfig)
         return app
 
     def add_tosca2_middleware(self, app):
         """Configure the ToscaWidgets2 middleware.
-        
-        If you would like to override the way the TW2 middleware works, 
+
+        If you would like to override the way the TW2 middleware works,
         you might do change your app_cfg.py to add something like::
-        
+
             from tg.configuration import AppConfig
             from tw2.core.middleware import TwMiddleware
 
             class MyAppConfig(AppConfig):
-        
+
                 def add_tosca2_middleware(self, app):
 
-                    app = TwMiddleware(app, 
+                    app = TwMiddleware(app,
                         default_engine=self.default_renderer,
                         translator=ugettext,
                         auto_reload_templates = False
                         )
-                    
+
                     return app
             base_config = MyAppConfig()
-            
-            
-        
+
+
+
         The above example would always set the template auto reloading off. (This is normally an
         option that is set within your application's ini file.)
         """
         from tw2.core.middleware import Config, TwMiddleware
-        app = TwMiddleware(app, 
-            default_engine=self.default_renderer,
-            translator=ugettext,
-            auto_reload_templates = asbool(self.get('templating.mako.reloadfromdisk', 'false'))
-            )
+        default_tw2_config = dict( default_engine=self.default_renderer,
+                                   translator=ugettext,
+                                   auto_reload_templates=asbool(self.get('templating.mako.reloadfromdisk', 'false'))
+                                   )
+        default_tw2_config.update(self.custom_tw2_config)
+        app = TwMiddleware(app, **default_tw2_config)
         return app
 
     def add_static_file_middleware(self, app):
@@ -808,7 +813,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 app = self.add_tosca2_middleware(app)
 
             if self.auth_backend:
-                # Skipping authentication if explicitly requested. Used by 
+                # Skipping authentication if explicitly requested. Used by
                 # repoze.who-testutil:
                 skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
