@@ -193,6 +193,12 @@ class BasicTGController(TGController):
         return "Hello " + name
 
     @expose()
+    def optional_and_req_args(self, id, one=None, two=2, three=3):
+        r = dict(id=id, one=str(one), two=str(two), three=str(three))
+        
+        return str(r)
+    
+    @expose()
     def redirect_cookie(self, name):
         pylons.response.set_cookie('name', name)
         tg.redirect('/hello_cookie')
@@ -430,3 +436,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
+        
+    def test_optional_and_req_args(self):
+        resp = self.app.get('/optional_and_req_args/test/one')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
