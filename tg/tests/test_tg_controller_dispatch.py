@@ -199,6 +199,10 @@ class BasicTGController(TGController):
         return str(r)
     
     @expose()
+    def ticket2412(self, arg1):
+        return arg1
+    
+    @expose()
     def redirect_cookie(self, name):
         pylons.response.set_cookie('name', name)
         tg.redirect('/hello_cookie')
@@ -440,3 +444,12 @@ class TestTGController(TestWSGIController):
     def test_optional_and_req_args(self):
         resp = self.app.get('/optional_and_req_args/test/one')
         assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
+
+    def test_ticket_2412_with_ordered_arg(self):
+        resp = self.app.get('/ticket2412/Abip%C3%B3n')
+        assert """Abipón""" in  resp, resp
+
+    def test_ticket_2412_with_named_arg(self):
+        resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
+        assert """Abipón""" in  resp, resp
+        
