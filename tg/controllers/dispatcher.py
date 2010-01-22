@@ -15,7 +15,7 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-
+from urllib import url2pathname
 from inspect import ismethod, isclass, getargspec
 from warnings import warn
 import pylons

@@ -75,7 +75,7 @@ class SubController(object):
 
     @expose()
     def default(self, *args):
-        return ("recieved the following args (from the url): %s" %list(args))
+        return ("recieved the following args (from the url): %s" %str([str(a) for a in args]))
 
     @expose()
     def redirect_me(self, target, **kw):
@@ -395,7 +395,7 @@ class TestTGController(TestWSGIController):
 
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/äö')
-        assert "%C3%A4%C3%B6" in r
+        assert "\\xc3\\xa4\\xc3\\xb6" in r, r
 
     def test_defalt_with_empty_second_arg(self):
         r =self.app.get('/sub4/default_with_args/a')
@@ -446,6 +446,7 @@ class TestTGController(TestWSGIController):
         assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
 
     def test_ticket_2412_with_ordered_arg(self):
+        # this is failing
         resp = self.app.get('/ticket2412/Abip%C3%B3n')
         assert """Abipón""" in  resp, resp
 
