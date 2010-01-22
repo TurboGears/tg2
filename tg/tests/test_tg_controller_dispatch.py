@@ -167,6 +167,10 @@ class BasicTGController(TGController):
     lookup = LoookupController()
     lookup_with_args = LoookupControllerWithArgs()
     
+    @expose(content_type='application/rss+xml')
+    def ticket2351(self, **kw):
+        return 'test'
+    
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -454,3 +458,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
         assert """Abipón""" in  resp, resp
         
+    def test_ticket_2351_bad_content_type(self):
+        resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})
+        assert 'test' in resp, resp
