@@ -138,8 +138,13 @@ class Dispatcher(WSGIController):
 
         # replace the existing required variables with the values that come in
         # from params these could be the parameters that come off of validation.
-        for i,var in enumerate(required_vars):
-            remainder[i] = params[var]
+        remainder = list(remainder)
+        for i, var in enumerate(required_vars):
+#            remainder[i] = params[var]
+            if i < len(remainder):
+                remainder[i] = params[var]
+            elif params.get(var):
+                remainder.append(params[var])
             del params[var]
 
         #remove the optional vars from the params until we run out of remainder
@@ -147,7 +152,7 @@ class Dispatcher(WSGIController):
             if var in params:
                 del params[var]
 
-        return params, remainder
+        return params, tuple(remainder)
 
     def _dispatch(self, state, remainder):
         """override this to define how your controller should dispatch.
