@@ -193,6 +193,11 @@ class BasicTGController(TGController):
     sub5 = SubController5()
 
     @expose()
+    def test_args(self, id, one=None, two=2, three=3):
+        r = dict(id=id, one=str(one), two=str(two), three=str(three))
+        return str(r)
+
+    @expose()
     def redirect_me(self, target, **kw):
         tg.redirect(target, kw)
 
@@ -457,6 +462,34 @@ class TestTGController(TestWSGIController):
     def test_optional_and_req_args(self):
         resp = self.app.get('/optional_and_req_args/test/one')
         assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
+
+    def test_optional_and_req_args_at_root(self):
+        resp = self.app.get('/test_args/test/one')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
+
+    def test_no_args(self):
+        resp = self.app.get('/test_args/test/')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'None'}""" in  resp, resp
+
+    def test_one_extra_arg(self):
+        resp = self.app.get('/test_args/test/1')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_two_extra_args(self):
+        resp = self.app.get('/test_args/test/1/2')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_three_extra_args(self):
+        resp = self.app.get('/test_args/test/1/2/3')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_four_extra_args(self):
+        resp = self.app.get('/test_args/test/1/2/3/4')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_not_enough_args(self):
+        resp = self.app.get('/test_args/test/1')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
 
     def test_ticket_2412_with_ordered_arg(self):
         # this is failing

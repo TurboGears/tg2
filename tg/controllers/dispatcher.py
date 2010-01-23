@@ -145,7 +145,8 @@ class Dispatcher(WSGIController):
                 remainder[i] = params[var]
             elif params.get(var):
                 remainder.append(params[var])
-            del params[var]
+            if var in params:
+                del params[var]
 
         #remove the optional vars from the params until we run out of remainder
         for var in optional_vars:
