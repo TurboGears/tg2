@@ -75,8 +75,7 @@ class DottedTemplateLookup(object):
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
             result = tg.config['pylons.app_globals'].\
-                dotted_filename_finder.get_dotted_filename(template_name=uri,
-                    template_extension='.mak')
+                dotted_filename_finder.get_dotted_filename(template_name=uri, template_extension='.mak')
 
             if not self.template_filenames_cache.has_key(uri):
                 # feed our filename cache if needed.
@@ -169,7 +168,6 @@ class DottedTemplateLookup(object):
             # Do so now
             self.__load(template_name)
 
-        #TODO: use the paste asbool function here.
         if asbool(tg.config.get('templating.mako.reloadfromdisk', 'false')):
             # AUTO RELOADING will be activated only if user has
             # explicitly asked for it in the configuration
