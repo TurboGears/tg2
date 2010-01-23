@@ -18,54 +18,6 @@ class RestDispatcher(ObjectDispatcher):
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
 
-    def _method_matches_args(self, method, state, remainder):
-        """
-        This method matches the params from the request along with the remainder to the
-        method's function signiture.  If the two jive, it returns true.
-
-        It is very likely that this method would go into ObjectDispatch in the future.
-        """
-        argspec = self._get_argspec(method)
-        #skip self,
-        argvars = argspec[0][1:]
-        argvals = argspec[3]
-
-        required_vars = argvars
-        if argvals:
-            required_vars = argvars[:-len(argvals)]
-        else:
-            argvals = []
-
-        #remove the appropriate remainder quotient
-        if len(remainder)<len(required_vars):
-            #pull the first few off with the remainder
-            required_vars = required_vars[len(remainder):]
-        else:
-            #there is more of a remainder than there is non optional vars
-            required_vars = []
-
-        #remove vars found in the params list
-        params = state.params
-        for var in required_vars[:]:
-            if var in params:
-                required_vars.pop(0)
-            else:
-                break;
-
-        var_in_params = 0
-        for var in argvars:
-            if var in params:
-                var_in_params+=1
-
-        #make sure all of the non-optional-vars are
-        if not required_vars:
-            var_args = argspec[1]
-            len_rem = len(remainder) + var_in_params
-            if (len_rem >= len(required_vars) and len_rem <= len(argvars)) or\
-               (len_rem >= len(required_vars) and var_args):
-                return True
-        return False
-
     def _handle_put_or_post(self, method, state, remainder):
         current_controller = state.controller
         if remainder:

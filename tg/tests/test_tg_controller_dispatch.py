@@ -483,9 +483,9 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/test_args/test/1/2/3')
         assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
 
-    def test_four_extra_args(self):
+    def test_extra_args_forces_default_lookup(self):
         resp = self.app.get('/test_args/test/1/2/3/4')
-        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+        assert resp.body == """Main Default Page called for url /['test_args', 'test', '1', '2', '3', '4']""", resp
 
     def test_not_enough_args(self):
         resp = self.app.get('/test_args/test/1')
