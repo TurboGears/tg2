@@ -164,17 +164,18 @@ class Dispatcher(WSGIController):
             url as string
         """
 
-        pylons.request.response_type = None
-        pylons.request.response_ext = None
-        if url_path and '.' in url_path[-1]:
-            last_remainder = url_path[-1]
-            mime_type, encoding = mimetypes.guess_type(last_remainder)
-            if mime_type:
-                extension_spot = last_remainder.rfind('.')
-                extension = last_remainder[extension_spot:]
-                url_path[-1] = last_remainder[:extension_spot]
-                pylons.request.response_type = mime_type
-                pylons.request.response_ext = extension
+        if not pylons.config.get('disable_request_extensions', False):
+            pylons.request.response_type = None
+            pylons.request.response_ext = None
+            if url_path and '.' in url_path[-1]:
+                last_remainder = url_path[-1]
+                mime_type, encoding = mimetypes.guess_type(last_remainder)
+                if mime_type:
+                    extension_spot = last_remainder.rfind('.')
+                    extension = last_remainder[extension_spot:]
+                    url_path[-1] = last_remainder[:extension_spot]
+                    pylons.request.response_type = mime_type
+                    pylons.request.response_ext = extension
 
         params = pylons.request.params.mixed()
 

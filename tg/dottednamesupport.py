@@ -26,7 +26,7 @@ class DottedTemplateLookup(object):
     This is necessary because Mako asserts that your project will always
     be installed in a zip-unsafe manner with all files somewhere on the
     hard drive.
-    
+
     This is not the case when you want your application to be deployed
     in a single zip file (zip-safe). If you want to deploy in a zip
     file _and_ use the dotted template name notation then this class
@@ -59,16 +59,24 @@ class DottedTemplateLookup(object):
 
         """
         if uri.startswith('local:'):
-            uri = uri.replace('local:', tg.config['pylons.package']+'.')
+            package = tg.config['pylons.package']
+            if relativeto:
+                cwd = os.getcwd()
+                assert cwd.endswith(package)
+                path_in_common = cwd[:-len(package)]
+                assert relativeto.startswith(path_in_common)
+                package = relativeto[len(path_in_common):]
+                package = package.split('/', 2)[0]
+
+            uri = uri.replace('local:', package + '.')
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = tg.config['pylons.app_globals'
-                    ].dotted_filename_finder.get_dotted_filename(
-                            template_name=uri,
-                            template_extension='.mak')
+            result = tg.config['pylons.app_globals'].\
+                dotted_filename_finder.get_dotted_filename(template_name=uri,
+                    template_extension='.mak')
 
             if not self.template_filenames_cache.has_key(uri):
                 # feed our filename cache if needed.
@@ -93,7 +101,7 @@ class DottedTemplateLookup(object):
         """
         if template.filename is None:
             return template
-        
+
 
         if not os.path.exists(template.filename):
             # remove from cache.
