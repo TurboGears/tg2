@@ -366,12 +366,12 @@ class TestTGController(TestWSGIController):
         assert '{"response": 1}' in r, r
 
     def test_validated_with_error_handler(self):
-        r = self.app.get('/validated_with_error_handler?a=asdf')
+        r = self.app.get('/validated_with_error_handler?a=asdf&b=123')
         msg = 'VALIDATION ERROR HANDLER'
         assert msg in r, r
 
     def test_validated_with_remote_error_handler(self):
-        r = self.app.get('/validated_with_remote_error_handler?a=asdf')
+        r = self.app.get('/validated_with_remote_error_handler?a=asdf&b=123')
         msg = 'REMOTE ERROR HANDLER'
         assert msg in r, r
 
