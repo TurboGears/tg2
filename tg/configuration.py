@@ -397,9 +397,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             """
             template.filters.insert(0, Translator(ugettext))
 
-        loader = GenshiTemplateLoader(search_path=self.paths.templates,
-                                auto_reload=self.auto_reload_templates,
-                                callback=template_loaded)
+        if not config.get('use_dotted_templatenames', True):
+            from genshi.template import TemplateLoader
+            loader = TemplateLoader(search_path=self.paths.templates,
+                                    auto_reload=self.auto_reload_templates,
+                                    callback=template_loaded)
+        else:
+            loader = GenshiTemplateLoader(search_path=self.paths.templates,
+                                          auto_reload=self.auto_reload_templates,
+                                          callback=template_loaded)
 
         config['pylons.app_globals'].genshi_loader = loader
 
