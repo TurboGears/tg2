@@ -37,12 +37,18 @@ class DispatchState(object):
     """
     def __init__(self, url_path, params):
         self.url_path = url_path
-        self.params = params
         self.controller_path = odict()
         self.routing_args = {}
         self.method = None
         self.remainder = None
         self.dispatcher = None
+        self.params = params
+
+        #remove the ignore params from self.params
+        remove_params = pylons.config.get('ignore_parameters', [])
+        for param in remove_params:
+            if param in self.params:
+                del self.params[param]
 
     def add_controller(self, location, controller):
         """Add a controller object to the stack"""
