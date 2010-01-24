@@ -146,7 +146,6 @@ class Dispatcher(WSGIController):
         # from params these could be the parameters that come off of validation.
         remainder = list(remainder)
         for i, var in enumerate(required_vars):
-#            remainder[i] = params[var]
             if i < len(remainder):
                 remainder[i] = params[var]
             elif params.get(var):
@@ -154,9 +153,11 @@ class Dispatcher(WSGIController):
             if var in params:
                 del params[var]
 
-        #remove the optional vars from the params until we run out of remainder
-        for var in optional_vars:
+        #remove the optional positional variables (remainder) from the named parameters
+        # until we run out of remainder, that is, avoid creating duplicate parameters
+        for i,(original,var) in enumerate(zip(remainder[len(required_vars):],optional_vars)):
             if var in params:
+                remainder[ len(required_vars)+i ] = params[var]
                 del params[var]
 
         return params, tuple(remainder)

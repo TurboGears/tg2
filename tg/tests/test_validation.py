@@ -86,6 +86,19 @@ class BasicTGController(TGController):
         return {
             'int': a,
         }
+    @expose('json')
+    @validate(validators={
+        "a": validators.Int(),"b":validators.Int(),"c":validators.Int(),"d":validators.Int()
+    })
+    def with_default_shadow_long(self, a, b=None,c=None,d=None ):
+        """A default value should not cause the validated value to disappear"""
+        assert isinstance( a, int ), type(a)
+        assert isinstance( b, int ), type(b)
+        assert isinstance( c, int ), type(c)
+        assert isinstance( d, int ), type(d)
+        return {
+            'int': [a,b,c,d],
+        }
 
     @expose()
     def display_form(self, **kwargs):
@@ -139,10 +152,16 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/validated_and_unvalidated', form_values)
         assert '"int": 1' in resp
         assert '"str": "string"' in resp, resp
-    def test_for_validation_shadowed_by_defaults( self ):
+
+    def test_validation_shadowed_by_defaults( self ):
         """Catch regression on positional argument validation with defaults"""
         resp = self.app.post('/with_default_shadow/1?b=string')
         assert '"int": 1' in resp, resp
+
+    def test_optional_shadowed_by_defaults( self ):
+        """Catch regression on optional arguments being reverted to un-validated"""
+        resp = self.app.post('/with_default_shadow_long/1?b=2&c=3&d=4')
+        assert '"int": [1, 2, 3, 4]' in resp, resp
 
     @raises(AssertionError)
     def test_validation_fails_with_no_error_handler(self):
