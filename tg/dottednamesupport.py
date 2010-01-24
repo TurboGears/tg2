@@ -1,18 +1,20 @@
-"""a reimplementation of the mako template loader
-that supports dotted names
-"""
+"""Reimplementation of the Mako template loader that supports dotted names."""
+
 import os
 import stat
-
-import tg
-from mako.template import Template
-from paste.deploy.converters import asbool
-from genshi.template import TemplateLoader
 
 try:
     import threading
 except ImportError:
     import dummy_threading as threading
+
+
+from pkg_resources import resource_filename
+from mako.template import Template
+from genshi.template import TemplateLoader
+from paste.deploy.converters import asbool
+
+import tg
 
 
 class DottedTemplateLookup(object):
@@ -59,16 +61,8 @@ class DottedTemplateLookup(object):
 
         """
         if uri.startswith('local:'):
-            package = tg.config['pylons.package']
-            if relativeto:
-                cwd = os.getcwd()
-                assert cwd.endswith(package)
-                path_in_common = cwd[:-len(package)]
-                assert relativeto.startswith(path_in_common)
-                package = relativeto[len(path_in_common):]
-                package = package.split('/', 2)[0]
+            uri = tg.config['pylons.package'] + '.' + uri[6:]
 
-            uri = uri.replace('local:', package + '.')
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
@@ -78,7 +72,7 @@ class DottedTemplateLookup(object):
                 dotted_filename_finder.get_dotted_filename(template_name=uri,
                     template_extension='.mak')
 
-            if not self.template_filenames_cache.has_key(uri):
+            if not uri in self.template_filenames_cache:
                 # feed our filename cache if needed.
                 self.template_filenames_cache[uri] = result
 
@@ -179,6 +173,7 @@ class DottedTemplateLookup(object):
 
         else:
             return self.template_cache[template_name]
+
 
 class GenshiTemplateLoader(TemplateLoader):
     """Genshi template loader that supports
