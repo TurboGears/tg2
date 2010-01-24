@@ -355,13 +355,18 @@ class ObjectDispatcher(Dispatcher):
             if var in params:
                 var_in_params+=1
 
-        #make sure all of the non-optional-vars are
+        #make sure all of the non-optional-vars are there
         if not required_vars:
-            var_args = argspec[1]
-            len_rem = len(remainder) + var_in_params
-            if (len_rem >= len(required_vars) and len_rem <= len(argvars)) or\
-               (len_rem >= len(required_vars) and var_args):
-                return True
+            var_args = argspec[0][1:]
+            #there are more args in the remainder than are available in the argspec
+            if len(var_args)<len(remainder) and not argspec[1]:
+                return False
+            defaults = argspec[3] or []
+            var_args = var_args[len(remainder):-len(defaults)]
+            for arg in var_args:
+                if arg not in state.params:
+                    return False
+            return True
         return False
 
     def _is_controller(self, controller, name):
