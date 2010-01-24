@@ -138,16 +138,22 @@ class Dispatcher(WSGIController):
 
         # replace the existing required variables with the values that come in
         # from params these could be the parameters that come off of validation.
-        for i,var in enumerate(required_vars):
-            remainder[i] = params[var]
-            del params[var]
+        remainder = list(remainder)
+        for i, var in enumerate(required_vars):
+#            remainder[i] = params[var]
+            if i < len(remainder):
+                remainder[i] = params[var]
+            elif params.get(var):
+                remainder.append(params[var])
+            if var in params:
+                del params[var]
 
         #remove the optional vars from the params until we run out of remainder
         for var in optional_vars:
             if var in params:
                 del params[var]
 
-        return params, remainder
+        return params, tuple(remainder)
 
     def _dispatch(self, state, remainder):
         """override this to define how your controller should dispatch.
@@ -310,6 +316,59 @@ class ObjectDispatcher(Dispatcher):
         if hasattr(controller, name) and ismethod(getattr(controller, name)):
             return True
 
+    def _method_matches_args(self, method, state, remainder):
+        """
+        This method matches the params from the request along with the remainder to the
+        method's function signiture.  If the two jive, it returns true.
+
+        It is very likely that this method would go into ObjectDispatch in the future.
+        """
+        argspec = self._get_argspec(method)
+        #skip self,
+        argvars = argspec[0][1:]
+        argvals = argspec[3]
+
+        required_vars = argvars
+        if argvals:
+            required_vars = argvars[:-len(argvals)]
+        else:
+            argvals = []
+
+        #remove the appropriate remainder quotient
+        if len(remainder)<len(required_vars):
+            #pull the first few off with the remainder
+            required_vars = required_vars[len(remainder):]
+        else:
+            #there is more of a remainder than there is non optional vars
+            required_vars = []
+
+        #remove vars found in the params list
+        params = state.params
+        for var in required_vars[:]:
+            if var in params:
+                required_vars.pop(0)
+            else:
+                break;
+
+        var_in_params = 0
+        for var in argvars:
+            if var in params:
+                var_in_params+=1
+
+        #make sure all of the non-optional-vars are there
+        if not required_vars:
+            var_args = argspec[0][1:]
+            #there are more args in the remainder than are available in the argspec
+            if len(var_args)<len(remainder) and not argspec[1]:
+                return False
+            defaults = argspec[3] or []
+            var_args = var_args[len(remainder):-len(defaults)]
+            for arg in var_args:
+                if arg not in state.params:
+                    return False
+            return True
+        return False
+
     def _is_controller(self, controller, name):
         """
         Override this function to define how an object is determined to be a
@@ -407,9 +466,11 @@ class ObjectDispatcher(Dispatcher):
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
-            state.add_method(getattr(
-                current_controller, current_path), remainder[1:])
-            return state
+            #check to see if the argspec jives
+            controller = getattr(current_controller, current_path)
+            if self._method_matches_args(controller, state, remainder[1:]):
+                state.add_method(controller, remainder[1:])
+                return state
 
         #another controller is found
         if hasattr(current_controller, current_path):
