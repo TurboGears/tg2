@@ -130,8 +130,8 @@ class Dispatcher(WSGIController):
         required_vars = argvars
         optional_vars = []
         if argvals:
-            required_vars = argvars[:len(argvals)-1]
-            optional_vars = argvars[len(argvals)-1:]
+            required_vars = argvars[:-len(argvals)]
+            optional_vars = argvars[-len(argvals):]
 
         # make a copy of the params so that we don't modify the existing one
         params=params.copy()
