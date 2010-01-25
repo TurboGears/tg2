@@ -8,6 +8,7 @@ syntax: glob
 *.swp
 .coverage
 .noseids
+*.egg
 
 syntax: regexp
 ^build

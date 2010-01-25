@@ -67,7 +67,17 @@ def test_mako_inheritance():
     assert "inherited mako page" in resp, resp
     assert "Inside parent template" in resp, resp
 def test_template_override():
-    app = setup_noDB()
+#    app = setup_noDB()
+    base_config = TestConfig(folder = 'rendering',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.helpers': Bunch(),
+                                       'use_legacy_renderer': False,
+                                       # this is specific to mako
+                                       # to make sure inheritance works
+                                       'use_dotted_templatenames': True,
+                                       }
+                             )
+    app = app_from_config(base_config)
     r =app.get('/template_override')
     assert "Not overridden" in r, r
     r = app.get('/template_override', params=dict(override=True))

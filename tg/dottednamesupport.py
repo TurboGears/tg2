@@ -1,18 +1,20 @@
-"""a reimplementation of the mako template loader
-that supports dotted names
-"""
+"""Reimplementation of the Mako template loader that supports dotted names."""
+
 import os
 import stat
-
-import tg
-from mako.template import Template
-from paste.deploy.converters import asbool
-from genshi.template import TemplateLoader
 
 try:
     import threading
 except ImportError:
     import dummy_threading as threading
+
+
+from pkg_resources import resource_filename
+from mako.template import Template
+from genshi.template import TemplateLoader
+from paste.deploy.converters import asbool
+
+import tg
 
 
 class DottedTemplateLookup(object):
@@ -26,7 +28,7 @@ class DottedTemplateLookup(object):
     This is necessary because Mako asserts that your project will always
     be installed in a zip-unsafe manner with all files somewhere on the
     hard drive.
-    
+
     This is not the case when you want your application to be deployed
     in a single zip file (zip-safe). If you want to deploy in a zip
     file _and_ use the dotted template name notation then this class
@@ -59,18 +61,18 @@ class DottedTemplateLookup(object):
 
         """
         if uri.startswith('local:'):
-            uri = uri.replace('local:', tg.config['pylons.package']+'.')
+            uri = tg.config['pylons.package'] + '.' + uri[6:]
+
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = tg.config['pylons.app_globals'
-                    ].dotted_filename_finder.get_dotted_filename(
-                            template_name=uri,
-                            template_extension='.mak')
+            result = tg.config['pylons.app_globals'].\
+                dotted_filename_finder.get_dotted_filename(template_name=uri,
+                    template_extension='.mak')
 
-            if not self.template_filenames_cache.has_key(uri):
+            if not uri in self.template_filenames_cache:
                 # feed our filename cache if needed.
                 self.template_filenames_cache[uri] = result
 
@@ -93,7 +95,7 @@ class DottedTemplateLookup(object):
         """
         if template.filename is None:
             return template
-        
+
 
         if not os.path.exists(template.filename):
             # remove from cache.
@@ -171,6 +173,7 @@ class DottedTemplateLookup(object):
 
         else:
             return self.template_cache[template_name]
+
 
 class GenshiTemplateLoader(TemplateLoader):
     """Genshi template loader that supports

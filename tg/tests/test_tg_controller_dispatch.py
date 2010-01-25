@@ -33,7 +33,7 @@ def wsgi_app(environ, start_response):
     return resp(environ, start_response)
 
 class BeforeController(TGController):
-    
+
     def __before__(self, *args, **kw):
         pylons.tmpl_context.var = '__my_before__'
     def __after__(self, *args, **kw):
@@ -49,7 +49,7 @@ class NewBeforeController(TGController):
         pylons.tmpl_context.var = '__my_before__'
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
-        
+
     @expose()
     def index(self):
         assert pylons.tmpl_context.var
@@ -57,14 +57,14 @@ class NewBeforeController(TGController):
 
 class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
-    
+
     before = BeforeController()
     newbefore = NewBeforeController()
 
     @expose('genshi')
     def unknown_template(self):
         return "sub unknown template"
-    
+
     @expose()
     def foo(self,):
         return 'sub_foo'
@@ -75,7 +75,7 @@ class SubController(object):
 
     @expose()
     def default(self, *args):
-        return ("recieved the following args (from the url): %s" %list(args))
+        return ("recieved the following args (from the url): %s" %str([str(a) for a in args]))
 
     @expose()
     def redirect_me(self, target, **kw):
@@ -104,28 +104,32 @@ class SubController2(object):
         return "hello list"
 
 class LookupHelper:
-    
+
     def __init__(self, var):
         self.var = var
-    
+
     @expose()
     def index(self):
         return self.var
-        
+
 class LookupHelperWithArgs:
-    
+
     @expose()
     def get_here(self, *args):
         return "%s"%args
 
+    @expose()
+    def post_with_mixed_args(self, arg1, arg2, **kw):
+        return "%s%s" % (arg1, arg2)
+
 class LoookupControllerWithArgs(TGController):
-    
+
     @expose()
     def _lookup(self, *args):
         return LookupHelperWithArgs(), args
 
 class LoookupController(TGController):
-    
+
     @expose()
     def _lookup(self, a, *args):
         return LookupHelper(a), args
@@ -136,7 +140,7 @@ class RemoteErrorHandler(TGController):
         return "REMOTE ERROR HANDLER"
 
 class NotFoundController(TGController):pass
-    
+
 class DefaultWithArgsController(TGController):
     @expose()
     def default(self, a, b=None, **kw):
@@ -146,7 +150,7 @@ class DefaultWithArgsAndValidatorsController(TGController):
     @expose()
     def failure(self, *args, **kw):
         return "FAILURE"
-    
+
     @expose()
     @validate({'a': validators.Int(),
               'b': validators.StringBool()}, error_handler=failure)
@@ -158,15 +162,19 @@ class SubController4:
 
 class SubController5:
     default_with_args = DefaultWithArgsAndValidatorsController()
-    
+
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
-    
+
     error_controller = RemoteErrorHandler()
-    
+
     lookup = LoookupController()
     lookup_with_args = LoookupControllerWithArgs()
-    
+
+    @expose(content_type='application/rss+xml')
+    def ticket2351(self, **kw):
+        return 'test'
+
     @expose()
     def index(self, **kwargs):
         return 'hello world'
@@ -185,12 +193,27 @@ class BasicTGController(TGController):
     sub5 = SubController5()
 
     @expose()
+    def test_args(self, id, one=None, two=2, three=3):
+        r = dict(id=id, one=str(one), two=str(two), three=str(three))
+        return str(r)
+
+    @expose()
     def redirect_me(self, target, **kw):
         tg.redirect(target, kw)
 
     @expose()
     def hello(self, name, silly=None):
         return "Hello " + name
+
+    @expose()
+    def optional_and_req_args(self, id, one=None, two=2, three=3):
+        r = dict(id=id, one=str(one), two=str(two), three=str(three))
+
+        return str(r)
+
+    @expose()
+    def ticket2412(self, arg1):
+        return arg1
 
     @expose()
     def redirect_cookie(self, name):
@@ -240,7 +263,7 @@ class BasicTGController(TGController):
     @expose()
     def error_handler(self, **kw):
         return 'VALIDATION ERROR HANDLER'
-    
+
     @expose('json')
     @validate(validators={"a":validators.Int()}, error_handler=error_handler)
     def validated_with_error_handler(self, a, b):
@@ -286,7 +309,7 @@ class TestNotFoundController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(NotFoundController)
-        
+
     def test_not_found(self):
         r = self.app.get('/something', status=404)
         assert '404 Not Found' in r, r
@@ -322,7 +345,7 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-        
+
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
@@ -333,25 +356,30 @@ class TestTGController(TestWSGIController):
         msg = 'got_here'
         assert r.body==msg, r
 
+    def test_post_with_mixed_args(self):
+        r = self.app.post('/lookup_with_args/post_with_mixed_args/test', params={'arg2': 'time'})
+        msg = 'testtime'
+        assert r.body==msg, r
+
     def test_validated_int(self):
         r = self.app.get('/validated_int/1')
         assert '{"response": 1}' in r, r
 
     def test_validated_with_error_handler(self):
-        r = self.app.get('/validated_with_error_handler?a=asdf')
+        r = self.app.get('/validated_with_error_handler?a=asdf&b=123')
         msg = 'VALIDATION ERROR HANDLER'
         assert msg in r, r
-        
+
     def test_validated_with_remote_error_handler(self):
-        r = self.app.get('/validated_with_remote_error_handler?a=asdf')
+        r = self.app.get('/validated_with_remote_error_handler?a=asdf&b=123')
         msg = 'REMOTE ERROR HANDLER'
         assert msg in r, r
-        
+
     def test_unknown_template(self):
         r = self.app.get('/sub/unknown_template/')
         msg = 'sub unknown template'
         assert msg in r, r
-    
+
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
         self.failUnless('Hello from /mounted_app' in r, r)
@@ -385,7 +413,7 @@ class TestTGController(TestWSGIController):
 
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/äö')
-        assert "%C3%A4%C3%B6" in r
+        assert "\\xc3\\xa4\\xc3\\xb6" in r, r
 
     def test_defalt_with_empty_second_arg(self):
         r =self.app.get('/sub4/default_with_args/a')
@@ -414,7 +442,7 @@ class TestTGController(TestWSGIController):
     def test_default_with_validator_fail2(self):
         r =self.app.get('/sub5/default_with_args/True/more')
         assert "FAILURE" in r.body, r
-        
+
     def test_custom_content_type_in_controller(self):
         resp = self.app.get('/custom_content_type_in_controller')
         assert 'PNG' in resp, resp
@@ -430,3 +458,48 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
+
+    def test_optional_and_req_args(self):
+        resp = self.app.get('/optional_and_req_args/test/one')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
+
+    def test_optional_and_req_args_at_root(self):
+        resp = self.app.get('/test_args/test/one')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'one'}""" in  resp, resp
+
+    def test_no_args(self):
+        resp = self.app.get('/test_args/test/')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': 'None'}""" in  resp, resp
+
+    def test_one_extra_arg(self):
+        resp = self.app.get('/test_args/test/1')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_two_extra_args(self):
+        resp = self.app.get('/test_args/test/1/2')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_three_extra_args(self):
+        resp = self.app.get('/test_args/test/1/2/3')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_extra_args_forces_default_lookup(self):
+        resp = self.app.get('/test_args/test/1/2/3/4')
+        assert resp.body == """Main Default Page called for url /['test_args', 'test', '1', '2', '3', '4']""", resp
+
+    def test_not_enough_args(self):
+        resp = self.app.get('/test_args/test/1')
+        assert """{'three': '3', 'id': 'test', 'two': '2', 'one': '1'}""" in  resp, resp
+
+    def test_ticket_2412_with_ordered_arg(self):
+        # this is failing
+        resp = self.app.get('/ticket2412/Abip%C3%B3n')
+        assert """Abipón""" in  resp, resp
+
+    def test_ticket_2412_with_named_arg(self):
+        resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
+        assert """Abipón""" in  resp, resp
+
+    def test_ticket_2351_bad_content_type(self):
+        resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})
+        assert 'test' in resp, resp

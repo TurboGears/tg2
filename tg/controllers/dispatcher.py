@@ -15,7 +15,7 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-
+from urllib import url2pathname
 from inspect import ismethod, isclass, getargspec
 from warnings import warn
 import pylons
@@ -37,12 +37,18 @@ class DispatchState(object):
     """
     def __init__(self, url_path, params):
         self.url_path = url_path
-        self.params = params
         self.controller_path = odict()
         self.routing_args = {}
         self.method = None
         self.remainder = None
         self.dispatcher = None
+        self.params = params
+
+        #remove the ignore params from self.params
+        remove_params = pylons.config.get('ignore_parameters', [])
+        for param in remove_params:
+            if param in self.params:
+                del self.params[param]
 
     def add_controller(self, location, controller):
         """Add a controller object to the stack"""
@@ -130,24 +136,31 @@ class Dispatcher(WSGIController):
         required_vars = argvars
         optional_vars = []
         if argvals:
-            required_vars = argvars[:len(argvals)-1]
-            optional_vars = argvars[len(argvals)-1:]
+            required_vars = argvars[:-len(argvals)]
+            optional_vars = argvars[-len(argvals):]
 
         # make a copy of the params so that we don't modify the existing one
         params=params.copy()
 
         # replace the existing required variables with the values that come in
         # from params these could be the parameters that come off of validation.
-        for i,var in enumerate(required_vars):
-            remainder[i] = params[var]
-            del params[var]
-
-        #remove the optional vars from the params until we run out of remainder
-        for var in optional_vars:
+        remainder = list(remainder)
+        for i, var in enumerate(required_vars):
+            if i < len(remainder):
+                remainder[i] = params[var]
+            elif params.get(var):
+                remainder.append(params[var])
             if var in params:
                 del params[var]
 
-        return params, remainder
+        #remove the optional positional variables (remainder) from the named parameters
+        # until we run out of remainder, that is, avoid creating duplicate parameters
+        for i,(original,var) in enumerate(zip(remainder[len(required_vars):],optional_vars)):
+            if var in params:
+                remainder[ len(required_vars)+i ] = params[var]
+                del params[var]
+
+        return params, tuple(remainder)
 
     def _dispatch(self, state, remainder):
         """override this to define how your controller should dispatch.
@@ -164,17 +177,18 @@ class Dispatcher(WSGIController):
             url as string
         """
 
-        pylons.request.response_type = None
-        pylons.request.response_ext = None
-        if url_path and '.' in url_path[-1]:
-            last_remainder = url_path[-1]
-            mime_type, encoding = mimetypes.guess_type(last_remainder)
-            if mime_type:
-                extension_spot = last_remainder.rfind('.')
-                extension = last_remainder[extension_spot:]
-                url_path[-1] = last_remainder[:extension_spot]
-                pylons.request.response_type = mime_type
-                pylons.request.response_ext = extension
+        if not pylons.config.get('disable_request_extensions', False):
+            pylons.request.response_type = None
+            pylons.request.response_ext = None
+            if url_path and '.' in url_path[-1]:
+                last_remainder = url_path[-1]
+                mime_type, encoding = mimetypes.guess_type(last_remainder)
+                if mime_type:
+                    extension_spot = last_remainder.rfind('.')
+                    extension = last_remainder[extension_spot:]
+                    url_path[-1] = last_remainder[:extension_spot]
+                    pylons.request.response_type = mime_type
+                    pylons.request.response_ext = extension
 
         params = pylons.request.params.mixed()
 
@@ -309,6 +323,59 @@ class ObjectDispatcher(Dispatcher):
         if hasattr(controller, name) and ismethod(getattr(controller, name)):
             return True
 
+    def _method_matches_args(self, method, state, remainder):
+        """
+        This method matches the params from the request along with the remainder to the
+        method's function signiture.  If the two jive, it returns true.
+
+        It is very likely that this method would go into ObjectDispatch in the future.
+        """
+        argspec = self._get_argspec(method)
+        #skip self,
+        argvars = argspec[0][1:]
+        argvals = argspec[3]
+
+        required_vars = argvars
+        if argvals:
+            required_vars = argvars[:-len(argvals)]
+        else:
+            argvals = []
+
+        #remove the appropriate remainder quotient
+        if len(remainder)<len(required_vars):
+            #pull the first few off with the remainder
+            required_vars = required_vars[len(remainder):]
+        else:
+            #there is more of a remainder than there is non optional vars
+            required_vars = []
+
+        #remove vars found in the params list
+        params = state.params
+        for var in required_vars[:]:
+            if var in params:
+                required_vars.pop(0)
+            else:
+                break;
+
+        var_in_params = 0
+        for var in argvars:
+            if var in params:
+                var_in_params+=1
+
+        #make sure all of the non-optional-vars are there
+        if not required_vars:
+            var_args = argspec[0][1:]
+            #there are more args in the remainder than are available in the argspec
+            if len(var_args)<len(remainder) and not argspec[1]:
+                return False
+            defaults = argspec[3] or []
+            var_args = var_args[len(remainder):-len(defaults)]
+            for arg in var_args:
+                if arg not in state.params:
+                    return False
+            return True
+        return False
+
     def _is_controller(self, controller, name):
         """
         Override this function to define how an object is determined to be a
@@ -357,8 +424,8 @@ class ObjectDispatcher(Dispatcher):
             state.url_path = state.url_path[:-len(remainder)]
         for i in xrange(len(state.controller_path)):
             controller = state.controller
-            if self._is_exposed(controller, 'default'):
-                state.add_method(controller.default, remainder)
+            if self._is_exposed(controller, '_default'):
+                state.add_method(controller._default, remainder)
                 state.dispatcher = self
                 return state
             if self._is_exposed(controller, '_lookup'):
@@ -366,6 +433,11 @@ class ObjectDispatcher(Dispatcher):
                 state.url_path = '/'.join(remainder)
                 return self._dispatch_controller(
                     '_lookup', controller, state, remainder)
+            if self._is_exposed(controller, 'default'):
+                warn('default method is deprecated, please replace with _default', DeprecationWarning)
+                state.add_method(controller.default, remainder)
+                state.dispatcher = self
+                return state
             if self._is_exposed(controller, 'lookup'):
                 warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
                 controller, remainder = controller.lookup(*remainder)
@@ -401,9 +473,11 @@ class ObjectDispatcher(Dispatcher):
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
-            state.add_method(getattr(
-                current_controller, current_path), remainder[1:])
-            return state
+            #check to see if the argspec jives
+            controller = getattr(current_controller, current_path)
+            if self._method_matches_args(controller, state, remainder[1:]):
+                state.add_method(controller, remainder[1:])
+                return state
 
         #another controller is found
         if hasattr(current_controller, current_path):

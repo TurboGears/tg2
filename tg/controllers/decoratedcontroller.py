@@ -5,6 +5,7 @@ call the methods can be expressed using expose, validate, and other
 decorators to effect a rendered page.
 """
 
+from urllib import url2pathname
 import inspect
 from warnings import warn
 import formencode
@@ -76,6 +77,8 @@ class DecoratedController(object):
         pylons.request.start_response = getattr(self, 'start_response', None)
 
         remainder = remainder or []
+        remainder = [url2pathname(r) for r in remainder]
+
         try:
             if 'tg_format' in params:
                 pylons.request.headers['tg_format'] = params['tg_format']

@@ -11,7 +11,7 @@ def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
 
 from sqlalchemy.engine.base import ResultProxy, RowProxy
-from webob import MultiDict
+from webob.multidict import MultiDict
 
 class JsonEncodeError(Exception):pass
 

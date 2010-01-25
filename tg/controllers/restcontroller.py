@@ -18,54 +18,6 @@ class RestDispatcher(ObjectDispatcher):
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
 
-    def _method_matches_args(self, method, state, remainder):
-        """
-        This method matches the params from the request along with the remainder to the 
-        method's function signiture.  If the two jive, it returns true.
-        
-        It is very likely that this method would go into ObjectDispatch in the future.
-        """
-        argspec = self._get_argspec(method)
-        #skip self,
-        argvars = argspec[0][1:]
-        argvals = argspec[3]
-        
-        required_vars = argvars
-        if argvals:
-            required_vars = argvars[:-len(argvals)]
-        else:
-            argvals = []
-            
-        #remove the appropriate remainder quotient
-        if len(remainder)<len(required_vars):
-            #pull the first few off with the remainder
-            required_vars = required_vars[len(remainder):]
-        else:
-            #there is more of a remainder than there is non optional vars
-            required_vars = []
-
-        #remove vars found in the params list
-        params = state.params
-        for var in required_vars[:]:
-            if var in params:
-                required_vars.pop(0)
-            else:
-                break;
-
-        var_in_params = 0
-        for var in argvars:
-            if var in params:
-                var_in_params+=1
-
-        #make sure all of the non-optional-vars are 
-        if not required_vars:
-            var_args = argspec[1]
-            len_rem = len(remainder) + var_in_params
-            if (len_rem >= len(required_vars) and len_rem <= len(argvars)) or\
-               (len_rem >= len(required_vars) and var_args):
-                return True
-        return False
-            
     def _handle_put_or_post(self, method, state, remainder):
         current_controller = state.controller
         if remainder:
@@ -98,7 +50,7 @@ class RestDispatcher(ObjectDispatcher):
         #you may not send a delete request to a non-delete function
         if remainder and self._is_exposed(current_controller, remainder[0]):
             abort(405)
-           
+
         # there might be a sub-controller with a delete method, let's go see
         if remainder:
             sub_controller = getattr(current_controller, remainder[0], None)
@@ -110,7 +62,7 @@ class RestDispatcher(ObjectDispatcher):
                 if r:
                     return r
         return self._dispatch_first_found_default_or_lookup(state, remainder)
-    
+
     def _check_for_sub_controllers(self, state, remainder):
         current_controller = state.controller
         method = None
@@ -145,7 +97,7 @@ class RestDispatcher(ObjectDispatcher):
             method_name = 'get_delete'
 
         current_controller = state.controller
-        
+
         if self._is_exposed(current_controller, method_name):
             method = getattr(current_controller, method_name)
             new_remainder = remainder[:-1]
@@ -169,26 +121,26 @@ class RestDispatcher(ObjectDispatcher):
 
         #test for "edit" or "new"
         r = self._handle_delete_edit_or_new(state, remainder)
-        if r: 
+        if r:
             return r
-        
+
         current_path = remainder[0]
         if self._is_exposed(current_controller, current_path):
             state.add_method(getattr(current_controller, current_path), remainder[1:])
             return state
-        
+
         if self._is_controller(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
             return self._dispatch_controller(current_path, current_controller, state, remainder[1:])
-        
-        if self._is_exposed(current_controller, 'get_one'):
-            method = current_controller.get_one
+
+        if self._is_exposed(current_controller, 'get_one') or self._is_exposed(current_controller,  'get'):
+            method = current_controller.get_one if self._is_exposed(current_controller, 'get_one') else current_controller.get
             if method and self._method_matches_args(method, state, remainder):
                 state.add_method(method, remainder)
                 return state
 
         return self._dispatch_first_found_default_or_lookup(state, remainder)
-    
+
     _handler_lookup = {
         'put':_handle_put_or_post,
         'post':_handle_put_or_post,
@@ -202,7 +154,7 @@ class RestDispatcher(ObjectDispatcher):
         if not hasattr(state, 'http_method'):
             method = pylons.request.method.lower()
             params = state.params
-            
+
             #conventional hack for handling methods which are not supported by most browsers
             request_method = params.get('_method', None)
             if request_method:
@@ -214,13 +166,13 @@ class RestDispatcher(ObjectDispatcher):
                     abort(405)
                 method = request_method
             state.http_method = method
-            
+
         r = self._check_for_sub_controllers(state, remainder)
         if r:
             return r
 
         r = self._handler_lookup[state.http_method](self, state.http_method, state, remainder)
-        
+
         #clear out the method hack
         if '_method' in pylons.request.POST:
             del pylons.request.POST['_method']
