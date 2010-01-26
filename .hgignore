@@ -9,6 +9,7 @@ syntax: glob
 .coverage
 .noseids
 *.egg
+*.DS_Store
 
 syntax: regexp
 ^build
@@ -26,3 +27,4 @@ syntax: regexp
 ^SQL
 ^Turbo
 ^zope
+

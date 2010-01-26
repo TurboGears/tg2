@@ -135,14 +135,6 @@ class AppConfig(Bunch):
         # this is to activate the legacy renderers
         # legacy renderers are buffet interface plugins
         self.use_legacy_renderer = False
-        # if this is set to True the @expose decorator will be able to
-        # specify template names using a dotted name that will be searched
-        # in the python path. This option is used in tg.render.render_genshi
-        # TODO: we should set this to False once we implement simple names
-        # support in the @expose decorator as explained in #1942
-        # for the moment only the dotted names notation is supported with the
-        # new generation renderer functions
-        self.use_dotted_templatenames = True
 
         self.use_toscawidgets = True
         self.use_transaction_manager = True
@@ -305,7 +297,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         config['sa_auth'] = defaults
         config['sa_auth'].update(self.sa_auth)
 
-    def setup_mako_renderer(self):
+    def setup_mako_renderer(self, use_dotted_templatenames=None):
         """Setup a renderer and loader for mako templates.
 
         Override this to customize the way that the mako template
@@ -318,44 +310,46 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         provided by tg.render.
 
         """
-        from tg.dottednamesupport import DottedTemplateLookup
-        from mako.lookup import TemplateLookup
-
+        
         from tg.render import render_mako
+        
+        if not use_dotted_templatenames:
+            use_dotted_templatenames = asbool(config.get('use_dotted_templatenames', 'true'))
 
-
-        if config.get('use_dotted_templatenames', False):
+        if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
-            # lookup system that will return templates from dotted template
-            # notation.
+            # lookup system that will return templates from dotted template notation.
+            from tg.dottednamesupport import DottedTemplateLookup
             config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'])
 
         else:
-            compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
-
-            if not compiled_dir:
-                # no specific compile dir give by conf... we expect that
-                # the server will have access to the first template dir
-                # to write the compiled version...
-                # If this is not the case we are doomed and the user should
-                # provide us the required config...
-                compiled_dir = self.paths['templates'][0]
-
             # If no dotted names support was required we will just setup
             # a file system based template lookup mechanism.
             compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
 
             if not compiled_dir:
-                # no specific compile dir give by conf... we expect that
-                # the server will have access to the first template dir
-                # to write the compiled version...
-                # If this is not the case we are doomed and the user should
-                # provide us the required config...
-                compiled_dir = self.paths['templates'][0]
-
+                # Try each given templates path (when are they > 1 ?) for writability..
+                for template_path in self.paths['templates']:
+                    if os.access(template_path, os.W_OK):
+                        compiled_dir = template_path
+                        break # first match is as good as any
+                
+                # Last recourse: project-dir/data/templates (pylons' default directory)
+                if not compiled_dir:
+                    root = os.path.dirname(os.path.abspath(self.package.__file__))
+                    pylons_default_path = os.path.join(root, '../data/templates')
+                    if os.access(pylons_default_path, os.W_OK):
+                        compiled_dir = pylons_default_path
+        
+                    if not compiled_dir:
+                        raise IOError("None of your templates directory, %s, are writable for compiled "
+                            "templates. Please set the templating.mako.compiled_templates_dir "
+                            "variable in your .ini file" % str(self.paths['templates']))
+            
+            from mako.lookup import TemplateLookup
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
                 module_directory=compiled_dir,

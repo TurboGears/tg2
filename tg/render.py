@@ -2,6 +2,7 @@ from urllib import quote_plus
 
 from genshi import HTML, XML
 from pylons.configuration import config
+from paste.deploy.converters import asbool
 from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
@@ -133,7 +134,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     if not template_vars:
         template_vars={}
 
-    if template_engine != "json" and template_engine!= 'amf':
+    if template_engine != "json" and template_engine != 'amf':
         #Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
@@ -172,14 +173,11 @@ def render_genshi(template_name, template_vars, **kwargs):
 
 
 def render_mako(template_name, template_vars, **kwargs):
-    if config.get('use_dotted_templatenames', False):
-        template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                        template_name,
-                        template_extension='.mak')
+    if asbool(config.get('use_dotted_templatenames', 'true')):
+        template_name = tg.config['pylons.app_globals'].\
+            dotted_filename_finder.get_dotted_filename(template_name, template_extension='.mak')
 
-    return templating.render_mako(template_name, extra_vars=template_vars,
-                                  **kwargs)
+    return templating.render_mako(template_name, extra_vars=template_vars, **kwargs)
 
 def render_jinja(template_name, template_vars, **kwargs):
     return templating.render_jinja2(template_name, extra_vars=template_vars,

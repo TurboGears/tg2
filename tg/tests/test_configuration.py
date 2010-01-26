@@ -98,9 +98,8 @@ class TestAppConfig:
         self.config.setup_jinja_renderer()
 
     def test_setup_mako_renderer(self):
-        self.config.paths.templates = 'template_path'
-        self.config.setup_mako_renderer()
-
+        self.config.paths.templates = ['template_path']
+        self.config.setup_mako_renderer(use_dotted_templatenames=True)
     
     def test_setup_sqlalchemy(self):
         config['sqlalchemy.url'] = 'sqlite://'
