@@ -39,8 +39,24 @@ class GenericJSON(JSONEncoder):
         else:
             return JSONEncoder.default(self, obj)
 
-_instance = GenericJSON()
+# Generic Function JSON Encoder class
 
+try:
+    from simplegeneric import generic
+
+    _default = GenericJSON()
+
+    @generic
+    def jsonify(obj):
+        return _default.default(obj)
+
+    class GenericFunctionJSON(GenericJSON):
+        def default(self, obj):
+            return jsonify(obj)
+
+    _instance = GenericFunctionJSON()
+except ImportError:
+    _instance = GenericJSON()
 
 # General encoding functions
 
