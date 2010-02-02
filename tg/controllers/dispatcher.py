@@ -200,11 +200,13 @@ class Dispatcher(WSGIController):
         pylons.tmpl_context.controller_url = '/'.join(
             url_path[:-len(state.remainder)])
 
-
         state.routing_args.update(params)
         if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
             state.dispatcher._setup_wsgiorg_routing_args(
                 url_path, state.remainder, state.routing_args)
+
+        #save the controller state for possible use within the controller methods
+        pylons.request.controller_state = state
 
         return state.method, state.controller, state.remainder, params
 
