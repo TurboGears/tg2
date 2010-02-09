@@ -222,6 +222,7 @@ class LoookupController(TGController):
 class DecoDefaultController(TGController):
 
     @default
+    @expose()
     def __0(self, *args):
         return ("recieved the following args (from the url): %s" %list(args))
         

@@ -129,6 +129,9 @@ class DecoratedController(WSGIController):
         rendering.
         """
 
+        # Add the GET/POST request params to our params dict, overriding any defaults passed in.
+        params.update(pylons.request.params.mixed())
+
         self._initialize_validation_context()
         request.start_response = self.start_response
 
@@ -203,11 +206,6 @@ class DecoratedController(WSGIController):
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
         """
-
-        # this is here because the params were not getting passed in on controllers that
-        # were mapped with routes.  This is a fix, but it's in the wrong place.
-        # we need to add better tests to ensure decorated controllers with routings work
-        # properly.
 
         validation = getattr(controller.decoration, 'validation', None)
 
@@ -409,6 +407,64 @@ class DecoratedController(WSGIController):
         pylons.c.form_errors = {}
         pylons.c.form_values = {}
 
+
+class RoutingController(DecoratedController):
+    """
+    DecoratedController extended for :mod:`routes` compatibility.
+
+    Mirrors some of the behaviour of :class:`TGController`, for exception
+    handling.
+
+    Mirrors some of the behaviour of :class:`ObjectDispatchController`, which
+    includes necessary special cases for :meth:`DecoratedController.__before__`
+    and :meth:`DecoratedController.__after__`.
+    """
+
+    def _perform_call(self, func, args):
+        try:
+            # If these are the __before__ or __after__ methods, they will have
+            # no decoration property. This will make the default
+            # DecoratedController._perform_call() method choke, so we'll handle
+            # them the same way ObjectDispatchController handles them.
+            func_name = func.__name__
+            if func_name in ['__before__', '__after__']:
+                action_name = str(args.get('action', 'lookup'))
+                controller = getattr(self, action_name)
+
+                if hasattr(controller.im_class, func_name):
+                    return getattr(controller.im_self, func_name)(*args)
+                return
+
+            else:
+                controller = func
+                params = args
+                remainder = ''
+
+                # Remove all extraneous Routing related params.
+                # Otherwise, they'd be passed as kwargs to the rendered action.
+                undesirables = [
+                    'pylons',
+                    'start_response',
+                    'environ',
+                    'action',
+                    'controller'
+                ]
+                for x in undesirables:
+                    params.pop(x, None)
+
+                result = DecoratedController._perform_call(
+                    self, controller, params, remainder=remainder)
+
+        except HTTPException, httpe:
+            result = httpe
+            # 304 Not Modified's shouldn't have a content-type set
+            if result.status_int == 304:
+                result.headers.pop('Content-Type', None)
+            result._exception = True
+
+        return result
+
+
 class ObjectDispatchController(DecoratedController):
     """
     Object dispatch (also "object publishing") means that each portion of the
@@ -471,17 +527,35 @@ class ObjectDispatchController(DecoratedController):
             pylons.c.controller_url = url
         if remainder and remainder[-1] == '':
             remainder.pop()
-        return controller, remainder, request.params.mixed()
+        return controller, remainder, {}
 
     def _perform_call(self, func, args):
+        """
+        A wrapper for :meth:`DecoratedController._perform_call`
+
+        This method is called three times during dispatch by
+        :meth:`pylons.controllers.WSGIController._inspect_call`.
+        First, for :meth:`__before__`, then for dispatch, then for
+        :meth:`__after__`
+
+        The __before__ or __after__ methods will have no decoration property.
+        This will make the :meth:`DecoratedController._perform_call` method
+        choke, so we avoid calling it for these methods.
+        """
+
+        # NOTE: It can be assumed that 'args' is a dict.
+        #       See :mod:`pylons.controllers.core`
         controller, remainder, params = self._get_routing_info(args.get('url'))
+
+        # This check has to be done before we call DecoratedController, or else
+        # the controller method will get sent and the function name will be
+        # lost.
         func_name = func.__name__
-        if func_name == '__before__' or func_name == '__after__':
-            if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
-                return controller.im_self.__before__(*args)
-            if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
-                return controller.im_self.__after__(*args)
+        if func_name in ['__before__', '__after__']:
+            if hasattr(controller.im_class, func_name):
+                return getattr(controller.im_self, func_name)(*args)
             return
+
         return DecoratedController._perform_call(
             self, controller, params, remainder=remainder)
 
@@ -843,28 +917,9 @@ class TGController(ObjectDispatchController):
 
     def _perform_call(self, func, args):
         setup_i18n()
-        routingArgs = None
-
-        if isinstance(args, dict) and 'url' in args:
-            routingArgs = args['url']
 
         try:
-            controller, remainder, params = self._get_routing_info(routingArgs)
-            # this has to be done before decorated controller is called because
-            # otherwise the controller method will get sent, and the function name will
-            # be lost.
-            func_name = func.__name__
-            if not args:
-                args = []
-            if func_name == '__before__' or func_name == '__after__':
-                if func_name == '__before__' and hasattr(controller.im_class, '__before__'):
-                    return controller.im_self.__before__(*args)
-                if func_name == '__after__' and hasattr(controller.im_class, '__after__'):
-                    return controller.im_self.__after__(*args)
-                return
-            result = DecoratedController._perform_call(
-                self, controller, params, remainder=remainder)
-
+            result = ObjectDispatchController._perform_call(self, func, args)
         except HTTPException, httpe:
             result = httpe
             # 304 Not Modified's shouldn't have a content-type set
@@ -1028,5 +1083,5 @@ def pylons_formencode_gettext(value):
 
 __all__ = [
     "DecoratedController", "ObjectDispatchController", "TGController",
-    "url", "redirect", "RestController"
+    "url", "redirect", "RestController", "RoutingController"
     ]

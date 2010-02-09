@@ -54,7 +54,7 @@ class Decoration(object):
     get_decoration = classmethod(get_decoration)
 
     def exposed(self):
-        return bool(self.engines)
+        return bool(self.engines) or bool(self.custom_engines)
     exposed = property(exposed)
 
     def run_hooks(self, hook, *l, **kw):
@@ -453,6 +453,25 @@ def paginate(name, items_per_page=10, use_prefix=False):
                     kwargs.pop(
                             own_parameters['items_per_page'],
                             items_per_page))
+
+            # Iterate over all of the named arguments expected by the function f
+            # if any of those arguments have values present in the kwargs dict,
+            # add the value to the positional args list, and remove it from the
+            # kwargs dict
+            argvars = inspect.getargspec(f)[0][1:]
+            if argvars:
+                args = list(args)
+                for i, var in enumerate(args):
+                    if i>=len(argvars):
+                        break;
+                    var = argvars[i]
+                    if var in kwargs:
+                        if i+1 >= len(args):
+                            args.append(kwargs[var])
+                        else:
+                            args[i+1] = kargs[var]
+                        del kwargs[var]
+
             res = f(*args, **kwargs)
             if isinstance(res, dict) and name in res:
                 additional_parameters = MultiDict()
