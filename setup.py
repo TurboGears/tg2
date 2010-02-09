@@ -10,14 +10,17 @@ except ImportError:
     from setuptools import find_packages, setup
 
 test_requirements = ['coverage',
-                    'nose',
-                    'TurboKid >= 1.0.4',
-                    'zope.sqlalchemy >= 0.4',
-                    'jinja2',
-                    'chameleon.genshi',
-                    'repoze.what >= 1.0.5',
-                    'repoze.who-testutil >= 1.0rc1',
-                    'wsgiref',
+                     'nose',
+                     'TurboKid >= 1.0.4',
+                     'zope.sqlalchemy >= 0.4',
+                     'jinja2',
+                     'chameleon.genshi',
+                     'repoze.what >= 1.0.5',
+                     'repoze.who-testutil >= 1.0rc1',
+                     'wsgiref',
+                     'lxml',
+                     'tw.forms',
+                     
                     ]
 
 setup(
