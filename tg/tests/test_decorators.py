@@ -72,4 +72,4 @@ class TestTGController(TestWSGIController):
             resp = self.app.get('/json_with_bad_object')
         except TypeError, e:
             pass
-        assert "is not JSON serializable" in e.message
+        assert "is not JSON serializable" in str(e)

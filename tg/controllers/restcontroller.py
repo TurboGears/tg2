@@ -134,7 +134,10 @@ class RestDispatcher(ObjectDispatcher):
             return self._dispatch_controller(current_path, current_controller, state, remainder[1:])
 
         if self._is_exposed(current_controller, 'get_one') or self._is_exposed(current_controller,  'get'):
-            method = current_controller.get_one if self._is_exposed(current_controller, 'get_one') else current_controller.get
+            if self._is_exposed(current_controller, 'get_one'):
+                method = current_controller.get_one
+            else:
+                method = current_controller.get
             if method and self._method_matches_args(method, state, remainder):
                 state.add_method(method, remainder)
                 return state

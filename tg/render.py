@@ -13,7 +13,7 @@ from tg.configuration import Bunch
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
-        super(MissingRendererError, self).__init__(
+        Exception.__init__(self, 
             ("The renderer for '%(template_engine)s' templates is missing. "
             "Try adding the following line in you app_cfg.py:\n"
             "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
