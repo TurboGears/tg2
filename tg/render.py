@@ -1,6 +1,5 @@
 from urllib import quote_plus
 
-from genshi import HTML, XML
 from pylons.configuration import config
 from paste.deploy.converters import asbool
 from pylons import (app_globals, session, tmpl_context, request,
@@ -153,8 +152,14 @@ def render_chameleon_genshi(template_name, template_vars, **kwargs):
     return render_genshi(template_name, template_vars, **kwargs)
 
 
+# demand load these items from Genshi if needed
+HTML = XML = None
 def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
+    global HTML,XML
+    if not HTML or not XML:
+        from genshi import HTML,XML
+
     template_vars.update(HTML=HTML, XML=XML)
 
     if config.get('use_dotted_templatenames', False):

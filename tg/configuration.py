@@ -7,7 +7,6 @@ import mimetypes
 from UserDict import DictMixin
 
 from pylons.i18n import ugettext
-from genshi.filters import Translator
 
 from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
@@ -25,8 +24,6 @@ from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from webob import Request
-
-from tw.api import make_middleware as tw_middleware
 
 log = logging.getLogger(__name__)
 
@@ -354,7 +351,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template notation.
-            from tg.dottednamesupport import DottedTemplateLookup
+            from tg.dottednames.mako_lookup import DottedTemplateLookup
             config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
@@ -392,7 +389,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         filter, template loader
 
         """
-        from tg.dottednamesupport import GenshiTemplateLoader
+        from tg.dottednames.genshi_lookup import GenshiTemplateLoader
         from tg.render import render_genshi
 
         def template_loaded(template):
@@ -450,6 +447,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         config['buffet.template_engines'].pop()
         template_location = '%s.templates' % self.package.__name__
         template_location = '%s.templates' % self.package.__name__
+        from genshi.filters import Translator
 
         def template_loaded(template):
             template.filters.insert(0, Translator(ugettext))
@@ -683,6 +681,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
 
         """
+        from tw.api import make_middleware as tw_middleware
+
 
         twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
                     'toscawidgets.framework.translator': ugettext,

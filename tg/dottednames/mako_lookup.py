@@ -9,9 +9,7 @@ except ImportError:
     import dummy_threading as threading
 
 
-from pkg_resources import resource_filename
 from mako.template import Template
-from genshi.template import TemplateLoader
 from paste.deploy.converters import asbool
 
 import tg
@@ -173,24 +171,4 @@ class DottedTemplateLookup(object):
 
         else:
             return self.template_cache[template_name]
-
-
-class GenshiTemplateLoader(TemplateLoader):
-    """Genshi template loader that supports
-    zipped applications and dotted filenames as well as path names
-    """
-
-    def load(self, filename, relative_to=None, cls=None, encoding=None):
-        """real loader function. copy paste from the mako template
-        loader.
-        """
-        # TODO: get the template extension from the config!!
-        if not filename.endswith('.html'):
-            filename = tg.config['pylons.app_globals'
-                    ].dotted_filename_finder.get_dotted_filename(
-                            template_name=filename,
-                            template_extension='.html')
-
-        return TemplateLoader.load(self, filename,
-                relative_to=relative_to, cls=cls, encoding=encoding)
 

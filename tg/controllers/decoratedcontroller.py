@@ -15,7 +15,9 @@ from pylons import request
 from pylons.controllers.util import abort
 
 from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
-import tw
+
+# demand load tw (ToscaWidets) if needed
+tw = None
 
 from tg.render import render as tg_render
 from tg.decorators import expose
@@ -267,6 +269,10 @@ class DecoratedController(object):
 
         #set up the tw renderer
         if engine_name in ('genshi','mako') and config['use_toscawidgets']:
+            global tw
+            if not tw:
+                import tw
+
             tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
