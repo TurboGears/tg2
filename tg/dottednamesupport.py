@@ -136,7 +136,7 @@ class DottedTemplateLookup(object):
             try:
                 self.template_cache[filename] = Template(
                     filename=filename,
-                    module_directory=os.sep,
+                    module_directory=self.module_directory,
                     input_encoding=self.input_encoding,
                     output_encoding=self.output_encoding,
                     default_filters=self.default_filters,
