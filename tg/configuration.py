@@ -391,6 +391,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
         from tg.dottednames.genshi_lookup import GenshiTemplateLoader
         from tg.render import render_genshi
+        from genshi.filters import Translator
 
         def template_loaded(template):
             """Plug-in our i18n function to Genshi, once the template is loaded.
