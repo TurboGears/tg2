@@ -13,6 +13,10 @@ def teardown():
     global path
     os.chdir(path)
 
+def test_get_partial_dict():
+    eq_(get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3}),
+        {'xyz':1,'zyx':2})
+
 # These tests aren't reliable if the package in question has
 # entry points.
 
