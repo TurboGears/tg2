@@ -548,7 +548,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
             self.setup_auth()
-
+            
+            if not 'json' in self.renderers: self.renderers.append('json')
+            
             for renderer in self.renderers:
                 setup = getattr(self, 'setup_%s_renderer'%renderer, None)
                 if setup:
