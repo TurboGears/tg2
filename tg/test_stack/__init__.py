@@ -7,9 +7,11 @@ from tg.configuration import AppConfig
 class TestConfig(AppConfig):
 
     def __init__(self, folder, values=None):
+        if values is None: 
+            values = {}
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja','json']
+        self.renderers = ['genshi', 'mako', 'jinja','json']
         self.render_functions = tg.util.Bunch()
         self.package = tg.test_stack
         self.default_renderer = 'genshi'
@@ -55,12 +57,5 @@ def app_from_config(base_config, deployment_config=None):
     app = TestApp(app_maker(deployment_config, full_stack=True))
     return app
 
-def teardown():
-    base_config = TestConfig(folder = 'rendering',
-                             values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': tg.util.Bunch(),
-                                       'use_legacy_renderer': True,
-                                       }
-                             )
-    app = app_from_config(base_config)
+
 
