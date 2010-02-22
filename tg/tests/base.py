@@ -15,7 +15,9 @@ from paste import httpexceptions
 
 
 import tg
+import pylons
 from tg import tmpl_context
+from tg.test_stack import app_from_config, TestConfig
 from pylons import url
 from routes import URLGenerator, Mapper
 from tg.util import Bunch
@@ -40,6 +42,30 @@ def setup_session_dir():
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
+default_config = {
+        'debug': False,
+        'pylons.package': None,
+        'pylons.paths': {'root': None,
+                         'controllers': None,
+                         'templates': [],
+                         'static_files': None},
+        'pylons.db_engines': {},
+        'pylons.environ_config': dict(session='beaker.session', 
+                                      cache='beaker.cache'),
+        'pylons.g': None,
+        'pylons.h': None,
+        'pylons.request_options': pylons.configuration.request_defaults.copy(),
+        'pylons.response_options': pylons.configuration.response_defaults.copy(),
+        'pylons.strict_c': False,
+        'pylons.c_attach_args': True,
+        'buffet.template_engines': [],
+        'buffet.template_options': {},
+        'default_renderer':'genshi',
+        'renderers':['genshi','json'],
+        'render_functions':{'genshi':tg.render.render_genshi, 'json':tg.render.render_json},
+        'use_legacy_renderers':False,
+        'use_sqlalchemy': False
+}
 
 default_environ = {
     'pylons.use_webob' : True,
@@ -110,15 +136,12 @@ class TestWSGIController(TestCase):
         tmpl_options['genshi.search_path'] = ['tests']
         self._ctx = ContextObj()
         tmpl_context._push_object(self._ctx)
-        self._buffet = pylons.templating.Buffet(
-            default_engine='genshi',tmpl_options=tmpl_options
-            )
-        pylons.buffet._push_object(self._buffet)
+        pylons.config.push_process_config(default_config)
         setup_session_dir()
 
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
-        pylons.buffet._pop_object(self._buffet)
+        pylons.config.pop_process_config()
         teardown_session_dir()
         
     def get_response(self, **kargs):
