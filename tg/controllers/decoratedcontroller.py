@@ -121,7 +121,7 @@ class DecoratedController(object):
                     raise
             else:
                 raise
-            
+
 
         # Render template
         controller.decoration.run_hooks('before_render', remainder, params,
@@ -232,7 +232,7 @@ class DecoratedController(object):
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(pylons.request)
 
-        if content_type is not None: 
+        if content_type is not None:
             pylons.response.headers['Content-Type'] = content_type
 
         # if it's a string return that string and skip all the stuff

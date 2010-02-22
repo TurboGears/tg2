@@ -113,21 +113,21 @@ class Decoration(object):
             accept_types = request.response_type
         else:
             accept_types = request.headers.get('accept', '*/*')
-        
+
         if self.render_custom_format:
             content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
         else:
             content_type = best_match(self.engines.keys(), accept_types)
-            
+
             if content_type == 'CUSTOM/LEAVE':
                 warn('@expose(CUSTOM_CONTENT_TYPE) is no longer needed and should be replaced with @expose()')
 
             # check for overridden content type from the controller call
             controller_content_type = response.headers.get('Content-Type')
-            
+
             if controller_content_type:
                 content_type = controller_content_type
-            
+
             # check for overridden templates
             try:
                 engine, template, exclude_names = request._override_mapping[self.controller][content_type.split(";")[0]]
@@ -424,21 +424,21 @@ class paginate(object):
 
     """
 
-    def __init__(self, name, use_prefix=False, 
-        items_per_page=10, max_items_per_page=0): 
-        self.name = name 
-        prefix = use_prefix and name + '_' or '' 
-        self.page_param = prefix + 'page' 
-        self.items_per_page_param = prefix + 'items_per_page' 
-        self.items_per_page = items_per_page 
-        self.max_items_per_page = max_items_per_page 
+    def __init__(self, name, use_prefix=False,
+        items_per_page=10, max_items_per_page=0):
+        self.name = name
+        prefix = use_prefix and name + '_' or ''
+        self.page_param = prefix + 'page'
+        self.items_per_page_param = prefix + 'items_per_page'
+        self.items_per_page = items_per_page
+        self.max_items_per_page = max_items_per_page
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
         decoration.register_hook('before_validate', self.before_validate)
         decoration.register_hook('before_render', self.before_render)
         return func
- 
+
     def before_validate(self, remainder, params):
         page = params.pop(self.page_param, None)
         if page:
@@ -479,8 +479,8 @@ class paginate(object):
         if not getattr(tmpl_context, 'paginators', None):
             tmpl_context.paginators = Bunch()
         tmpl_context.paginators[self.name] = output[self.name] = page
- 
- 
+
+
 @decorator
 def postpone_commits(func, *args, **kwargs):
     """Turns sqlalchemy commits into flushes in the decorated method
