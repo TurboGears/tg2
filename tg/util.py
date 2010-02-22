@@ -64,8 +64,9 @@ def get_partial_dict(prefix, dictionary):
     """
 
     match = prefix + "."
+    n = len(match)
 
-    new_dict = Bunch([(key.lstrip(match), dictionary[key])
+    new_dict = Bunch([(key[n:], dictionary[key])
                        for key in dictionary.iterkeys()
                        if key.startswith(match)])
     if new_dict:
