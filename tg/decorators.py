@@ -130,9 +130,9 @@ class Decoration(object):
             
             # check for overridden templates
             try:
-                engine, template, exclude_names = request._override_mapping[self.controller][content_type]
+                engine, template, exclude_names = request._override_mapping[self.controller][content_type.split(";")[0]]
             except (AttributeError, KeyError):
-                    engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
+                engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
 
 
         if 'charset' not in content_type and (
