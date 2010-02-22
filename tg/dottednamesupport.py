@@ -38,7 +38,7 @@ class DottedTemplateLookup(object):
     """
 
     def __init__(self, input_encoding, output_encoding,
-            imports, default_filters, module_directory):
+            imports, default_filters, module_directory=None):
 
         self.input_encoding = input_encoding
         self.output_encoding = output_encoding
