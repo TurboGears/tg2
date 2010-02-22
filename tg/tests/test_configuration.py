@@ -85,9 +85,9 @@ class TestAppConfig:
     def test_setup_sa_auth_backend(self):
         self.config.setup_sa_auth_backend()
 
-    def test_setup_chameleon_genshi_renderer(self):
-        self.config.paths.templates = 'template_path'
-        self.config.setup_chameleon_genshi_renderer()
+    #def test_setup_chameleon_genshi_renderer(self):
+    #    self.config.paths.templates = 'template_path'
+    #    self.config.setup_chameleon_genshi_renderer()
 
     def test_setup_genshi_renderer(self):
         self.config.paths.templates = 'template_path'
