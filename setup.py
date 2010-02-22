@@ -18,7 +18,7 @@ test_requirements = ['coverage',
                     'simplegeneric',
                     'repoze.what >= 1.0.5',
                     'repoze.what-quickstart',
-                    'repoze.who-testutil >= 1.0rc1',
+                    'repoze.who-testutil >= 1.0rc3',
                     'wsgiref',
                     'tw.forms',
                     ]
