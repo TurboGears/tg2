@@ -67,6 +67,11 @@ def test_url_with_params_key():
     result = url('/foo', params=params)
     assert 'spamm=eggs' in result
 
+def test_url_strip_None():
+    params = {'spamm':'eggs', 'hamm':None }
+    result = url('/foo', params=params)
+    assert 'hamm' not in result, result
+
 def test_url_doesnt_change_tgparams():
     params = {'spamm': 'eggs'}
     result = url('/foo', params, spamm='ham')

@@ -59,7 +59,7 @@ def test_redirect_relative():
 
 def test_redirect_external():
     resp = app.get('/redirect_me?target=http://example.com')
-    assert resp.status == "302 Found" and dict(resp.headers)['location'] == 'http://example.com', resp
+    assert resp.status == "302 Found" and resp.headers['location'] == 'http://example.com', resp
 
 def test_redirect_param():
     resp = app.get('/redirect_me?target=/hello&name=paj')
