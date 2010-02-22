@@ -97,6 +97,11 @@ class RootController(TGController):
         tg.redirect("/flash_after_redirect")
 
     @expose()
+    def bigflash_redirect(self):
+        tg.flash('x' * 5000)
+        tg.redirect('/flash_after_redirect')
+
+    @expose()
     def flash_unicode(self):
         tg.flash(u"Привет, мир!")
         tg.redirect("/flash_after_redirect")

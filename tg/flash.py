@@ -11,9 +11,12 @@ log = getLogger(__name__)
 class TGFlash(Flash):
     def __call__(self, message, status=None, **extra_payload):
         # Force the message to be unicode so lazystrings, etc... are coerced
-        return super(TGFlash, self).__call__(
+        result = super(TGFlash, self).__call__(
             unicode(message), status, **extra_payload
             )
+        if len(response.headers['Set-Cookie']) > 4096:
+            raise ValueError, 'Flash value is too long (cookie would be >4k)'
+        return result
 
     @property
     def message(self):

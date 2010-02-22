@@ -101,6 +101,10 @@ def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
     assert'Wow, flash!' in resp, resp
 
+@raises(ValueError)
+def test_bigflash_redirect():
+    resp = app.get('/bigflash_redirect', status=500)
+
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
     assert'Wow, flash!' in resp
