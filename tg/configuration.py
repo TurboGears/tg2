@@ -312,10 +312,45 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
         
         from tg.render import render_mako
-        
+
         if not use_dotted_templatenames:
             use_dotted_templatenames = asbool(config.get('use_dotted_templatenames', 'true'))
 
+
+        # If no dotted names support was required we will just setup
+        # a file system based template lookup mechanism.
+        compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
+
+        if not compiled_dir:
+            # Try each given templates path (when are they > 1 ?) for writability..
+            for template_path in self.paths['templates']:
+                if os.access(template_path, os.W_OK):
+                    compiled_dir = template_path
+                    break # first match is as good as any
+            
+            # Last recourse: project-dir/data/templates (pylons' default directory)
+            if not compiled_dir:
+                try:
+                    root = os.path.dirname(os.path.abspath(self.package.__file__))
+                except AttributeError:
+                    # Thrown during unit tests when self.package.__file__ doesn't exist
+                    root = None
+
+                if root:
+                    pylons_default_path = os.path.join(root, '../data/templates')
+                    if os.access(pylons_default_path, os.W_OK):
+                        compiled_dir = pylons_default_path
+    
+                if not compiled_dir:
+                    if use_dotted_templatenames:
+                        # Gracefully digress to in-memory template caching
+                        pass
+                    else:
+                        raise IOError("None of your templates directory, %s, are "
+                            "writable for compiled templates. Please set the "
+                            "templating.mako.compiled_templates_dir variable in your "
+                            ".ini file" % str(self.paths['templates']))
+        
         if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template notation.
@@ -323,32 +358,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
+                module_directory=compiled_dir,
                 default_filters=['escape'])
 
         else:
-            # If no dotted names support was required we will just setup
-            # a file system based template lookup mechanism.
-            compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
-
-            if not compiled_dir:
-                # Try each given templates path (when are they > 1 ?) for writability..
-                for template_path in self.paths['templates']:
-                    if os.access(template_path, os.W_OK):
-                        compiled_dir = template_path
-                        break # first match is as good as any
-                
-                # Last recourse: project-dir/data/templates (pylons' default directory)
-                if not compiled_dir:
-                    root = os.path.dirname(os.path.abspath(self.package.__file__))
-                    pylons_default_path = os.path.join(root, '../data/templates')
-                    if os.access(pylons_default_path, os.W_OK):
-                        compiled_dir = pylons_default_path
-        
-                    if not compiled_dir:
-                        raise IOError("None of your templates directory, %s, are writable for compiled "
-                            "templates. Please set the templating.mako.compiled_templates_dir "
-                            "variable in your .ini file" % str(self.paths['templates']))
-            
             from mako.lookup import TemplateLookup
             config['pylons.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
@@ -357,7 +370,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'],
                 filesystem_checks=self.auto_reload_templates)
-
+            
         self.render_functions.mako = render_mako
 
     def setup_chameleon_genshi_renderer(self):

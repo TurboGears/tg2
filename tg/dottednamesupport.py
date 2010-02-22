@@ -38,7 +38,7 @@ class DottedTemplateLookup(object):
     """
 
     def __init__(self, input_encoding, output_encoding,
-            imports, default_filters):
+            imports, default_filters, module_directory):
 
         self.input_encoding = input_encoding
         self.output_encoding = output_encoding
@@ -48,6 +48,7 @@ class DottedTemplateLookup(object):
         self.template_cache = dict()
         # implement a cache for the filename lookups
         self.template_filenames_cache = dict()
+        self.module_directory = module_directory
 
         # a mutex to ensure thread safeness during template loading
         self._mutex = threading.Lock()
@@ -133,8 +134,9 @@ class DottedTemplateLookup(object):
                 pass
 
             try:
-                self.template_cache[filename] = Template(open(filename).read(),
+                self.template_cache[filename] = Template(
                     filename=filename,
+                    module_directory=os.sep,
                     input_encoding=self.input_encoding,
                     output_encoding=self.output_encoding,
                     default_filters=self.default_filters,
