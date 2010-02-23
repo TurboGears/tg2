@@ -35,10 +35,10 @@ class LookupHelper:
     @expose()
     def index(self):
         return self.var
-        
+
 
 class LookupController(TGController):
-    
+
     @expose()
     def _lookup(self, a, *args):
         return LookupHelper(a), args
@@ -50,10 +50,10 @@ class DeprecatedLookupController(TGController):
 
 class LookupAlwaysHelper:
     """for testing _dispatch"""
-    
+
     def __init__(self, var):
         self.var = var
-    
+
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         pass
 
@@ -66,20 +66,20 @@ class LookupAlwaysHelper:
         return state
 
 class LookupAlwaysController(TGController):
-    
+
 
     @expose()
     def _lookup(self, a, *args):
         return LookupAlwaysHelper(a), args
 
 class SubController:
-    
+
     @expose()
     def sub_method(self, arg):
         return 'sub %s'%arg
 
 class CustomDispatchingSubController(TGController):
-    
+
     @expose()
     def always(self, *args, **kwargs):
         return 'always go here'
@@ -153,7 +153,7 @@ class VariableSubRestController(RestController):
     @expose()
     def post_delete(self, *args):
         return "SUBREST POST DELETE"
-    
+
 class SubRestController(RestController):
     @expose()
     def get_all(self):
@@ -199,7 +199,7 @@ class VariableRestController(RestController):
     @expose()
     def post_delete(self, *args):
         return "REST POST DELETE"
-    
+
 class ExtraRestController(RestController):
     @expose()
     def get_all(self):
@@ -213,7 +213,7 @@ class ExtraRestController(RestController):
     @expose()
     def post_delete(self, id):
         return "REST POST DELETE"
-    
+
     class sub(TGController):
         @expose()
         def index(self):
@@ -222,6 +222,16 @@ class ExtraRestController(RestController):
     subrest = SubRestController()
     optsubrest = OptionalArgumentRestController()
     reqsubrest = RequiredArgumentRestController()
+
+    _custom_actions = ['archive']
+
+    @expose()
+    def post_archive(self):
+        return 'got to post archive'
+
+    @expose()
+    def get_archive(self):
+        return 'got to get archive'
 
 class BasicRestController(RestController):
 
@@ -247,11 +257,17 @@ class BasicRestController(RestController):
     def other(self):
         return "REST OTHER"
 
+    _custom_actions = ['archive']
+
+    @expose()
+    def archive(self):
+        return 'got to archive'
+
 class EmptyRestController(RestController):
     pass
-    
+
 class BasicTGController(TGController):
-    
+
     sub = SubController()
     custom_dispatch = CustomDispatchingSubController()
     lookup = LookupController()
@@ -278,7 +294,7 @@ class BasicTGControllerNoDefault(TGController):
     @expose()
     def index(self, **kwargs):
         return 'hello world'
-    
+
 class TestTGControllerRoot(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
@@ -291,7 +307,7 @@ class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-        
+
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
@@ -310,7 +326,7 @@ class TestTGController(TestWSGIController):
     def test_root_method_dispatch(self):
         resp = self.app.get('/hello/Bob')
         assert "Hello Bob" in resp, resp
-        
+
     def test_root_index_dispatch(self):
         resp = self.app.get('/')
         assert "hello world" in resp, resp
@@ -318,7 +334,7 @@ class TestTGController(TestWSGIController):
     def test_no_sub_index_dispatch(self):
         resp = self.app.get('/sub/')
         assert "['sub']" in resp, resp
-        
+
     def test_root_default_dispatch(self):
         resp = self.app.get('/i/am/not/a/sub/controller')
         assert "['i', 'am', 'not', 'a', 'sub', 'controller']" in resp, resp
@@ -330,21 +346,21 @@ class TestTGController(TestWSGIController):
     def test_root_method_dispatch_with_trailing_slash(self):
         resp = self.app.get('/hello/Bob/')
         assert "Hello Bob" in resp, resp
-    
+
     def test_sub_method_dispatch(self):
         resp = self.app.get('/sub/sub_method/army of darkness')
         assert "sub army" in resp, resp
-        
+
     def test_custom_dispatch(self):
         resp = self.app.get('/custom_dispatch/army of darkness')
         assert "always" in resp, resp
 
 class TestRestController(TestWSGIController):
-    
+
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
-    
+
     def test_post(self):
         r = self.app.post('/rest/')
         assert 'REST POST' in r, r
@@ -352,6 +368,26 @@ class TestRestController(TestWSGIController):
     def _test_non_resty(self):
         r = self.app.post('/rest/non_resty_thing')
         assert 'non_resty' in r, r
+
+    def test_custom_action_simple_get(self):
+        r = self.app.get('/rest/archive')
+        assert 'got to archive' in r, r
+
+    def test_custom_action_simple_post(self):
+        r = self.app.post('/rest/archive')
+        assert 'got to archive' in r, r
+
+    def test_custom_action_simple_post_args(self):
+        r = self.app.post('/rest?_method=archive')
+        assert 'got to archive' in r, r
+
+    def test_custom_action_get(self):
+        r = self.app.get('/rest2/archive')
+        assert 'got to get archive' in r, r
+
+    def test_custom_action_post(self):
+        r = self.app.post('/rest2?_method=archive')
+        assert 'got to post archive' in r, r
 
     def test_get(self):
         r = self.app.get('/rest/')
@@ -364,7 +400,7 @@ class TestRestController(TestWSGIController):
     def test_put_post(self):
         r = self.app.post('/rest?_method=PUT')
         assert 'REST PUT' in r, r
-        
+
     def test_put_get(self):
         r = self.app.get('/rest?_method=PUT', status=405)
 
@@ -382,11 +418,11 @@ class TestRestController(TestWSGIController):
     def test_post_delete(self):
         r = self.app.post('/rest/', params={'_method':'DELETE'})
         assert 'REST DELETE' in r, r
-        
+
     def test_get_all(self):
         r = self.app.get('/rest2/')
         assert 'REST GET ALL' in r, r
-        
+
     def test_get_one(self):
         r = self.app.get('/rest2/1')
         assert 'REST GET ONE' in r, r
@@ -394,7 +430,7 @@ class TestRestController(TestWSGIController):
     def test_get_delete(self):
         r = self.app.get('/rest2/1/delete')
         assert 'REST GET DELETE' in r, r
-        
+
     def test_post_delete(self):
         r = self.app.post('/rest2/1', params={'_method':'DELETE'})
         assert 'REST POST DELETE' in r, r
@@ -410,7 +446,7 @@ class TestRestController(TestWSGIController):
     def test_get_method(self):
         r = self.app.get('/rest/other')
         assert 'REST OTHER' in r, r
-    
+
     @no_warn
     def test_get_sub_controller(self):
         r = self.app.get('/rest2/sub')
@@ -436,11 +472,11 @@ class TestRestController(TestWSGIController):
     def test_post_empty(self):
         r = self.app.post('/empty/')
         assert "/['empty']" in r, r
-        
+
     def test_put_empty(self):
         r = self.app.put('/empty/')
         assert "/['empty']" in r, r
-    
+
     @no_warn
     def test_delete_empty(self):
         r = self.app.delete('/empty/')
@@ -647,7 +683,7 @@ class TestRestController(TestWSGIController):
     def test_sub_delete_opt_hack(self):
         r = self.app.post('/rest2/1/optsubrest/1?_method=DELETE')
         assert 'SUBREST ' in r, r
-        
+
     def test_put_post_req(self):
         r = self.app.post('/rest2/reqsubrest', params={'something':'required'})
         assert 'SUBREST POST' in r, r

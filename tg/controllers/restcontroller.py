@@ -105,6 +105,46 @@ class RestDispatcher(ObjectDispatcher):
                 state.add_method(method, new_remainder)
                 return state
 
+    def _handle_custom_get(self, state, remainder):
+        method_name = remainder[-1]
+        if method_name not in getattr(self, '_custom_actions', []):
+            return
+
+        current_controller = state.controller
+
+        if (self._is_exposed(current_controller, method_name) or
+           self._is_exposed(current_controller, 'get_%s' % method_name)):
+            method = self._find_first_exposed(current_controller, ('get_%s' % method_name, method_name))
+            new_remainder = remainder[:-1]
+            if method and self._method_matches_args(method, state, new_remainder):
+                state.add_method(method, new_remainder)
+                return state
+
+    def _handle_custom_method(self, method, state, remainder):
+        current_controller = state.controller
+        method_name = method
+        method = self._find_first_exposed(current_controller, ('post_%s' % method_name, method_name))
+
+        if method and self._method_matches_args(method, state, remainder):
+            state.add_method(method, remainder)
+            return state
+
+        #you may not send a delete request to a non-delete function
+        if remainder and self._is_exposed(current_controller, remainder[0]):
+            abort(405)
+
+        # there might be a sub-controller with a delete method, let's go see
+        if remainder:
+            sub_controller = getattr(current_controller, remainder[0], None)
+            if sub_controller:
+                remainder = remainder[1:]
+                state.current_controller = sub_controller
+                state.url_path = '/'.join(remainder)
+                r = self._dispatch_controller(state.url_path, sub_controller, state, remainder)
+                if r:
+                    return r
+        return self._dispatch_first_found_default_or_lookup(state, remainder)
+
     def _handle_get(self, method, state, remainder):
         current_controller = state.controller
         if not remainder:
@@ -119,8 +159,13 @@ class RestDispatcher(ObjectDispatcher):
                     return state
             return self._dispatch_first_found_default_or_lookup(state, remainder)
 
-        #test for "edit" or "new"
+        #test for "delete", "edit" or "new"
         r = self._handle_delete_edit_or_new(state, remainder)
+        if r:
+            return r
+
+        #test for custom REST-like attribute
+        r = self._handle_custom_get(state, remainder)
         if r:
             return r
 
@@ -171,7 +216,10 @@ class RestDispatcher(ObjectDispatcher):
         if r:
             return r
 
-        r = self._handler_lookup[state.http_method](self, state.http_method, state, remainder)
+        if state.http_method in self._handler_lookup.keys():
+            r = self._handler_lookup[state.http_method](self, state.http_method, state, remainder)
+        else:
+            r = self._handle_custom_method(state.http_method, state, remainder)
 
         #clear out the method hack
         if '_method' in pylons.request.POST:
