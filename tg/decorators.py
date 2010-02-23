@@ -16,7 +16,7 @@ from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
 from webob.multidict import MultiDict
-from webhelpers.paginate import Page
+from tg.paginate import Page
 from pylons.configuration import config
 from pylons import request, response
 from pylons.controllers.util import abort
@@ -474,7 +474,7 @@ class paginate(object):
             return
         collection = output[self.name]
         page = Page(collection, request.paginate_page,
-            request.paginate_items_per_page)
+            request.paginate_items_per_page, controller='/')
         page.kwargs = request.paginate_params
         if self.page_param != 'name':
             page.pager = partial(page.pager, page_param=self.page_param)
@@ -547,7 +547,7 @@ def without_trailing_slash(remainder, params):
         from tg.controllers import redirect
         redirect(request.url[:-1])
 
-        
+
 @before_validate
 def with_trailing_slash(remainder, params):
     """This decorator allows you to ensure that the URL ends in "/"
@@ -574,7 +574,7 @@ def with_trailing_slash(remainder, params):
         from tg.controllers import redirect
         redirect(request.url+'/')
 
-        
+
 #{ Authorization decorators
 
 
