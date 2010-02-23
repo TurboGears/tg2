@@ -2,7 +2,7 @@
 
 import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
-from tg.decorators import expose, validate
+from tg.decorators import expose, validate, https
 from formencode import validators
 
 from tg import expose, redirect, config
@@ -170,3 +170,8 @@ class RootController(TGController):
         u = url("/foo", bar=1, baz=2)
         assert u in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"], u
+
+    @https
+    @expose()
+    def test_https(self, **kw):
+        return ''

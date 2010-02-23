@@ -14,7 +14,7 @@ import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
-from webob.exc import HTTPUnauthorized
+from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from pylons.configuration import config
@@ -497,9 +497,16 @@ def postpone_commits(func, *args, **kwargs):
     s.commit = old_commit
     return retval
 
+@before_validate
+def https(remainder, params):
+    from tg.controllers import redirect
+    if request.scheme.lower() == 'https': return
+    if request.method.upper() == 'GET':
+        redirect('https' + request.url[len(request.scheme):])
+    raise HTTPMethodNotAllowed(headers=dict(allowed='GET'))
 
-@decorator
-def without_trailing_slash(func, *args, **kwargs):
+@before_validate
+def without_trailing_slash(remainder, params):
     """This decorator allows you to ensure that the URL does not end in "/"
     The decorator accomplish this by redirecting to the correct URL.
 
@@ -520,11 +527,10 @@ def without_trailing_slash(func, *args, **kwargs):
     if request.method == 'GET' and request.path.endswith('/') and not(request.response_type) and len(request.params)==0:
         from tg.controllers import redirect
         redirect(request.url[:-1])
-    return func(*args, **kwargs)
 
-
-@decorator
-def with_trailing_slash(func, *args, **kwargs):
+        
+@before_validate
+def with_trailing_slash(remainder, params):
     """This decorator allows you to ensure that the URL ends in "/"
     The decorator accomplish this by redirecting to the correct URL.
 
@@ -542,12 +548,14 @@ def with_trailing_slash(func, *args, **kwargs):
     In the above example http://localhost:8080/sample redirects to http://localhost:8080/sample/
     In addition, the URL http://localhost:8080/sample/1 redirects to http://localhost:8080/sample/1/
     """
-    if request.method == 'GET' and not(request.path.endswith('/')) and not(request.response_type) and len(request.params)==0:
+    if (request.method == 'GET'
+        and not(request.path.endswith('/'))
+        and not(request.response_type)
+        and len(request.params)==0):
         from tg.controllers import redirect
         redirect(request.url+'/')
-    return func(*args, **kwargs)
 
-
+        
 #{ Authorization decorators
 
 

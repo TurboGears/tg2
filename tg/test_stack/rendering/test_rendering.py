@@ -89,3 +89,26 @@ def test_template_override():
     # it should yield the old result
     r = app.get('/template_override')
     assert "Not overridden" in r, r
+    
+def test_template_override_wts():
+#    app = setup_noDB()
+    base_config = TestConfig(folder = 'rendering',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.helpers': Bunch(),
+                                       'use_legacy_renderer': False,
+                                       # this is specific to mako
+                                       # to make sure inheritance works
+                                       'use_dotted_templatenames': True,
+                                       }
+                             )
+    app = app_from_config(base_config)
+    r = app.get('/template_override_wts', status=302) # ensure with_trailing_slash
+    r =app.get('/template_override_wts/')
+    assert "Not overridden" in r, r
+    r = app.get('/template_override_wts/', params=dict(override=True))
+    assert "This is overridden." in r, r
+    # now invoke the controller again without override,
+    # it should yield the old result
+    r = app.get('/template_override_wts/')
+    assert "Not overridden" in r, r
+    
