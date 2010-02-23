@@ -3,7 +3,6 @@ import os, sys
 import pkg_resources
 from pkg_resources import resource_filename
 import warnings
-import functools
 
 from pylons.configuration import config
 
@@ -219,9 +218,20 @@ class odict(dict):
     def __str__(self):
         return str(self.items())
 
+def wrap(wrapper, wrapped):
+    """Update a wrapper function to look like the wrapped function"""
+    
+    for attr in ('__module__', '__name__', '__doc__'):
+        setattr(wrapper, attr, getattr(wrapped, attr))
+    for attr in     ('__dict__',):
+        getattr(wrapper, attr).update(getattr(wrapped, attr, {}))
+    # Return the wrapper so this can be used as a decorator via partial()
+    return wrapper
+
+
 def no_warn(f, *args, **kwargs):
     def _f(*args, **kwargs):
         warnings.simplefilter("ignore")
         f(*args, **kwargs)
         warnings.resetwarnings()
-    return functools.update_wrapper(_f, f)
+    return wrap(_f, f)
