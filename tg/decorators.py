@@ -339,14 +339,14 @@ def override_template(controller, template):
     else:
         return
 
-    text_engine = engines.get('text/html')
-    template = template.split(':')
-    template.extend(text_engine[2:])
-    try:
-        override_mapping = request._override_mapping
-    except AttributeError:
-        override_mapping = request._override_mapping = {}
-    override_mapping[controller.im_func] = {"text/html" : template}
+    for content_type, content_engine in engines.iteritems():
+        template = template.split(':')
+        template.extend(content_engine[2:])
+        try:
+            override_mapping = request._override_mapping
+        except AttributeError:
+            override_mapping = request._override_mapping = {}
+        override_mapping[controller.im_func] = {content_type: template}
 
 
 class validate(object):
