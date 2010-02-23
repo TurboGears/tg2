@@ -294,6 +294,11 @@ class BasicTGController(TGController):
         pylons.response.headers['content-type'] = 'image/png'
         return 'PNG'
 
+    @expose('json', content_type='application/json')
+    def custom_content_type_in_controller_charset(self):
+        pylons.response.headers['content-type'] = 'application/json; charset=utf-8'
+        return dict(result='TXT')
+
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def custom_content_type_with_ugliness(self):
         pylons.response.headers['content-type'] = 'image/png'
@@ -450,6 +455,11 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_in_controller')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
+
+    def test_custom_content_type_in_controller_charset(self):
+        resp = self.app.get('/custom_content_type_in_controller_charset')
+        assert 'TXT' in resp, resp
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8', resp
 
     def test_custom_content_type_in_decorator(self):
         resp = self.app.get('/custom_content_type_in_decorator')
