@@ -1,7 +1,7 @@
 """Main Controller"""
 
 from tg import expose, redirect, config, validate, override_template
-from tg.decorators import paginate, use_custom_format
+from tg.decorators import paginate, use_custom_format, with_trailing_slash
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -126,3 +126,11 @@ class RootController(TGController):
         if override:
             override_template(self.template_override, "genshi:tg.tests.overridden")
         return dict()
+
+    @with_trailing_slash
+    @expose("genshi:tg.tests.non_overridden")
+    def template_override_wts(self, override=False):
+        if override:
+            override_template(self.template_override_wts, "genshi:tg.tests.overridden")
+        return dict()
+
