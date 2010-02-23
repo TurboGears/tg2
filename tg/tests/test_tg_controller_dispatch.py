@@ -4,6 +4,7 @@ import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, \
                            WSGIAppController, RestController
 from tg.decorators import expose, validate, override_template
+from tg.util import no_warn
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
 from formencode import validators
@@ -34,9 +35,10 @@ def wsgi_app(environ, start_response):
 
 class BeforeController(TGController):
 
-    def __before__(self, *args, **kw):
+    def _before(self, *args, **kw):
         pylons.tmpl_context.var = '__my_before__'
-    def __after__(self, *args, **kw):
+        
+    def _after(self, *args, **kw):
         global_craziness = '__my_after__'
 
     @expose()
@@ -402,7 +404,7 @@ class TestTGController(TestWSGIController):
 
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
-
+    
     def test_before_controller(self):
         r = self.app.get('/sub/before')
         assert '__my_before__' in r, r
@@ -411,6 +413,7 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
 
+    @no_warn
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/äö')
         assert "\\xc3\\xa4\\xc3\\xb6" in r, r

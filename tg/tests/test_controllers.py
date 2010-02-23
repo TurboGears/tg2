@@ -6,6 +6,7 @@ from tg.controllers import *
 from tg.exceptions import HTTPFound
 from nose.tools import eq_
 from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from tg.util import no_warn
 
 def setup():
     setup_session_dir()
@@ -30,6 +31,7 @@ def test_lowerapproots():
                 )
     eq_("/subthing/subsubthing/foo", url("/foo"))
 
+@no_warn
 def test_multi_values():
     create_request('/')
     r = url("/foo", bar=(u"asdf",u"qwer"))
@@ -39,6 +41,7 @@ def test_multi_values():
     assert  r in \
             ["/foo?bar=1&bar=2", "/foo?bar=2&bar=1"], r
 
+@no_warn
 def test_unicode():
     """url() can handle unicode parameters"""
     create_request("/")
@@ -51,12 +54,14 @@ def test_unicode():
         '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
         )
 
+@no_warn
 def test_list():
     """url() can handle list parameters, with unicode too"""
     create_request("/")
     value = url('/', foo=['bar', u'\N{LATIN SMALL LETTER A WITH GRAVE}']),
     assert '/?foo=bar&foo=%C3%A0' in value, value
 
+@no_warn
 def test_url_kwargs_overwrite_tgparams():
     params = {'spamm': 'eggs'}
     result = url('/foo', params, spamm='ham')
@@ -67,11 +72,13 @@ def test_url_with_params_key():
     result = url('/foo', params=params)
     assert 'spamm=eggs' in result
 
+@no_warn
 def test_url_strip_None():
     params = {'spamm':'eggs', 'hamm':None }
     result = url('/foo', params=params)
     assert 'hamm' not in result, result
 
+@no_warn
 def test_url_doesnt_change_tgparams():
     params = {'spamm': 'eggs'}
     result = url('/foo', params, spamm='ham')

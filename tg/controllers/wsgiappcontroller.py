@@ -20,7 +20,7 @@ class WSGIAppController(TGController):
         super(WSGIAppController, self).__init__()
 
     @expose()
-    def default(self, *args, **kw):
+    def _default(self, *args, **kw):
         """
         This method is called whenever a request reaches this controller.
         It prepares the WSGI environment and delegates the request to the

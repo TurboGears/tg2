@@ -91,7 +91,7 @@ def url(base_url=None, params=None, **kwargs):
             params.update(kwargs)
 
     elif hasattr(base_url, '__iter__'):
-        base_url = u'/'.join(base_url)
+        base_url = '/'.join(base_url)
     if base_url.startswith('/'):
         base_url = pylons.request.environ['SCRIPT_NAME'] + base_url
     if params:

@@ -1,8 +1,12 @@
 """Utilities"""
-from pylons.configuration import config
 import os, sys
 import pkg_resources
 from pkg_resources import resource_filename
+import warnings
+import functools
+
+from pylons.configuration import config
+
 
 class DottedFileLocatorError(Exception):pass
 
@@ -214,3 +218,10 @@ class odict(dict):
         
     def __str__(self):
         return str(self.items())
+
+def no_warn(f, *args, **kwargs):
+    def _f(*args, **kwargs):
+        warnings.simplefilter("ignore")
+        f(*args, **kwargs)
+        warnings.resetwarnings()
+    return functools.update_wrapper(_f, f)

@@ -5,6 +5,7 @@ from tg.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 from nose.tools import eq_
 from tg.jsonify import JsonEncodeError
+from tg.util import no_warn
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch', 
@@ -17,6 +18,7 @@ def setup_noDB():
 
 app = setup_noDB()
 
+@no_warn #should be _default now
 def test_tg_style_default():
     resp = app.get('/sdfaswdfsdfa') #random string should be caught by the default route
     assert 'Default' in resp.body

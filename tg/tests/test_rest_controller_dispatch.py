@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
+from tg.util import no_warn
 from tg.controllers import TGController, RestController
 from tg.controllers.dispatcher import DispatchState
 from tg.decorators import expose, validate, override_template
@@ -409,11 +410,13 @@ class TestRestController(TestWSGIController):
     def test_get_method(self):
         r = self.app.get('/rest/other')
         assert 'REST OTHER' in r, r
-
+    
+    @no_warn
     def test_get_sub_controller(self):
         r = self.app.get('/rest2/sub')
         assert 'REST SUB INDEX' in r, r
 
+    @no_warn
     def test_put_sub_controller(self):
         r = self.app.put('/rest2/sub')
         assert 'REST SUB INDEX' in r, r
@@ -438,6 +441,7 @@ class TestRestController(TestWSGIController):
         r = self.app.put('/empty/')
         assert "/['empty']" in r, r
     
+    @no_warn
     def test_delete_empty(self):
         r = self.app.delete('/empty/')
         assert "/['empty']" in r, r
@@ -655,7 +659,6 @@ class TestRestController(TestWSGIController):
     def test_sub_post_req_bad(self):
         r = self.app.post('/rest2/reqsubrest',)
         assert "['rest2', 'reqsubrest']" in r, r
-
 
     def test_sub_delete_hack(self):
         r = self.app.post('/rest2/1/subrest/2?_method=DELETE')

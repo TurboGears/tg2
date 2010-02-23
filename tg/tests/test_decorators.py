@@ -2,6 +2,7 @@
 import paste.httpexceptions as httpexceptions
 
 import tg
+from tg.util import no_warn
 import pylons
 from tg.controllers import TGController
 from tg.decorators import expose
@@ -67,6 +68,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/json_with_object')
         assert '''"Json": "Rocks"''' in resp.body
     
+    @no_warn
     def test_json_with_bad_object(self):
         try:
             resp = self.app.get('/json_with_bad_object')

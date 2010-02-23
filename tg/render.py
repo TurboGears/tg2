@@ -97,10 +97,19 @@ def _get_tg_vars():
         predicates = predicates,
         )
 
-    # TODO: we should actually just get helpers from the package's helpers
+    # TODO in 2.2: we should actually just get helpers from the package's helpers
     # module and dump the use of the SOP.
+    
+    #########
+    #try: 
+    #    helpers = config['package'].lib.helpers 
+    #except ImportError: 
+    #    helpers = Bunch()
+    #########
+
     helpers = config.get('pylons.h') or config.get('pylons.helpers')
 
+    
     root_vars = Bunch(
         c = tmpl_context,
         tmpl_context = tmpl_context,

@@ -20,7 +20,7 @@ class SubController(object):
         return 'sub index'
 
     @expose()
-    def default(self, *args):
+    def _default(self, *args):
         return ("recieved the following args (from the url): %s" %list(args))
 
     @expose()
@@ -64,7 +64,7 @@ class RootController(TGController):
         return 'hello world'
 
     @expose()
-    def default(self, remainder):
+    def _default(self, remainder):
         return "Main Default Page called for url /%s"%remainder
 
     @expose()

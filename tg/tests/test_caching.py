@@ -5,7 +5,6 @@
 http://wiki.pylonshq.com/display/pylonsdocs/Caching+in+Templates+and+Controllers
 
 For more details.
-
 """
 
 
