@@ -2,7 +2,7 @@
 
 import tg, pylons
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
-from tg.decorators import expose, validate, https
+from tg.decorators import expose, validate, https, variable_decode
 from formencode import validators
 
 from tg import expose, redirect, config
@@ -175,3 +175,8 @@ class RootController(TGController):
     @expose()
     def test_https(self, **kw):
         return ''
+
+    @expose('json')
+    @variable_decode
+    def test_vardec(self, **kw):
+        return kw

@@ -20,6 +20,7 @@ from webhelpers.paginate import Page
 from pylons.configuration import config
 from pylons import request, response
 from pylons.controllers.util import abort
+from formencode import variabledecode
 from tg import tmpl_context
 from tg.util import partial
 from repoze.what.plugins.pylonshq import ActionProtector
@@ -499,11 +500,28 @@ def postpone_commits(func, *args, **kwargs):
 
 @before_validate
 def https(remainder, params):
+    '''Ensure that the decorated method is always called with https://'''
     from tg.controllers import redirect
     if request.scheme.lower() == 'https': return
     if request.method.upper() == 'GET':
         redirect('https' + request.url[len(request.scheme):])
     raise HTTPMethodNotAllowed(headers=dict(allowed='GET'))
+
+@before_validate
+def variable_decode(remainder, params):
+    '''Best-effort formencode.variabledecode on the params before validation
+
+    If any exceptions are raised due to invalid parameter names, they are
+    silently ignored, hopefully to be caught by the actual validator.  Note that
+    this decorator will *add* parameters to the method, not remove.  So for
+    instnace a method will move from {'foo-1':'1', 'foo-2':'2'} to
+    {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
+    '''
+    try:
+        new_params = variabledecode.variable_decode(params)
+        params.update(new_params)
+    except:
+        pass
 
 @before_validate
 def without_trailing_slash(remainder, params):
