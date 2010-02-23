@@ -145,4 +145,8 @@ def test_json_return_list():
     resp = app.get("/json_return_list")
     assert "None Recieved"
     
-
+def test_https_redirect():
+    resp = app.get("/test_https?foo=bar&baz=bat")
+    assert 'https://' in resp, resp
+    assert resp.location.endswith("/test_https?foo=bar&baz=bat")
+    resp = app.post("/test_https?foo=bar&baz=bat", status=405)

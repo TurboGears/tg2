@@ -14,7 +14,7 @@ import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
-from webob.exc import HTTPUnauthorized
+from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
 from webob.multidict import MultiDict
 from webhelpers.paginate import Page
 from pylons.configuration import config
@@ -497,6 +497,13 @@ def postpone_commits(func, *args, **kwargs):
     s.commit = old_commit
     return retval
 
+@before_validate
+def https(remainder, params):
+    from tg.controllers import redirect
+    if request.scheme.lower() == 'https': return
+    if request.method.upper() == 'GET':
+        redirect('https' + request.url[len(request.scheme):])
+    raise HTTPMethodNotAllowed(headers=dict(allowed='GET'))
 
 @before_validate
 def without_trailing_slash(remainder, params):
