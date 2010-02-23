@@ -220,7 +220,6 @@ class odict(dict):
 
 def wrap(wrapper, wrapped):
     """Update a wrapper function to look like the wrapped function"""
-    
     for attr in ('__module__', '__name__', '__doc__'):
         setattr(wrapper, attr, getattr(wrapped, attr))
     for attr in     ('__dict__',):
