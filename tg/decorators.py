@@ -52,9 +52,9 @@ class Decoration(object):
         return func.decoration
     get_decoration = classmethod(get_decoration)
 
+    @property
     def exposed(self):
         return bool(self.engines)
-    expose = property(exposed)
 
     def run_hooks(self, hook, *l, **kw):
         for func in self.hooks[hook]:
