@@ -126,7 +126,6 @@ class AppConfig(Bunch):
         self.auto_reload_templates = True
         self.auth_backend = None
         self.default_renderer = 'genshi'
-        self.serve_static = True
         self.stand_alone = True
 
         # this is to activate the legacy renderers
@@ -307,7 +306,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         provided by tg.render.
 
         """
-        
+
         from tg.render import render_mako
 
         if not use_dotted_templatenames:
@@ -324,7 +323,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 if os.access(template_path, os.W_OK):
                     compiled_dir = template_path
                     break # first match is as good as any
-            
+
             # Last recourse: project-dir/data/templates (pylons' default directory)
             if not compiled_dir:
                 try:
@@ -337,7 +336,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     pylons_default_path = os.path.join(root, '../data/templates')
                     if os.access(pylons_default_path, os.W_OK):
                         compiled_dir = pylons_default_path
-    
+
                 if not compiled_dir:
                     if use_dotted_templatenames:
                         # Gracefully digress to in-memory template caching
@@ -347,7 +346,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                             "writable for compiled templates. Please set the "
                             "templating.mako.compiled_templates_dir variable in your "
                             ".ini file" % str(self.paths['templates']))
-        
+
         if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template notation.
@@ -367,7 +366,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 imports=['from webhelpers.html import escape'],
                 default_filters=['escape'],
                 filesystem_checks=self.auto_reload_templates)
-            
+
         self.render_functions.mako = render_mako
 
     def setup_chameleon_genshi_renderer(self):
@@ -560,9 +559,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
             self.setup_auth()
-            
+
             if not 'json' in self.renderers: self.renderers.append('json')
-            
+
             for renderer in self.renderers:
                 setup = getattr(self, 'setup_%s_renderer'%renderer, None)
                 if setup:
@@ -864,6 +863,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
             # Static files (if running in production, and Apache or another
             # web server is serving static files)
+
+            #if the user has set the value in app_config, don't pull it from the ini
+            if not hasattr(self, 'serve_static'):
+                self.serve_static = asbool(config.get('serve_static', 'true'))
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
 
