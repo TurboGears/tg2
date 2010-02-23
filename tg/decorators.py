@@ -127,7 +127,8 @@ class Decoration(object):
             controller_content_type = response.headers.get('Content-Type')
 
             if controller_content_type:
-                content_type = controller_content_type
+                # make sure we handle content_types like 'text/html; charset=utf-8'
+                content_type = controller_content_type.split(';')[0]
 
             # check for overridden templates
             try:
