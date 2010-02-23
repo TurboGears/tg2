@@ -2,12 +2,7 @@ import os
 here = os.path.abspath(os.path.dirname(__file__))
 execfile(os.path.join(here, 'tg', 'release.py'))
 
-try:
-    from setuptools import find_packages, setup
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import find_packages, setup
+from setuptools import find_packages, setup
 
 test_requirements = ['coverage',
                     'nose',
