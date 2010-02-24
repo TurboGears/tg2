@@ -61,18 +61,12 @@ def urlencode(params):
 def url(base_url=None, params=None, **kwargs):
     """Generate an absolute URL that's specific to this application.
 
-    The URL function takes a string, appends the SCRIPT_NAME and adds url
-    parameters for all of the other keyword arguments passed in.
+    The URL function takes a string (base_url) and, appends the
+    SCRIPT_NAME and adds parameters for all of the
+    parameters passed into the params dict.
 
-    For backwards compatibility you can also pass in a params dictionary
-    which is turned into url params, or you can send in a a list of
-    strings as the first argument, which will be joined with /'s to
-    make a url string.
+    For backwards compatibility you can also pass in keyword parameters.
 
-    In general tg.url is just a proxy for pylons.url which is in turn
-    a proxy for routes url_for function.  This means that if the first
-    argument is not a basestring but a method that has been routed to,
-    the standard routes url_for reverse lookup system will be used.
     """
     #remove in 2.2
     if base_url is None:
@@ -110,7 +104,7 @@ def redirect(*args, **kwargs):
     second request.
     """
 
-    new_url = url(*args, **kwargs)
+    new_url = url(params=kwargs, *args)
     found = HTTPFound(location=new_url).exception
     raise found
 
