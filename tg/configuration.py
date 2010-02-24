@@ -681,6 +681,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
 
         """
+
         from tw.api import make_middleware as tw_middleware
 
 
@@ -691,6 +692,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         for k,v in config.iteritems():
             if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'):
                 twconfig[k] = v
+
+        if 'toscawidgets.framework.resource_variant' in config:
+            import tw.api
+            tw.api.resources.registry.ACTIVE_VARIANT = config['toscawidgets.framework.resource_variant']
+            #remove it from the middleware madness
+            del twconfig['toscawidgets.framework.resource_variant']
+
         app = tw_middleware(app, twconfig)
         return app
 
