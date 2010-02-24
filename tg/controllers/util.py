@@ -104,7 +104,7 @@ def redirect(*args, **kwargs):
     second request.
     """
 
-    new_url = url(params=kwargs, *args)
+    new_url = url(*args, **kwargs)
     found = HTTPFound(location=new_url).exception
     raise found
 
