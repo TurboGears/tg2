@@ -33,7 +33,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Pylons >= 0.9.7',
+        'Pylons >= 0.9.7, < 1.0b1',
         'Genshi >= 0.5.1',
         'WebFlash >= 0.1a8',
         'ToscaWidgets >= 0.9.4',
