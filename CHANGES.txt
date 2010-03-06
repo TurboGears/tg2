@@ -1,5 +1,7 @@
 = Change Log =
 
+ * Added tg.abort as a proxy to pylons.controllers.util.abort 
+
 == 2.1b1: (**January, 25 2009**) ==
 
  * Deprecated default in favor of _default
