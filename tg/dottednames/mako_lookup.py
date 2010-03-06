@@ -47,6 +47,7 @@ class DottedTemplateLookup(object):
         # implement a cache for the filename lookups
         self.template_filenames_cache = dict()
         self.module_directory = module_directory
+        self.auto_reload = asbool(tg.config.get('templating.mako.reloadfromdisk', 'false'))
 
         # a mutex to ensure thread safeness during template loading
         self._mutex = threading.Lock()
@@ -162,7 +163,7 @@ class DottedTemplateLookup(object):
             # Do so now
             self.__load(template_name)
 
-        if asbool(tg.config.get('templating.mako.reloadfromdisk', 'false')):
+        if self.auto_reload:
             # AUTO RELOADING will be activated only if user has
             # explicitly asked for it in the configuration
             # return the template, but first make sure it's not outdated
