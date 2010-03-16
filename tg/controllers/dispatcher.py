@@ -422,7 +422,7 @@ class ObjectDispatcher(Dispatcher):
         tree until we found a method which matches with a default or lookup method.
         """
         orig_url_path = state.url_path
-        if len(remainder):
+        if remainder:
             state.url_path = state.url_path[:-len(remainder)]
         for i in xrange(len(state.controller_path)):
             controller = state.controller
@@ -436,7 +436,9 @@ class ObjectDispatcher(Dispatcher):
                 if type(last_tried_lookup) != type(new_controller):
                     self._last_tried_abstraction = new_controller
                     state.add_controller(remainder[0], new_controller)
-                    return self._dispatch(state, new_remainder)
+                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
+                        
+                    return dispatcher(state, new_remainder)
 
             if self._is_exposed(controller, 'default'):
                 warn('default method is deprecated, please replace with _default', DeprecationWarning)

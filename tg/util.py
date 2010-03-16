@@ -170,51 +170,53 @@ class DottedFileNameFinder(object):
             return result
 
 class odict(dict):
-    
+
     def __init__(self, *args, **kw):
         self._ordering = []
         dict.__init__(self, *args, **kw)
-    
+
     def __setitem__(self, key, value):
+        if key in self._ordering:
+            self._ordering.remove(key)
         self._ordering.append(key)
         dict.__setitem__(self, key, value)
-    
+
     def keys(self):
         return self._ordering
-    
+
     def clear(self):
         self._ordering = []
         dict.clear(self)
-        
+
     def getitem(self, n):
         return self[self._ordering[n]]
-    
-    def __slice__(self, a, b, n):
-        return self.values()[a:b:n]
-    
+        
+
+#    def __slice__(self, a, b=-1, n=1):
+#        return self.values()[a:b:n]
+
     def iteritems(self):
         for item in self._ordering:
             yield item, self[item]
-    
+
     def items(self):
         return [i for i in self.iteritems()]
-    
+
     def itervalues(self):
         for item in self._ordering:
             yield self[item]
-        
+
     def values(self):
-        return [i for i in self.values()]
-    
-    def __delete__(self, key):
+        return [i for i in self.itervalues()]
+
+    def __delitem__(self, key):
         self._ordering.remove(key)
-        dict.__delete__(self, key)
-        
+        dict.__delitem__(self, key)
+
     def pop(self):
         item = self._ordering[-1]
         del self[item]
-        self._ordering.remove(item)
-        
+
     def __str__(self):
         return str(self.items())
 
