@@ -128,8 +128,9 @@ class LoookupControllerWithArgs(TGController):
 
     @expose()
     def _lookup(self, *args):
-        print args
-        return LookupHelperWithArgs(), args
+        l = LookupHelperWithArgs()
+#        print 'inside _lookup', l, args
+        return l, args
 
 class LoookupController(TGController):
 
@@ -350,8 +351,9 @@ class TestWSGIAppController(TestWSGIController):
         assert 'some_url' in r
 
 class TestTGController(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setUp(self, *args, **kargs):
+        
+        TestWSGIController.setUp(self, *args, **kargs)
         self.app = make_app(BasicTGController)
 
     def test_lookup(self):
