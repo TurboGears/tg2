@@ -431,9 +431,10 @@ class ObjectDispatcher(Dispatcher):
                 return state
             if self._is_exposed(controller, '_lookup'):
                 controller, remainder = controller._lookup(*remainder)
-                state.url_path = '/'.join(remainder)
-                return self._dispatch_controller(
-                    '_lookup', controller, state, remainder)
+                last_tried_abstraction = getattr(self, '_last_tried_abstraction', None)
+                if type(last_tried_abstraction) != type(controller):
+                    self._last_tried_abstraction = controller
+                    return self._dispatch_controller('_lookup', controller, state, remainder)
             if self._is_exposed(controller, 'default'):
                 warn('default method is deprecated, please replace with _default', DeprecationWarning)
                 state.add_method(controller.default, remainder)
