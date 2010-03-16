@@ -397,6 +397,7 @@ class ObjectDispatcher(Dispatcher):
         """
         #xxx: add logging?
         if hasattr(controller, '_dispatch'):
+#            print 'controller', controller
             if isclass(controller):
                 warn("this functionality is going to removed in the next minor version,"
                      " please create an instance of your sub-controller instead")
@@ -430,11 +431,13 @@ class ObjectDispatcher(Dispatcher):
                 state.dispatcher = self
                 return state
             if self._is_exposed(controller, '_lookup'):
-                controller, remainder = controller._lookup(*remainder)
+                new_controller, new_remainder = controller._lookup(*remainder)
                 last_tried_abstraction = getattr(self, '_last_tried_abstraction', None)
-                if type(last_tried_abstraction) != type(controller):
-                    self._last_tried_abstraction = controller
-                    return self._dispatch_controller('_lookup', controller, state, remainder)
+                if type(last_tried_abstraction) != type(new_controller):
+                    self._last_tried_abstraction = new_controller
+                    state.add_controller(remainder[0], new_controller)
+                    return self._dispatch(state, new_remainder)
+
             if self._is_exposed(controller, 'default'):
                 warn('default method is deprecated, please replace with _default', DeprecationWarning)
                 state.add_method(controller.default, remainder)

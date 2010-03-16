@@ -128,6 +128,7 @@ class LoookupControllerWithArgs(TGController):
 
     @expose()
     def _lookup(self, *args):
+        print args
         return LookupHelperWithArgs(), args
 
 class LoookupController(TGController):
