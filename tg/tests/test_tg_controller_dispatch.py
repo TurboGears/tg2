@@ -175,6 +175,7 @@ class LookupWithEmbeddedLookupWithHelperWithIndex(TGController):
     @expose()
     def index(self):
         return "first controller with index"
+    
 
 class RemoteErrorHandler(TGController):
     @expose()
@@ -205,6 +206,30 @@ class SubController4:
 class SubController5:
     default_with_args = DefaultWithArgsAndValidatorsController()
 
+class HelperWithSpecificArgs(TGController):
+    
+    @expose()
+    def index(self, **kw):
+        return str(kw)
+
+    @expose()
+    def method(self, arg1, arg2, **kw):
+        return str((arg1, arg2, kw))
+    
+class SelfCallingLookupController(TGController):
+
+    @expose()
+    def _lookup(self, a, *args):
+        if a in ['a', 'b', 'c']:
+            return SelfCallingLookupController(), args
+        a = [a]
+        a.extend(args)
+        return HelperWithSpecificArgs(), a
+    
+    @expose()
+    def index(self, *args, **kw):
+        return str((args, kw))
+
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
 
@@ -212,6 +237,7 @@ class BasicTGController(TGController):
 
     lookup = LookupController()
     lookup_with_args = LookupControllerWithArgs()
+    self_calling = SelfCallingLookupController()
 
     @expose(content_type='application/rss+xml')
     def ticket2351(self, **kw):
@@ -576,4 +602,15 @@ class TestTGController(TestWSGIController):
     def test_embedded_lookup_with_index_method(self):
         resp = self.app.get('/embedded_lookup_with_index/a/b/method')
         assert 'helper method' in resp, resp
-        
+    
+    def test_self_calling_lookup_simple_index(self):
+        resp = self.app.get('/self_calling')
+        assert '((), {})' in resp, resp
+
+    def test_self_calling_lookup_method(self):
+        resp = self.app.get('/self_calling/a/method/a/b')
+        assert "('a', 'b', {})" in resp, resp
+
+    def test_self_calling_lookup_multiple_calls_method(self):
+        resp = self.app.get('/self_calling/a/b/c/method/a/b')
+        assert "('a', 'b', {})" in resp, resp

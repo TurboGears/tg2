@@ -427,12 +427,10 @@ class ObjectDispatcher(Dispatcher):
 
         remainder = list(remainder[:])
         for i, controller in enumerate(reversed(state.controller_path.values())):
-#            print i, controller, remainder
             if self._is_exposed(controller, '_lookup'):
                 new_controller, new_remainder = controller._lookup(*remainder)
                 last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
-                if last_tried_lookup.__class__.__name__ != new_controller.__class__.__name__:
-#                    import ipdb; ipdb.set_trace();
+                if last_tried_lookup.__class__.__name__ != new_controller.__class__.__name__ or remainder != new_remainder:
                     new_controller._last_tried_lookup = new_controller
                     state.add_controller(new_controller.__class__.__name__, new_controller)
                     dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
@@ -442,8 +440,8 @@ class ObjectDispatcher(Dispatcher):
                 warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
                 new_controller, new_remainder = controller.lookup(*remainder)
                 last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
-                if type(last_tried_lookup) != type(new_controller):
-                    self._last_tried_lookup = new_controller
+                if last_tried_lookup.__class__.__name__ != new_controller.__class__.__name__ or remainder != new_remainder:
+                    new_controller._last_tried_lookup = new_controller
                     state.add_controller(new_controller.__class__.__name__, new_controller)
                     dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
                     return dispatcher(state, new_remainder)
@@ -461,55 +459,12 @@ class ObjectDispatcher(Dispatcher):
                 state.dispatcher = self
                 return state
 
-#            if self._is_exposed(controller, 'index') and\
-#               method_matches_args(controller.index, state.params, remainder, self._use_lax_params):
-#                state.add_method(controller.index, remainder)
-#                state.dispatcher = self
-#                return state
             try:
                 remainder.insert(0, state.url_path[-(i+orig_remainder_len+1)])
             except IndexError:
                 #you ran out of path in the remainder, somehow
                 break
 
-        raise HTTPNotFound
-
-        orig_url_path = state.url_path
-        if remainder:
-            state.url_path = state.url_path[:-len(remainder)]
-        for i in xrange(len(state.controller_path)):
-            controller = state.controller
-            if self._is_exposed(controller, '_default'):
-                state.add_method(controller._default, remainder)
-                state.dispatcher = self
-                return state
-            if self._is_exposed(controller, '_lookup'):
-                new_controller, new_remainder = controller._lookup(*remainder)
-                last_tried_lookup = getattr(self, '_last_tried_lookup', None)
-                if type(last_tried_lookup) != type(new_controller):
-                    #prevents infinite recursion
-                    new_controller._last_tried_lookup = new_controller
-                    state.add_controller(remainder[0], new_controller)
-                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
-                        
-                    return dispatcher(state, new_remainder)
-
-            if self._is_exposed(controller, 'default'):
-                warn('default method is deprecated, please replace with _default', DeprecationWarning)
-                state.add_method(controller.default, remainder)
-                state.dispatcher = self
-                return state
-            if self._is_exposed(controller, 'lookup'):
-                warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
-                controller, remainder = controller.lookup(*remainder)
-                state.url_path = '/'.join(remainder)
-                return self._dispatch_controller(
-                    'lookup', controller, state, remainder)
-            state.controller_path.pop()
-            if len(state.url_path):
-                remainder = list(remainder)
-                remainder.insert(0, state.url_path[-1])
-                state.url_path.pop()
         raise HTTPNotFound
 
     def _dispatch(self, state, remainder):
