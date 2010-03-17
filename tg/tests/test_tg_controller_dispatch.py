@@ -124,7 +124,7 @@ class LookupHelperWithArgs:
     def post_with_mixed_args(self, arg1, arg2, **kw):
         return "%s%s" % (arg1, arg2)
 
-class LoookupControllerWithArgs(TGController):
+class LookupControllerWithArgs(TGController):
 
     @expose()
     def _lookup(self, *args):
@@ -132,11 +132,49 @@ class LoookupControllerWithArgs(TGController):
 #        print 'inside _lookup', l, args
         return l, args
 
-class LoookupController(TGController):
+class LookupController(TGController):
 
     @expose()
     def _lookup(self, a, *args):
         return LookupHelper(a), args
+    
+class LookupWithEmbeddedLookupController(TGController):
+    
+    @expose()
+    def _lookup(self, a, *args):
+        return LookupControllerWithArgs(), args
+
+
+class LookupHelperWithIndex:
+
+    @expose()
+    def index(self):
+        return "helper index"
+    
+    @expose()
+    def method(self):
+        return "helper method"
+    
+
+class LookupControllerWithIndexHelper(TGController):
+
+    @expose()
+    def _lookup(self, a, *args):
+        return LookupHelperWithIndex(), args
+
+    @expose()
+    def index(self):
+        return "second controller with index"
+
+class LookupWithEmbeddedLookupWithHelperWithIndex(TGController):
+
+    @expose()
+    def _lookup(self, a, *args):
+        return LookupControllerWithIndexHelper(), args
+    
+    @expose()
+    def index(self):
+        return "first controller with index"
 
 class RemoteErrorHandler(TGController):
     @expose()
@@ -172,8 +210,8 @@ class BasicTGController(TGController):
 
     error_controller = RemoteErrorHandler()
 
-    lookup = LoookupController()
-    lookup_with_args = LoookupControllerWithArgs()
+    lookup = LookupController()
+    lookup_with_args = LookupControllerWithArgs()
 
     @expose(content_type='application/rss+xml')
     def ticket2351(self, **kw):
@@ -195,6 +233,9 @@ class BasicTGController(TGController):
     sub2 = SubController2()
     sub4 = SubController4()
     sub5 = SubController5()
+    
+    embedded_lookup = LookupWithEmbeddedLookupController()
+    embedded_lookup_with_index = LookupWithEmbeddedLookupWithHelperWithIndex()
 
     @expose()
     def test_args(self, id, one=None, two=2, three=3):
@@ -519,3 +560,20 @@ class TestTGController(TestWSGIController):
     def test_ticket_2351_bad_content_type(self):
         resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})
         assert 'test' in resp, resp
+
+    def test_embedded_lookup_with_index_first(self):
+        resp = self.app.get('/embedded_lookup_with_index/')
+        assert 'first controller with index' in resp, resp
+
+    def test_embedded_lookup_with_index_second(self):
+        resp = self.app.get('/embedded_lookup_with_index/a')
+        assert 'second controller with index' in resp, resp
+
+    def test_embedded_lookup_with_index_helper(self):
+        resp = self.app.get('/embedded_lookup_with_index/a/b')
+        assert 'helper index' in resp, resp
+
+    def test_embedded_lookup_with_index_method(self):
+        resp = self.app.get('/embedded_lookup_with_index/a/b/method')
+        assert 'helper method' in resp, resp
+        
