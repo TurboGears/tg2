@@ -434,7 +434,7 @@ class ObjectDispatcher(Dispatcher):
                 new_controller, new_remainder = controller._lookup(*remainder)
                 last_tried_lookup = getattr(self, '_last_tried_lookup', None)
                 if type(last_tried_lookup) != type(new_controller):
-                    self._last_tried_abstraction = new_controller
+                    self._last_tried_lookup = new_controller
                     state.add_controller(remainder[0], new_controller)
                     dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
                         
