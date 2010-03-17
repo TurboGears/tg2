@@ -421,6 +421,57 @@ class ObjectDispatcher(Dispatcher):
         applicable method, so therefore we head back up the branches of the
         tree until we found a method which matches with a default or lookup method.
         """
+        
+        orig_remainder_len = len(remainder)
+        current_controller = state.controller
+
+        remainder = list(remainder[:])
+        for i, controller in enumerate(reversed(state.controller_path.values())):
+            if self._is_exposed(controller, '_lookup'):
+                new_controller, new_remainder = controller._lookup(*remainder)
+                last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
+                if type(last_tried_lookup) != type(new_controller):
+                    new_controller._last_tried_lookup = new_controller
+                    state.add_controller(new_controller.__class__.__name__, new_controller)
+                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
+                    return dispatcher(state, new_remainder)
+
+            if self._is_exposed(controller, 'lookup'):
+                warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
+                new_controller, new_remainder = controller.lookup(*remainder)
+                last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
+                if type(last_tried_lookup) != type(new_controller):
+                    new_controller._last_tried_lookup = new_controller
+                    state.add_controller(new_controller.__class__.__name__, new_controller)
+                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
+                    return dispatcher(state, new_remainder)
+
+            if self._is_exposed(controller, '_default'):# and\
+#               method_matches_args(controller._default, state.params, remainder, self._use_lax_params):
+                state.add_method(controller._default, remainder)
+                state.dispatcher = self
+                return state
+
+            if self._is_exposed(controller, 'default'):# and\
+#               method_matches_args(controller._default, state.params, remainder, self._use_lax_params):
+                warn('default method is deprecated, please replace with _default', DeprecationWarning)
+                state.add_method(controller.default, remainder)
+                state.dispatcher = self
+                return state
+
+#            if self._is_exposed(controller, 'index') and\
+#               method_matches_args(controller.index, state.params, remainder, self._use_lax_params):
+#                state.add_method(controller.index, remainder)
+#                state.dispatcher = self
+#                return state
+            try:
+                remainder.insert(0, state.url_path[-(i+orig_remainder_len+1)])
+            except IndexError:
+                #you ran out of path in the remainder, somehow
+                break
+
+        raise HTTPNotFound
+
         orig_url_path = state.url_path
         if remainder:
             state.url_path = state.url_path[:-len(remainder)]
