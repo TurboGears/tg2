@@ -1,8 +1,33 @@
 = Change Log =
 
- * Added tg.abort as a proxy to pylons.controllers.util.abort 
+== 2.1b2: (**March 27, 2009**) ==
 
-== 2.1b1: (**January, 25 2009**) ==
+ * Various fixes to dispatch involving _lookup
+ * Functools removed as a dependency of TG2
+ * Fixed #2456 TurboJson dependency causing RuntimeWarning
+ * Fixed #2437 tg.url() docstring does not match behavior, pagination problem
+ * Fixed #2455 Admin list view fails with more than 8 records
+ * Fixed #1905 use variable_decode to add automagical formparsing like tg1
+ * Fixed #2272 tg.url() is too laxist with argument types
+ * Fixed #2299 flash() doesn't display anything when message is too long
+ * Fixed #2337 RestController cannot handle non-ascii URLs
+ * Fixed #2358 override_template does not work if @without_trailing_slash placed before @expose)
+ * Fixed #2394 Configuration value "base_config.serve_static" sthould be set in *.ini files rather than in "app_cfg.py" file
+ * Fixed #2403 Provide a TGCommand base class within TurboGears 2.x core
+ * Fixed #2411 @https decorator crashes outside of root
+ * Fixed #2413 Installing tw.dojo breaks CrudRestController from tgext.crud
+ * Fixed #2416 Spurious SAWarnings caused by built-in SQL-based auth
+ * Fixed #2450 TG 2.1 tests failing with recent WebOb version
+ * Fixed #2451 Override template failing in 2.1
+ * Fixed #2457 Make override_template work for all content types
+ * Fixed #2458 Allow custom REST-like methods in RestController enhancement
+ * Fixed #2469 Python2.4 issue when the uuid package is not installed
+ * Tests fixed to not be order-dependent.
+ * mako bytcode cashing added.
+ * Python 2.4 compatibility.
+ * Added tg.abort as a proxy to pylons.controllers.util.abort.
+
+== 2.1b1: (**January 25, 2009**) ==
 
  * Deprecated default in favor of _default
  * Fixed handling of Unicode parameters
@@ -57,14 +82,14 @@
  * Fixed WSGI compatibility bug #2294 from Alex Morega at pycon sprints.
  * Fixed Jinja2 renderer (#2310) thanks mbailey!
  * Small test suite incompatibility on windows #2301 (chrisz)
- * Fixed the very annoying login messages from i8n r6586 (everyone reported this :p) 
+ * Fixed the very annoying login messages from i8n r6586 (everyone reported this :p)
 
 === Backwards Incompatible Changes ===
- 
+
  * Reverted fix for #2241 the workaround should be at tgext.wsgiapps's HGController. If you add needed this fix you will need to fix it on your side.
 
 === Known Issues ===
- 
+
  * None
 
 == 2.0rc1: (**March 3, 2009**) ==
@@ -76,15 +101,15 @@
 === Fixes ===
 
  * The authorization failure reason was being hardcoded when the Controller.allow_only attribute was used and the user was anonymous ([6520])
- * Fixes to the special __before__ and  __after__ methods that are called before and after a controller's request is completed. 
-  
+ * Fixes to the special __before__ and  __after__ methods that are called before and after a controller's request is completed.
+
 
 === Backwards Incompatible Changes ===
- 
+
  * None.
 
 === Known Issues ===
- 
+
  * None
 
 == 2.0b7: (**March 4, 2009**) ==
@@ -97,33 +122,33 @@
 === Fixes ===
 
  * .allow_only was broken in the !RootController (#2254)
- * Controller Wide authorization now works as expected in all cases (even when you forget to call super's __init__)  
+ * Controller Wide authorization now works as expected in all cases (even when you forget to call super's __init__)
  * Now quickstarted applications are PEP-8 and PEP-257 compliant (#2223)
  * Controller tests in the quickstart were not isolated, and did not have sample data from setup_app
  * !TestModel in quickstarted applications was be moved to {app}.tests.models (#2249).
  * repoze.what implements a workaround for a bug in Python < 2.6 whereby non-ASCII messages couldn't be logged (#2250)
  * Controller tests are now isolated (#2244)
-  
+
 
 === Backwards Incompatible Changes ===
- 
+
  * None.
 
 === Known Issues ===
- 
+
  * being rejected from the Catwalk admin controllers caused you to loose your current login credentials. (#2262)
 
 == 2.0b6: (**Febuary 25, 2009**) ==
 
-Beta 6 moves some dependencies into the Quickstarted project, so users who don't need them can edit them out.   However, this means that you must {{{python setup.py develop}}}  your quickstarted app. 
+Beta 6 moves some dependencies into the Quickstarted project, so users who don't need them can edit them out.   However, this means that you must {{{python setup.py develop}}}  your quickstarted app.
 
 === Features ===
 
- * New default ModelTest class for unitesting #2200, quickstarted project uses it documentation pending but it's super easy to use :) 
+ * New default ModelTest class for unitesting #2200, quickstarted project uses it documentation pending but it's super easy to use :)
  * Installing TurboGears now requires less dependencies thanks to #2176
  * TurboGears is now pip compatible but still not the default #2169
  * The repoze.what integration is now provided by the new [http://code.gustavonarea.net/repoze.what-pylons/ repoze.what-pylons] package.
- * the webhelpers defined in lib/helpers are now only added to the template as helpers not as h.   Previously Mako's h was not available because we were overriding it.  This change was also sponsored by the campaign against one letter variables ;) 
+ * the webhelpers defined in lib/helpers are now only added to the template as helpers not as h.   Previously Mako's h was not available because we were overriding it.  This change was also sponsored by the campaign against one letter variables ;)
  * For Python 2.6 users, introduced the class decorator @allow_only to set controller-wide authorization. It's an alternative to ''Controller.allow_only''.
  * Now repoze.what predicates can be evaluated without passing the environ, as in:
 {{{
@@ -138,17 +163,17 @@ False
 
  * ''@tg.require'' set the status code to 401 when authorization was denied, regardless of whether the user was anonymous or not. From now on, a 403 status is used when the user was authenticated.
  * repoze.what predicate messages in the quickstart are translated lazily (#2179; #2180).
- * QUickstarted projects without Authorization were not starting due to a paster template error. 
+ * QUickstarted projects without Authorization were not starting due to a paster template error.
 
 === Backwards Incompatible Changes ===
- 
+
  * Due to #2176 it is now required to run (python setup.py develop / pip install -e .) on a new quickstarted project to get the dependencies only used there.
  * If you relied on the ''Controller._check_security()'' method, then you have to call it from ''Controller.!__before!__()'' because it's not called anymore by TG.
- * if you used tg.testutils it's now gone r6323 (noone really used it) 
+ * if you used tg.testutils it's now gone r6323 (noone really used it)
 
 
 === Known Issues ===
- 
+
  * While installing tg.devtools, you'll get an error about "repoze.who" not being found. A workaround is to try to run the command, again.
  * SQLAlchemy is not properly set up in test environments (#2243).
  * The ''!__before!__()'' method of the controllers is not called.
@@ -158,18 +183,18 @@ False
 === Features ===
 
  * Implemented post-login and post-logout pages in quickstarted applications thanks to the latest version of ''repoze.what-quickstart''.
- * you can now manually set the content type in the controller and return a string, generator or webob response object without @expose messing with the response at all. 
- * by popular demand the tg.url function now supports getting a list of strings (like tg1) 
+ * you can now manually set the content type in the controller and return a string, generator or webob response object without @expose messing with the response at all.
+ * by popular demand the tg.url function now supports getting a list of strings (like tg1)
 
 === Fixes ===
 
  * Authorization denial messages issued using TG's flash mechanism were using an invalid status and thus were not inside the typical color box.
  * Two production config files were included in quickstart
- * Pylons style __before__ was not supported. 
+ * Pylons style __before__ was not supported.
  * error pages were not styled properly
- * repoze.who now respects SCRIPT_PATH so logout_handler will go to the right place in apps not mounted at the root of the url tree. 
+ * repoze.who now respects SCRIPT_PATH so logout_handler will go to the right place in apps not mounted at the root of the url tree.
  * SQLite install requirement added for python 2.4 users
- * Several files were not included in the egg bundle for TG2 projects that were eggified. 
+ * Several files were not included in the egg bundle for TG2 projects that were eggified.
  * catwalk scrolling issue fixed
 
 === Backwards Incompatible Changes ===
@@ -177,16 +202,16 @@ False
  * None
 
 === Known Issues ===
- 
+
 * None
 
 == 2.0b4: (January 24th, 2009) ==
 
-Beta 4 is mostly a bugfix release, with no new features as we are approaching the 2.0 final release we need to squash out all the remaining known bugs and start working on release candidates.    B4 is a recomended upgrade for all TG2 users who are using our authentication system because a threadsafety issue in repoze.what could cause authenentication denied messages to get sent to the wrong user if two users were denied access at "the same" time. 
+Beta 4 is mostly a bugfix release, with no new features as we are approaching the 2.0 final release we need to squash out all the remaining known bugs and start working on release candidates.    B4 is a recomended upgrade for all TG2 users who are using our authentication system because a threadsafety issue in repoze.what could cause authenentication denied messages to get sent to the wrong user if two users were denied access at "the same" time.
 
-Other key fixes, allow flash messages to cross authentication boundries, and updates to the admin so that it handles some relationships better, and to the mimetypes stuff so that .json works on all platforms. 
+Other key fixes, allow flash messages to cross authentication boundries, and updates to the admin so that it handles some relationships better, and to the mimetypes stuff so that .json works on all platforms.
 
-Beta 5 should be released next week with many more fixes. 
+Beta 5 should be released next week with many more fixes.
 
 === Features ===
 
@@ -195,22 +220,22 @@ Beta 5 should be released next week with many more fixes.
 === Fixes ===
 
  * Synchronized to repoze.what 1.0.1, which fixes an important bug that may affect production websites.
- * Updated repoze.who so that it passes cookies along when doing a redirect for authorization  -- this allows us to send flash messages across login requests. 
+ * Updated repoze.who so that it passes cookies along when doing a redirect for authorization  -- this allows us to send flash messages across login requests.
  * Updated sprox to fix an issue with some relationships
- * Updated tgext.admin and catwalk to go with the new sprox release and fix some minor issues. 
+ * Updated tgext.admin and catwalk to go with the new sprox release and fix some minor issues.
  * Fixed problem where content type negotiation was not working on some platforms that don't include mimetypes for .json out of the box
- * The traceback poster feature of the interactive debugger was not returning all the libraries in use, this is now fixed. 
+ * The traceback poster feature of the interactive debugger was not returning all the libraries in use, this is now fixed.
 
 === Backwards Incompatible Changes ===
 
  * None
 
 === Known Issues ===
- 
- * Error page is not styled properly. 
+
+ * Error page is not styled properly.
  * catwalk opening page does not show a scrollbar -- even if one is needed
 
- More minor issues that are known in b4 and expected to be fixed in b5 can be found here: 
+ More minor issues that are known in b4 and expected to be fixed in b5 can be found here:
 
 http://trac.turbogears.org/query?milestone=2.0b5
 
@@ -222,9 +247,9 @@ http://trac.turbogears.org/query?milestone=2.0b5
 
 === Features ===
 
- * HTTP Verb aware dispatch mechanisms for support of more REST based interfaces. 
- * you can now indicate a content type request using file extensions (index.html or index.json) 
- * Full unicode support in the url and redirect functions 
+ * HTTP Verb aware dispatch mechanisms for support of more REST based interfaces.
+ * you can now indicate a content type request using file extensions (index.html or index.json)
+ * Full unicode support in the url and redirect functions
  * WSGIAppController and a new tgext.wsgiapps project to make mounting wsgi apps in TG2 even easier.
  * Flash messages now use a plain cookie as a transport mechanism so they can be accessed and displayed with JS code which can make cacheing easier.
 
@@ -235,10 +260,10 @@ http://trac.turbogears.org/query?milestone=2.0b5
 
 === Backwards Incompatible Changes ===
 
- * The "status_" prefix has been removed from the status codes of the flash messages so pre 2.0b3 quickstarted apps must be updated accordingly. TG now provides a helper to display them in the template, read this [http://groups.google.com/group/turbogears-trunk/msg/fcf0784c074f5dfc post] for more details. 
+ * The "status_" prefix has been removed from the status codes of the flash messages so pre 2.0b3 quickstarted apps must be updated accordingly. TG now provides a helper to display them in the template, read this [http://groups.google.com/group/turbogears-trunk/msg/fcf0784c074f5dfc post] for more details.
 
 === Known Issues ===
- 
+
  * none
 
 === Contributors (in alphabetic order) ===
@@ -251,14 +276,14 @@ http://trac.turbogears.org/query?milestone=2.0b5
 === Features ===
  * Debugger page now allows searching the turbogears mailing list
  * Debugger page now posts TG dependencies when you post a traceback to the web
- * app_cfg now allows you to regester call_on_startup and call_on_shutdown functions 
+ * app_cfg now allows you to regester call_on_startup and call_on_shutdown functions
  * tg.url now wraps pylons.url to properly encode unicode strings to URL strings (as per the iri to url RFC)
  * "error pages" now looked up and displayed by normal TurboGears controllers
 
 === Fixes ===
 
- * tg.url fixed so escaping of redirect params is no longer required. 
- 
+ * tg.url fixed so escaping of redirect params is no longer required.
+
 === Contributors (in alphabetic order) ===
 
 Mark Ramm
@@ -280,8 +305,8 @@ Mark Ramm
  * tg.url no longer supports passing in a params dict (but you can use keyword arguments)
 
 === Known Issues ===
- 
- * apps using authentication outside the root of the URL hierarchy will redirect to the absolute root rather than the app root. 
+
+ * apps using authentication outside the root of the URL hierarchy will redirect to the absolute root rather than the app root.
 
 === Contributors (in alphabetic order) ===
 
@@ -303,9 +328,9 @@ Florent Aide, Gustavo Narea, Chris Perkins, Mark Ramm, Jonathan Schemoul, Jorge 
             # do other things here
 }}}
 
-If you are using tg.cycle, tg.selector, tg.ipeek, or tg.checker in your templates, you'll have to add that functionality to your lib.helpers module and import it from there.  There is some talk about asking for some of these things to be added to webhelpers, so if you use them you may want to chime in in support of that on the mailing list. 
+If you are using tg.cycle, tg.selector, tg.ipeek, or tg.checker in your templates, you'll have to add that functionality to your lib.helpers module and import it from there.  There is some talk about asking for some of these things to be added to webhelpers, so if you use them you may want to chime in in support of that on the mailing list.
 
-  
+
 == 1.9.7b2 (December 2nd, 2008): ==
 
 === Features ===
@@ -369,24 +394,24 @@ base_config.sa_auth = Bunch()
 
 === Known Issues ===
    * Toscawidgets does not render js_callbacks properly because of breakage from the simplejson.
- 
+
 
 == 1.9.7a4: ==
 
 === Features ===
-    * New highly customizable replacement for Buffet renderers.  
-         * These are not on by default, you must add base_config.use_legacy_renderer = False to your app_cfg.py file to use them. 
-         * When using the new renderers, you have to switch genshi from dotted lookup to using paths+filenames. 
+    * New highly customizable replacement for Buffet renderers.
+         * These are not on by default, you must add base_config.use_legacy_renderer = False to your app_cfg.py file to use them.
+         * When using the new renderers, you have to switch genshi from dotted lookup to using paths+filenames.
     * TG2 now supports automatic transactions, so you no longer have to explicitly commit transactions
        * Transaction middleware supports cross-database transactions
        * Transactions are not begun until the SQLAlchemy session becomes dirty, so no transaction overhead is wasted on requests that don't ever write to the database
-    * The SQLAlchemy metadata is no longer automatically bound in the config setup, so we can more easily support multiple database engines (eg., for master-slave replication). 
+    * The SQLAlchemy metadata is no longer automatically bound in the config setup, so we can more easily support multiple database engines (eg., for master-slave replication).
     * added start_response to the context, so we're easily able to use it to use WSGI applications anywhere
-    * added a use_wsgi_app() function that makes it very, very easy to mount a wsgi app in your tg2 controller, or use a TG2 controller as middleware. 
+    * added a use_wsgi_app() function that makes it very, very easy to mount a wsgi app in your tg2 controller, or use a TG2 controller as middleware.
     * Improved support and documentation for returning a WebOb response object, so tg2 controllers can take over all aspects of defining the responce whenever that's needed.
-    * Simply set base_config.serve_static to False to stop your TG2 app from serving up static content, no manual editing of the middleware setup required. 
+    * Simply set base_config.serve_static to False to stop your TG2 app from serving up static content, no manual editing of the middleware setup required.
     * request, repsonse, etc all available from tg as well as pylons now
-    * default template namspace now has request, response, and tg variables automatically injected into it. 
+    * default template namspace now has request, response, and tg variables automatically injected into it.
     * quickstart now imports from tg wherever possible so there's less what's in tg what's in pylons
     * a custom content type can now be set dynamically within a controller method by setting the content type in @expose to tg.controllers.CUSTOM_CONTENT_TYPE and using pylons.response.headers['Content-Type']
     * The declarative plugin of SQLAlchemy is now used in the default template, instead of the traditional method.
@@ -395,7 +420,7 @@ base_config.sa_auth = Bunch()
 
 === Fixes ===
     * You were not able to use non-standard class names for User, Group, and Permissions in tg.ext.repoze.who
-    * Configuring an alternate location for controllers did not work with PylonsApp (now we have TGApp, an it will work)> 
+    * Configuring an alternate location for controllers did not work with PylonsApp (now we have TGApp, an it will work)>
     * the Content-Type header will not have `charset=utf8` appended to it when it is not required
 
 === Contributors (in alphabetic order) ===
@@ -410,7 +435,7 @@ base_config.sa_auth = Bunch()
 +from tg.configuration import AppConfig, Bunch
 }}}
 
-    * You must define the user_class, group_class, and permission_class in app_config.py when using the authorizaiton plugin. 
+    * You must define the user_class, group_class, and permission_class in app_config.py when using the authorizaiton plugin.
 {{{
 -base_config.sa_auth.user = model.User
 +base_config.sa_auth.user_class = model.User
@@ -422,7 +447,7 @@ base_config.sa_auth = Bunch()
 
    *  TG2 no longer binds the database engine to the DBSession or metadata so you can decide how you want to handle this (perhaps to re-bind the session dynamically to a different engine on a per-request basis, etc...).
 
-This is now done in the yourapp.model.init_model callback which is called when your app is loaded and passed a configured engine as a parameter. To upgrade an existing project just add one line to __init__ in you model directory, as shown here. 
+This is now done in the yourapp.model.init_model callback which is called when your app is loaded and passed a configured engine as a parameter. To upgrade an existing project just add one line to __init__ in you model directory, as shown here.
 
 {{{
 def init_model(engine):
@@ -437,7 +462,7 @@ def init_model(engine):
 }}}
 
 
-Of course if you're starting a new project, all of this is done automatically for you by quickstart. 
+Of course if you're starting a new project, all of this is done automatically for you by quickstart.
 
    *  If you turn on new-style renderers, you must now provide the filename (and whatever path information is necessary) in expose, including the .html extension. Furthermore, we're now registering the template directory in the search path directly, so expose can be simpler. The old expose:
 
@@ -461,10 +486,10 @@ Should be replaced by the new expose:
 
     * TurboGears 2 now defaults to making multiple request parameters into a list that's passed to the controller (emulating the tg1 behavior).
     * The base_config object now has a number of methods for those who need very fine grained control of how the middleware and environment are setup.
-    * tg2 now uses sphinx extensions to import code samples from svn, as well as to test the example code. 
-    * new support of calling wsgi_apps from a TG2 controller method (see the use_wsgi_app function) 
+    * tg2 now uses sphinx extensions to import code samples from svn, as well as to test the example code.
+    * new support of calling wsgi_apps from a TG2 controller method (see the use_wsgi_app function)
     * added tg_vars to template namespace to more closely match tg1
-    * Lots and lots of new docs covering: 
+    * Lots and lots of new docs covering:
        * Updated TW docs
        * Updated config docs
        * Updated PyAMF integration docs
@@ -496,7 +521,7 @@ Florent Aide, Bruno J. M. Melo, Lee McFadden, Christopher Perkins, Mark Ramm, Sa
 
       * in `config/middleware.py`:
 
-{{{ 
+{{{
 +-make_base_app = setup_tg_wsgi_app(load_environment, base_config)
 +make_base_app = base_config.setup_tg_wsgi_app(load_environment)
 }}}
