@@ -15,11 +15,11 @@ def setup_noDB():
                              )
     return app_from_config(base_config)
 
-#def test_default_chameleon_genshi_renderer():
-#    app = setup_noDB()
-#    resp = app.get('/chameleon_index_dotted')
-#    assert "Welcome" in resp, resp
-#    assert "TurboGears" in resp, resp
+def test_default_chameleon_genshi_renderer():
+    app = setup_noDB()
+    resp = app.get('/chameleon_index_dotted')
+    assert "Welcome" in resp, resp
+    assert "TurboGears" in resp, resp
 
 def test_default_genshi_renderer():
     app = setup_noDB()

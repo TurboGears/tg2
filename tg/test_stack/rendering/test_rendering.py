@@ -40,19 +40,16 @@ def test_genshi_sub_inheritance_from_bottom():
     assert "from sub-template: sub.frombottom" in resp
     assert "Master template" in resp
 
-# These tests are removed along with Chameleon Genshi support until 
-# there is full support for CG in tg2
+def test_chameleon_genshi_base():
+    app = setup_noDB()
+    resp = app.get('/chameleon_genshi_index')
+    assert "<p>TurboGears 2 is rapid web application development toolkit designed to make your life easier.</p>" in resp
 
-#def test_chameleon_genshi_base():
-#    app = setup_noDB()
-#    resp = app.get('/chameleon_genshi_index')
-#    assert "<p>TurboGears 2 is rapid web application development toolkit designed to make your life easier.</p>" in resp
-#
-#def test_chameleon_genshi_inheritance():
-#    app = setup_noDB()
-#    resp = app.get('/chameleon_genshi_inherits')
-#    assert "Inheritance template" in resp
-#    assert "Master template" in resp
+def test_chameleon_genshi_inheritance():
+    app = setup_noDB()
+    resp = app.get('/chameleon_genshi_inherits')
+    assert "Inheritance template" in resp
+    assert "Master template" in resp
 
 def _test_jinja_inherits():
     app = setup_noDB()

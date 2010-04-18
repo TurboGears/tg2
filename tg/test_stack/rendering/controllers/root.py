@@ -70,13 +70,13 @@ class RootController(TGController):
     def jinja_inherits(self):
         return {}
 
-    #@expose('chameleon_genshi:index.html')
-    #def chameleon_genshi_index(self):
-    #    return {}
+    @expose('chameleon_genshi:index.html')
+    def chameleon_genshi_index(self):
+        return {}
 
-    #@expose('chameleon_genshi:genshi_inherits.html')
-    #def chameleon_genshi_inherits(self):
-    #    return {}
+    @expose('chameleon_genshi:genshi_inherits.html')
+    def chameleon_genshi_inherits(self):
+        return {}
 
     @expose('mako:mako_noop.mak')
     def mako_index(self):
@@ -86,9 +86,9 @@ class RootController(TGController):
     def mako_inherits(self):
         return {}
 
-    #@expose('chameleon_genshi:tg.test_stack.rendering.templates.index')
-    #def chameleon_index_dotted(self):
-    #    return {}
+    @expose('chameleon_genshi:tg.test_stack.rendering.templates.index')
+    def chameleon_index_dotted(self):
+        return {}
 
     @expose('genshi:tg.test_stack.rendering.templates.index')
     def index_dotted(self):
