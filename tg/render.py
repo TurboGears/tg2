@@ -9,10 +9,66 @@ from repoze.what import predicates
 import tg
 from tg.configuration import Bunch
 
+#monkey patch alert!
+import pylons
+def my_pylons_globals():
+    """Create and return a dictionary of global Pylons variables
+
+    Render functions should call this to retrieve a list of global
+    Pylons variables that should be included in the global template
+    namespace if possible.
+
+    Pylons variables that are returned in the dictionary:
+        ``c``, ``g``, ``h``, ``_``, ``N_``, config, request, response,
+        translator, ungettext, ``url``
+
+    If SessionMiddleware is being used, ``session`` will also be
+    available in the template namespace.
+
+    """
+
+    conf = pylons.config._current_obj()
+    c = pylons.tmpl_context._current_obj()
+    g = conf.get('pylons.app_globals') or conf['pylons.g']
+
+    try:
+        h = config.get('pylons.package').lib.helpers
+
+    except (AttributeError, KeyError):
+        h = Bunch()
+
+    pylons_vars = dict(
+        c=c,
+        tmpl_context=c,
+        config=conf,
+        app_globals=g,
+        g=g,
+        h = h,
+        #h=conf.get('pylons.h') or pylons.h._current_obj(),
+        request=pylons.request._current_obj(),
+        response=pylons.response._current_obj(),
+        url=pylons.url._current_obj(),
+        translator=pylons.translator._current_obj(),
+        ungettext=pylons.i18n.ungettext,
+        _=pylons.i18n._,
+        N_=pylons.i18n.N_
+    )
+
+    # If the session was overriden to be None, don't populate the session
+    # var
+    econf = pylons.config['pylons.environ_config']
+    if 'beaker.session' in pylons.request.environ or \
+        ('session' in econf and econf['session'] in pylons.request.environ):
+        pylons_vars['session'] = pylons.session._current_obj()
+    templating.log.debug("Created render namespace with pylons vars: %s", pylons_vars)
+    return pylons_vars
+
+templating.pylons_globals = my_pylons_globals
+#end monkeying around
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
-        Exception.__init__(self, 
+        Exception.__init__(self,
             ("The renderer for '%(template_engine)s' templates is missing. "
             "Try adding the following line in you app_cfg.py:\n"
             "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
@@ -99,17 +155,12 @@ def _get_tg_vars():
 
     # TODO in 2.2: we should actually just get helpers from the package's helpers
     # module and dump the use of the SOP.
-    
-    #########
-    #try: 
-    #    helpers = config['package'].lib.helpers 
-    #except ImportError: 
-    #    helpers = Bunch()
-    #########
 
-    helpers = config.get('pylons.h') or config.get('pylons.helpers')
+    try:
+        helpers = config['pylons.package'].lib.helpers
+    except AttributeError, ImportError:
+        helpers = Bunch()
 
-    
     root_vars = Bunch(
         c = tmpl_context,
         tmpl_context = tmpl_context,

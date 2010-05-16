@@ -220,7 +220,6 @@ class TestRequire(BaseIntegrationTests):
     def test_authz_denied_in_root_controller(self):
         # As an anonymous user:
         resp = self.app.get('/commit', status=401)
-        return
         assert "you can commit" not in resp.body
         self._check_flash(resp, r'The current user must be \"developer\"')
         # As an authenticated user:
