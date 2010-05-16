@@ -11,6 +11,8 @@ def setup_noDB():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
+                                       'pylons.tmpl_context_attach_args': False
+
                                        }
                              )
     return app_from_config(base_config)
@@ -75,6 +77,7 @@ def test_template_override():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
+                                       'pylons.tmpl_context_attach_args': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -86,7 +89,7 @@ def test_template_override():
     # it should yield the old result
     r = app.get('/template_override')
     assert "Not overridden" in r, r
-    
+
 def test_template_override_wts():
 #    app = setup_noDB()
     base_config = TestConfig(folder = 'rendering',
@@ -96,6 +99,7 @@ def test_template_override_wts():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
+                                       'pylons.tmpl_context_attach_args': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -108,4 +112,4 @@ def test_template_override_wts():
     # it should yield the old result
     r = app.get('/template_override_wts/')
     assert "Not overridden" in r, r
-    
+

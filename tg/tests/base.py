@@ -38,7 +38,7 @@ session_dir = os.path.join(data_dir, 'session')
 def setup_session_dir():
     if not os.path.exists(session_dir):
         os.makedirs(session_dir)
-    
+
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
@@ -50,7 +50,7 @@ default_config = {
                          'templates': [],
                          'static_files': None},
         'pylons.db_engines': {},
-        'pylons.environ_config': dict(session='beaker.session', 
+        'pylons.environ_config': dict(session='beaker.session',
                                       cache='beaker.cache'),
         'pylons.g': None,
         'pylons.h': None,
@@ -58,6 +58,7 @@ default_config = {
         'pylons.response_options': pylons.configuration.response_defaults.copy(),
         'pylons.strict_c': False,
         'pylons.c_attach_args': True,
+        'pylons.tmpl_context_attach_args': True,
         'buffet.template_engines': [],
         'buffet.template_options': {},
         'default_renderer':'genshi',
@@ -87,12 +88,12 @@ def make_app(controller_klass=None, environ=None):
     environ['pylons.routes_dict'] = {}
     environ['pylons.routes_dict']['action'] = "routes_placeholder"
 
-    
+
     if controller_klass is None:
         controller_klass = TGController
 
     app = ControllerWrap(controller_klass)
-    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)    
+    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
@@ -123,8 +124,8 @@ def create_request(path, environ=None):
 
     # setup pylons.request to point to our Registry
     reg.register(pylons.request, req)
-    
-    
+
+
     # setup tmpl context
     tmpl_context._push_object(ContextObj())
     url._push_object(URLGenerator(default_map, environ))
@@ -143,7 +144,7 @@ class TestWSGIController(TestCase):
         tmpl_context._pop_object(self._ctx)
         pylons.config.pop_process_config()
         teardown_session_dir()
-        
+
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
         self.environ['pylons.routes_dict'].update(kargs)

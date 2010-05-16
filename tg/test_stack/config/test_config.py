@@ -3,10 +3,12 @@ from tg.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 
 def setup_noDB():
-    base_config = TestConfig(folder = 'config', 
-                             values = {'use_sqlalchemy': False}
+    base_config = TestConfig(folder = 'config',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.tmpl_context_attach_args': False
+                                       }
                              )
-    return app_from_config(base_config) 
+    return app_from_config(base_config)
 
 def test_basic_stack():
     app = setup_noDB()

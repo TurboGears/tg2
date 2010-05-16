@@ -7,7 +7,7 @@ from tg.configuration import AppConfig
 class TestConfig(AppConfig):
 
     def __init__(self, folder, values=None):
-        if values is None: 
+        if values is None:
             values = {}
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
@@ -22,8 +22,6 @@ class TestConfig(AppConfig):
         self.use_legacy_renderer = False
         self.use_dotted_templatenames = False
         self.serve_static = False
-
-
 
         root = "."
         test_base_path = os.path.join(root,'tg', 'test_stack',)

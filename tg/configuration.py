@@ -470,14 +470,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         for key, value in lookup.iteritems():
             mimetypes.add_type(value, key)
 
-    def setup_persistance(self):
-        """Override this method to define how your application configures it's persistance model.
+    def setup_persistence(self):
+        """Override this method to define how your application configures it's persistence model.
            the default is to setup sqlalchemy from the cofiguration file, but you might choose
-           to set up a persistance system other than sqlalchemy, or add an additional persistance
-           layer.  Here is how you would go about setting up a ming (mongo) persistance layer::
+           to set up a persistence system other than sqlalchemy, or add an additional persistence
+           layer.  Here is how you would go about setting up a ming (mongo) persistence layer::
 
             class MingAppConfig(AppConfig):
-                def setup_persistance(self):
+                def setup_persistence(self):
                     self.ming_ds = DataStore(config['mongo.url'])
                     session = Session.by_name('main')
                     session.bind = self.ming_ds
@@ -573,7 +573,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             if self.use_legacy_renderer:
                 self.setup_default_renderer()
 
-            self.setup_persistance()
+            self.setup_persistence()
 
         return load_environment
 
