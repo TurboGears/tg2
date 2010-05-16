@@ -2,6 +2,7 @@
 import atexit
 import os
 import logging
+import warnings
 from copy import copy
 import mimetypes
 from UserDict import DictMixin
@@ -198,8 +199,10 @@ class AppConfig(Bunch):
 
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
+            warnings.simplefilter("ignore")
             config['pylons.strict_c'] = True
-
+            warnings.resetwarnings()
+            config['pylons.stritmpl_contextt_tmpl_context'] = True
         self.after_init_config()
 
     def after_init_config(self):
@@ -207,14 +210,14 @@ class AppConfig(Bunch):
         Override this method to set up configuration variables at the application
         level.  This method will be called after your configuration object has
         been initialized on startup.  Here is how you would use it to override
-        the default setting of pylons.strict_c ::
+        the default setting of pylons.stritmpl_contextt_tmpl_context ::
 
             from tg.configuration import AppConfig
             from pylons import config
 
             class MyAppConfig(AppConfig):
                 def after_init_config(self):
-                    config['pylons.strict_c'] = False
+                    config['pylons.stritmpl_contextt_tmpl_context'] = False
 
             base_config = MyAppConfig()
 
@@ -424,7 +427,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                  [FileSystemLoader(path) for path in self.paths['templates']]),
                  auto_reload=self.auto_reload_templates)
         # Jinja's unable to request c's attributes without strict_c
+        warnings.simplefilter("ignore")
         config['pylons.strict_c'] = True
+        warnings.resetwarnings()
+        config['pylons.stritmpl_contextt_tmpl_context'] = True
+
 
         self.render_functions.jinja = render_jinja
 

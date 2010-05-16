@@ -30,7 +30,7 @@ class SubController(object):
     @expose()
     def redirect_sub(self):
         tg.redirect('index')
-    
+
     @expose()
     def redirect_list(self):
         tg.redirect(["/sub2", "list"])
@@ -144,7 +144,7 @@ class RootController(TGController):
     @expose(content_type='image/png')
     def custom_content_type(self):
         return 'PNG'
-    
+
     @expose(content_type='text/plain')
     def custom_content_text_plain_type(self):
         return 'a<br/>bx'
@@ -153,20 +153,20 @@ class RootController(TGController):
     def custom_content_type2(self):
         pylons.response.headers['Content-Type'] = 'image/png'
         return 'PNG2'
-    
+
     @expose()
     def check_params(self, *args, **kwargs):
         if not args and not kwargs:
             return "None recieved"
         else:
-            return "Controler recieved: %s, %s" %(args, kwargs) 
-    
+            return "Controler recieved: %s, %s" %(args, kwargs)
+
     @expose()
     def test_url_sop(self):
         from tg import url
         eq_('/foo', url('/foo'))
 
-        
+
         u = url("/foo", bar=1, baz=2)
         assert u in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"], u

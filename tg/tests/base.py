@@ -3,6 +3,7 @@
 import os, shutil
 from unittest import TestCase
 from xmlrpclib import loads, dumps
+import warnings
 
 import webob
 import beaker
@@ -57,6 +58,7 @@ default_config = {
         'pylons.request_options': pylons.configuration.request_defaults.copy(),
         'pylons.response_options': pylons.configuration.response_defaults.copy(),
         'pylons.strict_c': False,
+        'pylons.stritmpl_contextt_tmpl_context':False,
         'pylons.c_attach_args': True,
         'pylons.tmpl_context_attach_args': True,
         'buffet.template_engines': [],
@@ -137,11 +139,15 @@ class TestWSGIController(TestCase):
         tmpl_options['genshi.search_path'] = ['tests']
         self._ctx = ContextObj()
         tmpl_context._push_object(self._ctx)
+
+        warnings.simplefilter("ignore")
         pylons.config.push_process_config(default_config)
+        warnings.resetwarnings()
         setup_session_dir()
 
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
+        pylons.config.pop_thread_config()
         pylons.config.pop_process_config()
         teardown_session_dir()
 

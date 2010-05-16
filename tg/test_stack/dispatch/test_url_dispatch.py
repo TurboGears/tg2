@@ -8,12 +8,12 @@ from tg.jsonify import JsonEncodeError
 from tg.util import no_warn
 
 def setup_noDB():
-    base_config = TestConfig(folder = 'dispatch', 
+    base_config = TestConfig(folder = 'dispatch',
                              values = {'use_sqlalchemy': False,
                              'ignore_parameters': ["ignore", "ignore_me"]
                              }
                              )
-    return app_from_config(base_config) 
+    return app_from_config(base_config)
 
 
 app = setup_noDB()
@@ -48,6 +48,7 @@ def test_redirect_absolute():
     resp = resp.follow()
     assert 'hello world' in resp, resp
 
+@no_warn
 def test_redirect_relative():
     resp = app.get('/redirect_me?target=hello&name=abc')
     resp = resp.follow()
@@ -94,7 +95,7 @@ def _test_subcontroller_lookup():
 def test_subcontroller_redirect_no_slash_sub2index():
     resp=app.get('/sub2/').follow()
     assert'hello list' in resp, resp
-    
+
 def test_redirect_to_list_of_strings():
     resp = app.get('/sub/redirect_list').follow()
     assert 'hello list' in resp, resp
@@ -130,14 +131,16 @@ def test_custom_text_plain_content_type():
     assert 'text/plain; charset=utf-8' == dict(resp.headers)['Content-Type'], resp
     assert resp.body == """a<br/>bx""", resp
 
+@no_warn
 def test_custom_content_type2():
     resp = app.get('/custom_content_type2')
     assert 'image/png' == dict(resp.headers)['Content-Type'], resp
     assert resp.body == 'PNG2', resp
 
+@no_warn
 def test_basicurls():
     resp = app.get("/test_url_sop")
-    
+
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
     assert "None Recieved"
@@ -146,7 +149,7 @@ def test_ignore_parameters():
 def test_json_return_list():
     resp = app.get("/json_return_list")
     assert "None Recieved"
-    
+
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")
     assert 'https://' in resp, resp
@@ -161,4 +164,4 @@ def test_variable_decode():
     params = variable_encode(dict(obj=obj), add_repetitions=False)
     resp = app.get('/test_vardec', params=params)
     assert resp.json['obj'] == obj, (resp.json['obj'], obj)
-    
+
