@@ -147,7 +147,7 @@ class TestWSGIController(TestCase):
 
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
-        pylons.config.pop_thread_config()
+#        pylons.config.pop_thread_config()
         pylons.config.pop_process_config()
         teardown_session_dir()
 
