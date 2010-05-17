@@ -16,7 +16,10 @@ def setup_noDB():
     return app_from_config(base_config)
 
 
-app = setup_noDB()
+app = None
+def setup():
+    global app
+    app = setup_noDB()
 
 @no_warn #should be _default now
 def test_tg_style_default():

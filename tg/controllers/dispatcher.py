@@ -421,7 +421,7 @@ class ObjectDispatcher(Dispatcher):
         applicable method, so therefore we head back up the branches of the
         tree until we found a method which matches with a default or lookup method.
         """
-        
+
         orig_remainder_len = len(remainder)
         current_controller = state.controller
 
@@ -472,7 +472,7 @@ class ObjectDispatcher(Dispatcher):
         This method defines how the object dispatch mechanism works, including
         checking for security along the way.
         """
-        
+
         current_controller = state.controller
 
         if hasattr(current_controller, '_check_security'):
@@ -487,7 +487,7 @@ class ObjectDispatcher(Dispatcher):
             return self._dispatch_first_found_default_or_lookup(state, remainder)
 
         current_path = remainder[0]
-        
+
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
             #check to see if the argspec jives

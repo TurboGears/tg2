@@ -17,7 +17,41 @@ class MovieForm(TableForm):
 #then, we create an instance of this form
 base_movie_form = MovieForm("movie_form", action='create')
 
+
+class GoodJsonObject(object):
+    def __json__(self):
+        return {'Json':'Rocks'}
+
+class BadJsonObject(object):
+    pass
+
+class JsonController(TGController):
+
+    @expose('json')
+    def json(self):
+        return dict(a='hello world', b=True)
+
+    @expose('json', exclude_names=["b"])
+    def excluded_b(self):
+        return dict(a="visible", b="invisible")
+
+    @expose('json')
+    @expose('genshi:test', content_type='application/xml')
+    def xml_or_json(self):
+        return dict(name="John Carter", title='officer', status='missing')
+
+    @expose('json')
+    def json_with_object(self):
+        return dict(obj=GoodJsonObject())
+
+    @expose('json')
+    def json_with_bad_object(self):
+        return dict(obj=BadJsonObject())
+
 class RootController(TGController):
+
+    j = JsonController()
+
     @expose('genshi:index.html')
     def index(self):
         return {}
