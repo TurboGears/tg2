@@ -23,7 +23,7 @@ def setup():
     global app
     app = make_app()
 
-class TestTGController():
+class TestTGController(object):
 
     def setup(self):
         self.app = app
