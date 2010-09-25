@@ -43,7 +43,7 @@ class DispatchState(object):
         self.remainder = None
         self.dispatcher = None
         self.params = params
-        self._last_tried_lookup = None
+        self._notfound_stack = []
 
         #remove the ignore params from self.params
         remove_params = pylons.config.get('ignore_parameters', [])
@@ -422,50 +422,23 @@ class ObjectDispatcher(Dispatcher):
         tree until we found a method which matches with a default or lookup method.
         """
 
-        orig_remainder_len = len(remainder)
-        current_controller = state.controller
-
-        remainder = list(remainder[:])
-        for i, controller in enumerate(reversed(state.controller_path.values())):
-            if self._is_exposed(controller, '_lookup'):
-                new_controller, new_remainder = controller._lookup(*remainder)
-                last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
-                if last_tried_lookup.__class__.__name__ != new_controller.__class__.__name__ or remainder != new_remainder:
-                    new_controller._last_tried_lookup = new_controller
-                    state.add_controller(new_controller.__class__.__name__, new_controller)
-                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
-                    return dispatcher(state, new_remainder)
-
-            if self._is_exposed(controller, 'lookup'):
-                warn('lookup method is deprecated, please replace with _lookup', DeprecationWarning)
-                new_controller, new_remainder = controller.lookup(*remainder)
-                last_tried_lookup = getattr(current_controller, '_last_tried_lookup', None)
-                if last_tried_lookup.__class__.__name__ != new_controller.__class__.__name__ or remainder != new_remainder:
-                    new_controller._last_tried_lookup = new_controller
-                    state.add_controller(new_controller.__class__.__name__, new_controller)
-                    dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
-                    return dispatcher(state, new_remainder)
-
-            if self._is_exposed(controller, '_default'):# and\
-#               method_matches_args(controller._default, state.params, remainder, self._use_lax_params):
-                state.add_method(controller._default, remainder)
+        try:
+            m_type, meth, m_remainder, warning = state._notfound_stack.pop()
+            if warning:
+                warn(warning, DeprecationWarning)
+            if m_type == 'lookup':
+                new_controller, new_remainder = meth(*m_remainder)
+                state.add_controller(new_controller.__class__.__name__, new_controller)
+                dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
+                return dispatcher(state, new_remainder)
+            elif m_type == 'default':
+                state.add_method(meth, m_remainder)
                 state.dispatcher = self
                 return state
-
-            if self._is_exposed(controller, 'default'):# and\
-#               method_matches_args(controller._default, state.params, remainder, self._use_lax_params):
-                warn('default method is deprecated, please replace with _default', DeprecationWarning)
-                state.add_method(controller.default, remainder)
-                state.dispatcher = self
-                return state
-
-            try:
-                remainder.insert(0, state.url_path[-(i+orig_remainder_len+1)])
-            except IndexError:
-                #you ran out of path in the remainder, somehow
-                break
-
-        raise HTTPNotFound
+            else:
+                assert False, 'Unknown notfound hander %r' % m_type
+        except:
+            raise HTTPNotFound
 
     def _dispatch(self, state, remainder):
         """
@@ -474,9 +447,8 @@ class ObjectDispatcher(Dispatcher):
         """
 
         current_controller = state.controller
+        self._enter_controller(state, remainder)
 
-        if hasattr(current_controller, '_check_security'):
-            current_controller._check_security()
         #we are plumb out of path, check for index
         if not remainder:
             if hasattr(current_controller, 'index'):
@@ -504,6 +476,26 @@ class ObjectDispatcher(Dispatcher):
 
         #dispatch not found
         return self._dispatch_first_found_default_or_lookup(state, remainder)
+
+    def _enter_controller(self, state, remainder):
+        '''Checks security and pushes any notfound (lookup or default) handlers
+        onto the stack
+        '''
+
+        current_controller = state.controller
+        if hasattr(current_controller, '_check_security'):
+            current_controller._check_security()
+        if self._is_exposed(current_controller, '_lookup'):
+            state._notfound_stack.append(('lookup', current_controller._lookup, remainder, None))
+        elif self._is_exposed(current_controller, 'lookup'):
+            state._notfound_stack.append(('lookup', current_controller.lookup, remainder,
+                                          'lookup method is deprecated, please replace with _lookup'))
+        if self._is_exposed(current_controller, '_default'):
+            state._notfound_stack.append(('default', current_controller._default, remainder, None))
+        elif self._is_exposed(current_controller, 'default'):
+            state._notfound_stack.append(('default', current_controller.default, remainder,
+                                          'default method is deprecated, please replace with _default'))
+            
 
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         """

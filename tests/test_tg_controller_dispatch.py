@@ -141,9 +141,8 @@ class LookupController(TGController):
 class LookupWithEmbeddedLookupController(TGController):
     
     @expose()
-    def _lookup(self, a, *args):
+    def _lookup(self, *args):
         return LookupControllerWithArgs(), args
-
 
 class LookupHelperWithIndex:
 
@@ -437,7 +436,9 @@ class TestTGController(TestWSGIController):
         assert msg in r, r
 
     def test_lookup_with_sub(self):
-        self.app.get('/lookup_with_sub/EYE', status=404)
+        r = self.app.get('/lookup_with_sub/EYE')
+        msg = 'EYE'
+        assert msg in r, r
 
     def test_lookup_with_args(self):
         r = self.app.get('/lookup_with_args/get_here/got_here')
