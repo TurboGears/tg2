@@ -175,7 +175,14 @@ class LookupWithEmbeddedLookupWithHelperWithIndex(TGController):
     @expose()
     def index(self):
         return "first controller with index"
-    
+
+class LookupControllerWithSubcontroller(TGController):
+
+    class SubController(object): pass
+
+    @expose()
+    def _lookup(self, a, *args):
+        return self.SubController(), args
 
 class RemoteErrorHandler(TGController):
     @expose()
@@ -237,6 +244,7 @@ class BasicTGController(TGController):
 
     lookup = LookupController()
     lookup_with_args = LookupControllerWithArgs()
+    lookup_with_sub = LookupControllerWithSubcontroller()
     self_calling = SelfCallingLookupController()
 
     @expose(content_type='application/rss+xml')
@@ -427,6 +435,9 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/lookup/EYE')
         msg = 'EYE'
         assert msg in r, r
+
+    def test_lookup_with_sub(self):
+        self.app.get('/lookup_with_sub/EYE', status=404)
 
     def test_lookup_with_args(self):
         r = self.app.get('/lookup_with_args/get_here/got_here')
