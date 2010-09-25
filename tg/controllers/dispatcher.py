@@ -424,21 +424,21 @@ class ObjectDispatcher(Dispatcher):
 
         try:
             m_type, meth, m_remainder, warning = state._notfound_stack.pop()
-            if warning:
-                warn(warning, DeprecationWarning)
-            if m_type == 'lookup':
-                new_controller, new_remainder = meth(*m_remainder)
-                state.add_controller(new_controller.__class__.__name__, new_controller)
-                dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
-                return dispatcher(state, new_remainder)
-            elif m_type == 'default':
-                state.add_method(meth, m_remainder)
-                state.dispatcher = self
-                return state
-            else:
-                assert False, 'Unknown notfound hander %r' % m_type
-        except:
+        except IndexError:
             raise HTTPNotFound
+        if warning:
+            warn(warning, DeprecationWarning)
+        if m_type == 'lookup':
+            new_controller, new_remainder = meth(*m_remainder)
+            state.add_controller(new_controller.__class__.__name__, new_controller)
+            dispatcher = getattr(new_controller, '_dispatch', self._dispatch)
+            return dispatcher(state, new_remainder)
+        elif m_type == 'default':
+            state.add_method(meth, m_remainder)
+            state.dispatcher = self
+            return state
+        else:
+            assert False, 'Unknown notfound hander %r' % m_type
 
     def _dispatch(self, state, remainder):
         """
