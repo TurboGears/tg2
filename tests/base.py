@@ -18,7 +18,7 @@ from paste import httpexceptions
 import tg
 import pylons
 from tg import tmpl_context
-from tg.test_stack import app_from_config, TestConfig
+from tests.test_stack import app_from_config, TestConfig
 from pylons import url
 from routes import URLGenerator, Mapper
 from tg.util import Bunch

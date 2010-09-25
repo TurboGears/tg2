@@ -120,31 +120,31 @@ class RootController(TGController):
     def mako_inherits(self):
         return {}
 
-    @expose('chameleon_genshi:tg.test_stack.rendering.templates.index')
+    @expose('chameleon_genshi:tests.test_stack.rendering.templates.index')
     def chameleon_index_dotted(self):
         return {}
 
-    @expose('genshi:tg.test_stack.rendering.templates.index')
+    @expose('genshi:tests.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}
 
-    @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits')
+    @expose('genshi:tests.test_stack.rendering.templates.genshi_inherits')
     def genshi_inherits_dotted(self):
         return {}
 
-    @expose('genshi:tg.test_stack.rendering.templates.genshi_inherits_sub_dotted')
+    @expose('genshi:tests.test_stack.rendering.templates.genshi_inherits_sub_dotted')
     def genshi_inherits_sub_dotted(self):
         return {}
 
-    @expose('genshi:tg.test_stack.rendering.templates.sub.frombottom_dotted')
+    @expose('genshi:tests.test_stack.rendering.templates.sub.frombottom_dotted')
     def genshi_inherits_sub_dotted_from_bottom(self):
         return {}
 
-    @expose('mako:tg.test_stack.rendering.templates.mako_noop')
+    @expose('mako:tests.test_stack.rendering.templates.mako_noop')
     def mako_index_dotted(self):
         return {}
 
-    @expose('mako:tg.test_stack.rendering.templates.mako_inherits_dotted')
+    @expose('mako:tests.test_stack.rendering.templates.mako_inherits_dotted')
     def mako_inherits_dotted(self):
         return {}
 
@@ -155,16 +155,16 @@ class RootController(TGController):
         use_custom_format(self.custom_format, format)
         return dict(format=format, status="ok")
 
-    @expose("genshi:tg.tests.non_overridden")
+    @expose("genshi:tests.non_overridden")
     def template_override(self, override=False):
         if override:
-            override_template(self.template_override, "genshi:tg.tests.overridden")
+            override_template(self.template_override, "genshi:tests.overridden")
         return dict()
 
     @with_trailing_slash
-    @expose("genshi:tg.tests.non_overridden")
+    @expose("genshi:tests.non_overridden")
     def template_override_wts(self, override=False):
         if override:
-            override_template(self.template_override_wts, "genshi:tg.tests.overridden")
+            override_template(self.template_override_wts, "genshi:tests.overridden")
         return dict()
 

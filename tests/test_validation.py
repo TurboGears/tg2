@@ -8,7 +8,7 @@ from simplejson import loads
 
 from tg.controllers import TGController
 from tg.decorators import expose, validate
-from tg.tests.base import (TestWSGIController, data_dir,
+from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tw.forms import TableForm, TextField

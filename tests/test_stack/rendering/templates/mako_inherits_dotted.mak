@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-<%inherit file="tg.test_stack.rendering.templates.mako_base" />
+<%inherit file="tests.test_stack.rendering.templates.mako_base" />
 
 <%def name="head_tags()">
   <!-- add some head tags here -->

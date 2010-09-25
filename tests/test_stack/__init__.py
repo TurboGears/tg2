@@ -1,6 +1,7 @@
 import os
 from webtest import TestApp
 import tg
+import tests
 from tg.util import DottedFileNameFinder
 from tg.configuration import AppConfig
 
@@ -13,7 +14,7 @@ class TestConfig(AppConfig):
         #First we setup some base values that we know will work
         self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja','json']
         self.render_functions = tg.util.Bunch()
-        self.package = tg.test_stack
+        self.package = tests.test_stack
         self.default_renderer = 'genshi'
         self.globals = self
         self.helpers = {}
@@ -23,8 +24,8 @@ class TestConfig(AppConfig):
         self.use_dotted_templatenames = False
         self.serve_static = False
 
-        root = "."
-        test_base_path = os.path.join(root,'tg', 'test_stack',)
+        root = os.path.dirname(os.path.dirname(tests.__file__))
+        test_base_path = os.path.join(root,'tests', 'test_stack',)
         test_config_path = os.path.join(test_base_path, folder)
         self.paths=tg.util.Bunch(
                     root=test_base_path,
@@ -33,8 +34,6 @@ class TestConfig(AppConfig):
                     templates=[os.path.join(test_config_path, 'templates')],
                     i18n=os.path.join(test_config_path, 'i18n')
                     )
-        print test_config_path
-
         #Then we overide those values with what was passed in
         for key, value in values.items():
             setattr(self, key, value)

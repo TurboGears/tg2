@@ -1,4 +1,4 @@
-from tg.test_stack import TestConfig, app_from_config
+from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
 from webtest import TestApp
 from pylons import tmpl_context

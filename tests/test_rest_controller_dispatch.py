@@ -11,7 +11,7 @@ from formencode import validators
 from webob import Response, Request
 from nose.tools import raises
 
-from tg.tests.base import TestWSGIController, make_app, setup_session_dir, \
+from tests.base import TestWSGIController, make_app, setup_session_dir, \
                           teardown_session_dir
 
 def setup():

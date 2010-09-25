@@ -18,7 +18,7 @@ from routes import Mapper
 import pylons
 from routes.middleware import RoutesMiddleware
 from webob.exc import HTTPNotModified
-from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
 def setup():
     setup_session_dir()

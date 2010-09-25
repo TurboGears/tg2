@@ -4,8 +4,9 @@ Testing for TG2 Configuration
 from nose.tools import eq_, raises
 import atexit
 
+from tg.util import Bunch
 from tg.configuration import AppConfig, config
-from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
 
 
@@ -46,6 +47,18 @@ class TestPylonsConfigWrapper:
 class TestAppConfig:
     def setup(self):
         self.config = AppConfig()
+        # set up some required paths and config settings
+        # FIXME: these seem to be needed so that
+        # other tests don't suffer - but that's a nasty
+        # side-effect. setup for those tests actually needs
+        # fixing.
+        config['pylons.paths']['static_files'] = "test"
+        config["pylons.app_globals"] = Bunch()
+        config["use_sqlalchemy"] = False
+        config["global_conf"] = Bunch()
+        config["package"] = "test"
+        config["call_on_shutdown"] = "foo"
+        config["render_functions"] = Bunch()
         config['beaker.session.secret'] = 'some_secret'
 
     def test_create(self):

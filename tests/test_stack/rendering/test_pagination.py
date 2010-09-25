@@ -1,4 +1,4 @@
-from tg.test_stack import TestConfig, app_from_config
+from tests.test_stack import TestConfig, app_from_config
 
 
 def setup_noDB():

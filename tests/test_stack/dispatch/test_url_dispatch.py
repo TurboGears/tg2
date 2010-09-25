@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from nose.tools import raises
 import os
-from tg.test_stack import TestConfig, app_from_config
+from tests.test_stack import TestConfig, app_from_config
 from webtest import TestApp
 from nose.tools import eq_
 from tg.jsonify import JsonEncodeError

@@ -5,7 +5,7 @@ import tg
 from tg.controllers import *
 from tg.exceptions import HTTPFound
 from nose.tools import eq_
-from tg.tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from tg.util import no_warn
 
 def setup():
