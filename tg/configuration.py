@@ -418,6 +418,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         self.render_functions.genshi = render_genshi
 
+    def setup_kajiki_renderer(self):
+        """Setup a renderer and loader for the fastpt engine."""
+        from kajiki.loader import PackageLoader
+        from tg.render import render_kajiki
+        loader = PackageLoader()
+        config['pylons.app_globals'].kajiki_loader = loader
+        self.render_functions.kajiki = render_kajiki
+
     def setup_jinja_renderer(self):
         """Setup a renderer and loader for Jinja2 templates."""
         from jinja2 import ChoiceLoader, Environment, FileSystemLoader

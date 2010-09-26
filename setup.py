@@ -17,6 +17,7 @@ test_requirements = ['coverage',
                     'repoze.who-testutil >= 1.0rc3',
                     'wsgiref',
                     'tw.forms',
+                     'Kajiki>=0.2.1',
                     ]
 
 setup(

@@ -124,6 +124,10 @@ class RootController(TGController):
     def chameleon_index_dotted(self):
         return {}
 
+    @expose('kajiki:tests.test_stack.rendering.templates.index')
+    def kajiki_index_dotted(self):
+        return {}
+
     @expose('genshi:tests.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}

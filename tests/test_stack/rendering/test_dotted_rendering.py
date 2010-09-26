@@ -21,6 +21,12 @@ def test_default_chameleon_genshi_renderer():
     assert "Welcome" in resp, resp
     assert "TurboGears" in resp, resp
 
+def test_default_kajiki_renderer():
+    app = setup_noDB()
+    resp = app.get('/kajiki_index_dotted')
+    assert "Welcome" in resp, resp
+    assert "TurboGears" in resp, resp
+
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/index_dotted')

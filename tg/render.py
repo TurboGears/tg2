@@ -5,6 +5,7 @@ from paste.deploy.converters import asbool
 from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
 from repoze.what import predicates
+from webhelpers.html import literal
 
 import tg
 from tg.configuration import Bunch
@@ -250,3 +251,31 @@ def render_jinja(template_name, template_vars, **kwargs):
 
 def render_json(template_name, template_vars, **kwargs):
     return tg.json_encode(template_vars)
+
+def render_kajiki(template_name, extra_vars=None, cache_key=None, 
+                  cache_type=None, cache_expire=None, method='xhtml'):
+    """Render a template with Kajiki
+    
+    Accepts the cache options ``cache_key``, ``cache_type``, and
+    ``cache_expire`` in addition to method which are passed to Kajiki's
+    render function.
+    
+    """
+    # Create a render callable for the cache function
+    def render_template():
+        # Pull in extra vars if needed
+        globs = extra_vars or {}
+        
+        # Second, get the globals
+        globs.update(templating.pylons_globals())
+
+        # Grab a template reference
+        template = globs['app_globals'].kajiki_loader.load(template_name)
+        
+        return literal(template(globs).render())
+    
+    return templating.cached_template(template_name, render_template, cache_key=cache_key,
+                           cache_type=cache_type, cache_expire=cache_expire,
+                           ns_options=('method'), method=method)
+
+
