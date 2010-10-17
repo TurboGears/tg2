@@ -275,8 +275,6 @@ class AppConfig(Bunch):
         config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
         g = config['pylons.app_globals']
         g.dotted_filename_finder = DottedFileNameFinder()
-        #config['pylons.helpers'] = self.package.lib.helpers
-        #config['pylons.h'] = self.package.lib.helpers
 
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""

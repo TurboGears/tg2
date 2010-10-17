@@ -33,7 +33,7 @@ def my_pylons_globals():
     g = conf.get('pylons.app_globals') or conf['pylons.g']
 
     try:
-        h = config.get('pylons.package').lib.helpers
+        h = conf.package.lib.helpers
 
     except (AttributeError, KeyError):
         h = Bunch()
@@ -154,13 +154,10 @@ def _get_tg_vars():
         predicates = predicates,
         )
 
-    # TODO in 2.2: we should actually just get helpers from the package's helpers
-    # module and dump the use of the SOP.
-
     try:
-        helpers = config['pylons.package'].lib.helpers
+        h = config.package.lib.helpers
     except AttributeError, ImportError:
-        helpers = Bunch()
+        h = Bunch()
 
     root_vars = Bunch(
         c = tmpl_context,
@@ -168,7 +165,8 @@ def _get_tg_vars():
         response = response,
         request = request,
         url = tg.url,
-        helpers = helpers,
+        helpers = h,
+        h = h,
         tg = tg_vars
         )
     #Allow users to provide a callable that defines extra vars to be
