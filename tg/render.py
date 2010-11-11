@@ -215,9 +215,9 @@ def render_chameleon_genshi(template_name, template_vars, **kwargs):
 HTML = XML = None
 def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
-    global HTML,XML
+    global HTML, XML
     if not HTML or not XML:
-        from genshi import HTML,XML
+        from genshi import HTML, XML
 
     template_vars.update(HTML=HTML, XML=XML)
 
@@ -227,8 +227,9 @@ def render_genshi(template_name, template_vars, **kwargs):
                         template_name,
                         template_extension='.html')
 
-    if 'method' not in kwargs and 'templating.genshi.method' in config:
-        kwargs['method'] = config['templating.genshi.method']
+    if 'method' not in kwargs:
+        kwargs['method'] = {'text/xml': 'xml', 'text/plain': 'text'}.get(
+            response.content_type, config.get('templating.genshi.method'))
     # (in a similar way, we could pass other serialization options when they
     # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
@@ -250,28 +251,28 @@ def render_jinja(template_name, template_vars, **kwargs):
 def render_json(template_name, template_vars, **kwargs):
     return tg.json_encode(template_vars)
 
-def render_kajiki(template_name, extra_vars=None, cache_key=None, 
+def render_kajiki(template_name, extra_vars=None, cache_key=None,
                   cache_type=None, cache_expire=None, method='xhtml'):
     """Render a template with Kajiki
-    
+
     Accepts the cache options ``cache_key``, ``cache_type``, and
     ``cache_expire`` in addition to method which are passed to Kajiki's
     render function.
-    
+
     """
     # Create a render callable for the cache function
     def render_template():
         # Pull in extra vars if needed
         globs = extra_vars or {}
-        
+
         # Second, get the globals
         globs.update(templating.pylons_globals())
 
         # Grab a template reference
         template = globs['app_globals'].kajiki_loader.load(template_name)
-        
+
         return literal(template(globs).render())
-    
+
     return templating.cached_template(template_name, render_template, cache_key=cache_key,
                            cache_type=cache_type, cache_expire=cache_expire,
                            ns_options=('method'), method=method)
