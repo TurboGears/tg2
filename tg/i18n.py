@@ -1,14 +1,37 @@
 import logging
 
+from gettext import translation
+
+from babel import parse_locale
+
 import formencode
+
 import pylons
 import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
 from pylons.configuration import config
 from pylons import session
-from gettext import translation
+
 
 log = logging.getLogger(__name__)
+
+
+def sanitize_language_code(lang):
+    """Sanitize the language code if the spelling is slightly wrong.
+
+    For instance, 'pt-br' and 'pt_br' should be interpreted as 'pt_BR'.
+
+    """
+    try:
+        lang = '_'.join(filter(None, parse_locale(lang)[:2]))
+    except ValueError:
+        if '-' in lang:
+            try:
+                lang = '_'.join(filter(None, parse_locale(lang, sep='-')[:2]))
+            except ValueError:
+                pass
+    return lang
+
 
 def setup_i18n():
     """Set languages from the request header and the session.
@@ -17,6 +40,7 @@ def setup_i18n():
 
     Automatically called by tg controllers to setup i18n.
     Should only be manually called if you override controllers function.
+
     """
     if pylons.session:
         # If session is available, we try to see if there are languages set
@@ -29,7 +53,8 @@ def setup_i18n():
             languages = []
     else:
         languages = []
-    languages.extend(pylons.request.accept_language.best_matches())
+    languages.extend(map(sanitize_language_code,
+        pylons.request.accept_language.best_matches()))
     set_temporary_lang(languages)
 
 
@@ -39,10 +64,11 @@ def set_temporary_lang(languages):
 
     languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
+
     """
     # the logging to the screen was removed because
     # the printing to the screen for every problem causes serious slow down.
-    
+
     try:
         pylons.i18n.set_lang(languages)
     except LanguageError:
@@ -61,6 +87,7 @@ def set_lang(languages, **kwargs):
 
     languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
+
     """
     set_temporary_lang(languages)
 
@@ -68,16 +95,17 @@ def set_lang(languages, **kwargs):
         session[config.get('lang_session_key', 'tg_lang')] = languages
         session.save()
 
+
 _localdir = formencode.api.get_localedir()
 
 def set_formencode_translation(languages):
     """Set request specific translation of FormEncode."""
     try:
-        formencode_translation = translation('FormEncode',languages=languages, localedir=_localdir)
+        formencode_translation = translation(
+            'FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
     pylons.tmpl_context.formencode_translation = formencode_translation
-
 
 
 __all__ = [
