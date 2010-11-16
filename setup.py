@@ -17,7 +17,10 @@ test_requirements = ['coverage',
                     'repoze.who-testutil >= 1.0rc3',
                     'wsgiref',
                     'tw.forms',
-                     'Kajiki>=0.2.2',
+                    'Kajiki>=0.2.2',
+                    'repoze.what-pylons >= 1.0rc3',
+                    'repoze.tm2 >= 1.0a4',
+                    'Genshi >= 0.5.1',
                     ]
 
 setup(
@@ -36,12 +39,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'Pylons >= 0.9.7',
-        'Genshi >= 0.5.1',
         'WebFlash >= 0.1a8',
-        'ToscaWidgets >= 0.9.4',
         'WebError >= 0.10.1',
-        'repoze.what-pylons >= 1.0rc3',
-        'repoze.tm2 >= 1.0a4',
+        'Babel',
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed

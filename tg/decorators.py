@@ -23,8 +23,15 @@ from pylons.controllers.util import abort
 from formencode import variabledecode
 from tg import tmpl_context
 from tg.util import partial
-from repoze.what.plugins.pylonshq import ActionProtector
-from repoze.what.plugins.pylonshq.protectors import _BaseProtectionDecorator
+
+try:
+    from repoze.what.plugins.pylonshq import ActionProtector
+    from repoze.what.plugins.pylonshq.protectors import _BaseProtectionDecorator
+except ImportError:
+    class ActionProtector(object):
+        pass
+    class _BaseProtectionDecorator(object):
+        pass
 
 from tg.configuration import Bunch
 from tg.flash import flash

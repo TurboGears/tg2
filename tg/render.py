@@ -4,7 +4,12 @@ from pylons.configuration import config
 from paste.deploy.converters import asbool
 from pylons import (app_globals, session, tmpl_context, request,
                     response, templating)
-from repoze.what import predicates
+
+try:
+    from repoze.what import predicates
+except ImportError:
+    predicates = []
+    
 from webhelpers.html import literal
 
 import tg

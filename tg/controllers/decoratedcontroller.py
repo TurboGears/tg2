@@ -14,7 +14,11 @@ from pylons.configuration import config
 from pylons import request
 from pylons.controllers.util import abort
 
-from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
+try:
+    from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
+except ImportError:
+    class WhatNotAuthorizedError(Exception):pass
+    def not_anonymous():pass
 
 # demand load tw (ToscaWidets) if needed
 tw = None
@@ -271,7 +275,10 @@ class DecoratedController(object):
         if engine_name in ('genshi','mako') and config['use_toscawidgets']:
             global tw
             if not tw:
-                import tw
+                try:
+                    import tw
+                except ImportError:
+                    pass
 
             tw.framework.default_view = engine_name
 

@@ -5,12 +5,16 @@ import decimal
 
 from simplejson import JSONEncoder
 
-import sqlalchemy
+try:
+    import sqlalchemy
+    from sqlalchemy.engine.base import ResultProxy, RowProxy
+except ImportError:
+    ResultProxy=None
+    RowProxy=None
 
 def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
 
-from sqlalchemy.engine.base import ResultProxy, RowProxy
 from webob.multidict import MultiDict
 
 class JsonEncodeError(Exception):pass
