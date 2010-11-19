@@ -25,7 +25,7 @@ test_requirements = ['coverage',
                     'Genshi >= 0.5.1',
                     'TurboKid >= 1.0.4',
                     'Mako',
-                    'TurboJson >= 1.2.1',
+                    'TurboJson >= 1.3',
                     'Babel >=0.9.4',
                     'tgext.admin>=0.3.9',
                     ]

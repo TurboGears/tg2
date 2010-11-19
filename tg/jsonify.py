@@ -1,9 +1,11 @@
-"""JSON encoding functions using EAK-Rules."""
+"""JSON encoding functions."""
 
 import datetime
 import decimal
 
 from simplejson import JSONEncoder
+
+from webob.multidict import MultiDict
 
 try:
     import sqlalchemy
@@ -15,12 +17,13 @@ except ImportError:
 def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
 
-from webob.multidict import MultiDict
+class JsonEncodeError(Exception):
+    """JSON Encode error"""
 
-class JsonEncodeError(Exception):pass
 
-# JSON Encoder class
 class GenericJSON(JSONEncoder):
+    """JSON Encoder class"""
+
     def default(self, obj):
         if hasattr(obj, '__json__') and callable(obj.__json__):
             return obj.__json__()
@@ -43,8 +46,6 @@ class GenericJSON(JSONEncoder):
         else:
             return JSONEncoder.default(self, obj)
 
-# Generic Function JSON Encoder class
-
 try:
     from simplegeneric import generic
 
@@ -55,16 +56,24 @@ try:
         return _default.default(obj)
 
     class GenericFunctionJSON(GenericJSON):
+        """Generic Function JSON Encoder class."""
+
         def default(self, obj):
             return jsonify(obj)
 
     _instance = GenericFunctionJSON()
 except ImportError:
+
+    def jsonify(obj):
+        raise ImportError('simplegeneric is not installed')
+
     _instance = GenericJSON()
+
 
 # General encoding functions
 
 def encode(obj):
+    """Return a JSON string representation of a Python object."""
     if isinstance(obj, basestring):
         return _instance.encode(obj)
     try:
@@ -74,8 +83,8 @@ def encode(obj):
             raise JsonEncodeError('Your Encoded object must be dict-like.')
     except:
         pass
-    """Return a JSON string representation of a Python object."""
     return _instance.encode(obj)
+
 
 def encode_iter(obj):
     """Encode object, yielding each string representation as available."""
