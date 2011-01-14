@@ -234,7 +234,7 @@ def render_genshi(template_name, template_vars, **kwargs):
 
     if 'method' not in kwargs:
         kwargs['method'] = {'text/xml': 'xml', 'text/plain': 'text'}.get(
-            response.content_type, config.get('templating.genshi.method'))
+            response.content_type, config.get('templating.genshi.method', 'xhtml'))
     # (in a similar way, we could pass other serialization options when they
     # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
