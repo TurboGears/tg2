@@ -38,7 +38,7 @@ def my_pylons_globals():
     g = conf.get('pylons.app_globals') or conf['pylons.g']
 
     try:
-        h = conf.package.lib.helpers
+        h = conf['package'].lib.helpers
 
     except (AttributeError, KeyError):
         h = Bunch()
