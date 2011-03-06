@@ -65,5 +65,8 @@ setup(
         [turbogears2.command]
         serve = paste.script.serve:ServeCommand [Config]
         shell = pylons.commands:ShellCommand
-    '''
+    ''',
+    dependency_links=[
+        "http://www.turbogears.org/2.1/downloads/current"
+        ]
 )
