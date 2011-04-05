@@ -95,6 +95,24 @@ class PylonsConfigWrapper(DictMixin):
 #Create a config object that has attribute style lookup built in.
 config = PylonsConfigWrapper(pylons_config)
 
+class ClearResponseMiddleware:
+    """Bogus middleware needed to clean up the response.
+
+    Having the response with a Content-Type set to None makes ToscaWidgets crash
+    and also returns a response with an invalid Content-Type. 204, 205 and 302 responses
+    actually set Content-Type to None which is invalid and has to be removed.
+
+    """
+       
+    def __init__(self, application, config):
+        self.application = application
+
+    def __call__(self, environ, start_response):
+        req = Request(environ)
+        resp = req.get_response(self.application)
+        if not resp.headers.get('Content-Type'):
+            resp.headers.pop('Content-Type')
+        return resp(environ, start_response)
 
 class AppConfig(Bunch):
     """Class to store application configuration.
@@ -660,6 +678,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             base_config = MyAppConfig()
         """
         app = RoutesMiddleware(app, config['routes.map'])
+        app = ClearResponseMiddleware(app, config)
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app
