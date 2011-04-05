@@ -111,7 +111,7 @@ class ClearResponseMiddleware:
         req = Request(environ)
         resp = req.get_response(self.application)
         if not resp.headers.get('Content-Type'):
-            resp.headers.pop('Content-Type')
+            resp.headers.pop('Content-Type', None)
         return resp(environ, start_response)
 
 class AppConfig(Bunch):
