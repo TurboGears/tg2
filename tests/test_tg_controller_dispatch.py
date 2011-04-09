@@ -212,6 +212,12 @@ class SubController4:
 class SubController5:
     default_with_args = DefaultWithArgsAndValidatorsController()
 
+class NoContentTypeController(TGController):
+    @expose()
+    def test_204(self, *args, **kw):
+        from webob.exc import HTTPNoContent
+        raise HTTPNoContent()
+
 class HelperWithSpecificArgs(TGController):
     
     @expose()
@@ -404,6 +410,46 @@ class TestNotFoundController(TestWSGIController):
     def test_not_found_unicode(self):
         r = self.app.get('/права', status=404)
         assert '404 Not Found' in r, r
+
+def make_clear_response_middleware_app(controller, enable_clear=True):
+    from webtest import TestApp
+    from paste.registry import RegistryManager
+    from pylons.testutil import ControllerWrap, SetupCacheGlobal
+    from tg.configuration import ClearResponseMiddleware
+    from beaker.middleware import SessionMiddleware, CacheMiddleware
+    from base import session_dir, data_dir
+    from paste import httpexceptions
+    import os
+
+    environ = {}
+    environ['pylons.routes_dict'] = {}
+    environ['pylons.routes_dict']['action'] = "routes_placeholder"
+
+    app = ControllerWrap(controller)
+    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
+    app = RegistryManager(app)
+    app = SessionMiddleware(app, {}, data_dir=session_dir)
+    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
+    app = httpexceptions.make_middleware(app)
+    
+    if enable_clear:
+        app = ClearResponseMiddleware(app, None)
+    return TestApp(app)
+        
+
+class TestNoContentTypeController(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_clear_response_middleware_app(NoContentTypeController)
+        self.uncleared_app =  make_clear_response_middleware_app(NoContentTypeController, False)
+
+    def test_removed_spurious_content_type(self):
+        r = self.app.get('/test_204')
+        assert r.headers.get('Content-Type', 'MISSING') == 'MISSING'
+
+    @raises(TypeError)
+    def test_remove_spurious_content_type_bugreplication(self):
+        r = self.uncleared_app.get('/test_204')
 
 class TestWSGIAppController(TestWSGIController):
     def __init__(self, *args, **kargs):
