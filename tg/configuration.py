@@ -218,9 +218,11 @@ class AppConfig(Bunch):
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
             warnings.simplefilter("ignore")
-            config['pylons.strict_c'] = True
+            config['pylons.strict_tmpl_context'] = True
             warnings.resetwarnings()
             config['pylons.stritmpl_contextt_tmpl_context'] = True
+        else:
+            config['pylons.strict_tmpl_context'] = False
         self.after_init_config()
 
     def after_init_config(self):
