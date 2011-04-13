@@ -88,7 +88,7 @@ def ErrorHandler(app, global_conf, **errorware):
 
     if asbool(global_conf.get('debug')):
         footer = footer_html % (pylons.configuration.config.get('traceback_host', 
-                                                  'beta.pylonshq.com'),
+                                                  'pylonshq.com'),
                                 pylons.__version__)
                                 
         py_media = dict(pylons=media_path)
