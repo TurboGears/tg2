@@ -68,6 +68,7 @@ def test_mako_inheritance():
     resp = app.get('/mako_inherits')
     assert "inherited mako page" in resp, resp
     assert "Inside parent template" in resp, resp
+
 def test_template_override():
 #    app = setup_noDB()
     base_config = TestConfig(folder = 'rendering',
@@ -77,7 +78,8 @@ def test_template_override():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'pylons.tmpl_context_attach_args': False
+                                       'pylons.tmpl_context_attach_args': False,
+                                       'renderers':['genshi']
                                        }
                              )
     app = app_from_config(base_config)
@@ -99,7 +101,8 @@ def test_template_override_wts():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'pylons.tmpl_context_attach_args': False
+                                       'pylons.tmpl_context_attach_args': False,
+                                       'renderers':['genshi']
                                        }
                              )
     app = app_from_config(base_config)
@@ -112,4 +115,29 @@ def test_template_override_wts():
     # it should yield the old result
     r = app.get('/template_override_wts/')
     assert "Not overridden" in r, r
+
+def test_template_override_content_type():
+    base_config = TestConfig(folder = 'rendering',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.helpers': Bunch(),
+                                       'use_legacy_renderer': False,
+                                       # this is specific to mako
+                                       # to make sure inheritance works
+                                       'use_dotted_templatenames': True,
+                                       'pylons.tmpl_context_attach_args': False,
+                                       'renderers':['mako', 'genshi']
+                                       }
+                             )
+    app = app_from_config(base_config)
+    r =app.get('/template_override_content_type')
+    assert r.content_type == 'text/javascript'
+    assert "Not overridden" in r, r
+    r = app.get('/template_override_content_type', params=dict(override=True))
+    assert r.content_type == 'text/javascript'
+    assert "This is overridden." in r, r
+    # now invoke the controller again without override,
+    # it should yield the old result
+    r = app.get('/template_override_content_type')
+    assert "Not overridden" in r, r
+
 

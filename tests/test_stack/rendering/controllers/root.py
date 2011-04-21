@@ -172,3 +172,11 @@ class RootController(TGController):
             override_template(self.template_override_wts, "genshi:tests.overridden")
         return dict()
 
+    @expose(content_type='text/javascript')
+    def template_override_content_type(self, override=False):
+        if override:
+            override_template(self.template_override_content_type, "mako:tests.overridden_js")
+            return dict()
+        else:
+            return "alert('Not overridden')"
+

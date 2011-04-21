@@ -337,13 +337,9 @@ def override_template(controller, template):
     future versions may make the `genshi:` optional if you want to use
     the default engine.
     """
-    if hasattr(controller, 'decoration'):
-        decoration = controller.decoration
-    else:
-        return
-    if hasattr(decoration, 'engines'):
-        engines = decoration.engines
-    else:
+    try:
+        engines = controller.decoration.engines
+    except:
         return
 
     for content_type, content_engine in engines.iteritems():
