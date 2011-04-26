@@ -220,7 +220,6 @@ class AppConfig(Bunch):
             warnings.simplefilter("ignore")
             config['pylons.strict_tmpl_context'] = True
             warnings.resetwarnings()
-            config['pylons.stritmpl_contextt_tmpl_context'] = True
         else:
             config['pylons.strict_tmpl_context'] = False
         self.after_init_config()
@@ -230,14 +229,14 @@ class AppConfig(Bunch):
         Override this method to set up configuration variables at the application
         level.  This method will be called after your configuration object has
         been initialized on startup.  Here is how you would use it to override
-        the default setting of pylons.stritmpl_contextt_tmpl_context ::
+        the default setting of pylons.strict_tmpl_context ::
 
             from tg.configuration import AppConfig
             from pylons import config
 
             class MyAppConfig(AppConfig):
                 def after_init_config(self):
-                    config['pylons.stritmpl_contextt_tmpl_context'] = False
+                    config['pylons.strict_tmpl_context'] = False
 
             base_config = MyAppConfig()
 
@@ -456,7 +455,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         warnings.simplefilter("ignore")
         config['pylons.strict_c'] = True
         warnings.resetwarnings()
-        config['pylons.stritmpl_contextt_tmpl_context'] = True
+        config['pylons.strict_tmpl_context'] = True
 
 
         self.render_functions.jinja = render_jinja

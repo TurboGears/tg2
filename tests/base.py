@@ -58,7 +58,7 @@ default_config = {
         'pylons.request_options': pylons.configuration.request_defaults.copy(),
         'pylons.response_options': pylons.configuration.response_defaults.copy(),
         'pylons.strict_c': False,
-        'pylons.stritmpl_contextt_tmpl_context':False,
+        'pylons.strict_tmpl_context':False,
         'pylons.c_attach_args': True,
         'pylons.tmpl_context_attach_args': True,
         'buffet.template_engines': [],
