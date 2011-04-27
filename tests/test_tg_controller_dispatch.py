@@ -16,6 +16,7 @@ from tests.base import TestWSGIController, make_app, setup_session_dir, \
 
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
+from pylons.controllers.xmlrpc import XMLRPCController
 
 from pylons import config
 config['renderers'] = ['genshi', 'mako', 'json']
@@ -32,6 +33,11 @@ def wsgi_app(environ, start_response):
     else:
         resp = Response("Hello from %s/%s"%(req.script_name, req.path_info))
     return resp(environ, start_response)
+
+class XMLRpcTestController(XMLRPCController):
+    def textvalue(self):
+        return 'hi from xmlrpc'
+    textvalue.signature = [ ['string'] ]
 
 class BeforeController(TGController):
 
@@ -212,12 +218,6 @@ class SubController4:
 class SubController5:
     default_with_args = DefaultWithArgsAndValidatorsController()
 
-class NoContentTypeController(TGController):
-    @expose()
-    def test_204(self, *args, **kw):
-        from webob.exc import HTTPNoContent
-        raise HTTPNoContent()
-
 class HelperWithSpecificArgs(TGController):
     
     @expose()
@@ -244,6 +244,7 @@ class SelfCallingLookupController(TGController):
 
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
+    xml_rpc = WSGIAppController(XMLRpcTestController())
 
     error_controller = RemoteErrorHandler()
 
@@ -391,6 +392,16 @@ class BasicTGController(TGController):
         return 'PNG'
 
     @expose()
+    def test_204(self, *args, **kw):
+        from webob.exc import HTTPNoContent
+        raise HTTPNoContent()
+
+    @expose()
+    def custom_content_type_replace_header(self):
+        replace_header(pylons.response.headerlist, 'Content-Type', 'text/xml')
+        return "<?xml version='1.0'?>"
+
+    @expose()
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
 
@@ -410,15 +421,6 @@ class TestNotFoundController(TestWSGIController):
     def test_not_found_unicode(self):
         r = self.app.get('/права', status=404)
         assert '404 Not Found' in r, r
-
-class TestNoContentTypeController(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
-        self.app = make_app(NoContentTypeController)
-
-    def test_removed_spurious_content_type(self):
-        r = self.app.get('/test_204')
-        assert r.headers.get('Content-Type', 'MISSING') == 'MISSING'
 
 class TestWSGIAppController(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -500,6 +502,15 @@ class TestTGController(TestWSGIController):
         r = self.app.post('/mounted_app/', params={'data':'Foooo'})
         self.failUnless('Foooo' in r, r)
 
+    def test_custom_content_type_replace_header(self):
+        s = '''<?xml version="1.0"?>
+<methodCall>
+<methodName>textvalue</methodName>
+</methodCall>
+'''
+        r = self.app.post('/xml_rpc/', s, [('Content-Type', 'text/xml')])
+        assert len(r.headers.getall('Content-Type')) == 1, r.headers.getall('Content-Type')
+
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')
         assert 'got_json' in r.body, r
@@ -568,6 +579,10 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/custom_content_type_with_ugliness')
         assert 'PNG' in resp, resp
         assert resp.headers['Content-Type'] == 'image/png', resp
+
+    def test_removed_spurious_content_type(self):
+        r = self.app.get('/test_204')
+        assert r.headers.get('Content-Type', 'MISSING') == 'MISSING'
 
     def test_optional_and_req_args(self):
         resp = self.app.get('/optional_and_req_args/test/one')
