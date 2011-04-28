@@ -136,10 +136,6 @@ class EtagController(TGController):
 
     @expose()
     def etagged(self, etag):
-        # this is needed because the default content type is overridden within the config
-        # etag_cache should probably do this, in order that the content-type header is popped
-        # if it is None
-        pylons.response.headers.pop('Content-Type')
         etag_cache(etag)
         return "bar"
     

@@ -95,25 +95,6 @@ class PylonsConfigWrapper(DictMixin):
 #Create a config object that has attribute style lookup built in.
 config = PylonsConfigWrapper(pylons_config)
 
-class ClearResponseMiddleware:
-    """Bogus middleware needed to clean up the response.
-
-    Having the response with a Content-Type set to None makes ToscaWidgets crash
-    and also returns a response with an invalid Content-Type. 204, 205 and 302 responses
-    actually set Content-Type to None which is invalid and has to be removed.
-
-    """
-       
-    def __init__(self, application, config):
-        self.application = application
-
-    def __call__(self, environ, start_response):
-        req = Request(environ)
-        resp = req.get_response(self.application)
-        if not resp.headers.get('Content-Type'):
-            resp.headers.pop('Content-Type', None)
-        return resp(environ, start_response)
-
 class AppConfig(Bunch):
     """Class to store application configuration.
 
@@ -220,7 +201,6 @@ class AppConfig(Bunch):
             warnings.simplefilter("ignore")
             config['pylons.strict_tmpl_context'] = True
             warnings.resetwarnings()
-            config['pylons.stritmpl_contextt_tmpl_context'] = True
         else:
             config['pylons.strict_tmpl_context'] = False
         self.after_init_config()
@@ -230,14 +210,14 @@ class AppConfig(Bunch):
         Override this method to set up configuration variables at the application
         level.  This method will be called after your configuration object has
         been initialized on startup.  Here is how you would use it to override
-        the default setting of pylons.stritmpl_contextt_tmpl_context ::
+        the default setting of pylons.strict_tmpl_context ::
 
             from tg.configuration import AppConfig
             from pylons import config
 
             class MyAppConfig(AppConfig):
                 def after_init_config(self):
-                    config['pylons.stritmpl_contextt_tmpl_context'] = False
+                    config['pylons.strict_tmpl_context'] = False
 
             base_config = MyAppConfig()
 
@@ -456,7 +436,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         warnings.simplefilter("ignore")
         config['pylons.strict_c'] = True
         warnings.resetwarnings()
-        config['pylons.stritmpl_contextt_tmpl_context'] = True
+        config['pylons.strict_tmpl_context'] = True
 
 
         self.render_functions.jinja = render_jinja
@@ -680,7 +660,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             base_config = MyAppConfig()
         """
         app = RoutesMiddleware(app, config['routes.map'])
-        app = ClearResponseMiddleware(app, config)
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app

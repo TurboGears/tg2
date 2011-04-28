@@ -79,6 +79,12 @@ class DecoratedController(object):
 
         self._initialize_validation_context()
 
+        #This is necessary to prevent spurious Content Type header which would
+        #cause problems to paste.response.replace_header calls and cause
+        #responses wihout content type to get out with a wrong content type
+        if not pylons.response.headers.get('Content-Type'):
+            pylons.response.headers.pop('Content-Type', None)
+
         pylons.request.start_response = getattr(self, 'start_response', None)
 
         remainder = remainder or []
