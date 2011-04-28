@@ -244,10 +244,10 @@ class Dispatcher(WSGIController):
             warn("this functionality is going to removed in the next minor version,"\
                  " please use _before instead."
                  )
-            controller.__before__(*args)
+            controller.__before__(*args, **args)
 
         if hasattr(controller, '_before'):
-            controller._before(*args)
+            controller._before(*args, **args)
 
         self._setup_wsgi_script_name(url_path, remainder, params)
 
@@ -256,9 +256,9 @@ class Dispatcher(WSGIController):
         if hasattr(controller, '__after__'):
             warn("this functionality is going to removed in the next minor version,"
                  " please use _after instead.")
-            controller.__after__(*args)
+            controller.__after__(*args, **args)
         if hasattr(controller, '_after'):
-            controller._after(*args)
+            controller._after(*args, **args)
         return r
 
     def routes_placeholder(self, url='/', start_response=None, **kwargs):

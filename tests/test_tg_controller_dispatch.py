@@ -55,6 +55,9 @@ class BeforeController(TGController):
 class NewBeforeController(TGController):
     def _before(self, *args, **kw):
         pylons.tmpl_context.var = '__my_before__'
+        pylons.tmpl_context.args = args
+        pylons.tmpl_context.params = kw
+
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
 
@@ -62,6 +65,12 @@ class NewBeforeController(TGController):
     def index(self):
         assert pylons.tmpl_context.var
         return pylons.tmpl_context.var
+
+    @expose()
+    def with_args(self, *args, **kw):
+        assert pylons.tmpl_context.args
+        assert pylons.tmpl_context.params
+        return pylons.tmpl_context.var+pylons.tmpl_context.params['environ']['webob._parsed_query_vars'][0]['x']
 
 class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
@@ -525,6 +534,10 @@ class TestTGController(TestWSGIController):
     def test_new_before_controller(self):
         r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
+
+    def test_before_with_args(self):
+        r = self.app.get('/sub/newbefore/with_args/1/2?x=5')
+        assert '__my_before__5' in r, r
 
     @no_warn
     def test_unicode_default_dispatch(self):
