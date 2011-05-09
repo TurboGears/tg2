@@ -21,6 +21,7 @@ test_requirements = ['coverage',
                      'tw.forms',
                      'repoze.what-quickstart',
                      'lxml',
+                     'WebOb == 0.9.6.1',
                     ]
 
 setup(

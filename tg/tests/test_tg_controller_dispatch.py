@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg, pylons
+import mimetypes
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, \
                            WSGIAppController, RestController
 from tg.decorators import expose, validate, override_template, lookup, default
@@ -500,6 +501,7 @@ class TestWSGIAppController(TestWSGIController):
 
 class TestTGController(TestWSGIController):
     def __init__(self, *args, **kargs):
+        mimetypes.add_type('.json', 'application/json')
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
         
