@@ -20,7 +20,7 @@ from webob import Response, Request
 from webtest import TestApp
 from beaker.middleware import CacheMiddleware, SessionMiddleware
 
-from tg import response, expose, require, allow_only
+from tg import request, response, expose, require, allow_only
 from tg.controllers import TGController, WSGIAppController, RestController
 import pylons
 from pylons import tmpl_context
@@ -32,6 +32,8 @@ from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.what.middleware import setup_auth
 from repoze.what.predicates import Not, is_user, not_anonymous
 
+from tg.error import ErrorHandler
+from pylons.middleware import StatusCodeRedirect
 
 #{ AUT's setup
 NOT_AUTHENTICATED = "The current user must have been authenticated"
@@ -42,11 +44,14 @@ session_dir = os.path.join(data_dir, 'session')
 # Just in case...
 rmtree(session_dir, ignore_errors=True)
 
-def make_app(controller_klass, environ={}):
+def make_app(controller_klass, environ={}, with_errors=False):
     """Creates a ``TestApp`` instance."""
     # The basic middleware:
     app = ControllerWrap(controller_klass)
     app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
+    if with_errors:
+        app = ErrorHandler(app, {}, debug=False)
+        app = StatusCodeRedirect(app, [403, 404, 500])
     app = RegistryManager(app)
     app = SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
@@ -457,5 +462,38 @@ class TestProtectedWSGIApplication(BaseIntegrationTests):
         assert "Hello from /mounted_app/" not in resp.body
         self._check_flash(resp, r'The current user must be \"gustavo\"')
 
+class ErrorController(object):
+    @expose()
+    def document(self, *args, **kwargs):
+        return request.environ.get('repoze.who.identity')['repoze.who.userid']
 
+class DefaultLessTGController(TGController):
+    error = ErrorController()
+
+    @expose()
+    def index(self):
+        return request.environ.get('repoze.who.identity')['repoze.who.userid']
+
+class TestLoggedErrorTGController(BaseIntegrationTests):
+    def setUp(self):
+        if not os.path.exists(session_dir):
+            os.makedirs(session_dir)
+        # Setting TG2 up:
+        c = ContextObj()
+        py_obj = PylonsContext()
+        py_obj.c = c
+        py_obj.request = py_obj.response = None
+        environ = {'pylons.routes_dict': dict(action='index'),
+                   'pylons.pylons': py_obj}
+        pylons.tmpl_context._push_object(c)
+        self.app = make_app(DefaultLessTGController, environ, with_errors=True)
+
+    def test_logged_index(self):
+        resp = self.app.get('/index', extra_environ={'REMOTE_USER': 'gustavo'}, expect_errors=True)
+        assert 'gustavo' in resp
+
+    def test_logged_error(self):
+        resp = self.app.get('/missing_page_for_sure', extra_environ={'REMOTE_USER': 'gustavo'}, expect_errors=True)
+        assert 'gustavo' in resp 
+        
 #}
