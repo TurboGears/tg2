@@ -15,11 +15,9 @@ from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
-from pylons.middleware import report_libs, StatusCodeRedirect
 
 import tg
 from tg import TGApp
-from tg.error import ErrorHandler
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
 
 from routes import Mapper
@@ -593,6 +591,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def add_error_middleware(self, global_conf, app):
         """Add middleware which handles errors and exceptions."""
+        from pylons.middleware import report_libs, StatusCodeRedirect
+        from tg.error import ErrorHandler
+
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
         # Display error documents for self.handle_status_codes status codes (and
@@ -868,6 +869,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
             if pylons_config.get('make_body_seekable'):
                 app = maybe_make_body_seekable(app)
+
+            if 'PYTHONOPTIMIZE' in os.environ:
+                warnings.warn("Forcing full_stack=False due to PYTHONOPTIMIZE enabled. "+\
+                              "Error Middleware will be disabled", RuntimeWarning, stacklevel=2)
+                full_stack = False
 
             if asbool(full_stack):
                 if (self.auth_backend is None
