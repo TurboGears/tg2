@@ -61,7 +61,7 @@ class Decoration(object):
 
     @property
     def exposed(self):
-        return bool(self.engines)
+        return bool(self.engines) or bool(self.custom_engines)
 
     def run_hooks(self, hook, *l, **kw):
         for func in self.hooks[hook]:
@@ -122,10 +122,18 @@ class Decoration(object):
         else:
             accept_types = request.headers.get('accept', '*/*')
 
-        if self.render_custom_format:
-            content_type, engine, template, exclude_names = self.custom_engines[self.render_custom_format]
+        try:
+            render_custom_format = request._render_custom_format[self.controller]
+        except:
+            render_custom_format = self.render_custom_format
+
+        if render_custom_format:
+            content_type, engine, template, exclude_names = self.custom_engines[render_custom_format]
         else:
-            content_type = best_match(self.engines.keys(), accept_types)
+            if self.engines:
+                content_type = best_match(self.engines.keys(), accept_types)
+            else:
+                content_type = 'text/html'
 
             if content_type == 'CUSTOM/LEAVE':
                 warn('@expose(CUSTOM_CONTENT_TYPE) is no longer needed and should be replaced with @expose()')
@@ -319,8 +327,11 @@ def use_custom_format(controller, custom_format):
     if not custom_format in deco.custom_engines.keys():
         raise ValueError("'%s' is not a valid custom_format" % custom_format)
 
-    deco.render_custom_format = custom_format
-
+    try:
+        render_custom_format = request._render_custom_format
+    except AttributeError:
+        render_custom_format = request._render_custom_format = {}
+    render_custom_format[controller.im_func] = custom_format
 
 def override_template(controller, template):
     """Use overide_template in a controller in order to change the

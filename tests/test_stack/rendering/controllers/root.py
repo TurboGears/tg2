@@ -155,9 +155,12 @@ class RootController(TGController):
     @expose('json', custom_format='json')
     @expose('mako:mako_custom_format.mak', content_type='text/xml', custom_format='xml')
     @expose('genshi:genshi_custom_format.html', content_type='text/html', custom_format='html')
-    def custom_format(self, format):
-        use_custom_format(self.custom_format, format)
-        return dict(format=format, status="ok")
+    def custom_format(self, format='default'):
+        if format != 'default':
+            use_custom_format(self.custom_format, format)
+            return dict(format=format, status="ok")
+        else:
+            return 'OK'
 
     @expose("genshi:tests.non_overridden")
     def template_override(self, override=False):

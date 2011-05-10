@@ -140,4 +140,26 @@ def test_template_override_content_type():
     r = app.get('/template_override_content_type')
     assert "Not overridden" in r, r
 
+def test_template_custom_format_default():
+    app = setup_noDB()
+    resp = app.get('/custom_format')
+    assert 'OK' in resp
+    assert resp.content_type == 'text/html'
 
+def test_template_custom_format_xml():
+    app = setup_noDB()
+    resp = app.get('/custom_format?format=xml')
+    assert 'xml' in resp
+    assert resp.content_type == 'text/xml'
+
+def test_template_custom_format_json():
+    app = setup_noDB()
+    resp = app.get('/custom_format?format=json')
+    assert 'json' in resp
+    assert resp.content_type == 'application/json'
+
+def test_template_custom_format_html():
+    app = setup_noDB()
+    resp = app.get('/custom_format?format=html')
+    assert 'html' in resp
+    assert resp.content_type == 'text/html'
