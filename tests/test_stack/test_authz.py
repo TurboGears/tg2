@@ -32,8 +32,8 @@ from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.what.middleware import setup_auth
 from repoze.what.predicates import Not, is_user, not_anonymous
 
-from tg.error import ErrorHandler
 from pylons.middleware import StatusCodeRedirect
+from tg.error import ErrorHandler
 
 #{ AUT's setup
 NOT_AUTHENTICATED = "The current user must have been authenticated"
