@@ -403,7 +403,7 @@ class BasicTGController(TGController):
     @expose()
     def test_204(self, *args, **kw):
         from webob.exc import HTTPNoContent
-        raise HTTPNoContent()
+        raise HTTPNoContent().exception
 
     @expose()
     def custom_content_type_replace_header(self):
