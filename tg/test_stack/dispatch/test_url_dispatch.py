@@ -24,6 +24,10 @@ def test_url_encoded_param_passing():
     resp = app.get('/feed?feed=http%3A%2F%2Fdeanlandolt.com%2Ffeed%2Fatom%2F')
     assert "http://deanlandolt.com/feed/atom/" in resp.body
 
+def test_url_remainder_issue():
+    resp = app.get('/dom/wth')
+    assert 'you can not do anything with [wth] now' in resp.body, resp.body
+    
 def test_tg_style_index():
     resp = app.get('/index/')
     assert 'hello' in resp.body, resp.body

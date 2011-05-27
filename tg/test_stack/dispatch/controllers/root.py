@@ -6,9 +6,26 @@ from tg.decorators import expose, validate, paginate
 from formencode import validators
 
 from tg import expose, redirect, config
-from tg.controllers import TGController
+from tg.controllers import TGController, RestController
 from nose.tools import eq_
 
+class DomainController(RestController): 
+        def __init__(self): 
+                self._domains = {} 
+                self._domains["do.com"] = "do.com" 
+                self._domains["dom.com"] = "dom.com" 
+                self._domains["doma.com"] = "doma.com" 
+                self._domains["domain.com"] = "domain.com" 
+        @expose() 
+        def get_one(self, domain_id): 
+                print "in get_one" 
+                return "you can not do anything with [%s] now" % (domain_id) 
+        @expose() 
+        def get_all(self, **dict): 
+                str_domain_ids = ""
+                for domain_id in self._domains.keys(): 
+                    str_domain_ids += "[%s] " % (domain_id) 
+                return str_domain_ids 
 
 class SubController(object):
     @expose()
@@ -73,6 +90,7 @@ class RootController(TGController):
 
     sub = SubController()
     sub2 = SubController2()
+    dom = DomainController()
 
     @expose()
     def redirect_me(self, target, **kw):

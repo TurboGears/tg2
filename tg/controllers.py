@@ -135,7 +135,7 @@ class DecoratedController(WSGIController):
         self._initialize_validation_context()
         request.start_response = self.start_response
 
-        remainder = remainder or []
+        remainder = list(remainder) or []
         try:
             if 'tg_format' in params:
                 request.headers['tg_format'] = params['tg_format']
