@@ -656,7 +656,7 @@ def _find_restful_dispatch(obj, parent, remainder):
                 remainder = remainder[:-1]
 
         #handles put and post for parental relations
-        elif remainder_len >=2 and (method == 'post' or method == 'put') and hasattr(obj, 'get_one'):
+        elif remainder_len >=2 and (method == 'post' or method == 'put' or method == 'delete') and hasattr(obj, 'get_one'):
             func = getattr(obj, 'get_one')
             arg_len = len(inspect.getargspec(func)[0])-1
             new_remainder = remainder[arg_len:]

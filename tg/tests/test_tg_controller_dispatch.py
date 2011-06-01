@@ -100,6 +100,10 @@ class SubRestController(RestController):
     @expose()
     def new(self):
         return "SUBREST NEW"
+
+    @expose()
+    def delete(self, *p):
+        return "SUBREST DELETE"
     
     @expose()
     def edit(self):
@@ -426,6 +430,10 @@ class TestRestController(TestWSGIController):
     def test_rest_sub_new(self):
         r = self.app.get('/sub2/rest/rest2/2/subrest/new')
         assert 'SUBREST NEW' in r, r
+    
+    def test_rest_sub_delete(self):
+        r = self.app.get('/sub2/rest/rest2/2/subrest/delete/3')
+        assert 'SUBREST DELETE' in r, r
     
     def test_rest_sub_edit(self):
         r = self.app.get('/sub2/rest/rest2/2/subrest/edit')
