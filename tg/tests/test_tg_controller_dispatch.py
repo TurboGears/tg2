@@ -243,6 +243,17 @@ class RemoteErrorHandler(TGController):
         return "REMOTE ERROR HANDLER"
 
 class NotFoundController(TGController):pass
+
+class CustomContentController(TGController):
+    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    def custom_content_type(self):
+        pylons.response.headers['content-type'] = 'image/png'
+        return 'PNG'
+    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    def custom2(self):
+        pylons.response.headers['content-type'] = 'image/png'
+        return 'PNG'
+    
     
 class BasicTGController(TGController):
     mounted_app = WSGIAppController(wsgi_app)
@@ -252,6 +263,7 @@ class BasicTGController(TGController):
     lookup = LoookupController()
     deco_lookup = DecoLookupController()
     deco_default = DecoDefaultController()
+    custom = CustomContentController()
     
     @expose()
     def index(self, **kwargs):
@@ -352,6 +364,16 @@ class BasicTGController(TGController):
     @expose()
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
+
+class TestCustomContentController(TestWSGIController):
+    
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(BasicTGController)
+    
+    def test_custom_content_types(self):
+        r = self.app.get('/custom/custom_content_type')
+        assert 'PNG' in r, r
 
 class TestRestController(TestWSGIController):
     
