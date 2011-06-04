@@ -9,6 +9,8 @@ except ImportError:
     use_setuptools()
     from setuptools import find_packages, setup
 
+import sys
+
 test_requirements = ['coverage',
                      'nose',
                      'TurboKid >= 1.0.4',
@@ -23,6 +25,19 @@ test_requirements = ['coverage',
                      'lxml',
                      'WebOb == 0.9.6.1',
                     ]
+install_requirements = [
+        'Pylons >= 0.9.7',
+        'Genshi >= 0.5.1',
+        'WebFlash >= 0.1a8',
+        'ToscaWidgets >= 0.9.7',
+        'WebError >= 0.10.1',
+        'repoze.what-pylons >= 1.0rc3',
+        'repoze.tm2 >= 1.0a4',
+        'TurboJson >= 1.2.1',
+    ]
+
+if sys.version_info[:2] == (2,4):
+    install_requirements.extend(['hashlib','pysqlite','uuid'])
 
 setup(
     name='TurboGears2',
@@ -38,16 +53,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'Pylons >= 0.9.7',
-        'Genshi >= 0.5.1',
-        'WebFlash >= 0.1a8',
-        'ToscaWidgets >= 0.9.7',
-        'WebError >= 0.10.1',
-        'repoze.what-pylons >= 1.0rc3',
-        'repoze.tm2 >= 1.0a4',
-        'TurboJson >= 1.2.1',
-    ],
+    install_requires=install_requirements,
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
         #     since tests_require takes care of that as long as TG is tested
