@@ -549,7 +549,7 @@ class TestRestController(TestWSGIController):
         r = self.app.get('/rest3/vsubrest/edit')
         assert 'SUBREST EDIT' in r, r
 
-    def test_var_sub_edit_method(self):
+    def test_var_sub_delete_method(self):
         r = self.app.get('/rest3/1/3/3/subrest/1/delete')
         assert 'SUBREST GET DELETE' in r, r
         r = self.app.get('/rest3/1/3/subrest/1/delete')
