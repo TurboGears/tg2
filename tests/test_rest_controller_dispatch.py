@@ -72,12 +72,6 @@ class LookupAlwaysController(TGController):
     def _lookup(self, a, *args):
         return LookupAlwaysHelper(a), args
 
-class SubController:
-
-    @expose()
-    def sub_method(self, arg):
-        return 'sub %s'%arg
-
 class CustomDispatchingSubController(TGController):
 
     @expose()
@@ -183,6 +177,7 @@ class SubRestController(RestController):
     def post_delete(self, id):
         return "SUBREST POST DELETE"
 
+
 class VariableRestController(RestController):
     subrest = SubRestController()
     vsubrest = VariableSubRestController()
@@ -265,6 +260,13 @@ class BasicRestController(RestController):
 
 class EmptyRestController(RestController):
     pass
+
+class SubController(TGController):
+    rest = BasicRestController()
+
+    @expose()
+    def sub_method(self, arg):
+        return 'sub %s'%arg
 
 class BasicTGController(TGController):
 
@@ -508,6 +510,10 @@ class TestRestController(TestWSGIController):
 
     def test_delete_method(self):
         r = self.app.delete('/rest/other', status=405)
+
+    def test_sub_with_rest_delete(self):
+        r = self.app.delete('/sub/rest/')
+        assert 'REST DELETE' in r, r 
 
     def test_put_method(self):
         r = self.app.put('/rest/other')
