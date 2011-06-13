@@ -1,3 +1,6 @@
 *.pyc
 TurboGears2.egg-info
 dist/
+*.egg
+build/
+*.mak.py
