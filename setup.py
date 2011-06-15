@@ -4,6 +4,8 @@ execfile(os.path.join(here, 'tg', 'release.py'))
 
 from setuptools import find_packages, setup
 
+import sys
+
 test_requirements = ['coverage',
                     'nose',
                     'TurboKid >= 1.0.4',
@@ -31,6 +33,9 @@ test_requirements = ['coverage',
                     'tgext.admin>=0.3.9',
                     ]
 
+if sys.version_info[:2] == (2,4):
+    test_requirements.append('pysqlite')
+    
 setup(
     name='TurboGears2',
     version=version,
@@ -69,6 +74,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://www.turbogears.org/2.1/downloads/next"
+        "http://www.turbogears.org/2.1/downloads/next/index"
         ]
 )
