@@ -74,6 +74,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://www.turbogears.org/2.1/downloads/next/index"
+        "http://www.turbogears.org/2.1/downloads/next"
         ]
 )
