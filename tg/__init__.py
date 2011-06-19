@@ -63,10 +63,11 @@ from tg.decorators import (validate, expose, override_template,
 
 from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
+from tg.controllers.util import use_wsgi_app
 
 __version__ = version
 
 __all__ = ['__version__',
-    'allow_only', 'app_globals', 'expose', 'overide_template', 'request',
+    'allow_only', 'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
-    'TurboGearsApplication', 'use_wsgi_app', 'validate', 'i18n','json_encode']
+    'use_wsgi_app', 'validate', 'i18n','json_encode']
