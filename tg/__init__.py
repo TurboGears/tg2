@@ -52,7 +52,8 @@ assumptions about how things will work.
 
 """
 
-from pylons import app_globals, request, response, tmpl_context, session
+from pylons import app_globals, request, response, tmpl_context, session, cache
+from pylons.controllers.util import etag_cache
 
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, abort
@@ -70,4 +71,4 @@ __version__ = version
 __all__ = ['__version__',
     'allow_only', 'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
-    'use_wsgi_app', 'validate', 'i18n','json_encode']
+    'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'etag_cache']
