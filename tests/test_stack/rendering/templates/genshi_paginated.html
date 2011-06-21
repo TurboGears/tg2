@@ -6,7 +6,12 @@
 <title>Pagination Test</title>
 </head>
 <body>
-<div id="pager" py:content="c.paginators.testdata.pager()"/>
+<py:if test="not defined('url_params')">
+    <div id="pager" py:content="c.paginators.testdata.pager()"/>
+</py:if>
+<py:if test="defined('url_params')">
+    <div id="pager" py:content="c.paginators.testdata.pager(link='/fake_url', partial='/partial_url', **url_params)"/>
+</py:if>
 <ul id="data"><li py:for="item in testdata" py:content="item"/></ul>
 </body>
 </html>

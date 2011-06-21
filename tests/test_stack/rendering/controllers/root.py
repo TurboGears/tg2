@@ -74,6 +74,12 @@ class RootController(TGController):
 
     @expose('genshi:genshi_paginated.html')
     @paginate('testdata')
+    def paginate_with_params(self, n):
+        url_params = dict(param1='hi', param2='man')
+        return dict(testdata=range(int(n)), url_params=url_params)
+
+    @expose('genshi:genshi_paginated.html')
+    @paginate('testdata')
     @validate(dict(n=validators.Int()))
     def paginated_validated(self, n):
         return dict(testdata=range(n))

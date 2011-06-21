@@ -53,3 +53,16 @@ class TestPagination:
         page = self.app.get(url)
         assert '<li>0</li>' not in page
         assert '<li>10</li>' in page
+
+    def test_pagination_with_link_args(self):
+        url = '/paginate_with_params/42'
+        page = self.app.get(url)
+        assert 'param1=hi' in page
+        assert 'param2=man' in page
+        assert 'partial' not in page
+        assert '/fake_url' in page
+        url = '/paginate_with_params/42?page=2'
+        page = self.app.get(url)
+        print page
+        assert '<li>0</li>' not in page
+        assert '<li>10</li>' in page

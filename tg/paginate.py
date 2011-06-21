@@ -1,6 +1,7 @@
 from webhelpers.paginate import Page as WhPage
 from webhelpers.html import HTML
 from tg import request
+from tg.controllers.util import url
 
 class Page(WhPage):
 
@@ -30,12 +31,12 @@ class Page(WhPage):
         link_params.update(self.pager_kwargs)
         link_params[self.page_param] = pagenr
 
-        # Create the URL to load a certain page
-        link_url = link_params.get('link', request.path_info)
-        link_url = '%s?page=%s'%(link_url, pagenr)
         # Create the URL to load the page area part of a certain page (AJAX updates)
-        #link_params[self.partial_param] = 1
-        partial_url = link_params.get('partial', '') #url_for(**link_params)
+        partial_url = link_params.pop('partial', '') #url_for(**link_params)
+
+        # Create the URL to load a certain page
+        link_url = link_params.pop('link', request.path_info)
+        link_url = HTML.literal(url(link_url, params=link_params))
 
         if self.onclick: # create link with onclick action for AJAX
             try: # if '%s' is used in the 'onclick' parameter (backwards compatibility)
