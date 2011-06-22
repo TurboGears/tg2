@@ -9,9 +9,9 @@ import formencode
 import pylons
 import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
+from pylons.i18n import ugettext, ungettext, lazy_gettext
 from pylons.configuration import config
 from pylons import session
-
 
 log = logging.getLogger(__name__)
 
@@ -109,5 +109,6 @@ def set_formencode_translation(languages):
 
 
 __all__ = [
-    "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang"
+    "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang",
+    "ugettext", "lazy_gettext", "ungettext"
 ]
