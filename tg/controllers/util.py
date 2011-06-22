@@ -7,6 +7,7 @@ Url definition and browser redirection are defined here.
 
 import pylons
 from pylons import request
+from pylons.controllers.util import etag_cache
 import urllib
 from warnings import warn
 
@@ -138,5 +139,5 @@ def pylons_formencode_gettext(value):
     return trans
 
 __all__ = [
-    "url", "redirect"
+    "url", "redirect", "etag_cache"
     ]
