@@ -7,11 +7,11 @@ from babel import parse_locale
 import formencode
 
 import pylons
-import pylons.i18n
-from pylons.i18n import add_fallback, LanguageError, get_lang
+from pylons.i18n import add_fallback, LanguageError, get_lang 
+from pylons.i18n.translation import _get_translator as pylons_get_translator
 from pylons.i18n import ugettext, ungettext, lazy_ugettext
 from pylons.configuration import config
-from pylons import session
+import tg
 
 log = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ def setup_i18n():
     Should only be manually called if you override controllers function.
 
     """
-    if pylons.session:
+    if tg.session:
         # If session is available, we try to see if there are languages set
-        languages = pylons.session.get(
-            config.get('lang_session_key', 'tg_lang'))
+        languages = tg.session.get(
+            tg.config.get('lang_session_key', 'tg_lang'))
         if languages:
             if isinstance(languages, basestring):
                 languages = [languages]
@@ -54,9 +54,22 @@ def setup_i18n():
     else:
         languages = []
     languages.extend(map(sanitize_language_code,
-        pylons.request.accept_language.best_matches()))
+        tg.request.accept_language.best_matches()))
     set_temporary_lang(languages)
 
+def set_pylons_lang(lang, **kwargs):
+    """took from pylons. 
+    Sets the current language used for translations by pylons.
+
+    ``lang`` should be a string or a list of strings. If a list of
+    strings, the first language is set as the main and the subsequent
+    languages are added as fallbacks.
+    """
+    translator = pylons_get_translator(lang, **kwargs)
+    environ = tg.request.environ
+    environ['pylons.pylons'].translator = translator
+    if 'paste.registry' in environ:
+        environ['paste.registry'].replace(pylons.translator, translator)
 
 def set_temporary_lang(languages):
     """Set the current language(s) used for translations without touching
@@ -70,7 +83,7 @@ def set_temporary_lang(languages):
     # the printing to the screen for every problem causes serious slow down.
 
     try:
-        pylons.i18n.set_lang(languages)
+        set_pylons_lang(languages)
     except LanguageError:
         pass
         #log.warn("Language %s: not supported", languages)
@@ -91,9 +104,9 @@ def set_lang(languages, **kwargs):
     """
     set_temporary_lang(languages)
 
-    if pylons.session:
-        session[config.get('lang_session_key', 'tg_lang')] = languages
-        session.save()
+    if tg.session:
+        tg.session[tg.config.get('lang_session_key', 'tg_lang')] = languages
+        tg.session.save()
 
 
 _localdir = formencode.api.get_localedir()
@@ -105,7 +118,7 @@ def set_formencode_translation(languages):
             'FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
-    pylons.tmpl_context.formencode_translation = formencode_translation
+    tg.tmpl_context.formencode_translation = formencode_translation
 
 
 __all__ = [

@@ -1,6 +1,6 @@
 from webhelpers.paginate import Page as WhPage
 from webhelpers.html import HTML
-from tg import request
+from pylons import request
 from tg.controllers.util import url
 
 class Page(WhPage):

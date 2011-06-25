@@ -5,7 +5,7 @@ Helper functions for controller operation.
 Url definition and browser redirection are defined here.
 """
 
-import pylons
+import tg
 from pylons import request
 from pylons.controllers.util import etag_cache
 import urllib
@@ -88,7 +88,7 @@ def url(base_url=None, params=None, **kwargs):
     elif hasattr(base_url, '__iter__'):
         base_url = '/'.join(base_url)
     if base_url.startswith('/'):
-        base_url = pylons.request.environ['SCRIPT_NAME'] + base_url
+        base_url = request.environ['SCRIPT_NAME'] + base_url
     if params:
         return '?'.join((base_url, urlencode(params)))
     return base_url
@@ -110,7 +110,7 @@ def redirect(*args, **kwargs):
     raise found
 
 def use_wsgi_app(wsgi_app):
-    return wsgi_app(pylons.request.environ, pylons.request.start_response)
+    return wsgi_app(request.environ, request.start_response)
 
 
 # Idea stolen from Pylons
@@ -124,7 +124,7 @@ def pylons_formencode_gettext(value):
     if trans == value:
 
         try:
-            fetrans = pylons.tmpl_context.formencode_translation
+            fetrans = tg.tmpl_context.formencode_translation
         except AttributeError, attrerror:
             # the translator was not set in the Pylons context
             # we are certainly in the test framework

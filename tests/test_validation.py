@@ -2,7 +2,7 @@
 
 from nose.tools import raises
 
-import pylons
+import tg
 from formencode import validators, Schema
 from simplejson import loads
 
@@ -73,8 +73,8 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(validators={"a": validators.Int(), "someemail": validators.Email})
     def two_validators(self, a=None, someemail=None, *args):
-        errors = pylons.tmpl_context.form_errors
-        values =  pylons.tmpl_context.form_values
+        errors = tg.tmpl_context.form_errors
+        values = tg.tmpl_context.form_values
         return dict(a=a, someemail=someemail,
                 errors=str(errors), values=str(values))
 
@@ -107,25 +107,25 @@ class BasicTGController(TGController):
     @expose('json')
     @validate(form=myform)
     def process_form(self, **kwargs):
-        kwargs['errors'] = pylons.tmpl_context.form_errors
+        kwargs['errors'] = tg.tmpl_context.form_errors
         return dict(kwargs)
 
     @expose('json')
     @validate(form=myform, error_handler=process_form)
     def send_to_error_handler(self, **kwargs):
-        kwargs['errors'] = pylons.tmpl_context.form_errors
+        kwargs['errors'] = tg.tmpl_context.form_errors
         return dict(kwargs)
 
     @expose()
     def set_lang(self, lang=None):
-        pylons.session['tg_lang'] = lang
-        pylons.session.save()
+        tg.session['tg_lang'] = lang
+        tg.session.save()
         return 'ok'
 
     @expose()
     @validate(validators=Pwd())
     def password(self, pwd1, pwd2):
-        if pylons.tmpl_context.form_errors:
+        if tg.tmpl_context.form_errors:
             return "There was an error"
         else:
             return "Password ok!"
@@ -135,7 +135,7 @@ class TestTGController(TestWSGIController):
 
     def setUp(self):
         TestWSGIController.setUp(self)
-        pylons.config.update({
+        tg.config.update({
             'pylons.paths': {'root': data_dir},
             'pylons.package': 'tests'})
         self.app = make_app(BasicTGController)

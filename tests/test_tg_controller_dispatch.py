@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import tg, pylons
+import tg
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE, \
                            WSGIAppController, RestController
 from tg.decorators import expose, validate, override_template
@@ -18,7 +18,7 @@ from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 from pylons.controllers.xmlrpc import XMLRPCController
 
-from pylons import config
+from tg import config
 config['renderers'] = ['genshi', 'mako', 'json']
 
 def setup():
@@ -42,35 +42,35 @@ class XMLRpcTestController(XMLRPCController):
 class BeforeController(TGController):
 
     def _before(self, *args, **kw):
-        pylons.tmpl_context.var = '__my_before__'
+        tg.tmpl_context.var = '__my_before__'
         
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
 
     @expose()
     def index(self):
-        assert pylons.tmpl_context.var
-        return pylons.tmpl_context.var
+        assert tg.tmpl_context.var
+        return tg.tmpl_context.var
 
 class NewBeforeController(TGController):
     def _before(self, *args, **kw):
-        pylons.tmpl_context.var = '__my_before__'
-        pylons.tmpl_context.args = args
-        pylons.tmpl_context.params = kw
+        tg.tmpl_context.var = '__my_before__'
+        tg.tmpl_context.args = args
+        tg.tmpl_context.params = kw
 
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
 
     @expose()
     def index(self):
-        assert pylons.tmpl_context.var
-        return pylons.tmpl_context.var
+        assert tg.tmpl_context.var
+        return tg.tmpl_context.var
 
     @expose()
     def with_args(self, *args, **kw):
-        assert pylons.tmpl_context.args
-        assert pylons.tmpl_context.params
-        return pylons.tmpl_context.var+pylons.tmpl_context.params['environ']['webob._parsed_query_vars'][0]['x']
+        assert tg.tmpl_context.args
+        assert tg.tmpl_context.params
+        return tg.tmpl_context.var+tg.tmpl_context.params['environ']['webob._parsed_query_vars'][0]['x']
 
 class SubController(object):
     mounted_app = WSGIAppController(wsgi_app)
@@ -311,12 +311,12 @@ class BasicTGController(TGController):
 
     @expose()
     def redirect_cookie(self, name):
-        pylons.response.set_cookie('name', name)
+        tg.response.set_cookie('name', name)
         tg.redirect('/hello_cookie')
 
     @expose()
     def hello_cookie(self):
-        return "Hello " + pylons.request.cookies['name']
+        return "Hello " + tg.request.cookies['name']
 
     @expose()
     def flash_redirect(self):
@@ -383,17 +383,17 @@ class BasicTGController(TGController):
 
     @expose()
     def custom_content_type_in_controller(self):
-        pylons.response.headers['content-type'] = 'image/png'
+        tg.response.headers['content-type'] = 'image/png'
         return 'PNG'
 
     @expose('json', content_type='application/json')
     def custom_content_type_in_controller_charset(self):
-        pylons.response.headers['content-type'] = 'application/json; charset=utf-8'
+        tg.response.headers['content-type'] = 'application/json; charset=utf-8'
         return dict(result='TXT')
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def custom_content_type_with_ugliness(self):
-        pylons.response.headers['content-type'] = 'image/png'
+        tg.response.headers['content-type'] = 'image/png'
         return 'PNG'
 
     @expose(content_type='image/png')
@@ -407,7 +407,7 @@ class BasicTGController(TGController):
 
     @expose()
     def custom_content_type_replace_header(self):
-        replace_header(pylons.response.headerlist, 'Content-Type', 'text/xml')
+        replace_header(tg.response.headerlist, 'Content-Type', 'text/xml')
         return "<?xml version='1.0'?>"
 
     @expose()

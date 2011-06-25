@@ -52,7 +52,6 @@ assumptions about how things will work.
 
 """
 
-from pylons import app_globals, request, response, tmpl_context, session, cache
 
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, abort
@@ -64,6 +63,8 @@ from tg.decorators import (validate, expose, override_template,
 from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
 from tg.controllers.util import use_wsgi_app
+
+from pylonsobjs import app_globals, request, response, tmpl_context, session, cache
 
 __version__ = version
 

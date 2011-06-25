@@ -18,7 +18,7 @@ class which provides the ordinary TurboGears mechanism.
 from urllib import url2pathname
 from inspect import ismethod, isclass, getargspec
 from warnings import warn
-import pylons
+from pylons import request, config, tmpl_context
 import mimetypes
 from pylons.controllers import WSGIController
 from tg.exceptions import HTTPNotFound
@@ -46,7 +46,7 @@ class DispatchState(object):
         self._notfound_stack = []
 
         #remove the ignore params from self.params
-        remove_params = pylons.config.get('ignore_parameters', [])
+        remove_params = config.get('ignore_parameters', [])
         for param in remove_params:
             if param in self.params:
                 del self.params[param]
@@ -178,9 +178,9 @@ class Dispatcher(WSGIController):
             url as string
         """
 
-        if not pylons.config.get('disable_request_extensions', False):
-            pylons.request.response_type = None
-            pylons.request.response_ext = None
+        if not config.get('disable_request_extensions', False):
+            request.response_type = None
+            request.response_ext = None
             if url_path and '.' in url_path[-1]:
                 last_remainder = url_path[-1]
                 mime_type, encoding = mimetypes.guess_type(last_remainder)
@@ -188,17 +188,17 @@ class Dispatcher(WSGIController):
                     extension_spot = last_remainder.rfind('.')
                     extension = last_remainder[extension_spot:]
                     url_path[-1] = last_remainder[:extension_spot]
-                    pylons.request.response_type = mime_type
-                    pylons.request.response_ext = extension
+                    request.response_type = mime_type
+                    request.response_ext = extension
 
-        params = pylons.request.params.mixed()
+        params = request.params.mixed()
 
         state = DispatchState(url_path, params)
         state.add_controller('/', self)
         state.dispatcher = self
         state =  state.controller._dispatch(state, url_path)
 
-        pylons.tmpl_context.controller_url = '/'.join(
+        tmpl_context.controller_url = '/'.join(
             url_path[:-len(state.remainder)])
 
         state.routing_args.update(params)
@@ -207,7 +207,7 @@ class Dispatcher(WSGIController):
                 url_path, state.remainder, state.routing_args)
 
         #save the controller state for possible use within the controller methods
-        pylons.request.controller_state = state
+        request.controller_state = state
 
         return state.method, state.controller, state.remainder, params
 
@@ -226,11 +226,11 @@ class Dispatcher(WSGIController):
         """
         This function is called from within Pylons and should not be overidden.
         """
-        if pylons.config.get('i18n_enabled', True):
+        if config.get('i18n_enabled', True):
             setup_i18n()
 
-        script_name = pylons.request.environ.get('SCRIPT_NAME', '')
-        url_path = pylons.request.path
+        script_name = request.environ.get('SCRIPT_NAME', '')
+        url_path = request.path
         if url_path.startswith(script_name):
             url_path = url_path[len(script_name):]
         url_path = url_path.split('/')[1:]

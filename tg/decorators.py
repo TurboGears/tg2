@@ -21,8 +21,9 @@ from pylons.configuration import config
 from pylons import request, response
 from pylons.controllers.util import abort
 from formencode import variabledecode
-from tg import tmpl_context
+from pylons import tmpl_context
 from tg.util import partial
+from pylons.decorators.cache import beaker_cache
 
 try:
     from repoze.what.plugins.pylonshq import ActionProtector

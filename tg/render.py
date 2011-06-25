@@ -2,8 +2,13 @@ from urllib import quote_plus
 
 from pylons.configuration import config
 from paste.deploy.converters import asbool
-from pylons import (app_globals, session, tmpl_context, request,
-                    response, templating)
+from pylons import (app_globals as pylons_app_globals, 
+                    session as pylons_session, 
+                    tmpl_context as pylons_tmpl_context, 
+                    request as pylons_request,
+                    response as pylons_response,
+                    config as pylons_config, 
+                    templating)
 
 try:
     from repoze.what import predicates
@@ -15,8 +20,8 @@ from webhelpers.html import literal
 import tg
 from tg.configuration import Bunch
 
-#monkey patch alert!
 import pylons
+#monkey patch alert!
 def my_pylons_globals():
     """Create and return a dictionary of global Pylons variables
 
@@ -33,8 +38,8 @@ def my_pylons_globals():
 
     """
 
-    conf = pylons.config._current_obj()
-    c = pylons.tmpl_context._current_obj()
+    conf = pylons_config._current_obj()
+    c = pylons_tmpl_context._current_obj()
     g = conf.get('pylons.app_globals') or conf['pylons.g']
 
     try:
@@ -51,8 +56,8 @@ def my_pylons_globals():
         g=g,
         h = h,
         #h=conf.get('pylons.h') or pylons.h._current_obj(),
-        request=pylons.request._current_obj(),
-        response=pylons.response._current_obj(),
+        request=pylons_request._current_obj(),
+        response=pylons_response._current_obj(),
         url=pylons.url._current_obj(),
         translator=pylons.translator._current_obj(),
         ungettext=pylons.i18n.ungettext,
@@ -62,10 +67,10 @@ def my_pylons_globals():
 
     # If the session was overriden to be None, don't populate the session
     # var
-    econf = pylons.config['pylons.environ_config']
-    if 'beaker.session' in pylons.request.environ or \
-        ('session' in econf and econf['session'] in pylons.request.environ):
-        pylons_vars['session'] = pylons.session._current_obj()
+    econf = pylons_config['pylons.environ_config']
+    if 'beaker.session' in pylons_request.environ or \
+        ('session' in econf and econf['session'] in pylons_request.environ):
+        pylons_vars['session'] = pylons_session._current_obj()
     templating.log.debug("Created render namespace with pylons vars: %s", pylons_vars)
     return pylons_vars
 
@@ -149,11 +154,11 @@ def _get_tg_vars():
         quote_plus = quote_plus,
         url = tg.url,
         # this will be None if no identity
-        identity = request.environ.get('repoze.who.identity'),
-        session = session,
+        identity = tg.request.environ.get('repoze.who.identity'),
+        session = tg.session,
         locale = tg.request.accept_language.best_matches(),
-        errors = getattr(tmpl_context, "form_errors", {}),
-        inputs = getattr(tmpl_context, "form_values", {}),
+        errors = getattr(tg.tmpl_context, "form_errors", {}),
+        inputs = getattr(tg.tmpl_context, "form_values", {}),
         request = tg.request,
         auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ,
         predicates = predicates,
@@ -165,10 +170,10 @@ def _get_tg_vars():
         h = Bunch()
 
     root_vars = Bunch(
-        c = tmpl_context,
-        tmpl_context = tmpl_context,
-        response = response,
-        request = request,
+        c = tg.tmpl_context,
+        tmpl_context = tg.tmpl_context,
+        response = tg.response,
+        request = tg.request,
         url = tg.url,
         helpers = h,
         h = h,
@@ -234,7 +239,7 @@ def render_genshi(template_name, template_vars, **kwargs):
 
     if 'method' not in kwargs:
         kwargs['method'] = {'text/xml': 'xml', 'text/plain': 'text'}.get(
-            response.content_type, config.get('templating.genshi.method', 'xhtml'))
+            tg.response.content_type, tg.config.get('templating.genshi.method', 'xhtml'))
     # (in a similar way, we could pass other serialization options when they
     # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 

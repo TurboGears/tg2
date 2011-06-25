@@ -10,12 +10,10 @@ For more details.
 
 import tg
 from tg.controllers import TGController
-from tg.decorators import expose
-from pylons.decorators.cache import beaker_cache
-from pylons.controllers.util import etag_cache
-from pylons import cache
+from tg.decorators import expose, beaker_cache
+from tg.controllers.util import etag_cache
+from tg import cache
 from routes import Mapper
-import pylons
 from routes.middleware import RoutesMiddleware
 from webob.exc import HTTPNotModified
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
