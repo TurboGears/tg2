@@ -341,7 +341,7 @@ class DecoratedController(object):
         error_list = exception.__str__().split('\n')
 
         for error in error_list:
-            field_value = error.split(':')
+            field_value = error.split(':', 1)
 
             #if the error has no field associated with it,
             #return the error as a global form error

@@ -49,6 +49,9 @@ class controller_based_validate(validate):
 
         self.validators = Validators()
 
+class ColonValidator(validators.FancyValidator):
+    def validate_python(self, value, state):
+        raise validators.Invalid('ERROR: Description', value, state)
 
 class BasicTGController(TGController):
 
@@ -86,6 +89,13 @@ class BasicTGController(TGController):
         return {
             'int': a,
         }
+
+    @expose('json')
+    @validate(validators={"e": ColonValidator()})
+    def error_with_colon(self, e):
+        errors = pylons.tmpl_context.form_errors
+        return dict(errors=str(errors))
+
     @expose('json')
     @validate(validators={
         "a": validators.Int(),"b":validators.Int(),"c":validators.Int(),"d":validators.Int()
@@ -191,6 +201,10 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/process_form', form_values)
         values = loads(resp.body)
         assert values['year'] == 2007
+
+    def test_error_with_colon(self):
+        resp = self.app.post('/error_with_colon', {'e':"fakeparam"})
+        assert 'Description' in resp.body, resp.body       
 
     def test_form_render(self):
         """Test that myform renders properly"""
