@@ -1,0 +1,24 @@
+{% extends "jinja_base.html" %}
+
+{% block title %}Index{% endblock %}
+
+{% block html_head %}
+  <style type="text/css">
+    .important {
+      color: #336699;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Index</h1>
+    <p class="important">
+        {% autoescape true %}
+            {{ test_autoescape_on }}
+        {% endautoescape %}
+
+        {% autoescape false %}
+            {{ test_autoescape_off }}
+        {% endautoescape %}
+    </p>
+{% endblock %}
