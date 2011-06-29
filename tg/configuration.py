@@ -427,9 +427,20 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from jinja2 import ChoiceLoader, Environment, FileSystemLoader
         from tg.render import render_jinja
 
+        if not 'jinja_extensions' in self :
+            self.jinja_extensions = []
+
+        # TODO: Load jinja filters automatically from given modules
+        if not 'jinja_filters' in self:
+            self.jinja_filters = []
+
         config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
                  [FileSystemLoader(path) for path in self.paths['templates']]),
-                 auto_reload=self.auto_reload_templates)
+                 auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
+
+        # Add jinja filters
+        config['pylons.app_globals'].jinja2_env.filters = self.jinja_filters
+        
         # Jinja's unable to request c's attributes without strict_c
         warnings.simplefilter("ignore")
         config['pylons.strict_c'] = True
