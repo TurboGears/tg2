@@ -352,16 +352,15 @@ def override_template(controller, template):
         engines = controller.decoration.engines
     except:
         return
-
+    
     for content_type, content_engine in engines.iteritems():
-        template = template.split(':')
-        template.extend(content_engine[2:])
+        tmpl = template.split(':', 1)
+        tmpl.extend(content_engine[2:])
         try:
             override_mapping = request._override_mapping
         except AttributeError:
             override_mapping = request._override_mapping = {}
-        override_mapping[controller.im_func] = {content_type: template}
-
+        override_mapping.setdefault(controller.im_func, {}).update({content_type: tmpl})
 
 class validate(object):
     """Regesters which validators ought to be applied

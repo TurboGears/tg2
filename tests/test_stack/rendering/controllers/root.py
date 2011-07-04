@@ -1,6 +1,6 @@
 """Main Controller"""
 
-from tg import expose, redirect, config, validate, override_template
+from tg import expose, redirect, config, validate, override_template, response
 from tg.decorators import paginate, use_custom_format, with_trailing_slash
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
@@ -188,4 +188,12 @@ class RootController(TGController):
             return dict()
         else:
             return "alert('Not overridden')"
+
+    @expose('mako:mako_custom_format.mak', content_type='text/xml')
+    @expose('genshi:genshi_custom_format.html', content_type='text/html')
+    def template_override_multiple_content_type(self, override=False):
+        if override:
+            override_template(self.template_override_multiple_content_type, "mako:mako_noop.mak")
+        return dict(format='something', status="ok")            
+
 

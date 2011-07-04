@@ -163,3 +163,11 @@ def test_template_custom_format_html():
     resp = app.get('/custom_format?format=html')
     assert 'html' in resp
     assert resp.content_type == 'text/html'
+
+def test_template_override_multiple_content_type():
+    app = setup_noDB()
+    resp = app.get('/template_override_multiple_content_type')
+    assert 'something' in resp
+
+    resp = app.get('/template_override_multiple_content_type', params=dict(override=True))
+    assert 'This is the mako index page' in resp
