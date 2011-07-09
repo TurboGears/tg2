@@ -22,9 +22,9 @@ class TGController(DecoratedController, ObjectDispatcher):
     +=================+==============================================================+============================================+
     | index           | The root of the controller.                                  | /                                          |
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
-    | default         | A method to call when all other methods have failed.         | /movies                                    |
+    | _default        | A method to call when all other methods have failed.         | /movies                                    |
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
-    | lookup          | Allows the developer to return a                             | /location/23.35/2343.34/elevation          |
+    | _lookup         | Allows the developer to return a                             | /location/23.35/2343.34/elevation          |
     |                 | Controller instance for further dispatch.                    |                                            |
     +-----------------+--------------------------------------------------------------+--------------------------------------------+
 

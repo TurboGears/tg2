@@ -286,7 +286,7 @@ class RestController(DecoratedController, RestDispatcher):
     You may note the ?_method on some of the URLs.  This is basically a hack because exiting browsers
     do not support the PUT and DELETE methods.  Just note that if you decide to use a this resource with a web browser,
     you will likely have to add a _method as a hidden field in your forms for these items.  Also note that RestController differs
-    from TGController in that it offers no index, default, or lookup.  It is intended primarily for  resource management.
+    from TGController in that it offers no index, _default, or _lookup.  It is intended primarily for  resource management.
 
     :References:
 

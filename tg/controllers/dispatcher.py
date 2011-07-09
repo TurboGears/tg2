@@ -291,14 +291,14 @@ class ObjectDispatcher(Dispatcher):
     1) If the current object under consideration is a decorated controller
        method, the search is ended.
 
-    2) If the current object under consideration has a "default" method, keep a
+    2) If the current object under consideration has a "_default" method, keep a
        record of that method.  If we fail in our search, and the most recent
-       method recorded is a "default" method, then the search is ended with
+       method recorded is a "_default" method, then the search is ended with
        that method returned.
 
-    3) If the current object under consideration has a "lookup" method, keep a
+    3) If the current object under consideration has a "_lookup" method, keep a
        record of that method.  If we fail in our search, and the most recent
-       method recorded is a "lookup" method, then execute the "lookup" method,
+       method recorded is a "_lookup" method, then execute the "_lookup" method,
        and start the search again on the return value of that method.
 
     4) If the URL portion exists as an attribute on the object in question,
@@ -419,7 +419,7 @@ class ObjectDispatcher(Dispatcher):
         """
         When the dispatch has reached the end of the tree but not found an
         applicable method, so therefore we head back up the branches of the
-        tree until we found a method which matches with a default or lookup method.
+        tree until we found a method which matches with a _default or _lookup method.
         """
 
         try:
@@ -455,7 +455,7 @@ class ObjectDispatcher(Dispatcher):
                 state.add_method(current_controller.index, remainder)
                 return state
             #if there is no index, head up the tree
-            #to see if there is a default or lookup method we can use
+            #to see if there is a _default or _lookup method we can use
             return self._dispatch_first_found_default_or_lookup(state, remainder)
 
         current_path = remainder[0]
@@ -478,7 +478,7 @@ class ObjectDispatcher(Dispatcher):
         return self._dispatch_first_found_default_or_lookup(state, remainder)
 
     def _enter_controller(self, state, remainder):
-        '''Checks security and pushes any notfound (lookup or default) handlers
+        '''Checks security and pushes any notfound (_lookup or _default) handlers
         onto the stack
         '''
 
