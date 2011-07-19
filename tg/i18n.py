@@ -42,10 +42,14 @@ def setup_i18n():
     Should only be manually called if you override controllers function.
 
     """
-    if pylons.session:
+    session_ = pylons.session._current_obj()
+    if session_:
+        session_existed = session_.accessed()
         # If session is available, we try to see if there are languages set
-        languages = pylons.session.get(
-            config.get('lang_session_key', 'tg_lang'))
+        languages = session_.get(config.get('lang_session_key', 'tg_lang'))
+        if not session_existed and config.get('beaker.session.tg_avoid_touch'):
+            session_.__dict__['_sess'] = None
+
         if languages:
             if isinstance(languages, basestring):
                 languages = [languages]

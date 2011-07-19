@@ -843,6 +843,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             app = TGApp()
             if wrap_app:
                 app = wrap_app(app)
+
+            avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
+            config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
+
             app = self.add_core_middleware(app)
 
             if self.use_toscawidgets:
