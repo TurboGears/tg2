@@ -196,9 +196,7 @@ class AppConfig(Bunch):
 
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
-            warnings.simplefilter("ignore")
             config['pylons.strict_tmpl_context'] = True
-            warnings.resetwarnings()
         else:
             config['pylons.strict_tmpl_context'] = False
         self.after_init_config()
