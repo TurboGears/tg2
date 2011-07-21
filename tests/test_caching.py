@@ -158,3 +158,22 @@ class TestEtagCaching(TestWSGIController):
         resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': '"foo"'})
         assert "304" in resp.status, resp
 
+
+class SessionTouchController(TGController):
+    @expose()
+    def session_get(self):
+        return 'ACCESSED' if tg.session.accessed() else 'NOTOUCH'
+
+class TestSessionTouch(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(SessionTouchController)
+
+    def test_prova(self):
+        tg.config['beaker.session.tg_avoid_touch'] = False
+        assert 'ACCESSED' in self.app.get('/session_get')
+
+    def test_avoid_touch(self):
+        tg.config['beaker.session.tg_avoid_touch'] = True
+        assert 'NOTOUCH' in self.app.get('/session_get')
+
