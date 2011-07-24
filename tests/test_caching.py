@@ -162,7 +162,10 @@ class TestEtagCaching(TestWSGIController):
 class SessionTouchController(TGController):
     @expose()
     def session_get(self):
-        return 'ACCESSED' if tg.session.accessed() else 'NOTOUCH'
+        if tg.session.accessed():
+            return 'ACCESSED'
+        else:
+            return 'NOTOUCH'
 
 class TestSessionTouch(TestWSGIController):
     def __init__(self, *args, **kargs):
