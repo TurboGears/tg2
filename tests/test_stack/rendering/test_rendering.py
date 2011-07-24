@@ -58,6 +58,50 @@ def _test_jinja_inherits():
     resp = app.get('/jinja_inherits')
     assert "Welcome on my awsome homepage" in resp, resp
 
+def test_jinja_extensions():
+    base_config = TestConfig(folder = 'rendering',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.helpers': Bunch(),
+                                       'use_legacy_renderer': False,
+                                       # this is specific to mako
+                                       # to make sure inheritance works
+                                       'use_dotted_templatenames': False,
+                                       'pylons.tmpl_context_attach_args': False,
+                                       'renderers':['jinja'],
+                                       'jinja_extensions': ['jinja2.ext.do', 'jinja2.ext.i18n',
+                                                            'jinja2.ext.with_', 'jinja2.ext.autoescape']
+                                       }
+                             )
+    app = app_from_config(base_config)
+    resp = app.get('/jinja_extensions')
+    assert "<b>Autoescape Off</b>" in resp, resp
+    assert "&lt;b&gt;Test Autoescape On&lt;/b&gt;" in resp, resp
+
+def test_jinja_filters():
+
+    # Simple test filter to reverse a string
+    def reverse(value):
+        new_string = ''
+        for c in value:
+            new_string = c + new_string
+        return new_string
+
+    base_config = TestConfig(folder = 'rendering',
+                             values = {'use_sqlalchemy': False,
+                                       'pylons.helpers': Bunch(),
+                                       'use_legacy_renderer': False,
+                                       # this is specific to mako
+                                       # to make sure inheritance works
+                                       'use_dotted_templatenames': False,
+                                       'pylons.tmpl_context_attach_args': False,
+                                       'renderers':['jinja'],
+                                       'jinja_filters': {'reverse': reverse}
+                                       }
+                             )
+    app = app_from_config(base_config)
+    resp = app.get('/jinja_filters')
+    assert "gnirtS tseT" in resp, resp
+
 def test_mako_renderer():
     app = setup_noDB()
     resp = app.get('/mako_index')

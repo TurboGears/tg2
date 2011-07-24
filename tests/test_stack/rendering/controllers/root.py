@@ -110,6 +110,17 @@ class RootController(TGController):
     def jinja_inherits(self):
         return {}
 
+    @expose('jinja:jinja_extensions.html')
+    def jinja_extensions(self):
+        test_autoescape_on = "<b>Test Autoescape On</b>"
+        test_autoescape_off = "<b>Autoescape Off</b>"
+        return dict(test_autoescape_off=test_autoescape_off,
+                test_autoescape_on=test_autoescape_on)
+
+    @expose('jinja:jinja_filters.html')
+    def jinja_filters(self):
+        return {}
+
     @expose('chameleon_genshi:index.html')
     def chameleon_genshi_index(self):
         return {}
