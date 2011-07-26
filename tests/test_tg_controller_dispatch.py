@@ -437,7 +437,7 @@ class TestWSGIAppController(TestWSGIController):
         class TestedWSGIAppController(WSGIAppController):
             def __init__(self):
                 def test_app(environ, start_response):
-                    if environ['CONTENT_LENGTH'] in (-1, '-1'):
+                    if environ.get('CONTENT_LENGTH', None) in (-1, '-1'):
                         del environ['CONTENT_LENGTH']
                     return validator(demo_app)(environ, start_response)
                 super(TestedWSGIAppController, self).__init__(test_app)
