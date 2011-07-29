@@ -153,9 +153,9 @@ class Decoration(object):
 
 
         if 'charset' not in content_type and (content_type.startswith('text') or \
-                                              content_type == 'application/xhtml+xml' or \
-                                              content_type == 'application/xml' or \
-                                              content_type  == 'application/json'):
+                                              content_type in ('application/xhtml+xml',
+                                                               'application/xml',
+                                                               'application/json')):
             content_type = '%s; charset=utf-8' % content_type
 
         return content_type, engine, template, exclude_names
