@@ -56,6 +56,14 @@ class RootController(TGController):
     def index(self):
         return {}
 
+    @expose('genshi:index_autodoctype.html')
+    def autodoctype(self):
+        return {}
+
+    @expose('genshi:index_autodoctype.html', content_type='application/xhtml+xml')
+    def autodoctype_xhtml_strict(self):
+        return {}
+
     @expose('genshi:genshi_form.html')
     def form(self):
         return dict(form=base_movie_form)

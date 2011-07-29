@@ -15,6 +15,8 @@ from webhelpers.html import literal
 import tg
 from tg.configuration import Bunch
 
+from webhelpers.html import literal
+
 #monkey patch alert!
 import pylons
 def my_pylons_globals():
@@ -232,15 +234,38 @@ def render_genshi(template_name, template_vars, **kwargs):
                         template_name,
                         template_extension='.html')
 
+    #Gets rendering method from content_type or from config option
     if 'method' not in kwargs:
-        kwargs['method'] = {'text/xml': 'xml', 'text/plain': 'text'}.get(
-            response.content_type, config.get('templating.genshi.method', 'xhtml'))
+        config_default_method = config.get('templating.genshi.method', 'xhtml')
+        config_default_method = {'html5':'html',
+                                 'xhtml-strict':'xhtml'}.get(config_default_method,
+                                                             config_default_method)
+        kwargs['method'] = {'text/xml': 'xml',
+                            'text/plain': 'text',
+                            'application/xhtml+xml':'xml'}.get(response.content_type,
+                                                               config_default_method)
+
+    #Gets DOCTYPE from content_type or from config option
+    if 'doctype' not in kwargs:
+        config_default_doctype = config.get('templating.genshi.method', 'xhtml')
+        config_default_doctype = {'xhtml':'xhtml-transitional'}.get(config_default_doctype,
+                                                                    config_default_doctype)
+
+        kwargs['doctype'] = {'application/xhtml+xml':'xhtml'}.get(response.content_type,
+                                                                  config_default_doctype)
+
     # (in a similar way, we could pass other serialization options when they
     # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
 
-    return templating.render_genshi(template_name, extra_vars=template_vars,
-                                    **kwargs)
+    def render_template():
+        template_vars.update(my_pylons_globals())
+        template = template_vars['app_globals'].genshi_loader.load(template_name)
+        return literal(template.generate(**template_vars).render(encoding=None,
+                                                                 method=kwargs['method'],
+                                                                 doctype=kwargs['doctype']))
 
+    return templating.cached_template(template_name, render_template,
+                                      ns_options=('method', 'doctype'), **kwargs)
 
 def render_mako(template_name, template_vars, **kwargs):
     if asbool(config.get('use_dotted_templatenames', 'true')):

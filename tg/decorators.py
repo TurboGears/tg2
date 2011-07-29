@@ -152,8 +152,10 @@ class Decoration(object):
                 engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
 
 
-        if 'charset' not in content_type and (
-           content_type.startswith('text') or content_type  == 'application/json'):
+        if 'charset' not in content_type and (content_type.startswith('text') or \
+                                              content_type == 'application/xhtml+xml' or \
+                                              content_type == 'application/xml' or \
+                                              content_type  == 'application/json'):
             content_type = '%s; charset=utf-8' % content_type
 
         return content_type, engine, template, exclude_names

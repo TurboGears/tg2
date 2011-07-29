@@ -12,6 +12,7 @@ def setup_noDB():
                                'use_legacy_renderer': False,
                                # in this test we want dotted names support
                                'use_dotted_templatenames': False,
+                               'templating.genshi.method':'xhtml'
                                }
                              )
     return app_from_config(base_config)

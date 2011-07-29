@@ -1,9 +1,10 @@
+import tg
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
 from webtest import TestApp
 from pylons import tmpl_context
 
-def setup_noDB():
+def setup_noDB(genshi_render_method=None):
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
                                        'pylons.helpers': Bunch(),
@@ -15,11 +16,65 @@ def setup_noDB():
 
                                        }
                              )
-    return app_from_config(base_config)
+
+    #remove previous option value to avoid using the old one
+    tg.config.pop('templating.genshi.method', None)
+    deployment_config = {}
+    if genshi_render_method:
+        deployment_config['templating.genshi.method'] = genshi_render_method
+
+    return app_from_config(base_config, deployment_config)
 
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/')
+    assert 'XHTML 1.0 Transitional' in resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype():
+    app = setup_noDB()
+    resp = app.get('/autodoctype')
+    assert 'XHTML 1.0 Transitional' in resp, resp
+    assert 'text/html; charset=utf-8' in resp, resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype_xhtml():
+    app = setup_noDB('xhtml')
+    resp = app.get('/autodoctype')
+    assert 'XHTML 1.0 Transitional' in resp, resp
+    assert 'text/html; charset=utf-8' in resp, resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype_xhtml_strict():
+    app = setup_noDB('xhtml-strict')
+    resp = app.get('/autodoctype')
+    assert 'XHTML 1.0 Strict' in resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype_xhtml_strict_from_content_type():
+    app = setup_noDB('html5') #method from config should be ignored
+    resp = app.get('/autodoctype_xhtml_strict')
+    assert 'XHTML 1.0 Strict' in resp
+    assert 'application/xhtml+xml; charset=utf-8' in resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype_html5():
+    app = setup_noDB('html5')
+    resp = app.get('/autodoctype')
+    assert '<!DOCTYPE html>' in resp
+    assert 'text/html; charset=utf-8' in resp, resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
+def test_genshi_autodoctype_overwrite():
+    app = setup_noDB('html5')
+    resp = app.get('/autodoctype')
+    assert '<!DOCTYPE html>' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
