@@ -81,7 +81,7 @@ def test_genshi_autodoctype_html4():
 
 def test_genshi_autodoctype_overwrite():
     app = setup_noDB('html5')
-    resp = app.get('/autodoctype')
+    resp = app.get('/')
     assert '<!DOCTYPE html>' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
