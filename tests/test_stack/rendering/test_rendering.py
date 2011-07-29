@@ -71,6 +71,14 @@ def test_genshi_autodoctype_html5():
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
+def test_genshi_autodoctype_html4():
+    app = setup_noDB('html')
+    resp = app.get('/autodoctype')
+    assert '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' in resp
+    assert 'text/html; charset=utf-8' in resp, resp
+    assert "Welcome" in resp
+    assert "TurboGears" in resp
+
 def test_genshi_autodoctype_overwrite():
     app = setup_noDB('html5')
     resp = app.get('/autodoctype')
