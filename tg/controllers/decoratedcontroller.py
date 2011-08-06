@@ -7,7 +7,6 @@ decorators to effect a rendered page.
 
 from urllib import url2pathname
 import inspect
-from warnings import warn
 import formencode
 import pylons
 from pylons.configuration import config
@@ -17,8 +16,8 @@ from pylons.controllers.util import abort
 try:
     from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
 except ImportError:
-    class WhatNotAuthorizedError(Exception):pass
-    def not_anonymous():pass
+    class WhatNotAuthorizedError(Exception): pass
+    def not_anonymous(): pass
 
 # demand load tw (ToscaWidets) if needed
 tw = None
@@ -34,14 +33,15 @@ from util import pylons_formencode_gettext
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
-class NotAuthorizedError(Exception):pass
+class NotAuthorizedError(Exception): pass
+
 
 class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
     controller methods for the purpose of rendering web content.
     """
 
-    def __init__(self):
+    def __init__(self): # FIXME! #
         if hasattr(self, 'allow_only') and self.allow_only is not None:
             # Let's turn Controller.allow_only into something useful for
             # the @allow_only decorator.
@@ -252,7 +252,7 @@ class DecoratedController(object):
             return response
         """Return a JSON string representation of a Python object."""
 
-        # Save these objeccts as locals from the SOP to avoid expensive lookups
+        # Save these objects as locals from the SOP to avoid expensive lookups
         req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.configuration.config.get("use_legacy_renderer", True)
@@ -273,10 +273,10 @@ class DecoratedController(object):
                 buffet.prepare(engine_name, **template_options)
                 _configured_engines().add(engine_name)
 
-        #if there is an identity, push it to the pylons template context
+        # If there is an identity, push it to the Pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
-        #set up the tw renderer
+        # Set up the ToscaWidgets renderer
         if engine_name in ('genshi','mako') and config['use_toscawidgets']:
             global tw
             if not tw:
@@ -377,7 +377,7 @@ class DecoratedController(object):
         except WhatNotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
-                # Should shortcircut the rest, but if not we will still
+                # Should shortcircuit the rest, but if not we will still
                 # deny authorization
                 self._failed_authorization(reason)
             if not_anonymous().is_met(request.environ):
