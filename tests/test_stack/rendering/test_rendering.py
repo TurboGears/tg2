@@ -1,34 +1,39 @@
+# -*- coding: utf-8 -*-
+
 import tg
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
 from webtest import TestApp
 from pylons import tmpl_context
 
-def setup_noDB(genshi_render_method=None):
-    base_config = TestConfig(folder = 'rendering',
-                             values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
-                                       'use_legacy_renderer': False,
-                                       # this is specific to mako
-                                       # to make sure inheritance works
-                                       'use_dotted_templatenames': False,
-                                       'pylons.tmpl_context_attach_args': False
+def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
+    base_config = TestConfig(folder='rendering', values={
+        'use_sqlalchemy': False,
+       'pylons.helpers': Bunch(),
+       'use_legacy_renderer': False,
+       # this is specific to mako  to make sure inheritance works
+       'use_dotted_templatenames': False,
+       'pylons.tmpl_context_attach_args': False
+    })
 
-                                       }
-                             )
-
-    #remove previous option value to avoid using the old one
-    tg.config.pop('templating.genshi.method', None)
     deployment_config = {}
-    if genshi_render_method:
-        deployment_config['templating.genshi.method'] = genshi_render_method
+    # remove previous option value to avoid using the old one
+    tg.config.pop('templating.genshi.doctype', None)
+    if genshi_doctype:
+        deployment_config['templating.genshi.doctype'] = genshi_doctype
+    tg.config.pop('templating.genshi.method', None)
+    if genshi_method:
+        deployment_config['templating.genshi.method'] = genshi_method
+    tg.config.pop('templating.genshi.encoding', None)
+    if genshi_encoding:
+        deployment_config['templating.genshi.encoding'] = genshi_encoding
 
     return app_from_config(base_config, deployment_config)
 
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/')
-    assert 'XHTML 1.0 Transitional' in resp
+    assert 'XHTML 1.0 Transitional' in resp, resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
@@ -36,12 +41,12 @@ def test_genshi_autodoctype():
     app = setup_noDB()
     resp = app.get('/autodoctype')
     assert 'XHTML 1.0 Transitional' in resp, resp
-    assert 'text/html; charset=utf-8' in resp, resp
+    assert 'text/html; charset=utf-8' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_xhtml():
-    app = setup_noDB('xhtml')
+    app = setup_noDB(genshi_method='xhtml')
     resp = app.get('/autodoctype')
     assert 'XHTML 1.0 Transitional' in resp, resp
     assert 'text/html; charset=utf-8' in resp, resp
@@ -49,14 +54,14 @@ def test_genshi_autodoctype_xhtml():
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_xhtml_strict():
-    app = setup_noDB('xhtml-strict')
+    app = setup_noDB(genshi_doctype='xhtml-strict')
     resp = app.get('/autodoctype')
     assert 'XHTML 1.0 Strict' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_xhtml_strict_from_content_type():
-    app = setup_noDB('html5') #method from config should be ignored
+    app = setup_noDB(genshi_method='html') # method from config should be ignored
     resp = app.get('/autodoctype_xhtml_strict')
     assert 'XHTML 1.0 Strict' in resp
     assert 'application/xhtml+xml; charset=utf-8' in resp
@@ -64,7 +69,7 @@ def test_genshi_autodoctype_xhtml_strict_from_content_type():
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_html5():
-    app = setup_noDB('html5')
+    app = setup_noDB(genshi_doctype='html5')
     resp = app.get('/autodoctype')
     assert '<!DOCTYPE html>' in resp
     assert 'text/html; charset=utf-8' in resp, resp
@@ -72,7 +77,7 @@ def test_genshi_autodoctype_html5():
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_html4():
-    app = setup_noDB('html')
+    app = setup_noDB(genshi_doctype='html')
     resp = app.get('/autodoctype')
     assert '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' in resp
     assert 'text/html; charset=utf-8' in resp, resp
@@ -80,11 +85,17 @@ def test_genshi_autodoctype_html4():
     assert "TurboGears" in resp
 
 def test_genshi_autodoctype_overwrite():
-    app = setup_noDB('html5')
+    app = setup_noDB(genshi_doctype='html5')
     resp = app.get('/')
     assert '<!DOCTYPE html>' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
+
+def test_genshi_foreign_characters():
+    app = setup_noDB()
+    resp = app.get('/foreign')
+    assert "Foreign Cuisine" in resp
+    assert "Crème brûlée with Käsebrötchen" in resp
 
 def test_genshi_inheritance():
     app = setup_noDB()

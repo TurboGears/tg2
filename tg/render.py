@@ -9,7 +9,7 @@ try:
     from repoze.what import predicates
 except ImportError:
     predicates = []
-    
+
 from webhelpers.html import literal
 
 import tg
@@ -62,8 +62,7 @@ def my_pylons_globals():
         N_=pylons.i18n.N_
     )
 
-    # If the session was overriden to be None, don't populate the session
-    # var
+    # If the session was overridden to be None, don't populate the session var
     econf = pylons.config['pylons.environ_config']
     if 'beaker.session' in pylons.request.environ or \
         ('session' in econf and econf['session'] in pylons.request.environ):
@@ -176,8 +175,8 @@ def _get_tg_vars():
         h = h,
         tg = tg_vars
         )
-    #Allow users to provide a callable that defines extra vars to be
-    #added to the template namespace
+    # Allow users to provide a callable that defines extra vars to be
+    # added to the template namespace
     variable_provider = config.get('variable_provider', None)
     if variable_provider:
         root_vars.update(variable_provider())
@@ -200,33 +199,32 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
         template_vars={}
 
     if template_engine != "json" and template_engine != 'amf':
-        #Get the extra vars, and merge in the vars from the controller
+        # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
         template_vars = tg_vars
 
     if not render_function:
-        # getting the default renderer. (this is only if no engine was defined
-        # in the @expose()
+        # getting the default renderer, if no engine was defined in @expose()
         render_function = config['render_functions'][config['default_renderer']]
 
     return render_function(template_name, template_vars, **kwargs)
 
+
 def render_chameleon_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the chameleon.genshi template"""
-    # here we use the render genshi function because it should be api compliant
+    # we use the Genshi render function because it should be API compliant
     return render_genshi(template_name, template_vars, **kwargs)
 
 
-# demand load these items from Genshi if needed
-HTML = XML = None
+genshi_functions = {} # load these items from Genshi on demand
+
 def render_genshi(template_name, template_vars, **kwargs):
     """Render the template_vars with the Genshi template"""
-    global HTML, XML
-    if not HTML or not XML:
+    if not genshi_functions:
         from genshi import HTML, XML
-
-    template_vars.update(HTML=HTML, XML=XML)
+        genshi_functions.update(HTML=HTML, XML=XML)
+    template_vars.update(genshi_functions)
 
     if config.get('use_dotted_templatenames', False):
         template_name = tg.config['pylons.app_globals'
@@ -234,38 +232,71 @@ def render_genshi(template_name, template_vars, **kwargs):
                         template_name,
                         template_extension='.html')
 
-    #Gets rendering method from content_type or from config option
-    if 'method' not in kwargs:
-        config_default_method = config.get('templating.genshi.method', 'xhtml')
-        config_default_method = {'html5':'html',
-                                 'xhtml-strict':'xhtml'}.get(config_default_method,
-                                                             config_default_method)
-        kwargs['method'] = {'text/xml': 'xml',
-                            'text/plain': 'text',
-                            'application/xhtml+xml':'xml'}.get(response.content_type,
-                                                               config_default_method)
+    # Gets document type from content type or from config options
+    doctype = kwargs.get('doctype')
+    if not doctype:
+        doctype = config.get('templating.genshi.doctype')
+        if not doctype:
+            method = kwargs.get('method') or config.get(
+                'templating.genshi.method') or 'xhtml'
+            doctype = {
+                'html': 'html-transitional',
+                'xhtml': 'xhtml-transitional'
+            }.get(method)
+        doctypes = {'text/html':
+                ('html', 'html-transitional', 'html-frameset', 'html5',
+                 'xhtml', 'xhtml-strict',
+                 'xhtml-transitional', 'xhtml-frameset'),
+            'application/xhtml+xml':
+                ('xhtml', 'xhtml-strict',
+                 'xhtml-transitional', 'xhtml-frameset', 'xhtml11'),
+            'image/svg+xml':
+                ('svg', 'svg-full', 'svg-basic', 'svg-tiny')
+            }.get(response.content_type)
+        if doctypes and (not doctype or doctype not in doctypes):
+            doctype = doctypes[0]
+        kwargs['doctype'] = doctype
 
-    #Gets DOCTYPE from content_type or from config option
-    if 'doctype' not in kwargs:
-        config_default_doctype = config.get('templating.genshi.method', 'xhtml')
-        config_default_doctype = {'xhtml':'xhtml-transitional'}.get(config_default_doctype,
-                                                                    config_default_doctype)
-
-        kwargs['doctype'] = {'application/xhtml+xml':'xhtml'}.get(response.content_type,
-                                                                  config_default_doctype)
-
-    # (in a similar way, we could pass other serialization options when they
-    # will be supported - see http://pylonshq.com/project/pylonshq/ticket/613)
+    # Gets rendering method from content type or from config options
+    method = kwargs.get('method')
+    if not method:
+        method = config.get('templating.genshi.method')
+        if not method:
+            if doctype:
+                if doctype.startswith('html'):
+                    method = 'html'
+                elif doctype.startswith('xhtml'):
+                    method = 'xhtml'
+                elif doctype.startswith('svg'):
+                    method = 'xml'
+                else:
+                    method = 'xhtml'
+            else:
+                method = 'xhtml'
+        methods = {'text/plain': ('text',),
+            'text/css': ('text',),
+            'text/html': ('html', 'xhtml'),
+            'text/xml': ('xml', 'xhtml'),
+            'application/xml': ('xml', 'xhtml'),
+            'application/xhtml+xml': ('xhtml',),
+            'application/atom+xml': ('xml',),
+            'application/rss+xml': ('xml',),
+            'application/soap+xml': ('xml',),
+            'image/svg+xml': ('xml',)
+        }.get(response.content_type)
+        if methods and (not method or method not in methods):
+            method = methods[0]
+        kwargs['method'] = method
 
     def render_template():
         template_vars.update(my_pylons_globals())
         template = template_vars['app_globals'].genshi_loader.load(template_name)
-        return literal(template.generate(**template_vars).render(encoding=None,
-                                                                 method=kwargs['method'],
-                                                                 doctype=kwargs['doctype']))
+        return literal(template.generate(**template_vars).render(
+            doctype=doctype, method=method, encoding=None))
 
     return templating.cached_template(template_name, render_template,
-                                      ns_options=('method', 'doctype'), **kwargs)
+        ns_options=('doctype', 'method'), **kwargs)
+
 
 def render_mako(template_name, template_vars, **kwargs):
     if asbool(config.get('use_dotted_templatenames', 'true')):
@@ -274,12 +305,15 @@ def render_mako(template_name, template_vars, **kwargs):
 
     return templating.render_mako(template_name, extra_vars=template_vars, **kwargs)
 
+
 def render_jinja(template_name, template_vars, **kwargs):
     return templating.render_jinja2(template_name, extra_vars=template_vars,
                                    **kwargs)
 
+
 def render_json(template_name, template_vars, **kwargs):
     return tg.json_encode(template_vars)
+
 
 def render_kajiki(template_name, extra_vars=None, cache_key=None,
                   cache_type=None, cache_expire=None, method='xhtml'):
@@ -306,5 +340,4 @@ def render_kajiki(template_name, extra_vars=None, cache_key=None,
     return templating.cached_template(template_name, render_template, cache_key=cache_key,
                            cache_type=cache_type, cache_expire=cache_expire,
                            ns_options=('method'), method=method)
-
 

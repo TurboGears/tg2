@@ -68,6 +68,10 @@ class RootController(TGController):
     def form(self):
         return dict(form=base_movie_form)
 
+    @expose('genshi:genshi_foreign.html')
+    def foreign(self):
+        return {}
+
     @expose('json')
     @validate(form=base_movie_form)
     def process_form_errors(self, **kwargs):
@@ -213,6 +217,6 @@ class RootController(TGController):
     def template_override_multiple_content_type(self, override=False):
         if override:
             override_template(self.template_override_multiple_content_type, "mako:mako_noop.mak")
-        return dict(format='something', status="ok")            
+        return dict(format='something', status="ok")
 
 
