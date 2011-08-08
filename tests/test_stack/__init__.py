@@ -34,7 +34,7 @@ class TestConfig(AppConfig):
                     templates=[os.path.join(test_config_path, 'templates')],
                     i18n=os.path.join(test_config_path, 'i18n')
                     )
-        #Then we overide those values with what was passed in
+        # then we override those values with what was passed in
         for key, value in values.items():
             setattr(self, key, value)
 

@@ -103,7 +103,7 @@ class AppConfig(Bunch):
 
     AppConfig instances have a number of methods that are meant to be
     overridden by users who wish to have finer grained control over
-    the setup of the WSGI envirnment in which their application is run.
+    the setup of the WSGI environment in which their application is run.
 
     This is the place to configure custom routes, transaction handling,
     error handling, etc.
@@ -134,7 +134,7 @@ class AppConfig(Bunch):
         self.use_transaction_manager = True
         self.use_toscawidgets2 = False
 
-        #Registy for functions to be called on startup/teardown
+        # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
         # The codes TG should display an error page for. All other HTTP errors are
@@ -143,7 +143,6 @@ class AppConfig(Bunch):
 
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
-
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -368,15 +367,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_chameleon_genshi_renderer(self):
         """Setup a renderer and loader for the chameleon.genshi engine."""
-        from chameleon.genshi.loader import TemplateLoader as ChameleonLoader
-        from tg.render import render_chameleon_genshi
+        from tg.render import RenderChameleonGenshi
+        from chameleon.genshi.loader import TemplateLoader
 
-        loader = ChameleonLoader(search_path=self.paths.templates,
+        loader = TemplateLoader(search_path=self.paths.templates,
                                 auto_reload=self.auto_reload_templates)
 
-        config['pylons.app_globals'].chameleon_genshi_loader = loader
-
-        self.render_functions.chameleon_genshi = render_chameleon_genshi
+        self.render_functions.chameleon_genshi = RenderChameleonGenshi(loader)
 
     def setup_genshi_renderer(self):
         """Setup a renderer and loader for Genshi templates.
@@ -385,32 +382,30 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         filter, template loader
 
         """
-        from tg.dottednames.genshi_lookup import GenshiTemplateLoader
-        from tg.render import render_genshi
+        from tg.render import RenderGenshi
         from genshi.filters import Translator
 
         def template_loaded(template):
             """Plug-in our i18n function to Genshi, once the template is loaded.
 
-            This function will be called by genshi TemplateLoader after
+            This function will be called by the Genshi TemplateLoader after
             loading the template.
 
             """
             template.filters.insert(0, Translator(ugettext))
 
-        if not config.get('use_dotted_templatenames', True):
+        if config.get('use_dotted_templatenames'):
+            from tg.dottednames.genshi_lookup import GenshiTemplateLoader
+            loader = GenshiTemplateLoader(search_path=self.paths.templates,
+                                          auto_reload=self.auto_reload_templates,
+                                          callback=template_loaded)
+        else:
             from genshi.template import TemplateLoader
             loader = TemplateLoader(search_path=self.paths.templates,
                                     auto_reload=self.auto_reload_templates,
                                     callback=template_loaded)
-        else:
-            loader = GenshiTemplateLoader(search_path=self.paths.templates,
-                                          auto_reload=self.auto_reload_templates,
-                                          callback=template_loaded)
 
-        config['pylons.app_globals'].genshi_loader = loader
-
-        self.render_functions.genshi = render_genshi
+        self.render_functions.genshi = RenderGenshi(loader)
 
     def setup_kajiki_renderer(self):
         """Setup a renderer and loader for the fastpt engine."""
@@ -438,7 +433,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # Add jinja filters
         config['pylons.app_globals'].jinja2_env.filters = self.jinja_filters
-        
+
         # Jinja's unable to request c's attributes without strict_c
         warnings.simplefilter("ignore")
         config['pylons.strict_c'] = True

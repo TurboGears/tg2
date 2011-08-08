@@ -64,8 +64,8 @@ default_config = {
         'buffet.template_engines': [],
         'buffet.template_options': {},
         'default_renderer':'genshi',
-        'renderers':['genshi','json'],
-        'render_functions':{'genshi':tg.render.render_genshi, 'json':tg.render.render_json},
+        'renderers':['json'],
+        'render_functions':{'json':tg.render.render_json},
         'use_legacy_renderers':False,
         'use_sqlalchemy': False
 }

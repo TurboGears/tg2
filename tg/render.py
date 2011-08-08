@@ -211,38 +211,94 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     return render_function(template_name, template_vars, **kwargs)
 
 
-def render_chameleon_genshi(template_name, template_vars, **kwargs):
-    """Render the template_vars with the chameleon.genshi template"""
-    # we use the Genshi render function because it should be API compliant
-    return render_genshi(template_name, template_vars, **kwargs)
+class RenderChameleonGenshi(object):
+    """Singleton that can be called as the Chameleon-Genshi render function."""
 
-class render_genshi(object):
-    def __init__(self):
-        from genshi import HTML, XML
-        self.genshi_functions = dict(HTML=HTML, XML=XML)
-        
-        self.doctypes_for_methods = {'html': 'html-transitional',
-                                     'xhtml': 'xhtml-transitional'}
-        self.doctypes_for_content_type = {'text/html': ('html', 'html-transitional',
-                                                        'html-frameset', 'html5',
-                                                        'xhtml', 'xhtml-strict',
-                                                        'xhtml-transitional', 'xhtml-frameset'),
-                                          'application/xhtml+xml': ('xhtml', 'xhtml-strict',
-                                                                    'xhtml-transitional',
-                                                                    'xhtml-frameset', 'xhtml11'),
-                                          'image/svg+xml': ('svg', 'svg-full', 'svg-basic', 'svg-tiny')}
-        self.methods_for_content_type = {'text/plain': ('text',),
-                                         'text/css': ('text',),
-                                         'text/html': ('html', 'xhtml'),
-                                         'text/xml': ('xml', 'xhtml'),
-                                         'application/xml': ('xml', 'xhtml'),
-                                         'application/xhtml+xml': ('xhtml',),
-                                         'application/atom+xml': ('xml',),
-                                         'application/rss+xml': ('xml',),
-                                         'application/soap+xml': ('xml',),
-                                         'image/svg+xml': ('xml',)}
+    format_for_content_type = {
+        'text/plain': 'text',
+        'text/css': 'text',
+        'text/html': 'xml',
+        'text/xml': 'xml',
+        'application/xml': 'xml',
+        'application/xhtml+xml': 'xml',
+        'application/atom+xml': 'xml',
+        'application/rss+xml': 'xml',
+        'application/soap+xml': 'xml',
+        'image/svg+xml': 'xml'}
 
-    def method_for_doctype(self, doctype):
+    def __init__(self, loader):
+        self.load_template = loader.load
+        self.use_dotted_templatenames = config.get('use_dotted_templatenames')
+
+    def __call__(self, template_name, template_vars, **kwargs):
+        """Render the template_vars with the Chameleon-Genshi template."""
+        if self.use_dotted_templatenames:
+            template_name = tg.config['pylons.app_globals'
+                ].dotted_filename_finder.get_dotted_filename(
+                    template_name, template_extension='.html')
+
+        # Gets template format from content type or from config options
+        format = kwargs.get('format')
+        if not format:
+            format = self.format_for_content_type.get(response.content_type)
+            if not format:
+                format = config.get('templating.chameleon.genshi.format')
+                if not format:
+                    format = config.get('templating.genshi.method')
+                    if not format or format not in ('xml', 'text'):
+                        format = 'xml'
+
+        def render_template():
+            template_vars.update(my_pylons_globals())
+            template = self.load_template(template_name, format=format)
+            return literal(template.render(**template_vars))
+
+        return templating.cached_template(
+            template_name, render_template,
+            ns_options=('doctype', 'method'), **kwargs)
+
+
+class RenderGenshi(object):
+    """Singleton that can be called as the Genshi render function."""
+
+    genshi_functions = {} # auxiliary Genshi functions loaded on demand
+
+    doctypes_for_methods = {
+        'html': 'html-transitional',
+        'xhtml': 'xhtml-transitional'}
+
+    doctypes_for_content_type = {
+        'text/html': ('html', 'html-transitional',
+        'html-frameset', 'html5',
+        'xhtml', 'xhtml-strict',
+        'xhtml-transitional', 'xhtml-frameset'),
+        'application/xhtml+xml': ('xhtml', 'xhtml-strict',
+        'xhtml-transitional',
+        'xhtml-frameset', 'xhtml11'),
+        'image/svg+xml': ('svg', 'svg-full', 'svg-basic', 'svg-tiny')
+        }
+
+    methods_for_content_type = {
+        'text/plain': ('text',),
+        'text/css': ('text',),
+        'text/html': ('html', 'xhtml'),
+        'text/xml': ('xml', 'xhtml'),
+        'application/xml': ('xml', 'xhtml'),
+        'application/xhtml+xml': ('xhtml',),
+        'application/atom+xml': ('xml',),
+        'application/rss+xml': ('xml',),
+        'application/soap+xml': ('xml',),
+        'image/svg+xml': ('xml',)}
+
+    def __init__(self, loader):
+        if not self.genshi_functions:
+            from genshi import HTML, XML
+            self.genshi_functions.update(HTML=HTML, XML=XML)
+        self.load_template = loader.load
+        self.use_dotted_templatenames = config.get('use_dotted_templatenames')
+
+    @staticmethod
+    def method_for_doctype(doctype):
         method = 'xhtml'
         if doctype:
             if doctype.startswith('html'):
@@ -256,20 +312,21 @@ class render_genshi(object):
         return method
 
     def __call__(self, template_name, template_vars, **kwargs):
-        """Render the template_vars with the Genshi template"""
+        """Render the template_vars with the Genshi template."""
         template_vars.update(self.genshi_functions)
-        app_globals = tg.config['pylons.app_globals']
 
-        if config.get('use_dotted_templatenames', False):
-            template_name = app_globals.dotted_filename_finder.get_dotted_filename(template_name,
-                                                                                   template_extension='.html')
+        if self.use_dotted_templatenames:
+            template_name = tg.config['pylons.app_globals'
+                ].dotted_filename_finder.get_dotted_filename(
+                    template_name, template_extension='.html')
 
         # Gets document type from content type or from config options
         doctype = kwargs.get('doctype')
         if not doctype:
             doctype = config.get('templating.genshi.doctype')
             if not doctype:
-                method = kwargs.get('method') or config.get('templating.genshi.method') or 'xhtml'
+                method = kwargs.get('method') or config.get(
+                    'templating.genshi.method') or 'xhtml'
                 doctype = self.doctypes_for_methods.get(method)
             doctypes = self.doctypes_for_content_type.get(response.content_type)
             if doctypes and (not doctype or doctype not in doctypes):
@@ -289,13 +346,14 @@ class render_genshi(object):
 
         def render_template():
             template_vars.update(my_pylons_globals())
-            template = app_globals.genshi_loader.load(template_name)
+            template = self.load_template(template_name)
             return literal(template.generate(**template_vars).render(
-                doctype=doctype, method=method, encoding=None))
+                    doctype=doctype, method=method, encoding=None))
 
-        return templating.cached_template(template_name, render_template,
-                                          ns_options=('doctype', 'method'), **kwargs)
-render_genshi = render_genshi()
+        return templating.cached_template(
+            template_name, render_template,
+            ns_options=('doctype', 'method'), **kwargs)
+
 
 def render_mako(template_name, template_vars, **kwargs):
     if asbool(config.get('use_dotted_templatenames', 'true')):
