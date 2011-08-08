@@ -216,87 +216,86 @@ def render_chameleon_genshi(template_name, template_vars, **kwargs):
     # we use the Genshi render function because it should be API compliant
     return render_genshi(template_name, template_vars, **kwargs)
 
-
-genshi_functions = {} # load these items from Genshi on demand
-
-def render_genshi(template_name, template_vars, **kwargs):
-    """Render the template_vars with the Genshi template"""
-    if not genshi_functions:
+class render_genshi(object):
+    def __init__(self):
         from genshi import HTML, XML
-        genshi_functions.update(HTML=HTML, XML=XML)
-    template_vars.update(genshi_functions)
+        self.genshi_functions = dict(HTML=HTML, XML=XML)
+        
+        self.doctypes_for_methods = {'html': 'html-transitional',
+                                     'xhtml': 'xhtml-transitional'}
+        self.doctypes_for_content_type = {'text/html': ('html', 'html-transitional',
+                                                        'html-frameset', 'html5',
+                                                        'xhtml', 'xhtml-strict',
+                                                        'xhtml-transitional', 'xhtml-frameset'),
+                                          'application/xhtml+xml': ('xhtml', 'xhtml-strict',
+                                                                    'xhtml-transitional',
+                                                                    'xhtml-frameset', 'xhtml11'),
+                                          'image/svg+xml': ('svg', 'svg-full', 'svg-basic', 'svg-tiny')}
+        self.methods_for_content_type = {'text/plain': ('text',),
+                                         'text/css': ('text',),
+                                         'text/html': ('html', 'xhtml'),
+                                         'text/xml': ('xml', 'xhtml'),
+                                         'application/xml': ('xml', 'xhtml'),
+                                         'application/xhtml+xml': ('xhtml',),
+                                         'application/atom+xml': ('xml',),
+                                         'application/rss+xml': ('xml',),
+                                         'application/soap+xml': ('xml',),
+                                         'image/svg+xml': ('xml',)}
 
-    if config.get('use_dotted_templatenames', False):
-        template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                        template_name,
-                        template_extension='.html')
-
-    # Gets document type from content type or from config options
-    doctype = kwargs.get('doctype')
-    if not doctype:
-        doctype = config.get('templating.genshi.doctype')
-        if not doctype:
-            method = kwargs.get('method') or config.get(
-                'templating.genshi.method') or 'xhtml'
-            doctype = {
-                'html': 'html-transitional',
-                'xhtml': 'xhtml-transitional'
-            }.get(method)
-        doctypes = {'text/html':
-                ('html', 'html-transitional', 'html-frameset', 'html5',
-                 'xhtml', 'xhtml-strict',
-                 'xhtml-transitional', 'xhtml-frameset'),
-            'application/xhtml+xml':
-                ('xhtml', 'xhtml-strict',
-                 'xhtml-transitional', 'xhtml-frameset', 'xhtml11'),
-            'image/svg+xml':
-                ('svg', 'svg-full', 'svg-basic', 'svg-tiny')
-            }.get(response.content_type)
-        if doctypes and (not doctype or doctype not in doctypes):
-            doctype = doctypes[0]
-        kwargs['doctype'] = doctype
-
-    # Gets rendering method from content type or from config options
-    method = kwargs.get('method')
-    if not method:
-        method = config.get('templating.genshi.method')
-        if not method:
-            if doctype:
-                if doctype.startswith('html'):
-                    method = 'html'
-                elif doctype.startswith('xhtml'):
-                    method = 'xhtml'
-                elif doctype.startswith('svg'):
-                    method = 'xml'
-                else:
-                    method = 'xhtml'
+    def method_for_doctype(self, doctype):
+        method = 'xhtml'
+        if doctype:
+            if doctype.startswith('html'):
+                method = 'html'
+            elif doctype.startswith('xhtml'):
+                method = 'xhtml'
+            elif doctype.startswith('svg'):
+                method = 'xml'
             else:
                 method = 'xhtml'
-        methods = {'text/plain': ('text',),
-            'text/css': ('text',),
-            'text/html': ('html', 'xhtml'),
-            'text/xml': ('xml', 'xhtml'),
-            'application/xml': ('xml', 'xhtml'),
-            'application/xhtml+xml': ('xhtml',),
-            'application/atom+xml': ('xml',),
-            'application/rss+xml': ('xml',),
-            'application/soap+xml': ('xml',),
-            'image/svg+xml': ('xml',)
-        }.get(response.content_type)
-        if methods and (not method or method not in methods):
-            method = methods[0]
-        kwargs['method'] = method
+        return method
 
-    def render_template():
-        template_vars.update(my_pylons_globals())
-        template = template_vars['app_globals'].genshi_loader.load(template_name)
-        return literal(template.generate(**template_vars).render(
-            doctype=doctype, method=method, encoding=None))
+    def __call__(self, template_name, template_vars, **kwargs):
+        """Render the template_vars with the Genshi template"""
+        template_vars.update(self.genshi_functions)
+        app_globals = tg.config['pylons.app_globals']
 
-    return templating.cached_template(template_name, render_template,
-        ns_options=('doctype', 'method'), **kwargs)
+        if config.get('use_dotted_templatenames', False):
+            template_name = app_globals.dotted_filename_finder.get_dotted_filename(template_name,
+                                                                                   template_extension='.html')
 
+        # Gets document type from content type or from config options
+        doctype = kwargs.get('doctype')
+        if not doctype:
+            doctype = config.get('templating.genshi.doctype')
+            if not doctype:
+                method = kwargs.get('method') or config.get('templating.genshi.method') or 'xhtml'
+                doctype = self.doctypes_for_methods.get(method)
+            doctypes = self.doctypes_for_content_type.get(response.content_type)
+            if doctypes and (not doctype or doctype not in doctypes):
+                doctype = doctypes[0]
+            kwargs['doctype'] = doctype
+
+        # Gets rendering method from content type or from config options
+        method = kwargs.get('method')
+        if not method:
+            method = config.get('templating.genshi.method')
+            if not method:
+                method = self.method_for_doctype(doctype)
+            methods = self.methods_for_content_type.get(response.content_type)
+            if methods and (not method or method not in methods):
+                method = methods[0]
+            kwargs['method'] = method
+
+        def render_template():
+            template_vars.update(my_pylons_globals())
+            template = app_globals.genshi_loader.load(template_name)
+            return literal(template.generate(**template_vars).render(
+                doctype=doctype, method=method, encoding=None))
+
+        return templating.cached_template(template_name, render_template,
+                                          ns_options=('doctype', 'method'), **kwargs)
+render_genshi = render_genshi()
 
 def render_mako(template_name, template_vars, **kwargs):
     if asbool(config.get('use_dotted_templatenames', 'true')):
