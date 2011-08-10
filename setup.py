@@ -11,8 +11,7 @@ test_requirements = ['coverage',
                     'TurboKid >= 1.0.4',
                     'zope.sqlalchemy >= 0.4',
                     'jinja2',
-                    'chameleon.core < 1.0.4',
-                    'chameleon.genshi',
+                    'Chameleon < 2.0a',
                     'lxml',
                     'simplegeneric',
                     'repoze.what >= 1.0.8',
@@ -35,7 +34,7 @@ test_requirements = ['coverage',
 
 if sys.version_info[:2] == (2,4):
     test_requirements.append('pysqlite')
-    
+
 setup(
     name='TurboGears2',
     version=version,
