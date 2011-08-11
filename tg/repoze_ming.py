@@ -28,12 +28,19 @@ class MingUserMDPlugin(object):
 
     def add_metadata(self, environ, identity):
         identity['user'] = self.user_class.query.get(user_name=identity['repoze.who.userid'])
-        identity['groups'] = identity['user'].groups
+
+        if identity['user']:
+            identity['groups'] = identity['user'].groups
+            identity['permissions'] = [p.permission_name for p in identity['user'].permissions]
+        else:
+            identity['groups'] = []
+            identity['permissions'] = []
 
         if 'repoze.what.credentials' not in environ:
             environ['repoze.what.credentials'] = {}
 
         environ['repoze.what.credentials']['groups'] = identity['groups']
+        environ['repoze.what.credentials']['permissions'] = identity['permissions']
         environ['repoze.what.credentials']['repoze.what.userid'] = identity['repoze.who.userid']
 
 def setup_ming_auth(app, skip_authentication, **auth_args):
