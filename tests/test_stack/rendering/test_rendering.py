@@ -124,6 +124,12 @@ def test_chameleon_genshi_base():
         " designed to make your life easier.</p>") in resp
 
 def test_chameleon_genshi_inheritance():
+    try:
+        import lxml
+    except ImportError:
+        # match templates need lxml, but since they don're really work anyway
+        # (at least not fully compatible with Genshi), we just skip this test
+        return
     app = setup_noDB()
     try:
         resp = app.get('/chameleon_genshi_inherits')
