@@ -228,14 +228,9 @@ class RenderChameleonGenshi(object):
 
     def __init__(self, loader):
         self.load_template = loader.load
-        self.use_dotted_templatenames = config.get('use_dotted_templatenames')
 
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Chameleon-Genshi template."""
-        if self.use_dotted_templatenames:
-            template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                    template_name, template_extension='.html')
 
         # Gets template format from content type or from config options
         format = kwargs.get('format')
@@ -295,7 +290,6 @@ class RenderGenshi(object):
             from genshi import HTML, XML
             self.genshi_functions.update(HTML=HTML, XML=XML)
         self.load_template = loader.load
-        self.use_dotted_templatenames = config.get('use_dotted_templatenames')
 
     @staticmethod
     def method_for_doctype(doctype):
@@ -314,11 +308,6 @@ class RenderGenshi(object):
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Genshi template."""
         template_vars.update(self.genshi_functions)
-
-        if self.use_dotted_templatenames:
-            template_name = tg.config['pylons.app_globals'
-                ].dotted_filename_finder.get_dotted_filename(
-                    template_name, template_extension='.html')
 
         # Gets document type from content type or from config options
         doctype = kwargs.get('doctype')

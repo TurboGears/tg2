@@ -1,12 +1,12 @@
-"""Genshi template loader that supports dotted names."""
+"""Chameleon.Genshi template loader that supports dotted names."""
 
-from genshi.template import TemplateLoader
+from chameleon.genshi.loader import TemplateLoader
 
 from tg import config
 
 
-class GenshiTemplateLoader(TemplateLoader):
-    """Genshi template loader supporting dotted filenames.
+class ChameleonGenshiTemplateLoader(TemplateLoader):
+    """Chameleon.Genshi template loader supporting dotted filenames.
 
     Supports zipped applications and dotted filenames as well as path names.
 
@@ -22,9 +22,8 @@ class GenshiTemplateLoader(TemplateLoader):
                     template_extension=self.template_extension)
         return filename
 
-    def load(self, filename, relative_to=None, cls=None, encoding=None):
+    def load(self, filename, format='xml'):
         """Actual loader function."""
         return TemplateLoader.load(
-                self, self.get_dotted_filename(filename),
-                relative_to=relative_to, cls=cls, encoding=encoding)
+                self, self.get_dotted_filename(filename), format)
 

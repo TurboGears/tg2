@@ -368,8 +368,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def setup_chameleon_genshi_renderer(self):
         """Setup a renderer and loader for the chameleon.genshi engine."""
         from tg.render import RenderChameleonGenshi
-        from chameleon.genshi.loader import TemplateLoader
 
+        if config.get('use_dotted_templatenames', True):
+            from tg.dottednames.chameleon_genshi_lookup \
+                import ChameleonGenshiTemplateLoader as TemplateLoader
+        else:
+            from chameleon.genshi.loader import TemplateLoader
         loader = TemplateLoader(search_path=self.paths.templates,
                                 auto_reload=self.auto_reload_templates)
 
@@ -394,16 +398,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             """
             template.filters.insert(0, Translator(ugettext))
 
-        if config.get('use_dotted_templatenames'):
-            from tg.dottednames.genshi_lookup import GenshiTemplateLoader
-            loader = GenshiTemplateLoader(search_path=self.paths.templates,
-                                          auto_reload=self.auto_reload_templates,
-                                          callback=template_loaded)
+        if config.get('use_dotted_templatenames', True):
+            from tg.dottednames.genshi_lookup \
+                import GenshiTemplateLoader as TemplateLoader
         else:
             from genshi.template import TemplateLoader
-            loader = TemplateLoader(search_path=self.paths.templates,
-                                    auto_reload=self.auto_reload_templates,
-                                    callback=template_loaded)
+        loader = TemplateLoader(search_path=self.paths.templates,
+                                auto_reload=self.auto_reload_templates,
+                                callback=template_loaded)
 
         self.render_functions.genshi = RenderGenshi(loader)
 
