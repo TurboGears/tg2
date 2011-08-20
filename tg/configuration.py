@@ -1,4 +1,5 @@
 """Configuration Helpers for TurboGears 2"""
+
 import atexit
 import os
 import logging

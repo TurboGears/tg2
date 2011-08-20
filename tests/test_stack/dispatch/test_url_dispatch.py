@@ -40,7 +40,7 @@ def test_tg_style_subcontroller_index():
 
 def test_tg_style_subcontroller_default():
     resp=app.get('/sub/bob/tim/joe')
-    assert "bob" in resp.body, resp
+    assert 'bob' in resp.body, resp
     assert 'tim' in resp.body, resp
     assert 'joe' in resp.body, resp
 
@@ -55,13 +55,13 @@ def test_redirect_absolute():
 def test_redirect_relative():
     resp = app.get('/redirect_me?target=hello&name=abc')
     resp = resp.follow()
-    assert'Hello abc' in resp, resp
+    assert 'Hello abc' in resp, resp
     resp = app.get('/sub/redirect_me?target=hello&name=def')
     resp = resp.follow()
-    assert'Why HELLO! def' in resp, resp
+    assert 'Why HELLO! def' in resp, resp
     resp = app.get('/sub/redirect_me?target=../hello&name=ghi')
     resp = resp.follow()
-    assert'Hello ghi' in resp, resp
+    assert 'Hello ghi' in resp, resp
 
 def test_redirect_external():
     resp = app.get('/redirect_me?target=http://example.com')
@@ -70,34 +70,34 @@ def test_redirect_external():
 def test_redirect_param():
     resp = app.get('/redirect_me?target=/hello&name=paj')
     resp = resp.follow()
-    assert'Hello paj' in resp, resp
+    assert 'Hello paj' in resp, resp
     resp = app.get('/redirect_me?target=/hello&name=pbj')
     resp = resp.follow()
-    assert'Hello pbj' in resp, resp
+    assert 'Hello pbj' in resp, resp
     resp = app.get('/redirect_me?target=/hello&silly=billy&name=pcj')
     resp = resp.follow()
-    assert'Hello pcj' in resp, resp
+    assert 'Hello pcj' in resp, resp
 
 def test_redirect_cookie():
     resp = app.get('/redirect_cookie?name=stefanha').follow()
-    assert'Hello stefanha' in resp
+    assert 'Hello stefanha' in resp
 
 def test_subcontroller_redirect_subindex():
     resp=app.get('/sub/redirect_sub').follow()
-    assert'sub index' in resp
+    assert 'sub index' in resp
 
 def test_subcontroller_redirect_sub2index():
     resp=app.get('/sub2/').follow()
-    assert'hello list' in resp
+    assert 'hello list' in resp
 
 #this test does not run because of some bug in nose
 def _test_subcontroller_lookup():
     resp=app.get('/sub2/findme').follow()
-    assert'lookup' in resp, resp
+    assert 'lookup' in resp, resp
 
 def test_subcontroller_redirect_no_slash_sub2index():
     resp=app.get('/sub2/').follow()
-    assert'hello list' in resp, resp
+    assert 'hello list' in resp, resp
 
 def test_redirect_to_list_of_strings():
     resp = app.get('/sub/redirect_list').follow()
@@ -105,7 +105,7 @@ def test_redirect_to_list_of_strings():
 
 def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
-    assert'Wow, flash!' in resp, resp
+    assert 'Wow, flash!' in resp, resp
 
 @raises(ValueError)
 def test_bigflash_redirect():
@@ -113,7 +113,7 @@ def test_bigflash_redirect():
 
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
-    assert'Wow, flash!' in resp
+    assert 'Wow, flash!' in resp
 
 def test_flash_unicode():
     resp = app.get('/flash_unicode').follow()
@@ -146,12 +146,12 @@ def test_basicurls():
 
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
-    assert "None Recieved"
+    assert "None Received"
 
 @raises(JsonEncodeError)
 def test_json_return_list():
     resp = app.get("/json_return_list")
-    assert "None Recieved"
+    assert "None Received"
 
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")

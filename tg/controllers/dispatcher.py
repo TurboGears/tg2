@@ -495,7 +495,6 @@ class ObjectDispatcher(Dispatcher):
         elif self._is_exposed(current_controller, 'default'):
             state._notfound_stack.append(('default', current_controller.default, remainder,
                                           'default method is deprecated, please replace with _default'))
-            
 
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
         """
