@@ -131,6 +131,8 @@ class AppConfig(Bunch):
         # legacy renderers are buffet interface plugins
         self.use_legacy_renderer = False
 
+        self.use_ming = False
+        self.use_sqlalchemy = False
         self.use_toscawidgets = True
         self.use_transaction_manager = True
         self.use_toscawidgets2 = False
@@ -502,6 +504,16 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
         if self.use_sqlalchemy:
             self.setup_sqlalchemy()
+        elif self.use_ming:
+            self.setup_ming()
+
+    def setup_ming(self):
+        """Setup MongoDB database engine using Ming"""
+        from ming.datastore import DataStore
+
+        datastore = DataStore(config['ming.url'], database=config['ming.db'])
+        config['pylons.app_globals'].ming_datastore = datastore
+        self.package.model.init_model(datastore)
 
     def setup_sqlalchemy(self):
         """Setup SQLAlchemy database engine.
@@ -548,7 +560,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
            For the standard TurboGears App, this will set up the auth with SQLAlchemy.
         """
-        if self.auth_backend == "sqlalchemy":
+        if self.auth_backend in ("ming", "sqlalchemy"):
             self.setup_sa_auth_backend()
 
     def make_load_environment(self):
@@ -622,7 +634,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
-        from repoze.what.plugins.quickstart import setup_sql_auth
         from repoze.what.plugins.pylonshq import booleanize_predicates
 
         # Predicates booleanized:
@@ -644,8 +655,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 "you must define it in app_cfg.py or set "\
                 "sa_auth.cookie_secret in development.ini"
                 raise TGConfigError(msg)
-        app = setup_sql_auth(app, skip_authentication=skip_authentication,
-                             **auth_args)
+
+        if self.auth_backend == "sqlalchemy":
+            from repoze.what.plugins.quickstart import setup_sql_auth
+            app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
+        elif self.auth_backend == "ming":
+            from repoze_ming import setup_ming_auth
+            app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
         return app
 
     def add_core_middleware(self, app):
@@ -792,6 +808,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from repoze.tm import make_tm
         return make_tm(app, self.commit_veto)
 
+    def add_ming_middleware(self, app):
+        """Set up the ming middleware for the unit of work"""
+        import ming.orm.middleware
+        return ming.orm.middleware.MingMiddleware(app)
+
     def add_dbsession_remover_middleware(self, app):
         """Set up middleware that cleans up the sqlalchemy session.
 
@@ -877,6 +898,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     # he/she uses the default DBSession in model
                     self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
+
+            if self.use_ming:
+                app = self.add_ming_middleware(app)
 
             if pylons_config.get('make_body_seekable'):
                 app = maybe_make_body_seekable(app)
