@@ -84,6 +84,10 @@ def test_url_doesnt_change_tgparams():
     result = url('/foo', params, spamm='ham')
     eq_(params['spamm'], 'eggs')
 
+def test_lurl():
+    params = {'spamm':'eggs', 'hamm':None }
+    assert url('/foo', params=params) == str(lurl('/foo', params=params))
+
 #def test_approotsWithPath():
 #    create_request('/coolsite/root/subthing/', {'SCRIPT_NAME' : '/subthing'})
 #    pylons.config.update({"server.webpath":"/coolsite/root"})
