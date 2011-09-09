@@ -93,6 +93,50 @@ def url(base_url=None, params=None, **kwargs):
         return '?'.join((base_url, urlencode(params)))
     return base_url
 
+class LazyUrl(object):
+    """
+    Wraps tg.url in an object that enforces evaluation of the url
+    only when you try to display it as a string.
+    """
+
+    def __init__(self, base_url, params=None):
+        self.base_url = base_url
+        self.params = params
+        self._decoded = None
+
+    @property
+    def _id(self):
+        if self._decoded == None:
+            self._decoded = url(self.base_url, params=self.params)
+        return self._decoded
+
+    @property
+    def id(self):
+        return self._id
+
+    def __repr__(self):
+        return self._id
+
+    def __html__(self):
+        return str(self)
+
+    def __str__(self):
+        return str(self._id)
+
+def lurl(base_url=None, params=None):
+    """
+    Like tg.url but is lazily evaluated.
+
+    This is useful when creating global variables as no
+    request is in place.
+
+    As without a request it wouldn't be possible
+    to correctly calculate the url using the SCRIPT_NAME
+    this demands the url resolution to when it is
+    displayed for the first time.
+    """
+    return LazyUrl(base_url, params)
+
 def redirect(*args, **kwargs):
     """Generate an HTTP redirect.
 
@@ -139,5 +183,5 @@ def pylons_formencode_gettext(value):
     return trans
 
 __all__ = [
-    "url", "redirect", "etag_cache"
+    "url", "lurl", "redirect", "etag_cache"
     ]

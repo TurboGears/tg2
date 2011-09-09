@@ -55,7 +55,7 @@ assumptions about how things will work.
 from pylons import app_globals, request, response, tmpl_context, session, cache
 
 from tg.wsgiapp import TGApp
-from tg.controllers import TGController, redirect, url, abort
+from tg.controllers import TGController, redirect, url, lurl, abort
 from tg.configuration import config
 from tg.release import version
 from tg.decorators import (validate, expose, override_template,
@@ -70,4 +70,4 @@ __version__ = version
 __all__ = ['__version__',
     'allow_only', 'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
-    'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache']
+    'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'url', 'lurl']
