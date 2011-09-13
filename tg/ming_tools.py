@@ -4,6 +4,35 @@ from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.who.middleware import PluggableAuthenticationMiddleware
 
+from ming.orm.property import ORMProperty
+
+class SynonymProperty(ORMProperty):
+    include_in_repr = True
+
+    def __init__(self, getter, setter=None):
+        self.getter = getter
+        self.setter = setter
+        self.name = None
+        self.cls = None
+
+    def __get__(self, instance, cls=None):
+        return self.getter(instance)
+
+    def __set__(self, instance, value):
+        if not self.setter:
+            raise TypeError, 'read-only property'
+        else:
+            self.setter(instance, value)
+
+    def compile(self, mapper):
+        pass
+
+    def repr(self, doc):
+        return repr(self)
+
+    def __repr__(self):
+        return '<%s>' % (self.__class__.__name__,)
+
 class MingAuthenticatorPlugin(object):
     implements(IAuthenticator)
 
@@ -30,7 +59,7 @@ class MingUserMDPlugin(object):
         identity['user'] = self.user_class.query.get(user_name=identity['repoze.who.userid'])
 
         if identity['user']:
-            identity['groups'] = identity['user'].groups
+            identity['groups'] = [g.group_name for g in identity['user'].groups]
             identity['permissions'] = [p.permission_name for p in identity['user'].permissions]
         else:
             identity['groups'] = []
