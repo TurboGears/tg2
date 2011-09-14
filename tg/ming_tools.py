@@ -10,10 +10,9 @@ class SynonymProperty(ORMProperty):
     include_in_repr = True
 
     def __init__(self, getter, setter=None):
+        super(ORMProperty, self).__init__()
         self.getter = getter
         self.setter = setter
-        self.name = None
-        self.cls = None
 
     def __get__(self, instance, cls=None):
         return self.getter(instance)
@@ -23,9 +22,6 @@ class SynonymProperty(ORMProperty):
             raise TypeError, 'read-only property'
         else:
             self.setter(instance, value)
-
-    def compile(self, mapper):
-        pass
 
     def repr(self, doc):
         return repr(self)
