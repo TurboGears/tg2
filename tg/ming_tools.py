@@ -18,6 +18,8 @@ class SynonymProperty(ORMProperty):
         self.setter = setter
 
     def __get__(self, instance, cls=None):
+        if not instance:
+            return self
         return self.getter(instance)
 
     def __set__(self, instance, value):
