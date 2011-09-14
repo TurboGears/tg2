@@ -660,7 +660,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             from repoze.what.plugins.quickstart import setup_sql_auth
             app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
         elif self.auth_backend == "ming":
-            from ming_tools import setup_ming_auth
+            from tgming import setup_ming_auth
             app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
         return app
 
