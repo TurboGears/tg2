@@ -4,7 +4,10 @@ from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.who.middleware import PluggableAuthenticationMiddleware
 
-from ming.orm.property import ORMProperty
+from ming import schema as s
+from ming.orm import FieldProperty, RelationProperty
+from ming.orm.property import ORMProperty, LazyProperty, OneToManyJoin
+from pymongo.objectid import ObjectId
 
 class SynonymProperty(ORMProperty):
     include_in_repr = True
@@ -28,6 +31,29 @@ class SynonymProperty(ORMProperty):
 
     def __repr__(self):
         return '<%s>' % (self.__class__.__name__,)
+
+class ProgrammaticRelationProperty(RelationProperty):
+    include_in_repr = False
+
+    def __init__(self, related, getter, setter=None):
+        super(ProgrammaticRelationProperty, self).__init__(related)
+        self.getter = getter
+        self.setter = setter
+
+    def __get__(self, instance, cls=None):
+        if not instance:
+            return self
+        return self.getter(instance)
+
+    def __set__(self, instance, value):
+        if not self.setter:
+            raise TypeError, 'read-only property'
+        else:
+            self.setter(instance, value)
+
+    @LazyProperty
+    def join(self):
+        return OneToManyJoin(self.cls, self.related, None)
 
 class MingAuthenticatorPlugin(object):
     implements(IAuthenticator)
