@@ -198,7 +198,12 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     if not template_vars:
         template_vars={}
 
-    if template_engine != "json" and template_engine != 'amf':
+    caching_options = template_vars.get('tg_cache', {})
+    kwargs['cache_key'] = caching_options.get('key')
+    kwargs['cache_expire'] = caching_options.get('expire')
+    kwargs['cache_type'] =  caching_options.get('type')
+
+    if template_engine not in ("json", 'amf'):
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
