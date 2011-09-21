@@ -90,12 +90,12 @@ class DecoratedController(object):
         remainder = remainder or []
         remainder = [url2pathname(r) for r in remainder]
 
+        tg_decoration = controller.decoration
         try:
             if 'tg_format' in params:
                 pylons.request.headers['tg_format'] = params['tg_format']
 
-            controller.decoration.run_hooks('before_validate', remainder,
-                                            params)
+            tg_decoration.run_hooks('before_validate', remainder, params)
 
             validate_params = self._get_params_with_argspec(controller, params, remainder)
 
@@ -108,7 +108,7 @@ class DecoratedController(object):
 
             pylons.tmpl_context.form_values = params
 
-            controller.decoration.run_hooks('before_call', remainder, params)
+            tg_decoration.run_hooks('before_call', remainder, params)
             # call controller method
 
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
@@ -133,10 +133,10 @@ class DecoratedController(object):
 
 
         # Render template
-        controller.decoration.run_hooks('before_render', remainder, params,
+        tg_decoration.run_hooks('before_render', remainder, params,
                                         output)
         response = self._render_response(controller, output)
-        controller.decoration.run_hooks('after_render', response)
+        tg_decoration.run_hooks('after_render', response)
         return response
 
 
@@ -238,11 +238,14 @@ class DecoratedController(object):
         expose decorator.
         """
 
+        req = pylons.request._current_obj()
+        resp = pylons.response._current_obj()
+
         content_type, engine_name, template_name, exclude_names = \
-            controller.decoration.lookup_template_engine(pylons.request)
+            controller.decoration.lookup_template_engine(req)
 
         if content_type is not None:
-            pylons.response.headers['Content-Type'] = content_type
+            resp.headers['Content-Type'] = content_type
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
@@ -253,7 +256,6 @@ class DecoratedController(object):
         """Return a JSON string representation of a Python object."""
 
         # Save these objects as locals from the SOP to avoid expensive lookups
-        req = pylons.request._current_obj()
         tmpl_context = pylons.tmpl_context._current_obj()
         use_legacy_renderer = pylons.configuration.config.get("use_legacy_renderer", True)
 
@@ -317,7 +319,7 @@ class DecoratedController(object):
                       template_name=template_name)
 
         if isinstance(result, unicode) and not pylons.response.charset:
-            pylons.response.charset = 'UTF-8'
+            resp.charset = 'UTF-8'
 
         return result
 

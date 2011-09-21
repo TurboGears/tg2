@@ -323,7 +323,7 @@ class ObjectDispatcher(Dispatcher):
         :Returns:
            True or None
         """
-        if hasattr(controller, name) and ismethod(getattr(controller, name)):
+        if ismethod(getattr(controller, name, None)):
             return True
 
     def _method_matches_args(self, method, state, remainder):
@@ -402,11 +402,8 @@ class ObjectDispatcher(Dispatcher):
                 warn("this functionality is going to removed in the next minor version,"
                      " please create an instance of your sub-controller instead")
                 controller = controller()
-            if hasattr(controller, "im_self"):
-                obj = controller.im_self
-            else:
-                obj = controller
 
+            obj = getattr(controller, 'im_self', controller)
             if hasattr(obj, '_check_security'):
                 obj._check_security()
             state.add_controller(current_path, controller)
