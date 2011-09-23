@@ -45,7 +45,7 @@ setup(
     author_email=email,
     url=url,
     license=license,
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,
     zip_safe=False,
     install_requires=[
