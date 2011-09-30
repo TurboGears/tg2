@@ -4,3 +4,4 @@ dist/
 *.egg
 build/
 *.mak.py
+.coverage
