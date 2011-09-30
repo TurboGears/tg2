@@ -399,7 +399,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             loading the template.
 
             """
-            template.filters.insert(0, Translator(ugettext))
+            translator = Translator(ugettext)
+            template.filters.insert(0, translator)
+            if hasattr(template, 'add_directives'):
+                template.add_directives(Translator.NAMESPACE, translator)
 
         if config.get('use_dotted_templatenames', True):
             from tg.dottednames.genshi_lookup \
