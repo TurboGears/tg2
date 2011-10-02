@@ -52,7 +52,7 @@ assumptions about how things will work.
 
 """
 
-from pylons import app_globals, request, response, tmpl_context, session, cache
+from pylons import app_globals, request, response, tmpl_context, session, cache, translator
 
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, lurl, abort

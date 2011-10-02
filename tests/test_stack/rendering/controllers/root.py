@@ -220,3 +220,11 @@ class RootController(TGController):
         return dict(format='something', status="ok")
 
 
+    @expose()
+    def manual_rendering(self, frompylons=False):
+        if frompylons:
+            from pylons.templating import render_jinja2
+            return render_jinja2('jinja_inherits.html')
+        else:
+            from tg.render import render
+            return render({}, 'jinja', 'jinja_inherits.html')

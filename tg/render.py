@@ -1,9 +1,6 @@
 from urllib import quote_plus
 
-from pylons.configuration import config
 from paste.deploy.converters import asbool
-from pylons import (app_globals, session, tmpl_context, request,
-                    response, templating)
 
 try:
     from repoze.what import predicates
@@ -16,62 +13,6 @@ import tg
 from tg.configuration import Bunch
 
 from webhelpers.html import literal
-
-#monkey patch alert!
-import pylons
-def my_pylons_globals():
-    """Create and return a dictionary of global Pylons variables
-
-    Render functions should call this to retrieve a list of global
-    Pylons variables that should be included in the global template
-    namespace if possible.
-
-    Pylons variables that are returned in the dictionary:
-        ``c``, ``g``, ``h``, ``_``, ``N_``, config, request, response,
-        translator, ungettext, ``url``
-
-    If SessionMiddleware is being used, ``session`` will also be
-    available in the template namespace.
-
-    """
-
-    conf = pylons.config._current_obj()
-    c = pylons.tmpl_context._current_obj()
-    g = conf.get('pylons.app_globals') or conf['pylons.g']
-
-    try:
-        h = conf['package'].lib.helpers
-
-    except (AttributeError, KeyError):
-        h = Bunch()
-
-    pylons_vars = dict(
-        c=c,
-        tmpl_context=c,
-        config=conf,
-        app_globals=g,
-        g=g,
-        h = h,
-        #h=conf.get('pylons.h') or pylons.h._current_obj(),
-        request=pylons.request._current_obj(),
-        response=pylons.response._current_obj(),
-        url=pylons.url._current_obj(),
-        translator=pylons.translator._current_obj(),
-        ungettext=pylons.i18n.ungettext,
-        _=pylons.i18n._,
-        N_=pylons.i18n.N_
-    )
-
-    # If the session was overridden to be None, don't populate the session var
-    econf = pylons.config['pylons.environ_config']
-    if 'beaker.session' in pylons.request.environ or \
-        ('session' in econf and econf['session'] in pylons.request.environ):
-        pylons_vars['session'] = pylons.session._current_obj()
-    templating.log.debug("Created render namespace with pylons vars: %s", pylons_vars)
-    return pylons_vars
-
-templating.pylons_globals = my_pylons_globals
-#end monkeying around
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -133,9 +74,23 @@ def _get_tg_vars():
         The :mod:`repoze.what.predicates` module.
 
     """
+
+    req = tg.request._current_obj()
+    conf = tg.config._current_obj()
+    tmpl_context = tg.tmpl_context._current_obj()
+    app_globals = tg.app_globals._current_obj()
+    translator = tg.translator._current_obj()
+    response = tg.response._current_obj()
+
+    try:
+        h = conf.package.lib.helpers
+    except AttributeError, ImportError:
+        h = Bunch()
+
+
     # TODO: Implement user_agent and other missing features.
     tg_vars = Bunch(
-        config = tg.config,
+        config = conf,
         flash_obj = tg.flash,
         flash = DeprecatedFlashVariable(
             lambda: tg.flash.message,
@@ -150,40 +105,55 @@ def _get_tg_vars():
         quote_plus = quote_plus,
         url = tg.url,
         # this will be None if no identity
-        identity = request.environ.get('repoze.who.identity'),
-        session = session,
-        locale = tg.request.accept_language.best_matches(),
+        identity = req.environ.get('repoze.who.identity'),
+        session = tg.session,
+        locale = req.accept_language.best_matches(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
-        request = tg.request,
-        auth_stack_enabled = 'repoze.who.plugins' in tg.request.environ,
+        request = req,
+        auth_stack_enabled = 'repoze.who.plugins' in req.environ,
         predicates = predicates,
         )
 
-    try:
-        h = config.package.lib.helpers
-    except AttributeError, ImportError:
-        h = Bunch()
 
     root_vars = Bunch(
         c = tmpl_context,
         tmpl_context = tmpl_context,
         response = response,
-        request = request,
+        request = req,
+        config=conf,
+        app_globals=app_globals,
+        g=app_globals,
         url = tg.url,
         helpers = h,
         h = h,
-        tg = tg_vars
+        tg = tg_vars,
+        translator=translator,
+        ungettext=tg.i18n.ungettext,
+        _=tg.i18n.ugettext,
+        N_=tg.i18n.gettext_noop,
         )
+
+    econf = conf['pylons.environ_config']
+    if 'beaker.session' in req.environ or \
+        ('session' in econf and econf['session'] in req.environ):
+        root_vars['session'] = tg.session._current_obj()
+
     # Allow users to provide a callable that defines extra vars to be
     # added to the template namespace
-    variable_provider = config.get('variable_provider', None)
+    variable_provider = conf.get('variable_provider', None)
     if variable_provider:
         root_vars.update(variable_provider())
     return root_vars
 
+#Monkey patch pylons_globals for cases when pylons.templating is used
+#instead of tg.render to programmatically render templates.
+import pylons
+pylons.templating.pylons_globals = _get_tg_vars
+#end monkeying around
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
+    config = tg.config._current_obj()
 
     render_function = None
     if template_engine is not None:
@@ -215,6 +185,64 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     return render_function(template_name, template_vars, **kwargs)
 
+def cached_template(template_name, render_func, ns_options=(),
+                    cache_key=None, cache_type=None, cache_expire=None,
+                    **kwargs):
+    """Cache and render a template, took from Pylons
+
+    Cache a template to the namespace ``template_name``, along with a
+    specific key if provided.
+
+    Basic Options
+
+    ``template_name``
+        Name of the template, which is used as the template namespace.
+    ``render_func``
+        Function used to generate the template should it no longer be
+        valid or doesn't exist in the cache.
+    ``ns_options``
+        Tuple of strings, that should correspond to keys likely to be
+        in the ``kwargs`` that should be used to construct the
+        namespace used for the cache. For example, if the template
+        language supports the 'fragment' option, the namespace should
+        include it so that the cached copy for a template is not the
+        same as the fragment version of it.
+
+    Caching options (uses Beaker caching middleware)
+
+    ``cache_key``
+        Key to cache this copy of the template under.
+    ``cache_type``
+        Valid options are ``dbm``, ``file``, ``memory``, ``database``,
+        or ``memcached``.
+    ``cache_expire``
+        Time in seconds to cache this template with this ``cache_key``
+        for. Or use 'never' to designate that the cache should never
+        expire.
+
+    The minimum key required to trigger caching is
+    ``cache_expire='never'`` which will cache the template forever
+    seconds with no key.
+
+    """
+    # If one of them is not None then the user did set something
+    if cache_key is not None or cache_expire is not None or cache_type is not None:
+        if not cache_type:
+            cache_type = 'dbm'
+        if not cache_key:
+            cache_key = 'default'
+        if cache_expire == 'never':
+            cache_expire = None
+        namespace = template_name
+        for name in ns_options:
+            namespace += str(kwargs.get(name))
+        cache = tg.cache.get_cache(namespace, type=cache_type)
+        content = cache.get_value(cache_key, createfunc=render_func,
+            expiretime=cache_expire)
+        return content
+    else:
+        return render_func()
+
 
 class RenderChameleonGenshi(object):
     """Singleton that can be called as the Chameleon-Genshi render function."""
@@ -236,11 +264,12 @@ class RenderChameleonGenshi(object):
 
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Chameleon-Genshi template."""
+        config = tg.config._current_obj()
 
         # Gets template format from content type or from config options
         format = kwargs.get('format')
         if not format:
-            format = self.format_for_content_type.get(response.content_type)
+            format = self.format_for_content_type.get(tg.response.content_type)
             if not format:
                 format = config.get('templating.chameleon.genshi.format')
                 if not format:
@@ -249,13 +278,11 @@ class RenderChameleonGenshi(object):
                         format = 'xml'
 
         def render_template():
-            template_vars.update(my_pylons_globals())
             template = self.load_template(template_name, format=format)
             return literal(template.render(**template_vars))
 
-        return templating.cached_template(
-            template_name, render_template,
-            ns_options=('doctype', 'method'), **kwargs)
+        return cached_template(template_name, render_template,
+                               ns_options=('doctype', 'method'), **kwargs)
 
 
 class RenderGenshi(object):
@@ -312,6 +339,9 @@ class RenderGenshi(object):
 
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Genshi template."""
+        config = tg.config._current_obj()
+        response = tg.response._current_obj()
+
         template_vars.update(self.genshi_functions)
 
         # Gets document type from content type or from config options
@@ -339,34 +369,36 @@ class RenderGenshi(object):
             kwargs['method'] = method
 
         def render_template():
-            template_vars.update(my_pylons_globals())
             template = self.load_template(template_name)
             return literal(template.generate(**template_vars).render(
                     doctype=doctype, method=method, encoding=None))
 
-        return templating.cached_template(
-            template_name, render_template,
-            ns_options=('doctype', 'method'), **kwargs)
+        return cached_template(template_name, render_template,
+                               ns_options=('doctype', 'method'), **kwargs)
 
 
-def render_mako(template_name, template_vars, **kwargs):
+def render_mako(template_name, globs, cache_key=None, cache_type=None, cache_expire=None):
+    config = tg.config._current_obj()
+
     if asbool(config.get('use_dotted_templatenames', 'true')):
-        template_name = tg.config['pylons.app_globals'].\
+        template_name = globs['app_globals'].\
             dotted_filename_finder.get_dotted_filename(template_name, template_extension='.mak')
 
-    return templating.render_mako(template_name, extra_vars=template_vars, **kwargs)
 
+    # Create a render callable for the cache function
+    def render_template():
+        # Grab a template reference
+        template = globs['app_globals'].mako_lookup.get_template(template_name)
+        return literal(template.render_unicode(**globs))
 
-def render_jinja(template_name, template_vars, **kwargs):
-    return templating.render_jinja2(template_name, extra_vars=template_vars,
-                                   **kwargs)
-
+    return cached_template(template_name, render_template, cache_key=cache_key,
+                           cache_type=cache_type, cache_expire=cache_expire)
 
 def render_json(template_name, template_vars, **kwargs):
     return tg.json_encode(template_vars)
 
 
-def render_kajiki(template_name, extra_vars=None, cache_key=None,
+def render_kajiki(template_name, globs, cache_key=None,
                   cache_type=None, cache_expire=None, method='xhtml'):
     """Render a template with Kajiki
 
@@ -377,18 +409,28 @@ def render_kajiki(template_name, extra_vars=None, cache_key=None,
     """
     # Create a render callable for the cache function
     def render_template():
-        # Pull in extra vars if needed
-        globs = extra_vars or {}
-
-        # Second, get the globals
-        globs.update(templating.pylons_globals())
-
         # Grab a template reference
         template = globs['app_globals'].kajiki_loader.load(template_name)
-
         return literal(template(globs).render())
 
-    return templating.cached_template(template_name, render_template, cache_key=cache_key,
+    return cached_template(template_name, render_template, cache_key=cache_key,
                            cache_type=cache_type, cache_expire=cache_expire,
                            ns_options=('method'), method=method)
 
+def render_jinja(template_name, globs, cache_key=None,
+                 cache_type=None, cache_expire=None):
+    """Render a template with Jinja2
+
+    Accepts the cache options ``cache_key``, ``cache_type``, and
+    ``cache_expire``.
+
+    """
+    # Create a render callable for the cache function
+    def render_template():
+        # Grab a template reference
+        template = \
+            globs['app_globals'].jinja2_env.get_template(template_name)
+        return literal(template.render(**globs))
+
+    return cached_template(template_name, render_template, cache_key=cache_key,
+                           cache_type=cache_type, cache_expire=cache_expire)

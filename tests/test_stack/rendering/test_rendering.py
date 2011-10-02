@@ -309,3 +309,10 @@ def test_template_override_multiple_content_type():
         '/template_override_multiple_content_type',
         params=dict(override=True))
     assert 'This is the mako index page' in resp
+
+def test_pylons_rendering():
+    app = setup_noDB()
+    tgresp = app.get('/manual_rendering')
+    pyresp = app.get('/manual_rendering?frompylons=1')
+
+    assert str(tgresp) == str(pyresp), str(tgresp) + '\n------\n' + str(pyresp)

@@ -9,7 +9,7 @@ import formencode
 import pylons
 import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
-from pylons.i18n import ugettext, ungettext, lazy_ugettext
+from pylons.i18n import ugettext, ungettext, lazy_ugettext, gettext_noop
 from pylons.configuration import config
 from pylons import session
 
