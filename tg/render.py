@@ -83,14 +83,14 @@ def _get_tg_vars():
     response = tg.response._current_obj()
 
     try:
-        h = conf.package.lib.helpers
+        h = conf['package'].lib.helpers
     except AttributeError, ImportError:
         h = Bunch()
 
 
     # TODO: Implement user_agent and other missing features.
     tg_vars = Bunch(
-        config = conf,
+        config = tg.config,
         flash_obj = tg.flash,
         flash = DeprecatedFlashVariable(
             lambda: tg.flash.message,
@@ -434,3 +434,4 @@ def render_jinja(template_name, globs, cache_key=None,
 
     return cached_template(template_name, render_template, cache_key=cache_key,
                            cache_type=cache_type, cache_expire=cache_expire)
+
