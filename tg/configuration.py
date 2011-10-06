@@ -15,7 +15,7 @@ from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
-from paste.deploy.converters import asbool
+from paste.deploy.converters import asbool, asint
 
 import tg
 from tg import TGApp
@@ -410,6 +410,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         else:
             from genshi.template import TemplateLoader
         loader = TemplateLoader(search_path=self.paths.templates,
+                                max_cache_size=asint(self.get('genshi.max_cache_size', 30)),
                                 auto_reload=self.auto_reload_templates,
                                 callback=template_loaded)
 
