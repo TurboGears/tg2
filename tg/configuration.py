@@ -190,6 +190,9 @@ class AppConfig(Bunch):
         pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
                         paths=self.paths)
+
+        self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
+
         config.update(self)
         # set up the response options to None.  This allows
         # you to set the proper content type within a controller method
@@ -201,6 +204,7 @@ class AppConfig(Bunch):
             config['pylons.strict_tmpl_context'] = True
         else:
             config['pylons.strict_tmpl_context'] = False
+
         self.after_init_config()
 
     def after_init_config(self):
