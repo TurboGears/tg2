@@ -92,6 +92,11 @@ def test_genshi_autodoctype_overwrite():
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
+def test_html_priority_for_ie():
+    app = setup_noDB()
+    resp = app.get('/html_and_json', headers={'Accept':'application/x-ms-application, image/jpeg, application/xaml+xml, image/gif, image/pjpeg, application/x-ms-xbap, */*'})
+    assert 'text/html' in str(resp), resp
+
 def test_genshi_foreign_characters():
     app = setup_noDB()
     resp = app.get('/foreign')

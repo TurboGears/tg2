@@ -181,6 +181,11 @@ class RootController(TGController):
     def mako_inherits_dotted(self):
         return {}
 
+    @expose('json')
+    @expose('genshi:index.html')
+    def html_and_json(self):
+        return {}
+
     @expose('json', custom_format='json')
     @expose('mako:mako_custom_format.mak', content_type='text/xml', custom_format='xml')
     @expose('genshi:genshi_custom_format.html', content_type='text/html', custom_format='html')

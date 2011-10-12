@@ -9,7 +9,6 @@ needed to support these decorators.
 
 """
 from warnings import warn
-import inspect
 import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
@@ -44,6 +43,7 @@ class Decoration(object):
     def __init__(self, controller):
         self.controller = controller
         self.engines = {}
+        self.engines_keys = []
         self.custom_engines = {}
         self.render_custom_format = None
         self.validation = None
@@ -85,6 +85,11 @@ class Decoration(object):
         if content_type is None:
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
+
+        #this is a work-around to make text/html prominent in respect
+        #to other common choices when they have the same weight for
+        # paste.util.mimeparse.best_match.
+        self.engines_keys = sorted(self.engines.keys(), reverse=True)
 
     def register_custom_template_engine(self, custom_format, content_type, engine, template,
                                         exclude_names):
@@ -131,7 +136,7 @@ class Decoration(object):
             content_type, engine, template, exclude_names = self.custom_engines[render_custom_format]
         else:
             if self.engines:
-                content_type = best_match(self.engines.keys(), accept_types)
+                content_type = best_match(self.engines_keys, accept_types)
             else:
                 content_type = 'text/html'
 
