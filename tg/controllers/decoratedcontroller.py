@@ -40,14 +40,7 @@ class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
     controller methods for the purpose of rendering web content.
     """
-
-    def __init__(self): # FIXME! #
-        if hasattr(self, 'allow_only') and self.allow_only is not None:
-            # Let's turn Controller.allow_only into something useful for
-            # the @allow_only decorator.
-            predicate = self.allow_only
-            #self = allow_only(predicate)(self)
-
+    
     def _is_exposed(self, controller, name):
         if hasattr(controller, name):
             method = getattr(controller, name)
