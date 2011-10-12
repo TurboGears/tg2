@@ -431,6 +431,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def setup_jinja_renderer(self):
         """Setup a renderer and loader for Jinja2 templates."""
         from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+        from jinja2.filters import FILTERS
         from tg.render import render_jinja
 
         if not 'jinja_extensions' in self :
@@ -438,14 +439,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # TODO: Load jinja filters automatically from given modules
         if not 'jinja_filters' in self:
-            self.jinja_filters = []
+            self.jinja_filters = {}
 
         config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
                  [FileSystemLoader(path) for path in self.paths['templates']]),
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
         # Add jinja filters
-        config['pylons.app_globals'].jinja2_env.filters = self.jinja_filters
+        config['pylons.app_globals'].jinja2_env.filters = dict(FILTERS, **self.jinja_filters)
 
         # Jinja's unable to request c's attributes without strict_c
         warnings.simplefilter("ignore")
