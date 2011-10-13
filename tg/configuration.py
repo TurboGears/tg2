@@ -437,7 +437,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if not 'jinja_extensions' in self :
             self.jinja_extensions = []
 
-        # TODO: Load jinja filters automatically from given modules
         if not 'jinja_filters' in self:
             self.jinja_filters = {}
 
@@ -445,8 +444,18 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                  [FileSystemLoader(path) for path in self.paths['templates']]),
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
+        # Try to load custom filters module under app_package.lib.templatetools
+        try:
+            filter_package = self.package.__name__ + ".lib.templatetools"
+            autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
+            autoload_filters = autoload_lib.jinja_filters.__dict__
+        except (ImportError, AttributeError):
+            autoload_filters = {}
+
         # Add jinja filters
-        config['pylons.app_globals'].jinja2_env.filters = dict(FILTERS, **self.jinja_filters)
+        filters = dict(FILTERS, **autoload_filters)
+        filters.update(self.jinja_filters)
+        config['pylons.app_globals'].jinja2_env.filters = filters
 
         # Jinja's unable to request c's attributes without strict_c
         warnings.simplefilter("ignore")
