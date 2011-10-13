@@ -175,18 +175,7 @@ def test_jinja_extensions():
     assert "&lt;b&gt;Test Autoescape On&lt;/b&gt;" in resp, resp
 
 def test_jinja_buildin_filters():
-    base_config = TestConfig(folder = 'rendering',
-        values = {'use_sqlalchemy': False,
-                  'pylons.helpers': Bunch(),
-                  'use_legacy_renderer': False,
-                  # this is specific to mako
-                  # to make sure inheritance works
-                  'use_dotted_templatenames': False,
-                  'pylons.tmpl_context_attach_args': False,
-                  'renderers':['jinja'],
-        }
-    )
-    app = app_from_config(base_config)
+    app = setup_noDB()
     resp = app.get('/jinja_buildins')
     assert 'HELLO JINJA!' in resp, resp
 
@@ -215,6 +204,11 @@ def test_jinja_custom_filters():
     app = app_from_config(base_config)
     resp = app.get('/jinja_filters')
     assert '8bb23e0b574ecb147536efacc864891b' in resp, resp
+
+def test_jinja_autoload_filters():
+    app = setup_noDB()
+    resp = app.get('/jinja_filters')
+    assert '29464d5ffe8f8dba1782fffcd6ed9fca6ceb4742' in resp, resp
 
 def test_mako_renderer():
     app = setup_noDB()
