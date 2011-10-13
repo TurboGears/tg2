@@ -133,6 +133,10 @@ class RootController(TGController):
     def jinja_filters(self):
         return {}
 
+    @expose('jinja:jinja_buildins.html')
+    def jinja_buildins(self):
+        return {}
+
     @expose('chameleon_genshi:index.html')
     def chameleon_genshi_index(self):
         return {}

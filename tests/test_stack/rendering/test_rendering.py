@@ -174,14 +174,31 @@ def test_jinja_extensions():
     assert "<b>Autoescape Off</b>" in resp, resp
     assert "&lt;b&gt;Test Autoescape On&lt;/b&gt;" in resp, resp
 
-def test_jinja_filters():
+def test_jinja_buildin_filters():
+    base_config = TestConfig(folder = 'rendering',
+        values = {'use_sqlalchemy': False,
+                  'pylons.helpers': Bunch(),
+                  'use_legacy_renderer': False,
+                  # this is specific to mako
+                  # to make sure inheritance works
+                  'use_dotted_templatenames': False,
+                  'pylons.tmpl_context_attach_args': False,
+                  'renderers':['jinja'],
+        }
+    )
+    app = app_from_config(base_config)
+    resp = app.get('/jinja_buildins')
+    assert 'HELLO JINJA!' in resp, resp
 
-    # Simple test filter to reverse a string
-    def reverse(value):
-        new_string = ''
-        for c in value:
-            new_string = c + new_string
-        return new_string
+def test_jinja_custom_filters():
+    # Simple test filter to get a md5 hash of a string
+    def codify(value):
+        try:
+            from hashlib import md5
+        except ImportError:
+            from md5 import md5
+        string_hash = md5(value)
+        return string_hash.hexdigest()
 
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
@@ -192,12 +209,12 @@ def test_jinja_filters():
                                        'use_dotted_templatenames': False,
                                        'pylons.tmpl_context_attach_args': False,
                                        'renderers':['jinja'],
-                                       'jinja_filters': {'reverse': reverse}
+                                       'jinja_filters': {'codify': codify}
                                        }
                              )
     app = app_from_config(base_config)
     resp = app.get('/jinja_filters')
-    assert "gnirtS tseT" in resp, resp
+    assert '8bb23e0b574ecb147536efacc864891b' in resp, resp
 
 def test_mako_renderer():
     app = setup_noDB()
