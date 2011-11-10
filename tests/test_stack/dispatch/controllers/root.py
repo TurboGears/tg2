@@ -7,10 +7,26 @@ from formencode import validators
 
 from tg import expose, redirect, config
 from tg.controllers import TGController
+from tg import dispatched_controller
 from nose.tools import eq_
 
+class NestedSubController(TGController):
+    @expose()
+    def index(self):
+        return '-'.join((self.mount_point, dispatched_controller().mount_point))
 
-class SubController(object):
+    @expose()
+    def hitme(self):
+        return '*'.join((self.mount_point, dispatched_controller().mount_point))
+
+    @expose()
+    def _lookup(self, *args):
+        lookup = LookupController()
+        return lookup, args
+
+class SubController(TGController):
+    nested = NestedSubController()
+    
     @expose()
     def foo(self,):
         return 'sub_foo'
@@ -39,10 +55,20 @@ class SubController(object):
     def hello(self, name):
         return "Why HELLO! " + name
 
+    @expose()
+    def hitme(self):
+        return '@'.join((self.mount_point, dispatched_controller().mount_point))
+
 class LookupController(TGController):
+    nested = NestedSubController()
+    
     @expose()
     def findme(self, *args, **kw):
         return 'got to lookup'
+
+    @expose()
+    def hiddenhitme(self, *args, **kw):
+        return ' '.join((self.mount_point, dispatched_controller().mount_point))
 
 class SubController2(object):
     @expose()

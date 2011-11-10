@@ -147,6 +147,13 @@ class AppConfig(Bunch):
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
 
+    def get_root_module(self):
+        root_module_path = self.paths['root']
+        base_controller_path = self.paths['controllers']
+        controller_path = base_controller_path[len(root_module_path)+1:]
+        root_controller_module = '.'.join([self.package.__name__] + controller_path.split(os.sep) + ['root'])
+        return root_controller_module
+
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
             if callable(cmd):
@@ -192,6 +199,7 @@ class AppConfig(Bunch):
                         paths=self.paths)
 
         self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
+        pylons_config['application_root_module'] = self.get_root_module()
 
         config.update(self)
         # set up the response options to None.  This allows

@@ -15,18 +15,22 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-from urllib import url2pathname
 from inspect import ismethod, isclass, getargspec
 from warnings import warn
-import pylons
+import pylons, sys
 import mimetypes
 from pylons.controllers import WSGIController
 from tg.exceptions import HTTPNotFound
 from tg.i18n import setup_i18n
-from tg.util import odict
 
 HTTPNotFound = HTTPNotFound().exception
 
+def dispatched_controller():
+    state = pylons.request.controller_state
+    for location, cont in reversed(state.controller_path):
+        if cont.mount_point:
+            return cont
+    return None
 
 class DispatchState(object):
     """
@@ -37,7 +41,7 @@ class DispatchState(object):
     """
     def __init__(self, url_path, params):
         self.url_path = url_path
-        self.controller_path = odict()
+        self.controller_path = []
         self.routing_args = {}
         self.method = None
         self.remainder = None
@@ -53,7 +57,7 @@ class DispatchState(object):
 
     def add_controller(self, location, controller):
         """Add a controller object to the stack"""
-        self.controller_path[location] = controller
+        self.controller_path.append((location, controller))
 
     def add_method(self, method, remainder):
         """Add the final method that will be called in the _call method"""
@@ -77,7 +81,7 @@ class DispatchState(object):
     @property
     def controller(self):
         """returns the current controller"""
-        return self.controller_path.getitem(-1)
+        return self.controller_path[-1][1]
 
 
 class Dispatcher(WSGIController):
@@ -406,6 +410,7 @@ class ObjectDispatcher(Dispatcher):
             obj = getattr(controller, 'im_self', controller)
             if hasattr(obj, '_check_security'):
                 obj._check_security()
+
             state.add_controller(current_path, controller)
             state.dispatcher = controller
             return controller._dispatch(state, remainder)
@@ -498,3 +503,25 @@ class ObjectDispatcher(Dispatcher):
         This is expected to be overridden by any subclass that wants to set
         the routing_args (RestController). Do not delete.
         """
+
+    @property
+    def mount_point(self):
+        if not self.mount_steps:
+            return ''
+        return '/' + '/'.join((x[0] for x in self.mount_steps[1:]))
+
+    @property
+    def mount_steps(self):
+        def find_url(root, item, parents):
+            for i in root.__dict__:
+                controller = root.__dict__[i]
+                if controller is item:
+                    return parents + [(i, item)]
+                if hasattr(controller, '_dispatch'):
+                    v = find_url(controller.__class__, item, parents + [(i, controller)])
+                    if v:
+                        return v
+            return []
+
+        root_controller = sys.modules[pylons.config['application_root_module']].RootController
+        return find_url(root_controller, self, [('/', root_controller)])

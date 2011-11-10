@@ -168,3 +168,23 @@ def test_variable_decode():
     resp = app.get('/test_vardec', params=params)
     assert resp.json['obj'] == obj, (resp.json['obj'], obj)
 
+class TestVisits(object):
+    def test_visit_path_sub1(self):
+        resp = app.get("/sub/hitme")
+        assert str(resp).endswith('/sub@/sub')
+
+    def test_visit_path_nested(self):
+        resp = app.get("/sub/nested/hitme")
+        assert str(resp).endswith('/sub/nested*/sub/nested')
+
+    def test_visit_path_nested_index(self):
+        resp = app.get("/sub/nested")
+        assert str(resp).endswith('/sub/nested-/sub/nested')
+
+    def test_runtime_visit_path_subcontroller(self):
+        resp = app.get("/sub/nested/nested/hitme")
+        assert str(resp).endswith('*/sub/nested')
+
+    def test_runtime_visit_path(self):
+        resp = app.get("/sub/nested/hiddenhitme")
+        assert str(resp).endswith(' /sub/nested')
