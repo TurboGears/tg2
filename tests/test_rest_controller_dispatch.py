@@ -263,8 +263,6 @@ class ExtraRestController(RestController):
     optsubrest = OptionalArgumentRestController()
     reqsubrest = RequiredArgumentRestController()
 
-    _custom_actions = ['archive']
-
     @expose()
     def post_archive(self):
         return 'got to post archive'
@@ -302,8 +300,6 @@ class BasicRestController(RestController):
     @expose()
     def other(self):
         return "rest other"
-
-    _custom_actions = ['archive']
 
     @expose()
     def archive(self):

@@ -107,9 +107,6 @@ class RestDispatcher(ObjectDispatcher):
 
     def _handle_custom_get(self, state, remainder):
         method_name = remainder[-1]
-        if method_name not in getattr(self, '_custom_actions', []):
-            return
-
         current_controller = state.controller
 
         if (self._is_exposed(current_controller, method_name) or
