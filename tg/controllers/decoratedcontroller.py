@@ -126,11 +126,13 @@ class DecoratedController(object):
 
 
         # Render template
-        tg_decoration.run_hooks('before_render', remainder, params,
-                                        output)
-        response = self._render_response(controller, output)
+        tg_decoration.run_hooks('before_render', remainder, params,output)
+
+        response = dict(response=self._render_response(controller, output))
+        
         tg_decoration.run_hooks('after_render', response)
-        return response
+        
+        return response['response']
 
 
     def _perform_validate(self, controller, params):
