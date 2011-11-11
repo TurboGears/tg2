@@ -140,7 +140,10 @@ class AppConfig(Bunch):
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
-        # The codes TG should display an error page for. All other HTTP errors are
+        self.hooks = dict(before_validate=[],
+                          before_call=[],
+                          before_render=[],
+                          after_render=[])        # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
 
@@ -153,6 +156,14 @@ class AppConfig(Bunch):
         controller_path = base_controller_path[len(root_module_path)+1:]
         root_controller_module = '.'.join([self.package.__name__] + controller_path.split(os.sep) + ['root'])
         return root_controller_module
+
+    def register_hook(self, hook_name, func):
+        if hook_name == 'startup':
+            self.call_on_startup.append(func)
+        elif hook_name == 'shutdown':
+            self.call_on_shutdown.append(func)
+        else:
+            self.hooks[hook_name].append(func)
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
