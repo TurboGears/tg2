@@ -64,7 +64,7 @@ class Decoration(object):
         return bool(self.engines) or bool(self.custom_engines)
 
     def run_hooks(self, hook, *l, **kw):
-        for func in config['hooks'][hook]:
+        for func in config.get('hooks', {}).get(hook, []):
             func(*l, **kw)
         for func in self.hooks[hook]:
             func(*l, **kw)
