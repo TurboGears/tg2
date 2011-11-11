@@ -143,7 +143,8 @@ class AppConfig(Bunch):
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
-                          after_render=[])        # The codes TG should display an error page for. All other HTTP errors are
+                          after_render=[])
+        # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
 
