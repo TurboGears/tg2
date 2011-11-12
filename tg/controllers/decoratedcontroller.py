@@ -102,11 +102,16 @@ class DecoratedController(object):
             pylons.tmpl_context.form_values = params
 
             tg_decoration.run_hooks('before_call', remainder, params)
-            # call controller method
 
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
 
-            output = controller(*remainder, **dict(params))
+            #apply controller wrappers
+            controller_callable = controller
+            for wrapper in config.get('controller_wrappers', []):
+                controller_callable = wrapper(controller_callable)
+
+            # call controller method
+            output = controller_callable(*remainder, **dict(params))
 
         except formencode.api.Invalid, inv:
             controller, output = self._handle_validation_errors(controller,
@@ -126,9 +131,9 @@ class DecoratedController(object):
 
 
         # Render template
-        tg_decoration.run_hooks('before_render', remainder, params,output)
+        tg_decoration.run_hooks('before_render', remainder, params, output)
 
-        response = dict(response=self._render_response(controller, output))
+        response = self._render_response(controller, output)
         
         tg_decoration.run_hooks('after_render', response)
         
@@ -239,6 +244,9 @@ class DecoratedController(object):
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(req)
 
+        result = dict(response=response, content_type=content_type,
+                      engine_name=engine_name, template_name=template_name)
+
         if content_type is not None:
             resp.headers['Content-Type'] = content_type
 
@@ -247,8 +255,7 @@ class DecoratedController(object):
             if engine_name == 'json' and isinstance(response, list):
                 raise JsonEncodeError('You may not expose with json a list return value.  This is because'\
                                       ' it leaves your application open to CSRF attacks')
-            return response
-        """Return a JSON string representation of a Python object."""
+            return result
 
         # Save these objects as locals from the SOP to avoid expensive lookups
         tmpl_context = pylons.tmpl_context._current_obj()
@@ -258,7 +265,7 @@ class DecoratedController(object):
         # this is caused when someone specifies a content_type, but no template
         # because their controller returns a string.
         if template_name is None:
-            return response
+            return result
 
         # Prepare the engine, if it's not already been prepared.
         if use_legacy_renderer == engine_name:
@@ -304,18 +311,19 @@ class DecoratedController(object):
 
         # Render the result.
         if use_legacy_renderer == engine_name:
-            result = buffet.render(engine_name=engine_name,
+            rendered = buffet.render(engine_name=engine_name,
                                template_name=template_name,
                                include_pylons_variables=False,
                                namespace=namespace)
         else:
-            result = tg_render(template_vars=namespace,
+            rendered = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
 
         if isinstance(result, unicode) and not pylons.response.charset:
             resp.charset = 'UTF-8'
 
+        result['response'] = rendered
         return result
 
     def _handle_validation_errors(self, controller, remainder, params, exception):

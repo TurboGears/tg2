@@ -140,6 +140,7 @@ class AppConfig(Bunch):
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
+        self.controller_wrappers = []
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -163,6 +164,8 @@ class AppConfig(Bunch):
             self.call_on_startup.append(func)
         elif hook_name == 'shutdown':
             self.call_on_shutdown.append(func)
+        elif hook_name == 'controller_wrapper':
+            self.controller_wrappers.append(func)
         else:
             self.hooks[hook_name].append(func)
 
