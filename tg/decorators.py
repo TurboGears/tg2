@@ -69,6 +69,12 @@ class Decoration(object):
         for func in self.hooks[hook]:
             func(*l, **kw)
 
+    def wrap_controller(self, controller):
+        controller_callable = controller
+        for wrapper in config.get('controller_wrappers', []):
+            controller_callable = wrapper(self, controller_callable)
+        return controller_callable
+
     def register_template_engine(self, content_type, engine, template,
                                  exclude_names):
         """Registers an engine on the controller.

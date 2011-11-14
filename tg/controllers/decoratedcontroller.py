@@ -106,9 +106,7 @@ class DecoratedController(object):
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
-            controller_callable = controller
-            for wrapper in config.get('controller_wrappers', []):
-                controller_callable = wrapper(controller_callable)
+            controller_callable = tg_decoration.wrap_controller(controller)
 
             # call controller method
             output = controller_callable(*remainder, **dict(params))
