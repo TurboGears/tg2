@@ -123,6 +123,21 @@ class LazyUrl(object):
     def __str__(self):
         return str(self._id)
 
+    def encode(self, *args, **kw):
+        return self._id.encode(*args, **kw)
+
+    def __add__(self, other):
+        return self._id + other
+
+    def __radd__(self, other):
+        return other + self._id
+
+    def startswith(self, *args, **kw):
+        return self._id.startswith(*args, **kw)
+
+    def format(self, other):
+        return self._id.format(other)
+
 def lurl(base_url=None, params=None):
     """
     Like tg.url but is lazily evaluated.
