@@ -41,5 +41,5 @@ class TGApp(PylonsApp):
             log.debug("Found controller, module: '%s', class: '%s'",
                       full_module_name, class_name)
         mycontroller = getattr(sys.modules[full_module_name], class_name)
-        self.controller_classes[controller] = mycontroller
+        self.controller_classes[controller] = mycontroller()
         return mycontroller

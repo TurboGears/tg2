@@ -22,6 +22,7 @@ import mimetypes
 from pylons.controllers import WSGIController
 from tg.exceptions import HTTPNotFound
 from tg.i18n import setup_i18n
+from tg.decorators import cached_property
 
 HTTPNotFound = HTTPNotFound().exception
 
@@ -461,20 +462,21 @@ class ObjectDispatcher(Dispatcher):
             return self._dispatch_first_found_default_or_lookup(state, remainder)
 
         current_path = remainder[0]
+        current_args = remainder[1:]
 
         #an exposed method matching the path is found
         if self._is_exposed(current_controller, current_path):
             #check to see if the argspec jives
             controller = getattr(current_controller, current_path)
-            if self._method_matches_args(controller, state, remainder[1:]):
-                state.add_method(controller, remainder[1:])
+            if self._method_matches_args(controller, state, current_args):
+                state.add_method(controller, current_args)
                 return state
 
         #another controller is found
         if hasattr(current_controller, current_path):
             current_controller = getattr(current_controller, current_path)
             return self._dispatch_controller(
-                current_path, current_controller, state, remainder[1:])
+                current_path, current_controller, state, current_args)
 
         #dispatch not found
         return self._dispatch_first_found_default_or_lookup(state, remainder)
@@ -504,13 +506,13 @@ class ObjectDispatcher(Dispatcher):
         the routing_args (RestController). Do not delete.
         """
 
-    @property
+    @cached_property
     def mount_point(self):
         if not self.mount_steps:
             return ''
         return '/' + '/'.join((x[0] for x in self.mount_steps[1:]))
 
-    @property
+    @cached_property
     def mount_steps(self):
         def find_url(root, item, parents):
             for i in root.__dict__:

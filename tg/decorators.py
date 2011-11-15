@@ -654,5 +654,21 @@ class allow_only(_BaseProtectionDecorator):
         if hasattr(sup, '__call__'):
             return super(allow_only, self).__call__(cls, *args, **kwargs)
 
+class cached_property(object):
+    def __init__(self, func):
+        self.__name__ = func.__name__
+        self.__module__ = func.__module__
+        self.__doc__ = func.__doc__
+        self.func = func
+
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self
+
+        try:
+            value = obj.__dict__[self.__name__]
+        except KeyError:
+            value = obj.__dict__[self.__name__] = self.func(obj)
+        return value
 
 #}
