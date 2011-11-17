@@ -144,7 +144,9 @@ class AppConfig(Bunch):
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
-                          after_render=[])
+                          after_render=[],
+                          before_config=[],
+                          after_config=[])
         # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
@@ -913,6 +915,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             if wrap_app:
                 app = wrap_app(app)
 
+            for hook in self.hooks['before_config']:
+                app = hook(app)
+
             avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
             config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
 
@@ -972,6 +977,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 self.serve_static = asbool(config.get('serve_static', 'true'))
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
+
+            for hook in self.hooks['after_config']:
+                app = hook(app)
 
             return app
 
