@@ -14,6 +14,11 @@ except ImportError:
     ResultProxy=None
     RowProxy=None
 
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId=None
+
 def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
 
@@ -41,6 +46,8 @@ class GenericJSON(JSONEncoder):
             return dict(rows=list(obj), count=obj.rowcount)
         elif isinstance(obj, RowProxy):
             return dict(rows=dict(obj), count=1)
+        elif isinstance(obj, ObjectId):
+            return str(obj)
         elif isinstance(obj, MultiDict):
             return obj.mixed()
         else:
