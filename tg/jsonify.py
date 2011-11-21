@@ -7,17 +7,20 @@ from simplejson import JSONEncoder
 
 from webob.multidict import MultiDict
 
+class NotExistingImport:
+    pass
+
 try:
     import sqlalchemy
     from sqlalchemy.engine.base import ResultProxy, RowProxy
 except ImportError:
-    ResultProxy=None
-    RowProxy=None
+    ResultProxy=NotExistingImport
+    RowProxy=NotExistingImport
 
 try:
     from bson import ObjectId
 except ImportError:
-    ObjectId=None
+    ObjectId=NotExistingImport
 
 def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
