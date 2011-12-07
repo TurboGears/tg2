@@ -32,16 +32,11 @@ class TGApp(object):
         
         self.config.setdefault('lang', None)
 
-        # Create the redirect function we'll use and save it
-        def redirect_to(url):
-            log.debug("Raising redirect to %s", url)
-            raise HTTPFound(location=url)
-        self.redirect_to = redirect_to
-
         # Cache some options for use during requests
         self._session_key = 'beaker.session'
         self._cache_key = 'beaker.cache'
 
+        self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
         self.req_options = config.get('tg.request_options', config['pylons.request_options'])
         self.resp_options = config.get('tg.response_options', config['pylons.response_options'])
 
@@ -55,9 +50,8 @@ class TGApp(object):
         # Cache the logging level for the request
         log_debug = self.log_debug = logging.DEBUG >= log.getEffectiveLevel()
 
-        self.setup_app_env(environ, start_response)
-
-        if 'paste.testing_variables' in environ:
+        testmode = self.setup_app_env(environ, start_response)
+        if testmode:
             if environ['PATH_INFO'] == '/_test_vars':
                 paste.registry.restorer.save_registry_state(environ)
                 start_response('200 OK', [('Content-type', 'text/plain')])
@@ -66,8 +60,7 @@ class TGApp(object):
         controller = self.resolve(environ, start_response)
         response = self.dispatch(controller, environ, start_response)
 
-        if 'paste.testing_variables' in environ and hasattr(response,
-                                                            'wsgi_response'):
+        if testmode and hasattr(response, 'wsgi_response'):
             environ['paste.testing_variables']['response'] = response
 
         try:
@@ -117,7 +110,7 @@ class TGApp(object):
         lang = self.config['lang']
         translator = _get_translator(lang, pylons_config=self.config)
 
-        if self.config['tg.strict_tmpl_context']:
+        if self.strict_tmpl_context:
             tmpl_context = ContextObj()
         else:
             tmpl_context = AttribSafeContextObj()
@@ -157,6 +150,9 @@ class TGApp(object):
             testenv['config'] = self.config
             testenv['session'] = environ[self._session_key]
             testenv['cache'] = environ[self._cache_key]
+            return True
+
+        return False
 
     def resolve(self, environ, start_response):
         """Uses dispatching information found in
