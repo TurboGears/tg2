@@ -53,7 +53,7 @@ class TestAppConfig:
         # side-effect. setup for those tests actually needs
         # fixing.
         config['pylons.paths']['static_files'] = "test"
-        config["pylons.app_globals"] = Bunch()
+        config["tg.app_globals"] = Bunch()
         config["use_sqlalchemy"] = False
         config["global_conf"] = Bunch()
         config["package"] = "test"

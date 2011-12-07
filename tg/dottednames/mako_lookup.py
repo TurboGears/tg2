@@ -61,14 +61,14 @@ class DottedTemplateLookup(object):
 
         """
         if uri.startswith('local:'):
-            uri = tg.config['pylons.package'] + '.' + uri[6:]
+            uri = tg.config['package'].__name__ + '.' + uri[6:]
 
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = tg.config['pylons.app_globals'].\
+            result = tg.config['tg.app_globals'].\
                 dotted_filename_finder.get_dotted_filename(template_name=uri, template_extension='.mak')
 
             if not uri in self.template_filenames_cache:

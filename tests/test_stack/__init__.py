@@ -17,7 +17,6 @@ class TestConfig(AppConfig):
         self.package = tests.test_stack
         self.default_renderer = 'genshi'
         self.globals = self
-        self.helpers = {}
         self.auth_backend = None
         self.auto_reload_templates = False
         self.use_legacy_renderer = False
@@ -39,9 +38,8 @@ class TestConfig(AppConfig):
             setattr(self, key, value)
 
     def setup_helpers_and_globals(self):
-        tg.config['pylons.app_globals'] = self.globals
-        tg.config['pylons.h'] = self.helpers
-        g = tg.config['pylons.app_globals']
+        tg.config['tg.app_globals'] = self.globals
+        g = tg.config['tg.app_globals']
         g.dotted_filename_finder = DottedFileNameFinder()
 
 def app_from_config(base_config, deployment_config=None):

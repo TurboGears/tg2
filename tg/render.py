@@ -149,6 +149,7 @@ def _get_tg_vars():
 #Monkey patch pylons_globals for cases when pylons.templating is used
 #instead of tg.render to programmatically render templates.
 import pylons
+import pylons.templating
 pylons.templating.pylons_globals = _get_tg_vars
 #end monkeying around
 

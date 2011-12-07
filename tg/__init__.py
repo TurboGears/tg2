@@ -52,11 +52,10 @@ assumptions about how things will work.
 
 """
 
-from pylons import app_globals, request, response, tmpl_context, session, cache, translator
-
+from tg.request_local import app_globals, request, response, tmpl_context, session, cache, translator
+from tg.configuration import config
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, lurl, abort
-from tg.configuration import config
 from tg.release import version
 from tg.decorators import (validate, expose, override_template,
                            require, allow_only)

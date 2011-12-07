@@ -16,7 +16,7 @@ class ChameleonGenshiTemplateLoader(TemplateLoader):
 
     def get_dotted_filename(self, filename):
         if not filename.endswith(self.template_extension):
-            finder = config['pylons.app_globals'].dotted_filename_finder
+            finder = config['tg.app_globals'].dotted_filename_finder
             filename = finder.get_dotted_filename(
                     template_name=filename,
                     template_extension=self.template_extension)

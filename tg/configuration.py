@@ -18,7 +18,6 @@ from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool, asint
 
 import tg
-from tg import TGApp
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
 
 from routes import Mapper
@@ -229,6 +228,7 @@ class AppConfig(Bunch):
             config['pylons.strict_tmpl_context'] = True
         else:
             config['pylons.strict_tmpl_context'] = False
+        config['tg.strict_tmpl_context'] = config['pylons.strict_tmpl_context']
 
         self.after_init_config()
 
@@ -299,9 +299,10 @@ class AppConfig(Bunch):
 
         """
 
-        config['pylons.app_globals'] = self.package.lib.app_globals.Globals()
-        g = config['pylons.app_globals']
+        g = self.package.lib.app_globals.Globals()
         g.dotted_filename_finder = DottedFileNameFinder()
+        
+        config['pylons.app_globals'] = config['tg.app_globals'] = g
 
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
@@ -379,7 +380,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template notation.
             from tg.dottednames.mako_lookup import DottedTemplateLookup
-            config['pylons.app_globals'].mako_lookup = DottedTemplateLookup(
+            config['tg.app_globals'].mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 module_directory=compiled_dir,
@@ -387,7 +388,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         else:
             from mako.lookup import TemplateLookup
-            config['pylons.app_globals'].mako_lookup = TemplateLookup(
+            config['tg.app_globals'].mako_lookup = TemplateLookup(
                 directories=self.paths['templates'],
                 module_directory=compiled_dir,
                 input_encoding='utf-8', output_encoding='utf-8',
@@ -450,7 +451,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from kajiki.loader import PackageLoader
         from tg.render import render_kajiki
         loader = PackageLoader()
-        config['pylons.app_globals'].kajiki_loader = loader
+        config['tg.app_globals'].kajiki_loader = loader
         self.render_functions.kajiki = render_kajiki
 
     def setup_jinja_renderer(self):
@@ -465,7 +466,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if not 'jinja_filters' in self:
             self.jinja_filters = {}
 
-        config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
+        config['tg.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
                  [FileSystemLoader(path) for path in self.paths['templates']]),
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
@@ -480,7 +481,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         # Add jinja filters
         filters = dict(FILTERS, **autoload_filters)
         filters.update(self.jinja_filters)
-        config['pylons.app_globals'].jinja2_env.filters = filters
+        config['tg.app_globals'].jinja2_env.filters = filters
 
         # Jinja's unable to request c's attributes without strict_c
         warnings.simplefilter("ignore")
@@ -555,7 +556,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from ming.datastore import DataStore
 
         datastore = DataStore(config['ming.url'], database=config['ming.db'])
-        config['pylons.app_globals'].ming_datastore = datastore
+        config['tg.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
     def setup_sqlalchemy(self):
@@ -577,9 +578,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     engine1 = engine_from_config(pylons_config, 'sqlalchemy.first.')
                     engine2 = engine_from_config(pylons_config, 'sqlalchemy.second.')
                     # engine1 should be assigned to sa_engine as well as your first engine's name
-                    config['pylons.app_globals'].sa_engine = engine1
-                    config['pylons.app_globals'].sa_engine_first = engine1
-                    config['pylons.app_globals'].sa_engine_second = engine2
+                    config['tg.app_globals'].sa_engine = engine1
+                    config['tg.app_globals'].sa_engine_first = engine1
+                    config['tg.app_globals'].sa_engine_second = engine2
                     # Pass the engines to init_model, to be able to introspect tables
                     init_model(engine1, engine2)
 
@@ -593,7 +594,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
         from sqlalchemy import engine_from_config
         engine = engine_from_config(pylons_config, 'sqlalchemy.')
-        config['pylons.app_globals'].sa_engine = engine
+        config['tg.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
 
@@ -909,6 +910,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 defaults to main).
 
             """
+            from tg import TGApp
+            
             # Configure the Pylons environment
             load_environment(global_conf, app_conf)
             app = TGApp()
