@@ -6,13 +6,11 @@ from babel import parse_locale
 
 import formencode
 
-import pylons
+import tg
 import pylons.i18n
 from pylons.i18n import add_fallback, LanguageError, get_lang
 from pylons.i18n import ugettext, ungettext, lazy_ugettext, gettext_noop
 from pylons.i18n.translation import _get_translator
-from pylons.configuration import config
-from pylons import session
 
 log = logging.getLogger(__name__)
 
@@ -43,12 +41,12 @@ def setup_i18n():
     Should only be manually called if you override controllers function.
 
     """
-    session_ = pylons.session._current_obj()
+    session_ = tg.session._current_obj()
     if session_:
         session_existed = session_.accessed()
         # If session is available, we try to see if there are languages set
-        languages = session_.get(config.get('lang_session_key', 'tg_lang'))
-        if not session_existed and config.get('beaker.session.tg_avoid_touch'):
+        languages = session_.get(tg.config.get('lang_session_key', 'tg_lang'))
+        if not session_existed and tg.config.get('beaker.session.tg_avoid_touch'):
             session_.__dict__['_sess'] = None
 
         if languages:
@@ -96,9 +94,9 @@ def set_lang(languages, **kwargs):
     """
     set_temporary_lang(languages)
 
-    if pylons.session:
-        session[config.get('lang_session_key', 'tg_lang')] = languages
-        session.save()
+    if tg.session:
+        tg.session[tg.config.get('lang_session_key', 'tg_lang')] = languages
+        tg.session.save()
 
 
 _localdir = formencode.api.get_localedir()
@@ -110,7 +108,7 @@ def set_formencode_translation(languages):
             'FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
-    pylons.tmpl_context.formencode_translation = formencode_translation
+    tg.tmpl_context.formencode_translation = formencode_translation
 
 
 __all__ = [

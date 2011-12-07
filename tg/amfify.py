@@ -4,7 +4,8 @@ try:
 except:
     print 'You must easy_install pyamf for to use amf renderer'
     raise
-from pylons import request
+
+from tg import request
 
 def render_amf(template_name, template_vars, **kwargs):
     assert 0

@@ -9,16 +9,14 @@ needed to support these decorators.
 
 """
 from warnings import warn
-import formencode
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
-from webob.multidict import MultiDict
 from tg.paginate import Page
-from pylons.configuration import config
-from pylons import request, response
-from pylons.controllers.util import abort
+from tg.configuration import config
+from tg import request, response
+from tg.controllers.util import abort
 from formencode import variabledecode
 from tg import tmpl_context
 from tg.util import partial

@@ -1,6 +1,5 @@
 import os, sys, logging, paste
 from webob.exc import HTTPFound, HTTPNotFound
-from tg.util import Bunch
 
 log = logging.getLogger(__name__)
 

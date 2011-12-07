@@ -8,7 +8,7 @@ from copy import copy
 import mimetypes
 from UserDict import DictMixin
 
-from pylons.i18n import ugettext
+from tg.i18n import ugettext
 
 from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware

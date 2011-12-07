@@ -3,7 +3,7 @@ Flash messaging system for sending info to the user in a non-obtrusive way
 """
 
 from webflash import Flash
-from pylons import response, request
+from tg import response, request
 
 from logging import getLogger
 

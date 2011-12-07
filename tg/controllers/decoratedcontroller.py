@@ -8,10 +8,9 @@ decorators to effect a rendered page.
 from urllib import url2pathname
 import inspect
 import formencode
-import pylons
-from pylons.configuration import config
-from pylons import request
-from pylons.controllers.util import abort
+import tg
+from tg import config, request
+from tg.controllers.util import abort
 
 try:
     from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
@@ -75,8 +74,8 @@ class DecoratedController(object):
         #This is necessary to prevent spurious Content Type header which would
         #cause problems to paste.response.replace_header calls and cause
         #responses wihout content type to get out with a wrong content type
-        if not pylons.response.headers.get('Content-Type'):
-            pylons.response.headers.pop('Content-Type', None)
+        if not tg.response.headers.get('Content-Type'):
+            tg.response.headers.pop('Content-Type', None)
 
         remainder = remainder or []
         remainder = [url2pathname(r) for r in remainder]
@@ -84,7 +83,7 @@ class DecoratedController(object):
         tg_decoration = controller.decoration
         try:
             if 'tg_format' in params:
-                pylons.request.headers['tg_format'] = params['tg_format']
+                tg.request.headers['tg_format'] = params['tg_format']
 
             tg_decoration.run_hooks('before_validate', remainder, params)
 
@@ -97,7 +96,7 @@ class DecoratedController(object):
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 
-            pylons.tmpl_context.form_values = params
+            tg.tmpl_context.form_values = params
 
             tg_decoration.run_hooks('before_call', remainder, params)
 
@@ -234,8 +233,8 @@ class DecoratedController(object):
         expose decorator.
         """
 
-        req = pylons.request._current_obj()
-        resp = pylons.response._current_obj()
+        req = tg.request._current_obj()
+        resp = tg.response._current_obj()
 
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(req)
@@ -254,8 +253,8 @@ class DecoratedController(object):
             return result
 
         # Save these objects as locals from the SOP to avoid expensive lookups
-        tmpl_context = pylons.tmpl_context._current_obj()
-        use_legacy_renderer = pylons.configuration.config.get("use_legacy_renderer", True)
+        tmpl_context = tg.tmpl_context._current_obj()
+        use_legacy_renderer = tg.configuration.config.get("use_legacy_renderer", True)
 
         # what causes this condition?  there are no tests for it.
         # this is caused when someone specifies a content_type, but no template
@@ -266,7 +265,7 @@ class DecoratedController(object):
         # Prepare the engine, if it's not already been prepared.
         if use_legacy_renderer == engine_name:
             # get the buffet handler
-            buffet = pylons.buffet._current_obj()
+            buffet = tg.buffet._current_obj()
 
             if engine_name not in _configured_engines():
                 template_options = dict(config).get('buffet.template_options', {})
@@ -316,7 +315,7 @@ class DecoratedController(object):
                       template_engine=engine_name,
                       template_name=template_name)
 
-        if isinstance(result, unicode) and not pylons.response.charset:
+        if isinstance(result, unicode) and not tg.response.charset:
             resp.charset = 'UTF-8'
 
         result['response'] = rendered
@@ -333,8 +332,8 @@ class DecoratedController(object):
         error handler instead.
         """
 
-        pylons.tmpl_context.validation_exception = exception
-        pylons.tmpl_context.form_errors = {}
+        tg.tmpl_context.validation_exception = exception
+        tg.tmpl_context.form_errors = {}
 
         # Most Invalid objects come back with a list of errors in the format:
         #"fieldname1: error\nfieldname2: error"
@@ -347,12 +346,12 @@ class DecoratedController(object):
             #if the error has no field associated with it,
             #return the error as a global form error
             if len(field_value) == 1:
-                pylons.tmpl_context.form_errors['_the_form'] = field_value[0].strip()
+                tg.tmpl_context.form_errors['_the_form'] = field_value[0].strip()
                 continue
 
-            pylons.tmpl_context.form_errors[field_value[0]] = field_value[1].strip()
+            tg.tmpl_context.form_errors[field_value[0]] = field_value[1].strip()
 
-        pylons.tmpl_context.form_values = getattr(exception, 'value', {})
+        tg.tmpl_context.form_values = getattr(exception, 'value', {})
 
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
@@ -366,15 +365,15 @@ class DecoratedController(object):
         return error_handler, output
 
     def _initialize_validation_context(self):
-        pylons.tmpl_context.form_errors = {}
-        pylons.tmpl_context.form_values = {}
+        tg.tmpl_context.form_errors = {}
+        tg.tmpl_context.form_values = {}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
         if predicate is None:
             return True
         try:
-            predicate.check_authorization(pylons.request.environ)
+            predicate.check_authorization(tg.request.environ)
         except WhatNotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
@@ -389,14 +388,14 @@ class DecoratedController(object):
                 # The user has not been not authenticated.
                 code = 401
                 status = 'warning'
-            pylons.response.status = code
+            tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
         except NotAuthorizedError, e:
             reason = getattr(e, 'msg', 'You are not Authorized to access this Resource')
             code   = getattr(e, 'code', 401)
             status = getattr(e, 'status', 'error')
-            pylons.response.status = code
+            tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
 
@@ -405,7 +404,7 @@ def _configured_engines():
     Returns a set containing the names of the currently configured template
     engines from the active application's globals
     """
-    g = pylons.app_globals._current_obj()
+    g = tg.app_globals._current_obj()
     if not hasattr(g, 'tg_configured_engines'):
         g.tg_configured_engines = set()
     return g.tg_configured_engines

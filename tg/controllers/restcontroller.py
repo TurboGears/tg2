@@ -4,8 +4,8 @@ This module contains the RestController implementation
 Rest controller provides a RESTful dispatch mechanism, and
 combines controller decoration for TG-Controller behavior.
 """
-import pylons
-from pylons.controllers.util import abort
+import tg
+from tg.controllers.util import abort
 import inspect
 from dispatcher          import ObjectDispatcher
 from decoratedcontroller import DecoratedController
@@ -16,7 +16,7 @@ class RestDispatcher(ObjectDispatcher):
     methods used.
     """
     def _setup_wsgiorg_routing_args(self, url_path, remainder, params):
-        pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
+        tg.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
 
     def _handle_put_or_post(self, method, state, remainder):
         current_controller = state.controller
@@ -199,7 +199,7 @@ class RestDispatcher(ObjectDispatcher):
         """returns: populated DispachState object
         """
         if not hasattr(state, 'http_method'):
-            method = pylons.request.method.lower()
+            method = tg.request.method.lower()
             params = state.params
 
             #conventional hack for handling methods which are not supported by most browsers
@@ -224,11 +224,11 @@ class RestDispatcher(ObjectDispatcher):
             r = self._handle_custom_method(state.http_method, state, remainder)
 
         #clear out the method hack
-        if '_method' in pylons.request.POST:
-            del pylons.request.POST['_method']
+        if '_method' in tg.request.POST:
+            del tg.request.POST['_method']
             del state.params['_method']
-        if '_method' in pylons.request.GET:
-            del pylons.request.GET['_method']
+        if '_method' in tg.request.GET:
+            del tg.request.GET['_method']
             del state.params['_method']
 
         return r

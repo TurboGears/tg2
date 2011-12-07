@@ -7,8 +7,6 @@ try:
 except ImportError:
     predicates = []
 
-from webhelpers.html import literal
-
 import tg
 from tg.configuration import Bunch
 
@@ -134,9 +132,7 @@ def _get_tg_vars():
         N_=tg.i18n.gettext_noop,
         )
 
-    econf = conf['pylons.environ_config']
-    if 'beaker.session' in req.environ or \
-        ('session' in econf and econf['session'] in req.environ):
+    if 'beaker.session' in req.environ:
         root_vars['session'] = tg.session._current_obj()
 
     # Allow users to provide a callable that defines extra vars to be
