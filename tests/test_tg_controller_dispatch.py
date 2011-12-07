@@ -67,7 +67,7 @@ class NewBeforeController(TGController):
     def _before(self, *args, **kw):
         tmpl_context.var = '__my_before__'
         tmpl_context.args = args
-        tmpl_context.params = kw
+        tmpl_context.params = dict(environ=tg.request.environ, **kw)
 
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'

@@ -17,9 +17,9 @@ class which provides the ordinary TurboGears mechanism.
 """
 from inspect import ismethod, isclass, getargspec
 from warnings import warn
-import pylons, sys
+import tg, sys
 import mimetypes
-from pylons.controllers import WSGIController
+from webob.exc import HTTPException
 from tg.exceptions import HTTPNotFound
 from tg.i18n import setup_i18n
 from tg.decorators import cached_property
@@ -27,7 +27,7 @@ from tg.decorators import cached_property
 HTTPNotFound = HTTPNotFound().exception
 
 def dispatched_controller():
-    state = pylons.request.controller_state
+    state = tg.request.controller_state
     for location, cont in reversed(state.controller_path):
         if cont.mount_point:
             return cont
@@ -51,7 +51,7 @@ class DispatchState(object):
         self._notfound_stack = []
 
         #remove the ignore params from self.params
-        remove_params = pylons.config.get('ignore_parameters', [])
+        remove_params = tg.config.get('ignore_parameters', [])
         for param in remove_params:
             if param in self.params:
                 del self.params[param]
@@ -85,7 +85,7 @@ class DispatchState(object):
         return self.controller_path[-1][1]
 
 
-class Dispatcher(WSGIController):
+class Dispatcher(object):
     """
        Extend this class to define your own mechanism for dispatch.
     """
@@ -183,9 +183,11 @@ class Dispatcher(WSGIController):
             url as string
         """
 
-        if not pylons.config.get('disable_request_extensions', False):
-            pylons.request.response_type = None
-            pylons.request.response_ext = None
+        req = tg.request._current_obj()
+        
+        if not tg.config.get('disable_request_extensions', False):
+            req.response_type = None
+            req.response_ext = None
             if url_path and '.' in url_path[-1]:
                 last_remainder = url_path[-1]
                 mime_type, encoding = mimetypes.guess_type(last_remainder)
@@ -193,17 +195,17 @@ class Dispatcher(WSGIController):
                     extension_spot = last_remainder.rfind('.')
                     extension = last_remainder[extension_spot:]
                     url_path[-1] = last_remainder[:extension_spot]
-                    pylons.request.response_type = mime_type
-                    pylons.request.response_ext = extension
+                    req.response_type = mime_type
+                    req.response_ext = extension
 
-        params = pylons.request.params.mixed()
+        params = req.params.mixed()
 
         state = DispatchState(url_path, params)
         state.add_controller('/', self)
         state.dispatcher = self
         state =  state.controller._dispatch(state, url_path)
 
-        pylons.tmpl_context.controller_url = '/'.join(
+        tg.tmpl_context.controller_url = '/'.join(
             url_path[:-len(state.remainder)])
 
         state.routing_args.update(params)
@@ -212,7 +214,7 @@ class Dispatcher(WSGIController):
                 url_path, state.remainder, state.routing_args)
 
         #save the controller state for possible use within the controller methods
-        pylons.request.controller_state = state
+        req.controller_state = state
 
         return state.method, state.controller, state.remainder, params
 
@@ -222,20 +224,20 @@ class Dispatcher(WSGIController):
         the routing_args (RestController). Do not delete.
         """
         # this needs to get added back in after we understand why it breaks pagination:
-        # pylons.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
+        # tg.request.environ['wsgiorg.routing_args'] = (tuple(remainder), params)
 
     def _setup_wsgi_script_name(self, url_path, remainder, params):
         pass
 
-    def _perform_call(self, func, args):
+    def _perform_call(self):
         """
         This function is called from within Pylons and should not be overidden.
         """
-        if pylons.config.get('i18n_enabled', True):
+        if tg.config.get('i18n_enabled', True):
             setup_i18n()
 
-        script_name = pylons.request.environ.get('SCRIPT_NAME', '')
-        url_path = pylons.request.path
+        script_name = tg.request.environ.get('SCRIPT_NAME', '')
+        url_path = tg.request.path
         if url_path.startswith(script_name):
             url_path = url_path[len(script_name):]
         url_path = url_path.split('/')[1:]
@@ -249,10 +251,10 @@ class Dispatcher(WSGIController):
             warn("this functionality is going to removed in the next minor version,"\
                  " please use _before instead."
                  )
-            controller.__before__(*args, **args)
+            controller.__before__(*remainder, **params)
 
         if hasattr(controller, '_before'):
-            controller._before(*args, **args)
+            controller._before(*remainder, **params)
 
         self._setup_wsgi_script_name(url_path, remainder, params)
 
@@ -261,9 +263,9 @@ class Dispatcher(WSGIController):
         if hasattr(controller, '__after__'):
             warn("this functionality is going to removed in the next minor version,"
                  " please use _after instead.")
-            controller.__after__(*args, **args)
+            controller.__after__(*remainder, **params)
         if hasattr(controller, '_after'):
-            controller._after(*args, **args)
+            controller._after(*remainder, **params)
         return r
 
     def routes_placeholder(self, url='/', start_response=None, **kwargs):
@@ -272,6 +274,46 @@ class Dispatcher(WSGIController):
         Routes to accept this controller as a target for its routing.
         """
         pass
+
+    def __call__(self, environ, start_response):
+        tg.request.start_response = start_response
+
+        try:
+            response = self._perform_call()
+        except HTTPException, httpe:
+            response = httpe
+
+        py_response = tg.response._current_obj()
+        if isinstance(response, str):
+            py_response.body = py_response.body + response
+        elif isinstance(response, unicode):
+            py_response.unicode_body = py_response.unicode_body + response
+        elif hasattr(response, 'wsgi_response'):
+            for name, value in py_response.headers.items():
+                if name.lower() == 'set-cookie':
+                    response.headers.add(name, value)
+                else:
+                    response.headers.setdefault(name, value)
+            try:
+                registry = environ['paste.registry']
+                registry.replace(tg.response, response)
+            except KeyError:
+                # Ignore the case when someone removes the registry
+                pass
+            py_response = response
+        elif response is None:
+            pass
+        else:
+            py_response.app_iter = response
+        response = py_response
+
+        if hasattr(response, 'wsgi_response'):
+            if 'paste.testing_variables' in environ:
+                # Copy the response object into the testing vars if we're testing
+                environ['paste.testing_variables']['response'] = response
+            return response(environ, start_response)
+
+        return response
 
 
 class ObjectDispatcher(Dispatcher):
@@ -525,5 +567,5 @@ class ObjectDispatcher(Dispatcher):
                         return v
             return []
 
-        root_controller = sys.modules[pylons.config['application_root_module']].RootController
+        root_controller = sys.modules[tg.config['application_root_module']].RootController
         return find_url(root_controller, self, [('/', root_controller)])

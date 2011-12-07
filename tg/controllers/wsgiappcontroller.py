@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 """
-import pylons
+import tg
 from tgcontroller import TGController
 from util import redirect
 from tg.decorators import expose
@@ -15,7 +15,7 @@ class WSGIAppController(TGController):
         self.allow_only = allow_only
         # Signal tg.configuration.maybe_make_body_seekable which is wrapping
         # The stack to make the body seekable so default() can rewind it.
-        pylons.configuration.config['make_body_seekable'] = True
+        tg.config['make_body_seekable'] = True
         # Calling the parent's contructor, to enable controller-wide auth:
         super(WSGIAppController, self).__init__()
 
@@ -27,7 +27,7 @@ class WSGIAppController(TGController):
         WSGI app.
         """
         # Push into SCRIPT_NAME the path components that have been consumed,
-        request = pylons.request._current_obj()
+        request = tg.request._current_obj()
         new_req = request.copy()
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
         for i in xrange(to_pop):

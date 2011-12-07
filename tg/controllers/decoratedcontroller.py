@@ -78,8 +78,6 @@ class DecoratedController(object):
         if not pylons.response.headers.get('Content-Type'):
             pylons.response.headers.pop('Content-Type', None)
 
-        pylons.request.start_response = getattr(self, 'start_response', None)
-
         remainder = remainder or []
         remainder = [url2pathname(r) for r in remainder]
 
