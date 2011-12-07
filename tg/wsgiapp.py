@@ -33,9 +33,6 @@ class TGApp(object):
         self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
-        self._session_key = 'beaker.session'
-        self._cache_key = 'beaker.cache'
-
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
         self.req_options = config.get('tg.request_options', config['pylons.request_options'])
         self.resp_options = config.get('tg.response_options', config['pylons.response_options'])
@@ -122,8 +119,8 @@ class TGApp(object):
         locals.config = self.config
         locals.tmpl_context = tmpl_context
         locals.translator = translator
-        locals.session = environ[self._session_key]
-        locals.cache = environ[self._cache_key]
+        locals.session = environ['beaker.session']
+        locals.cache = environ['beaker.cache']
         locals.url = environ['routes.url']
         environ['tg.locals'] = locals
 
@@ -135,9 +132,9 @@ class TGApp(object):
         registry.register(request_local.config, self.config)
         registry.register(request_local.tmpl_context, tmpl_context)
         registry.register(request_local.translator, translator)
-        registry.register(request_local.session, environ[self._session_key])
-        registry.register(request_local.cache, environ[self._cache_key])
-        registry.register(request_local.url, environ['routes.url'])
+        registry.register(request_local.session, locals.session)
+        registry.register(request_local.cache, locals.cache)
+        registry.register(request_local.url, locals.url)
 
         if 'paste.testing_variables' in environ:
             if self.log_debug:
@@ -148,8 +145,8 @@ class TGApp(object):
             testenv['tmpl_context'] = tmpl_context
             testenv['app_globals'] = testenv['g'] = self.globals
             testenv['config'] = self.config
-            testenv['session'] = environ[self._session_key]
-            testenv['cache'] = environ[self._cache_key]
+            testenv['session'] = locals.session
+            testenv['cache'] = locals.cache
             return True
 
         return False
