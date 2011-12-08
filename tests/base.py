@@ -22,8 +22,15 @@ from tests.test_stack import app_from_config, TestConfig
 from pylons import url
 from routes import URLGenerator, Mapper
 from tg.util import Bunch
+from tg.request_local import Request, Response
+
+#Monkey patch request-response to use TG ones
+import pylons.controllers.util
+pylons.controllers.util.Request = Request
+pylons.controllers.util.Response = Response
+#end monkey patch
+
 from pylons.util import ContextObj, PylonsContext
-from pylons.controllers.util import Request, Response
 from tg.controllers import TGController
 
 from pylons.configuration import response_defaults
@@ -83,6 +90,14 @@ default_map.connect('error/:action/:id', controller='error')
 # Setup a default route for the root of object dispatch
 default_map.connect('*url', controller='root', action='routes_placeholder')
 
+class PylonsToTG(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        environ['tg.locals'] = environ['pylons.pylons']
+        return self.app(environ, start_response)
+
 def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance."""
     if environ is None:
@@ -95,6 +110,7 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TGController
 
     app = ControllerWrap(controller_klass)
+    app = PylonsToTG(app)
     app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)

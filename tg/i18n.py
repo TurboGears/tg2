@@ -56,8 +56,7 @@ def setup_i18n():
             languages = []
     else:
         languages = []
-    languages.extend(map(sanitize_language_code,
-        pylons.request.accept_language.best_matches()))
+    languages.extend(map(sanitize_language_code, tg.request.languages_best_match()))
     set_temporary_lang(languages)
 
 

@@ -34,6 +34,7 @@ from tg.configuration import Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
 
+from caching import beaker_cache
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators

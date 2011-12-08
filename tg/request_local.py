@@ -26,9 +26,19 @@ class Request(WebObRequest):
         :attr:`webob.Request.accept_charset`"""
         return self.accept_charset
 
+    def languages_best_match(self, fallback=None):
+        al = self.accept_language
+        if hasattr(al, 'best_matches'): # webob<1.2
+           result = al.best_matches(fallback)
+        else:
+           result = list(self.accept_language)
+           if fallback and fallback not in result:
+               result.append(fallback)
+        return result
+
+    @property
     def languages(self):
-        return self.accept_language.best_matches(self.language)
-    languages = property(languages)
+        return self.languages_best_match(self.fallback)
 
     def match_accept(self, mimetypes):
         return self.accept.first_match(mimetypes)
@@ -55,6 +65,21 @@ class Request(WebObRequest):
         if hmac.new(secret, pickled, sha1).hexdigest() == sig:
             return pickle.loads(pickled)
 
+    @property
+    def str_cookies(self):
+        if hasattr(super(Request, self), 'str_cookies'):
+            return super(Request, self).str_cookies
+        
+        return self.cookies
+
+    @property
+    def args_params(self):
+        if hasattr(super(Request, self), 'str_params'):
+            return super(Request, self).params.mixed()
+        
+        if not hasattr(self, '_args_params_cache'):
+            self._args_params_cache = dict([(str(n), v) for n,v in self.params.mixed().iteritems()])
+        return self._args_params_cache
 
 class Response(WebObResponse):
     """WebOb Response subclass

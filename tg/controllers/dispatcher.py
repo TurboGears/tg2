@@ -198,7 +198,7 @@ class Dispatcher(object):
                     req.response_type = mime_type
                     req.response_ext = extension
 
-        params = req.params.mixed()
+        params = req.args_params
 
         state = DispatchState(url_path, params)
         state.add_controller('/', self)
