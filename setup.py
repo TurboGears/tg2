@@ -16,7 +16,6 @@ test_requirements = ['coverage',
                     'repoze.what >= 1.0.8',
                     'repoze.what-quickstart >= 1.0.3',
                     'repoze.who-testutil >= 1.0.1',
-                    'repoze.what-pylons >= 1.0',
                     "repoze.who-friendlyform >=1.0.4",
                     'repoze.who',
                     'repoze.tm2 >= 1.0a4',
@@ -49,11 +48,16 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'WebOb == 1.0.8',
-        'Pylons >= 0.9.7',
+        'WebOb >= 1.0.8',
         'WebFlash >= 0.1a8',
         'WebError >= 0.10.1',
         'Babel',
+        'WebHelpers',
+        'Formencode',
+        'Beaker',
+        'routes',
+        'decorator',
+        'simplejson'
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed

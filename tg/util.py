@@ -4,8 +4,7 @@ import pkg_resources
 from pkg_resources import resource_filename
 import warnings
 
-from pylons.configuration import config
-
+from tg.request_local import config
 
 class DottedFileLocatorError(Exception):pass
 
@@ -236,3 +235,38 @@ def no_warn(f, *args, **kwargs):
         f(*args, **kwargs)
         warnings.resetwarnings()
     return wrap(_f, f)
+
+
+class LazyString(object):
+    """Has a number of lazily evaluated functions replicating a
+    string. Just override the eval() method to produce the actual value.
+    """
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def eval(self):
+        return self.func(*self.args, **self.kwargs)
+
+    def __unicode__(self):
+        return unicode(self.eval())
+
+    def __str__(self):
+        return str(self.eval())
+
+    def __mod__(self, other):
+        return self.eval() % other
+
+    def format(self, other):
+        return self.eval().format(other)
+
+
+def lazify(func):
+    """Decorator to return a lazy-evaluated version of the original"""
+    def newfunc(*args, **kwargs):
+        return LazyString(func, *args, **kwargs)
+    newfunc.__name__ = 'lazy_%s' % func.__name__
+    newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
+        (func.__name__, func.__doc__)
+    return newfunc

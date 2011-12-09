@@ -1,18 +1,96 @@
-import logging
-
-from gettext import translation
-
-from babel import parse_locale
-
+import logging, os
+from gettext import NullTranslations, translation
+from babel.core import parse_locale
 import formencode
-
 import tg
-import pylons.i18n
-from pylons.i18n import add_fallback, LanguageError, get_lang
-from pylons.i18n import ugettext, ungettext, lazy_ugettext, gettext_noop
-from pylons.i18n.translation import _get_translator
+from tg.util import lazify
 
 log = logging.getLogger(__name__)
+
+class LanguageError(Exception):
+    """Exception raised when a problem occurs with changing languages"""
+    pass
+
+def gettext_noop(value):
+    """Mark a string for translation without translating it. Returns
+    value.
+    """
+    
+    return value
+
+def ugettext(value):
+    """Mark a string for translation. Returns the localized unicode
+    string of value.
+
+    Mark a string to be localized as follows::
+
+        _('This should be in lots of languages')
+
+    """
+    return tg.translator.ugettext(value)
+lazy_ugettext = lazify(ugettext)
+
+def ungettext(singular, plural, n):
+    """Mark a string for translation. Returns the localized unicode
+    string of the pluralized value.
+
+    This does a plural-forms lookup of a message id. ``singular`` is
+    used as the message id for purposes of lookup in the catalog, while
+    ``n`` is used to determine which plural form to use. The returned
+    message is a Unicode string.
+
+    Mark a string to be localized as follows::
+
+        ungettext('There is %(num)d file here', 'There are %(num)d files here',
+                  n) % {'num': n}
+
+    """
+    return tg.translator.ungettext(singular, plural, n)
+lazy_ungettext = lazify(ungettext)
+
+
+def _get_translator(lang, **kwargs):
+    """Utility method to get a valid translator object from a language
+    name"""
+    if not lang:
+        return NullTranslations()
+
+    if 'tg_config' in kwargs:
+        conf = kwargs.pop('tg_config')
+    else:
+        conf = tg.config.current_conf()
+
+    localedir = os.path.join(conf['paths']['root'], 'i18n')
+    if not isinstance(lang, list):
+        lang = [lang]
+    try:
+        translator = translation(conf['package'].__name__, localedir,
+                                 languages=lang, **kwargs)
+    except IOError, ioe:
+        raise LanguageError('IOError: %s' % ioe)
+
+    translator.tg_lang = lang
+    
+    return translator
+
+
+def get_lang():
+    """Return the current i18n language used"""
+    return getattr(tg.translator, 'tg_lang', None)
+
+
+def add_fallback(lang, **kwargs):
+    """Add a fallback language from which words not matched in other
+    languages will be translated to.
+
+    This fallback will be associated with the currently selected
+    language -- that is, resetting the language via set_lang() resets
+    the current fallbacks.
+
+    This function can be called multiple times to add multiple
+    fallbacks.
+    """
+    return tg.translator.add_fallback(_get_translator(lang, **kwargs))
 
 
 def sanitize_language_code(lang):
@@ -72,10 +150,15 @@ def set_temporary_lang(languages):
     # the printing to the screen for every problem causes serious slow down.
 
     try:
-        pylons.i18n.set_lang(languages)
+        translator = _get_translator(languages)
+        environ = tg.request.environ
+        environ['tg.locals'].translator = translator
+        if 'paste.registry' in environ:
+            environ['paste.registry'].replace(tg.translator, translator)
     except LanguageError:
         pass
         #log.warn("Language %s: not supported", languages)
+
     try:
         set_formencode_translation(languages)
     except LanguageError:
@@ -114,3 +197,4 @@ __all__ = [
     "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang",
     "ugettext", "lazy_ugettext", "ungettext"
 ]
+

@@ -1,4 +1,7 @@
 import hmac, base64
+import binascii
+from paste.registry import StackedObjectProxy
+from paste.config import DispatchingConfig
 
 try:
     import cPickle as pickle
@@ -119,7 +122,14 @@ class Response(WebObResponse):
         sig = hmac.new(secret, pickled, sha1).hexdigest()
         self.set_cookie(name, sig + base64.encodestring(pickled), **kwargs)
 
-from pylons import app_globals, request, response, tmpl_context, session, cache, translator, url
-from tg.configuration import pylons_config as config
+config = DispatchingConfig()
+app_globals = StackedObjectProxy(name="app_globals")
+cache = StackedObjectProxy(name="cache")
+request = StackedObjectProxy(name="request")
+response = StackedObjectProxy(name="response")
+session = StackedObjectProxy(name="session")
+tmpl_context = StackedObjectProxy(name="tmpl_context or C")
+url = StackedObjectProxy(name="url")
+translator = StackedObjectProxy(name="translator")
 
 __all__ = ['app_globals', 'request', 'response', 'tmpl_context', 'session', 'cache', 'translator', 'url', 'config']

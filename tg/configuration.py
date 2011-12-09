@@ -4,18 +4,19 @@ import atexit
 import os
 import logging
 import warnings
-from copy import copy
+from copy import copy, deepcopy
 import mimetypes
 from UserDict import DictMixin
+from webhelpers.mimehelper import MIMETypes
 
 from tg.i18n import ugettext
 
-from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
 from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool, asint
+from request_local import config as reqlocal_config
 
 import tg
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
@@ -28,19 +29,15 @@ log = logging.getLogger(__name__)
 
 class TGConfigError(Exception):pass
 
-class PylonsConfigWrapper(DictMixin):
-    """Wrapper for the Pylons configuration.
+class DispatchingConfigWrapper(DictMixin):
+    """Wrapper for the Dispatching configuration.
 
-    Simple wrapper for the Pylons config object that provides attribute
+    Simple wrapper for the DispatchingConfig object that provides attribute
     style access to the Pylons config dictionary.
 
-    When used in TG, items with keys like "pylons.response_options" will
-    be available via config.pylons.response_options as well as
-    config['pylons.response_options'].
-
     This class works by proxying all attribute and dictionary access to
-    the underlying Pylons config object, which is an application local
-    proxy that allows for multiple Pylons/TG2 applicatoins to live
+    the underlying DispatchingConfig config object, which is an application local
+    proxy that allows for multiple TG2 applications to live
     in the same process simultaneously, but to always get the right
     config data for the application that's requesting them.
 
@@ -51,7 +48,7 @@ class PylonsConfigWrapper(DictMixin):
     """
 
     def __init__(self, dict_to_wrap):
-        """Initialize the object by passing in pylons config to be wrapped"""
+        """Initialize the object by passing in config to be wrapped"""
         self.__dict__['config_proxy'] = dict_to_wrap
 
     def __getitem__(self, key):
@@ -90,8 +87,24 @@ class PylonsConfigWrapper(DictMixin):
         return self.config_proxy.keys()
 
 
+defaults = {
+    'debug': False,
+    'package': None,
+    'paths': {'root': None,
+              'controllers': None,
+              'templates': [],
+              'static_files': None},
+    'tg.app_globals': None,
+    'tg.strict_tmpl_context': True,
+}
+
 #Create a config object that has attribute style lookup built in.
-config = PylonsConfigWrapper(pylons_config)
+config = DispatchingConfigWrapper(reqlocal_config)
+
+# Push an empty config so all accesses to config at import time have something
+# to look at and modify. This config will be merged with the app's when it's
+# built in the paste.app_factory entry point.
+reqlocal_config.push_process_config(deepcopy(defaults))
 
 class AppConfig(Bunch):
     """Class to store application configuration.
@@ -157,7 +170,7 @@ class AppConfig(Bunch):
         root_module_path = self.paths['root']
         base_controller_path = self.paths['controllers']
         controller_path = base_controller_path[len(root_module_path)+1:]
-        root_controller_module = '.'.join([self.package.__name__] + controller_path.split(os.sep) + ['root'])
+        root_controller_module = '.'.join([self.package_name] + controller_path.split(os.sep) + ['root'])
         return root_controller_module
 
     def register_hook(self, hook_name, func):
@@ -201,34 +214,61 @@ class AppConfig(Bunch):
     def init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
-        tg.config is a proxy for pylons.configuration.config that allows
-        attribute style access, so it's automatically setup when we create
-        the pylons config.
-
         Besides basic initialization, this method copies all the values
-        in base_config into the ``pylons.configuration.config`` and
-        ``tg.config`` objects.
+        in base_config into the ``tg.config`` objects.
 
         """
-        pylons_config.init_app(global_conf, app_conf,
-                        package=self.package.__name__,
-                        paths=self.paths)
+        # Load the MIMETypes with its default types
+        MIMETypes.init()
+        self.package_name = self.package.__name__
+        
+        log.debug("Initializing configuration, package: '%s'", self.package_name)
+        conf = global_conf.copy()
+        conf.update(app_conf)
+        conf.update(dict(app_conf=app_conf, global_conf=global_conf))
+        conf.update(self.pop('environment_load', {}))
+        conf['paths'] = self.paths
+        conf['package_name'] = self.package_name
+        conf['debug'] = asbool(conf.get('debug'))
+
+        # Ensure all the keys from defaults are present, load them if not
+        for key, val in deepcopy(defaults).iteritems():
+            conf.setdefault(key, val)
+
+        # Load the errorware configuration from the Paste configuration file
+        # These all have defaults, and emails are only sent if configured and
+        # if this application is running in production mode
+        errorware = {}
+        errorware['debug'] = conf['debug']
+        if not errorware['debug']:
+            errorware['debug'] = False
+            errorware['error_email'] = conf.get('email_to')
+            errorware['error_log'] = conf.get('error_log', None)
+            errorware['smtp_server'] = conf.get('smtp_server', 'localhost')
+            errorware['error_subject_prefix'] = conf.get('error_subject_prefix', 'WebApp Error: ')
+            errorware['from_address'] = conf.get('from_address', conf.get('error_email_from', 'turbogears@yourapp.com'))
+            errorware['error_message'] = conf.get('error_message', 'An internal server error occurred')
+        conf['tg.errorware'] = errorware
+
+        # Copy in some defaults
+        if 'cache_dir' in conf:
+            conf.setdefault('beaker.session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
+            conf.setdefault('beaker.cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
+        conf['tg.cache_dir'] = conf.pop('cache_dir', conf['app_conf'].get('cache_dir'))
+
+        # Load conf dict into the global config object
+        config.update(conf)
 
         self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
-        pylons_config['application_root_module'] = self.get_root_module()
+        config['application_root_module'] = self.get_root_module()
 
         config.update(self)
-        # set up the response options to None.  This allows
-        # you to set the proper content type within a controller method
-        # if you choose.
-        pylons_config['pylons.response_options']['headers']['Content-Type'] = None
 
         #see http://trac.turbogears.org/ticket/2247
         if asbool(config['debug']):
-            config['pylons.strict_tmpl_context'] = True
+            config['tg.strict_tmpl_context'] = True
         else:
-            config['pylons.strict_tmpl_context'] = False
-        config['tg.strict_tmpl_context'] = config['pylons.strict_tmpl_context']
+            config['tg.strict_tmpl_context'] = False
 
         self.after_init_config()
 
@@ -237,14 +277,14 @@ class AppConfig(Bunch):
         Override this method to set up configuration variables at the application
         level.  This method will be called after your configuration object has
         been initialized on startup.  Here is how you would use it to override
-        the default setting of pylons.strict_tmpl_context ::
+        the default setting of tg.strict_tmpl_context ::
 
             from tg.configuration import AppConfig
-            from pylons import config
+            from tg import config
 
             class MyAppConfig(AppConfig):
                 def after_init_config(self):
-                    config['pylons.strict_tmpl_context'] = False
+                    config['tg.strict_tmpl_context'] = False
 
             base_config = MyAppConfig()
 
@@ -258,7 +298,7 @@ class AppConfig(Bunch):
 
         It is recommended that you keep the existing application routing in
         tact, and just add new connections to the mapper above the routes_placeholder
-        connection.  Lets say you want to add a pylons controller SamplesController,
+        connection.  Lets say you want to add a tg controller SamplesController,
         inside the controllers/samples.py file of your application.  You would
         augment the app_cfg.py in the following way::
 
@@ -267,7 +307,7 @@ class AppConfig(Bunch):
 
             class MyAppConfig(AppConfig):
                 def setup_routes(self):
-                    map = Mapper(directory=config['pylons.paths']['controllers'],
+                    map = Mapper(directory=config['paths']['controllers'],
                                 always_scan=config['debug'])
 
                     # Add a Samples route
@@ -283,7 +323,7 @@ class AppConfig(Bunch):
 
         """
 
-        map = Mapper(directory=config['pylons.paths']['controllers'],
+        map = Mapper(directory=config['paths']['controllers'],
                     always_scan=config['debug'])
 
         # Setup a default route for the root of object dispatch
@@ -301,8 +341,7 @@ class AppConfig(Bunch):
 
         g = self.package.lib.app_globals.Globals()
         g.dotted_filename_finder = DottedFileNameFinder()
-        
-        config['pylons.app_globals'] = config['tg.app_globals'] = g
+        config['tg.app_globals'] = g
 
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
@@ -353,7 +392,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     compiled_dir = template_path
                     break # first match is as good as any
 
-            # Last recourse: project-dir/data/templates (pylons' default directory)
+            # Last recourse: project-dir/data/templates (tg' default directory)
             if not compiled_dir:
                 try:
                     root = os.path.dirname(os.path.abspath(self.package.__file__))
@@ -362,9 +401,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     root = None
 
                 if root:
-                    pylons_default_path = os.path.join(root, '../data/templates')
-                    if os.access(pylons_default_path, os.W_OK):
-                        compiled_dir = pylons_default_path
+                    tg_default_path = os.path.join(root, '../data/templates')
+                    if os.access(tg_default_path, os.W_OK):
+                        compiled_dir = tg_default_path
 
                 if not compiled_dir:
                     if use_dotted_templatenames:
@@ -472,7 +511,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # Try to load custom filters module under app_package.lib.templatetools
         try:
-            filter_package = self.package.__name__ + ".lib.templatetools"
+            filter_package = self.package_name + ".lib.templatetools"
             autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
             autoload_filters = autoload_lib.jinja_filters.__dict__
         except (ImportError, AttributeError):
@@ -484,11 +523,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         config['tg.app_globals'].jinja2_env.filters = filters
 
         # Jinja's unable to request c's attributes without strict_c
-        warnings.simplefilter("ignore")
-        config['pylons.strict_c'] = True
-        warnings.resetwarnings()
-        config['pylons.strict_tmpl_context'] = True
-
+        config['tg.strict_tmpl_context'] = True
 
         self.render_functions.jinja = render_jinja
 
@@ -509,8 +544,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
         #T his is specific to buffet, will not be needed later
         config['buffet.template_engines'].pop()
-        template_location = '%s.templates' % self.package.__name__
-        template_location = '%s.templates' % self.package.__name__
+        template_location = '%s.templates' % self.package_name
+        template_location = '%s.templates' % self.package_name
         from genshi.filters import Translator
 
         def template_loaded(template):
@@ -567,7 +602,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         app_cfg.py file in the following manner::
 
             from tg.configuration import AppConfig, config
-            from pylons import config as pylons_config
             from myapp.model import init_model
 
             # add this before base_config =
@@ -575,8 +609,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 def setup_sqlalchemy(self):
                     '''Setup SQLAlchemy database engine(s)'''
                     from sqlalchemy import engine_from_config
-                    engine1 = engine_from_config(pylons_config, 'sqlalchemy.first.')
-                    engine2 = engine_from_config(pylons_config, 'sqlalchemy.second.')
+                    engine1 = engine_from_config(config, 'sqlalchemy.first.')
+                    engine2 = engine_from_config(config, 'sqlalchemy.second.')
                     # engine1 should be assigned to sa_engine as well as your first engine's name
                     config['tg.app_globals'].sa_engine = engine1
                     config['tg.app_globals'].sa_engine_first = engine1
@@ -593,7 +627,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         """
         from sqlalchemy import engine_from_config
-        engine = engine_from_config(pylons_config, 'sqlalchemy.')
+        engine = engine_from_config(config, 'sqlalchemy.')
         config['tg.app_globals'].sa_engine = engine
         # Pass the engine to initmodel, to be able to introspect tables
         self.package.model.init_model(engine)
@@ -618,7 +652,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """
 
         def load_environment(global_conf, app_conf):
-            """Configure the Pylons environment via ``pylons.configuration.config``."""
+            """Configure the TurboGears environment via ``tg.configuration.config``."""
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
 
@@ -654,10 +688,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def add_error_middleware(self, global_conf, app):
         """Add middleware which handles errors and exceptions."""
-        from pylons.middleware import report_libs, StatusCodeRedirect
+        from tg.middlewares import StatusCodeRedirect
         from tg.error import ErrorHandler
 
-        app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
+        app = ErrorHandler(app, global_conf, **config['tg.errorware'])
 
         # Display error documents for self.handle_status_codes status codes (and
         # 500 when debug is disabled)
@@ -678,10 +712,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
-        from repoze.what.plugins.pylonshq import booleanize_predicates
-
         # Predicates booleanized:
-        booleanize_predicates()
+        from repoze.what.predicates import Predicate
+        Predicate.__nonzero__ = lambda self: self.is_met(tg.request.environ)
 
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
@@ -820,7 +853,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         return app
 
     def add_static_file_middleware(self, app):
-        static_app = StaticURLParser(config['pylons.paths']['static_files'])
+        static_app = StaticURLParser(config['paths']['static_files'])
         app = Cascade([static_app, app])
         return app
 
@@ -951,7 +984,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             if self.use_ming:
                 app = self.add_ming_middleware(app)
 
-            if pylons_config.get('make_body_seekable'):
+            if config.get('make_body_seekable'):
                 app = maybe_make_body_seekable(app)
 
             if 'PYTHONOPTIMIZE' in os.environ:

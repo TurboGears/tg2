@@ -8,10 +8,34 @@ from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
 
-from pylons.util import ContextObj, AttribSafeContextObj
-
 class RequestLocals(object):
     pass
+
+class ContextObj(object):
+    def __repr__(self):
+        attrs = sorted((name, value)
+                       for name, value in self.__dict__.iteritems()
+                       if not name.startswith('_'))
+        parts = []
+        for name, value in attrs:
+            value_repr = repr(value)
+            if len(value_repr) > 70:
+                value_repr = value_repr[:60] + '...' + value_repr[-5:]
+            parts.append(' %s=%s' % (name, value_repr))
+        return '<%s.%s at %s%s>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            ','.join(parts))
+
+class AttribSafeContextObj(ContextObj):
+    """The :term:`tmpl_context` object, with lax attribute access (
+    returns '' when the attribute does not exist)"""
+    def __getattr__(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            return ''
 
 class TGApp(object):
     def __init__(self, config=None, **kwargs):
@@ -33,14 +57,42 @@ class TGApp(object):
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
-        self.req_options = config.get('tg.request_options', config['pylons.request_options'])
-        self.resp_options = config.get('tg.response_options', config['pylons.response_options'])
+        
+        self.req_options = config.get('tg.request_options',
+                                      dict(charset='utf-8',
+                                           errors='replace',
+                                           decode_param_names=False,
+                                           language='en-us'))
+
+        self.resp_options = config.get('tg.response_options',
+                                       dict(content_type='text/html',
+                                            charset='utf-8', errors='strict',
+                                            headers={'Cache-Control': 'no-cache',
+                                                     'Pragma': 'no-cache',
+                                                     'Content-Type': None}))
 
     def setup_pylons_compatibility(self, environ, controller):
         """Updates environ to be backward compatible with Pylons"""
-        environ['pylons.controller'] = controller
-        environ['pylons.pylons'] = environ['tg.locals']
-        environ['pylons.routes_dict'] = environ['tg.routes_dict']
+        try:
+            import pylons
+
+            environ['pylons.controller'] = controller
+            environ['pylons.pylons'] = environ['tg.locals']
+            environ['pylons.routes_dict'] = environ['tg.routes_dict']
+
+            self.config['pylons.app_globals'] = self.globals
+
+            pylons.request = request_local.request
+            pylons.cache = request_local.request
+            pylons.config = request_local.config
+            pylons.app_globals = request_local.app_globals
+            pylons.session = request_local.session
+            pylons.translator = request_local.translator
+            pylons.url = request_local.url
+            pylons.response = request_local.response
+            pylons.tmpl_context = request_local.tmpl_context
+        except ImportError:
+            pass
 
     def __call__(self, environ, start_response):
         # Cache the logging level for the request
@@ -104,7 +156,7 @@ class TGApp(object):
 
         # Setup the translator object
         lang = self.config['lang']
-        translator = _get_translator(lang, pylons_config=self.config)
+        translator = _get_translator(lang, tg_config=self.config)
 
         if self.strict_tmpl_context:
             tmpl_context = ContextObj()

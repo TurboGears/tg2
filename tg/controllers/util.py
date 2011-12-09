@@ -4,9 +4,10 @@ Helper functions for controller operation.
 
 Url definition and browser redirection are defined here.
 """
+import re
+from webob.exc import status_map
 
 import tg
-from pylons.controllers.util import etag_cache, abort
 import urllib
 from warnings import warn
 
@@ -166,6 +167,38 @@ def redirect(*args, **kwargs):
     new_url = url(*args, **kwargs)
     found = HTTPFound(location=new_url).exception
     raise found
+
+IF_NONE_MATCH = re.compile('(?:W/)?(?:"([^"]*)",?\s*)')
+def etag_cache(key=None):
+    """Use the HTTP Entity Tag cache for Browser side caching
+
+    If a "If-None-Match" header is found, and equivilant to ``key``,
+    then a ``304`` HTTP message will be returned with the ETag to tell
+    the browser that it should use its current cache of the page.
+
+    Otherwise, the ETag header will be added to the response headers.
+    """
+    if_none_matches = IF_NONE_MATCH.findall(tg.request.environ.get('HTTP_IF_NONE_MATCH', ''))
+    response = tg.response._current_obj()
+    response.headers['ETag'] = '"%s"' % key
+    if str(key) in if_none_matches:
+        response.headers.pop('Content-Type', None)
+        response.headers.pop('Cache-Control', None)
+        response.headers.pop('Pragma', None)
+        raise status_map[304]().exception
+
+def abort(status_code=None, detail="", headers=None, comment=None):
+    """Aborts the request immediately by returning an HTTP exception
+
+    In the event that the status_code is a 300 series error, the detail
+    attribute will be used as the Location header should one not be
+    specified in the headers attribute.
+
+    """
+    exc = status_map[status_code](detail=detail, headers=headers,
+                                  comment=comment)
+    raise exc.exception
+
 
 def use_wsgi_app(wsgi_app):
     return wsgi_app(tg.request.environ, tg.request.start_response)
