@@ -96,15 +96,17 @@ defaults = {
               'static_files': None},
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
+    'tg.pylons_compatible': False
 }
-
-#Create a config object that has attribute style lookup built in.
-config = DispatchingConfigWrapper(reqlocal_config)
 
 # Push an empty config so all accesses to config at import time have something
 # to look at and modify. This config will be merged with the app's when it's
 # built in the paste.app_factory entry point.
 reqlocal_config.push_process_config(deepcopy(defaults))
+
+#Create a config object that has attribute style lookup built in.
+config = DispatchingConfigWrapper(reqlocal_config)
+
 
 class AppConfig(Bunch):
     """Class to store application configuration.

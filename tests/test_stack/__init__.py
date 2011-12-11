@@ -1,6 +1,7 @@
 import os
 from webtest import TestApp
 import tg
+from tg.configuration import reqlocal_config
 import tests
 from tg.util import DottedFileNameFinder
 from tg.configuration import AppConfig

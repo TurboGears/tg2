@@ -22,17 +22,17 @@ from beaker.middleware import CacheMiddleware, SessionMiddleware
 
 from tg import request, response, expose, require, allow_only
 from tg.controllers import TGController, WSGIAppController, RestController
-import pylons
-from pylons import tmpl_context
-from pylons.controllers.util import abort
-from pylons.util import ContextObj, PylonsContext
-from pylons.testutil import ControllerWrap, SetupCacheGlobal
+from tg.controllers.util import abort
+from tg.wsgiapp import ContextObj, TGApp
+
+from baseutils import ControllerWrap, FakeRoutes, default_config
+
 
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from repoze.what.middleware import setup_auth
 from repoze.what.predicates import Not, is_user, not_anonymous
 
-from pylons.middleware import StatusCodeRedirect
+from tg.middlewares import StatusCodeRedirect
 from tg.error import ErrorHandler
 
 #{ AUT's setup
@@ -47,8 +47,11 @@ rmtree(session_dir, ignore_errors=True)
 def make_app(controller_klass, environ={}, with_errors=False):
     """Creates a ``TestApp`` instance."""
     # The basic middleware:
-    app = ControllerWrap(controller_klass)
-    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
+    app = TGApp(config=default_config)
+    app.controller_classes['root'] = ControllerWrap(controller_klass)
+
+    app = FakeRoutes(app)
+    
     if with_errors:
         app = ErrorHandler(app, {}, debug=False)
         app = StatusCodeRedirect(app, [403, 404, 500])
@@ -186,19 +189,11 @@ class BaseIntegrationTests(TestCase):
         # Creating the session dir:
         if not os.path.exists(session_dir):
             os.makedirs(session_dir)
+
         # Setting TG2 up:
-        c = ContextObj()
-        py_obj = PylonsContext()
-        py_obj.c = c
-        py_obj.request = py_obj.response = None
-        environ = {'pylons.routes_dict': dict(action='index'),
-                   'pylons.pylons': py_obj}
-        pylons.tmpl_context._push_object(c)
-        # Finally, the app:
-        self.app = make_app(self.controller, environ)
+        self.app = make_app(self.controller, {})
 
     def tearDown(self):
-        tmpl_context._pop_object()
         # Removing the session dir:
         rmtree(session_dir, ignore_errors=True)
 
@@ -478,15 +473,9 @@ class TestLoggedErrorTGController(BaseIntegrationTests):
     def setUp(self):
         if not os.path.exists(session_dir):
             os.makedirs(session_dir)
+
         # Setting TG2 up:
-        c = ContextObj()
-        py_obj = PylonsContext()
-        py_obj.c = c
-        py_obj.request = py_obj.response = None
-        environ = {'pylons.routes_dict': dict(action='index'),
-                   'pylons.pylons': py_obj}
-        pylons.tmpl_context._push_object(c)
-        self.app = make_app(DefaultLessTGController, environ, with_errors=True)
+        self.app = make_app(DefaultLessTGController, {}, with_errors=True)
 
     def test_logged_index(self):
         resp = self.app.get('/index', extra_environ={'REMOTE_USER': 'gustavo'}, expect_errors=True)

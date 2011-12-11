@@ -25,18 +25,16 @@ from tg.util import Bunch
 from tg.request_local import Request, Response
 
 #Monkey patch request-response to use TG ones
-import pylons.controllers.util
-pylons.controllers.util.Request = Request
-pylons.controllers.util.Response = Response
+#import pylons.controllers.util
+#pylons.controllers.util.Request = Request
+#pylons.controllers.util.Response = Response
 #end monkey patch
 
-from pylons.util import ContextObj, PylonsContext
+#from pylons.util import ContextObj, PylonsContext
+from tg.wsgiapp import ContextObj, TGApp
 from tg.controllers import TGController
 
-from pylons.configuration import response_defaults
-response_defaults['headers']['Content-Type'] = None
-
-from pylons.testutil import ControllerWrap, SetupCacheGlobal
+from test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
 
 from beaker.middleware import CacheMiddleware
 
@@ -49,33 +47,6 @@ def setup_session_dir():
 
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
-
-default_config = {
-        'debug': False,
-        'pylons.package': None,
-        'pylons.paths': {'root': None,
-                         'controllers': None,
-                         'templates': [],
-                         'static_files': None},
-        'pylons.db_engines': {},
-        'pylons.environ_config': dict(session='beaker.session',
-                                      cache='beaker.cache'),
-        'pylons.g': None,
-        'pylons.h': None,
-        'pylons.request_options': pylons.configuration.request_defaults.copy(),
-        'pylons.response_options': pylons.configuration.response_defaults.copy(),
-        'pylons.strict_c': False,
-        'pylons.strict_tmpl_context':False,
-        'pylons.c_attach_args': True,
-        'pylons.tmpl_context_attach_args': True,
-        'buffet.template_engines': [],
-        'buffet.template_options': {},
-        'default_renderer':'genshi',
-        'renderers':['json'],
-        'render_functions':{'json':tg.render.render_json},
-        'use_legacy_renderers':False,
-        'use_sqlalchemy': False
-}
 
 default_environ = {
     'pylons.use_webob' : True,
@@ -90,28 +61,16 @@ default_map.connect('error/:action/:id', controller='error')
 # Setup a default route for the root of object dispatch
 default_map.connect('*url', controller='root', action='routes_placeholder')
 
-class PylonsToTG(object):
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        environ['tg.locals'] = environ['pylons.pylons']
-        return self.app(environ, start_response)
-
 def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance."""
-    if environ is None:
-        environ = {}
-    environ['pylons.routes_dict'] = {}
-    environ['pylons.routes_dict']['action'] = "routes_placeholder"
-
-
     if controller_klass is None:
         controller_klass = TGController
 
-    app = ControllerWrap(controller_klass)
-    app = PylonsToTG(app)
-    app = SetupCacheGlobal(app, environ, setup_cache=True, setup_session=True)
+    app = TGApp(config=default_config)
+    app.controller_classes['root'] = ControllerWrap(controller_klass)
+
+    app = FakeRoutes(app)
+
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))

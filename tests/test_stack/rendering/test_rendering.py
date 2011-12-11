@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import tg
+#import tg.configuration
+
+#tg.configuration.reqlocal_config.push_process_config({})
+
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
-from webtest import TestApp
-from pylons import tmpl_context
 
 def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
     base_config = TestConfig(folder='rendering', values={

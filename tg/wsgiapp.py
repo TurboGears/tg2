@@ -51,8 +51,7 @@ class TGApp(object):
         self.package_name = config['package'].__name__
 
         self.controller_classes = {}
-        self.log_debug = False
-        
+
         self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
@@ -95,9 +94,6 @@ class TGApp(object):
             pass
 
     def __call__(self, environ, start_response):
-        # Cache the logging level for the request
-        log_debug = self.log_debug = logging.DEBUG >= log.getEffectiveLevel()
-
         testmode = self.setup_app_env(environ, start_response)
         if testmode:
             if environ['PATH_INFO'] == '/_test_vars':
@@ -112,13 +108,7 @@ class TGApp(object):
             environ['paste.testing_variables']['response'] = response
 
         try:
-            if hasattr(response, 'wsgi_response'):
-                # Transform Response objects from legacy Controller
-                if log_debug:
-                    log.debug("Transforming legacy Response object into WSGI "
-                              "response")
-                return response(environ, start_response)
-            elif response is not None:
+            if response is not None:
                 return response
 
             raise Exception("No content returned by controller (Did you "
@@ -126,9 +116,9 @@ class TGApp(object):
                             controller.__name__)
         finally:
             # Help Python collect ram a bit faster by removing the reference
-            # cycle that the pylons object causes
-            if 'pylons.pylons' in environ:
-                del environ['pylons.pylons']
+            # cycle that the thread local objects cause
+            if 'tg.locals' in environ:
+                del environ['tg.locals']
 
     def setup_app_env(self, environ, start_response):
         """Setup and register all the Pylons objects with the registry
@@ -138,8 +128,6 @@ class TGApp(object):
         in the environment.
 
         """
-        if self.log_debug:
-            log.debug("Setting up Pylons stacked object globals")
 
         # Setup the basic global objects
         req_options = self.req_options
@@ -173,6 +161,7 @@ class TGApp(object):
         locals.session = environ['beaker.session']
         locals.cache = environ['beaker.cache']
         locals.url = environ['routes.url']
+
         environ['tg.locals'] = locals
 
         #Register Global objects
@@ -188,8 +177,6 @@ class TGApp(object):
         registry.register(request_local.url, locals.url)
 
         if 'paste.testing_variables' in environ:
-            if self.log_debug:
-                log.debug("Setting up paste testing environment variables")
             testenv = environ['paste.testing_variables']
             testenv['req'] = req
             testenv['response'] = response
@@ -216,10 +203,7 @@ class TGApp(object):
         environ['tg.routes_dict'] = match
         controller = match.get('controller')
         if not controller:
-            return
-
-        if self.log_debug:
-            log.debug("Resolved URL to controller: %r", controller)
+            return None
 
         return self.find_controller(controller)
 
@@ -256,9 +240,6 @@ class TGApp(object):
         __import__(full_module_name)
         module_name = controller.split('/')[-1]
         class_name = self.class_name_from_module_name(module_name) + 'Controller'
-        if self.log_debug:
-            log.debug("Found controller, module: '%s', class: '%s'",
-                      full_module_name, class_name)
         mycontroller = getattr(sys.modules[full_module_name], class_name)
         self.controller_classes[controller] = mycontroller
         return mycontroller
@@ -270,23 +251,16 @@ class TGApp(object):
         Override this to change how the controller dispatch is handled.
 
         """
-        log_debug = self.log_debug
         if not controller:
-            if log_debug:
-                log.debug("No controller found, returning 404 HTTP Not Found")
             return HTTPNotFound()(environ, start_response)
 
         # If it's a class, instantiate it
         if hasattr(controller, '__bases__'):
-            if log_debug:
-                log.debug("Controller appears to be a class, instantiating")
             controller = controller()
-            controller._pylons_log_debug = log_debug
 
         #Setup pylons compatibility before calling controller
-        self.setup_pylons_compatibility(environ, controller)
+        if self.config['tg.pylons_compatible']:
+            self.setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to handle a WSGI call
-        if log_debug:
-            log.debug("Calling controller class with WSGI interface")
         return controller(environ, start_response)
