@@ -5,6 +5,10 @@ from pylons.util import class_name_from_module_name
 import logging
 log = logging.getLogger(__name__)
 
+import warnings
+
+if sys.version_info[:2] == (2,4):
+    warnings.warn('Python 2.4 support is deprecated, and will be removed in TurboGears 2.2', DeprecationWarning)
 
 class TGApp(PylonsApp):
     def find_controller(self, controller):
