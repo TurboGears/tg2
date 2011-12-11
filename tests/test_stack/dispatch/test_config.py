@@ -29,7 +29,7 @@ def test_config_reading():
     resp = app.get('/config_attr_lookup')
     assert "genshi" in resp.body
     resp = app.get('/config_dotted_values')
-    assert "environ_config" in resp.body
+    assert "root" in resp.body
 
 def test_config_writing():
     """Ensure that new values can be added to the config object"""

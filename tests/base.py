@@ -7,30 +7,17 @@ import warnings
 
 import webob
 import beaker
-import pylons
 from paste.registry import Registry
 from paste.registry import RegistryManager
 from webtest import TestApp
-from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
 
 import tg
-import pylons
-from tg import tmpl_context
+from tg import tmpl_context, request_local
 from tests.test_stack import app_from_config, TestConfig
-from pylons import url
 from routes import URLGenerator, Mapper
-from tg.util import Bunch
-from tg.request_local import Request, Response
 
-#Monkey patch request-response to use TG ones
-#import pylons.controllers.util
-#pylons.controllers.util.Request = Request
-#pylons.controllers.util.Response = Response
-#end monkey patch
-
-#from pylons.util import ContextObj, PylonsContext
 from tg.wsgiapp import ContextObj, TGApp
 from tg.controllers import TGController
 
@@ -47,12 +34,6 @@ def setup_session_dir():
 
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
-
-default_environ = {
-    'pylons.use_webob' : True,
-    'pylons.routes_dict': dict(action='index'),
-    'paste.config': dict(global_conf=dict(debug=True))
-}
 
 default_map = Mapper()
 
@@ -90,22 +71,22 @@ def create_request(path, environ=None):
     # setup the environ
     if environ is None:
         environ = {}
-    environ.update(default_environ)
+
     # create a "blank" WebOb Request object
-    # using Pylon's Request which is a webob Request plus
+    # using TG Request which is a webob Request plus
     # some compatibility methods
-    req = Request.blank(path, environ)
+    req = request_local.Request.blank(path, environ)
+
     # setup a Registry
     reg = environ.setdefault('paste.registry', Registry())
     reg.prepare()
 
-    # setup pylons.request to point to our Registry
-    reg.register(pylons.request, req)
-
+    # setup tg.request to point to our Registry
+    reg.register(request_local.request, req)
 
     # setup tmpl context
     tmpl_context._push_object(ContextObj())
-    url._push_object(URLGenerator(default_map, environ))
+    request_local.url._push_object(URLGenerator(default_map, environ))
     return req
 
 class TestWSGIController(TestCase):
@@ -116,19 +97,18 @@ class TestWSGIController(TestCase):
         tmpl_context._push_object(self._ctx)
 
         warnings.simplefilter("ignore")
-        pylons.config.push_process_config(default_config)
+        tg.config.push_process_config(default_config)
         warnings.resetwarnings()
         setup_session_dir()
 
     def tearDown(self):
         tmpl_context._pop_object(self._ctx)
-#        pylons.config.pop_thread_config()
-        pylons.config.pop_process_config()
+        tg.config.pop_process_config()
         teardown_session_dir()
 
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
-        self.environ['pylons.routes_dict'].update(kargs)
+        self.environ['tg.routes_dict'].update(kargs)
 
         return self.app.get(url, extra_environ=self.environ)
 

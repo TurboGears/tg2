@@ -18,7 +18,7 @@ class RootController(TGController):
     
     @expose()
     def config_dotted_values(self):
-        return str(config.pylons)
+        return str(config.paths)
     
     @expose()
     def config_attr_set(self, foo):

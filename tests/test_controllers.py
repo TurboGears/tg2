@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pylons
 import tg
 from tg.controllers import *
 from tg.exceptions import HTTPFound

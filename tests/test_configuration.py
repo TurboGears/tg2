@@ -24,7 +24,7 @@ class TestPylonsConfigWrapper:
         pass
 
     def test_getitem(self):
-        expected_keys = ['global_conf', 'use_sqlalchemy', 'package', 'pylons.app_globals', 'call_on_shutdown']
+        expected_keys = ['global_conf', 'use_sqlalchemy', 'package', 'tg.app_globals', 'call_on_shutdown']
         for key in expected_keys:
             self.config[key]
 
@@ -52,7 +52,7 @@ class TestAppConfig:
         # other tests don't suffer - but that's a nasty
         # side-effect. setup for those tests actually needs
         # fixing.
-        config['pylons.paths']['static_files'] = "test"
+        config['paths']['static_files'] = "test"
         config["tg.app_globals"] = Bunch()
         config["use_sqlalchemy"] = False
         config["global_conf"] = Bunch()

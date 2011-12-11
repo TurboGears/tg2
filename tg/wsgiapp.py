@@ -55,7 +55,7 @@ class TGApp(object):
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
-        self.pylons_compatible = self.config.get('tg.pylons_compatible', False)
+        self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
 
         self.req_options = config.get('tg.request_options',
                                       dict(charset='utf-8',
