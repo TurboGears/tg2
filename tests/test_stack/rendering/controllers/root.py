@@ -76,7 +76,7 @@ class RootController(TGController):
     @validate(form=base_movie_form)
     def process_form_errors(self, **kwargs):
         #add error messages to the kwargs dictionary and return it
-        kwargs['errors'] = pylons.tmpl_context.form_errors
+        kwargs['errors'] = tg.tmpl_context.form_errors
         return dict(kwargs)
 
     @expose('genshi:genshi_paginated.html')
@@ -231,6 +231,11 @@ class RootController(TGController):
 
     @expose()
     def manual_rendering(self, frompylons=False):
+        try:
+            import pylons
+        except ImportError:
+            frompylons = False
+
         if frompylons:
             from pylons.templating import render_jinja2
             return render_jinja2('jinja_inherits.html')

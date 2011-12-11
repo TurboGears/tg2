@@ -7,7 +7,21 @@ from formencode import validators
 
 from webob import Response, Request
 
-from pylons.controllers.xmlrpc import XMLRPCController
+try:
+    from pylons.controllers.xmlrpc import XMLRPCController
+except ImportError:
+    import xmlrpclib
+    class XMLRPCController(object):
+        def __call__(self, environ, start_response):
+            raw_response = self.textvalue()
+            response = xmlrpclib.dumps((raw_response,), methodresponse=True, allow_none=False)
+
+            headers = []
+            headers.append(('Content-Length', str(len(response))))
+            headers.append(('Content-Type', 'text/xml'))
+            start_response("200 OK", headers)
+            return response
+
 
 import tg
 from tg import config, tmpl_context

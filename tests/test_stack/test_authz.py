@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-repoze.what & repoze.what-pylons **integration** tests.
+repoze.what **integration** tests.
 
 Note that it is not necessary to have integration tests for the other auth*
 software in this package. They must be in tg.devtools, specifically in the test

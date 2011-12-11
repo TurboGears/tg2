@@ -1,19 +1,14 @@
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
-from webtest import TestApp
-from pylons import tmpl_context
 from tg.util import no_warn
 
 def make_app():
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
-                                       'pylons.tmpl_context_attach_args': False
-
                                        }
                              )
     return app_from_config(base_config)

@@ -11,11 +11,9 @@ from tg.util import Bunch
 def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
     base_config = TestConfig(folder='rendering', values={
         'use_sqlalchemy': False,
-       'pylons.helpers': Bunch(),
        'use_legacy_renderer': False,
        # this is specific to mako  to make sure inheritance works
        'use_dotted_templatenames': False,
-       'pylons.tmpl_context_attach_args': False
     })
 
     deployment_config = {}
@@ -160,12 +158,10 @@ def _test_jinja_inherits():
 def test_jinja_extensions():
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
-                                       'pylons.tmpl_context_attach_args': False,
                                        'renderers':['jinja'],
                                        'jinja_extensions': ['jinja2.ext.do', 'jinja2.ext.i18n',
                                                             'jinja2.ext.with_', 'jinja2.ext.autoescape']
@@ -193,12 +189,10 @@ def test_jinja_custom_filters():
 
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
-                                       'pylons.tmpl_context_attach_args': False,
                                        'renderers':['jinja'],
                                        'jinja_filters': {'codify': codify}
                                        }
@@ -227,12 +221,10 @@ def test_template_override():
 #    app = setup_noDB()
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'pylons.tmpl_context_attach_args': False,
                                        'renderers':['genshi']
                                        }
                              )
@@ -250,12 +242,10 @@ def test_template_override_wts():
 #    app = setup_noDB()
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'pylons.tmpl_context_attach_args': False,
                                        'renderers':['genshi']
                                        }
                              )
@@ -273,12 +263,10 @@ def test_template_override_wts():
 def test_template_override_content_type():
     base_config = TestConfig(folder = 'rendering',
                              values = {'use_sqlalchemy': False,
-                                       'pylons.helpers': Bunch(),
                                        'use_legacy_renderer': False,
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'pylons.tmpl_context_attach_args': False,
                                        'renderers':['mako', 'genshi']
                                        }
                              )

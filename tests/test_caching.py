@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-""" Test cases for Pylons caching.  See:
+""" Test cases for TG caching.  See:
 
-http://wiki.pylonshq.com/display/pylonsdocs/Caching+in+Templates+and+Controllers
+http://turbogears.org/2.1/docs/main/Caching.html
 
 For more details.
 """
@@ -14,7 +14,6 @@ from tg.decorators import expose, beaker_cache
 from tg.controllers.util import etag_cache
 from tg import cache
 from routes import Mapper
-import pylons
 from routes.middleware import RoutesMiddleware
 from webob.exc import HTTPNotModified
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir

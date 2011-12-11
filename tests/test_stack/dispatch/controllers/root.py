@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import tg, pylons
+import tg
 from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
 from tg.decorators import expose, validate, https, variable_decode
 from formencode import validators
@@ -110,12 +110,12 @@ class RootController(TGController):
 
     @expose()
     def redirect_cookie(self, name):
-        pylons.response.set_cookie('name', name)
+        tg.response.set_cookie('name', name)
         tg.redirect('/hello_cookie')
 
     @expose()
     def hello_cookie(self):
-        return "Hello " + pylons.request.cookies['name']
+        return "Hello " + tg.request.cookies['name']
 
     @expose()
     def flash_redirect(self):
@@ -177,7 +177,7 @@ class RootController(TGController):
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def custom_content_type2(self):
-        pylons.response.headers['Content-Type'] = 'image/png'
+        tg.response.headers['Content-Type'] = 'image/png'
         return 'PNG2'
 
     @expose()
