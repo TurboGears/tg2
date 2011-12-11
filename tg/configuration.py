@@ -96,7 +96,7 @@ defaults = {
               'static_files': None},
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
-    'tg.pylons_compatible': False
+    'tg.pylons_compatible': True
 }
 
 # Push an empty config so all accesses to config at import time have something

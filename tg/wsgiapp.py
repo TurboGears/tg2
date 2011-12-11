@@ -51,12 +51,12 @@ class TGApp(object):
         self.package_name = config['package'].__name__
 
         self.controller_classes = {}
-
         self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
-        
+        self.pylons_compatible = self.config.get('tg.pylons_compatible', False)
+
         self.req_options = config.get('tg.request_options',
                                       dict(charset='utf-8',
                                            errors='replace',
@@ -259,7 +259,7 @@ class TGApp(object):
             controller = controller()
 
         #Setup pylons compatibility before calling controller
-        if self.config['tg.pylons_compatible']:
+        if self.pylons_compatible:
             self.setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to handle a WSGI call
