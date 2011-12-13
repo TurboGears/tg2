@@ -46,7 +46,7 @@ class StatusCodeRedirect(object):
 
     Should an application wish to bypass the error response (ie, to
     purposely return a 401), set
-    ``environ['pylons.status_code_redirect'] = True`` in the application.
+    ``environ['tg.status_code_redirect'] = True`` in the application.
 
     """
     def __init__(self, app, errors=(400, 401, 403, 404),
@@ -75,6 +75,9 @@ class StatusCodeRedirect(object):
             environ['tg.original_response'] = Response(status=status, headerlist=headers, app_iter=app_iter)
             environ['tg.original_request'] = Request(environ)
 
+            environ['pylons.original_response'] = environ['tg.original_response']
+            environ['pylons.original_request'] = environ['tg.original_request']
+            
             # Create a new environ to avoid touching the original request data
             new_environ = environ.copy()
             new_environ['PATH_INFO'] = self.error_path
