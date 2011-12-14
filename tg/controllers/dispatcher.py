@@ -276,36 +276,53 @@ class Dispatcher(object):
         pass
 
     def __call__(self, environ, start_response):
-        tg.request.start_response = start_response
+        thread_locals = environ['tg.locals']
+        py_response = thread_locals.response
+        py_request = thread_locals.request
+
+        #Replace start_response and track if it is called
+        #this is to track if the controller is passing control to a plain
+        #WSGI application instead of a TG controller.
+        start_response_called = []
+        def repl_start_response(status, headers, exc_info=None):
+            start_response_called.append(None)
+            headers.extend(header for header in environ['tg.locals'].response.headerlist
+            if header[0] == 'Set-Cookie' or
+               header[0].startswith('X-'))
+            return start_response(status, headers, exc_info)
+        py_request.start_response = repl_start_response
 
         try:
             response = self._perform_call()
         except HTTPException, httpe:
             response = httpe
 
-        py_response = tg.response._current_obj()
-        if isinstance(response, str):
-            py_response.body = py_response.body + response
-        elif isinstance(response, unicode):
-            py_response.unicode_body = py_response.unicode_body + response
-        elif hasattr(response, 'wsgi_response'):
-            for name, value in py_response.headers.items():
-                if name.lower() == 'set-cookie':
-                    response.headers.add(name, value)
-                else:
-                    response.headers.setdefault(name, value)
-            try:
-                registry = environ['paste.registry']
-                registry.replace(tg.response, response)
-            except KeyError:
-                # Ignore the case when someone removes the registry
+        #If we reached a plain WSGI application do not build the response
+        #but simply pass the response as is.
+        if not start_response_called:
+            py_request.start_response = start_response
+            if isinstance(response, str):
+                py_response.body = py_response.body + response
+            elif isinstance(response, unicode):
+                py_response.unicode_body = py_response.unicode_body + response
+            elif hasattr(response, 'wsgi_response'):
+                for name, value in py_response.headers.items():
+                    if name.lower() == 'set-cookie':
+                        response.headers.add(name, value)
+                    else:
+                        response.headers.setdefault(name, value)
+                try:
+                    registry = environ['paste.registry']
+                    registry.replace(tg.response, response)
+                except KeyError:
+                    # Ignore the case when someone removes the registry
+                    pass
+                py_response = response
+            elif response is None:
                 pass
-            py_response = response
-        elif response is None:
-            pass
-        else:
-            py_response.app_iter = response
-        response = py_response
+            else:
+                py_response.app_iter = response
+            response = py_response
 
         if hasattr(response, 'wsgi_response'):
             if 'paste.testing_variables' in environ:
