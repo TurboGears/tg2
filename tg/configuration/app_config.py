@@ -16,7 +16,7 @@ from paste.cascade import Cascade
 from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool, asint
-from request_local import config as reqlocal_config
+from tg.request_local import config as reqlocal_config
 
 import tg
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
@@ -736,7 +736,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 raise TGConfigError(msg)
 
         if self.auth_backend == "sqlalchemy":
-            from repoze.what.plugins.quickstart import setup_sql_auth
+            from sqlauth_config import setup_sql_auth
             app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
         elif self.auth_backend == "ming":
             from tgming import setup_ming_auth

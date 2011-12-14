@@ -22,7 +22,7 @@ from formencode import variabledecode
 from tg import tmpl_context
 from tg.util import partial
 
-from tg.configuration import Bunch
+from tg.util import Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
 

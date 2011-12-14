@@ -8,7 +8,7 @@ except ImportError:
     predicates = []
 
 import tg
-from tg.configuration import Bunch
+from tg.util import Bunch
 
 from webhelpers.html import literal
 
