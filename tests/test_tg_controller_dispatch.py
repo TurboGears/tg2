@@ -20,7 +20,7 @@ except ImportError:
             headers.append(('Content-Length', str(len(response))))
             headers.append(('Content-Type', 'text/xml'))
             start_response("200 OK", headers)
-            return response
+            return list(response)
 
 
 import tg
@@ -583,6 +583,7 @@ class TestTGController(TestWSGIController):
 '''
         r = self.app.post('/xml_rpc/', s, [('Content-Type', 'text/xml')])
         assert len(r.headers.getall('Content-Type')) == 1, r.headers.getall('Content-Type')
+        assert r.headers['Content-Type'] == 'text/xml'
 
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')
