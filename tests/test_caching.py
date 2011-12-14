@@ -11,11 +11,9 @@ For more details.
 import tg
 from tg.controllers import TGController
 from tg.decorators import expose, beaker_cache
+from tg.caching import create_cache_key
 from tg.controllers.util import etag_cache
 from tg import cache
-from routes import Mapper
-from routes.middleware import RoutesMiddleware
-from webob.exc import HTTPNotModified
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
 def setup():
@@ -156,7 +154,6 @@ class TestEtagCaching(TestWSGIController):
         resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': '"foo"'})
         assert "304" in resp.status, resp
 
-
 class SessionTouchController(TGController):
     @expose()
     def session_get(self):
@@ -178,3 +175,119 @@ class TestSessionTouch(TestWSGIController):
         tg.config['beaker.session.tg_avoid_touch'] = True
         assert 'NOTOUCH' in self.app.get('/session_get')
 
+
+def disable_cache(wrapped):
+    def wrapper(*args, **kws):
+        tg.config['cache_enabled'] = False
+        x = wrapped(*args, **kws)
+        tg.config['cache_enabled'] = True
+        return x
+    return wrapper
+
+class BeakerCacheController(TGController):
+    CALL_COUNT = 0
+
+    @expose()
+    @beaker_cache(key=None)
+    def none_key(self):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
+    @beaker_cache()
+    def no_options(self):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
+    @beaker_cache(key='arg')
+    def specified_cache_key(self, arg):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
+    @beaker_cache(query_args=True)
+    def cache_with_args(self, arg):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
+    @disable_cache
+    @beaker_cache()
+    def disabled_cache(self):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+
+class TestBeakerCacheTouch(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(BeakerCacheController)
+
+    def test_none_key(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/none_key')
+        assert 'Counter=1' in r
+        r = self.app.get('/none_key')
+        assert 'Counter=1' in r
+
+    def test_no_options(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/no_options')
+        assert 'Counter=1' in r
+        r = self.app.get('/no_options')
+        assert 'Counter=1' in r
+
+    def test_specified_cache_key(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/specified_cache_key?arg=x')
+        assert 'Counter=1' in r
+        r = self.app.get('/specified_cache_key?arg=x')
+        assert 'Counter=1' in r
+
+    def test_cache_with_args(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/cache_with_args?arg=x')
+        assert 'Counter=1' in r, r
+        r = self.app.get('/cache_with_args?arg=x')
+        assert 'Counter=1' in r, r
+
+    def test_different_cache_key(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/specified_cache_key?arg=x')
+        assert 'Counter=1' in r
+        r = self.app.get('/specified_cache_key?arg=y')
+        assert 'Counter=2' in r
+
+    def test_cache_key_instance_method(self):
+        class Something(object):
+            def method(self, arg):
+                return arg
+
+        o = Something()
+        namespace, key = create_cache_key(o.method)
+
+        assert namespace == 'tests.test_caching.Something'
+        assert key == 'method'
+
+    def test_cache_key_function(self):
+        def method(self, arg):
+            return arg
+
+        namespace, key = create_cache_key(method)
+
+        assert namespace == 'tests.test_caching'
+        assert key == 'method'
+
+    def test_disable_cache(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/disabled_cache')
+        assert 'Counter=1' in r
+        r = self.app.get('/disabled_cache')
+        assert 'Counter=2' in r

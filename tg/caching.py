@@ -1,13 +1,7 @@
 """Caching decorator, took as is from pylons"""
-import inspect
-import logging
-import time
-
-import tg
+import tg, inspect, time
 from decorator import decorator
 from paste.deploy.converters import asbool
-
-log = logging.getLogger(__name__)
 
 def beaker_cache(key="cache_default", expire="never", type=None,
                  query_args=False,
@@ -59,11 +53,9 @@ def beaker_cache(key="cache_default", expire="never", type=None,
     def wrapper(func, *args, **kwargs):
         """Decorator wrapper"""
         tg_locals = tg.request.environ['tg.locals']
-        log.debug("Wrapped with key: %s, expire: %s, type: %s, query_args: %s",
-                  key, expire, type, query_args)
         enabled = tg_locals.config.get("cache_enabled", "True")
+
         if not asbool(enabled):
-            log.debug("Caching disabled, skipping cache lookup")
             return func(*args, **kwargs)
 
         if key:
@@ -103,8 +95,6 @@ def beaker_cache(key="cache_default", expire="never", type=None,
             cache_expire = expire
 
         def create_func():
-            log.debug("Creating new cache copy with key: %s, type: %s",
-                      cache_key, type)
             result = func(*args, **kwargs)
             glob_response = tg_locals.response
             headers = glob_response.headerlist
