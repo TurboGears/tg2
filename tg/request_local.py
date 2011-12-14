@@ -30,18 +30,24 @@ class Request(WebObRequest):
         return self.accept_charset
 
     def languages_best_match(self, fallback=None):
+        # And we now have the old best_matches code that webob ditched!
         al = self.accept_language
         if hasattr(al, 'best_matches'): # webob<1.2
-           result = al.best_matches(fallback)
+            items = al.best_matches(fallback)
         else:
-           result = list(self.accept_language)
-           if fallback and fallback not in result:
-               result.append(fallback)
-        return result
+            items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
+            if fallback:
+                for index, item in enumerate(items):
+                    if al._match(item, self.language):
+                        items[index:] = [self.language]
+                        break
+                else:
+                    items.append(self.language)
+        return items
 
     @property
     def languages(self):
-        return self.languages_best_match(self.fallback)
+        return self.languages_best_match(self.language)
 
     def match_accept(self, mimetypes):
         return self.accept.first_match(mimetypes)
