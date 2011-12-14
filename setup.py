@@ -13,11 +13,12 @@ test_requirements = ['coverage',
                     'jinja2',
                     'Chameleon < 2.0a',
                     'simplegeneric',
-                    'repoze.what >= 1.0.8',
-                    'repoze.what-quickstart >= 1.0.3',
+                    'repoze.what >= 1.0.3',
+                    'repoze.who >= 1.0.18, <= 1.99',
+                    'repoze.who.plugins.sa >= 1.0.1',
+                    'repoze.what.plugins.sql >= 1.0rc2',
                     'repoze.who-testutil >= 1.0.1',
                     "repoze.who-friendlyform >=1.0.4",
-                    'repoze.who',
                     'repoze.tm2 >= 1.0a4',
                     'wsgiref',
                     'tw.forms',
@@ -73,7 +74,7 @@ setup(
         tginfo = tg.commands.info:InfoCommand
         [turbogears2.command]
         serve = paste.script.serve:ServeCommand [Config]
-        shell = pylons.commands:ShellCommand
+        shell = tg.commands:ShellCommand
     ''',
     dependency_links=[
         "http://www.turbogears.org/2.1/downloads/current/"
