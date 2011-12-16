@@ -470,17 +470,26 @@ class paginate(object):
         return func
 
     def before_validate(self, remainder, params):
-        page = params.pop(self.page_param, None)
-        if page:
+        page_param = params.pop(self.page_param, None)
+        if page_param:
             try:
-                page = int(page)
+                page = int(page_param)
                 if page < 1:
                     raise ValueError
             except ValueError:
                 page = 1
         else:
             page = 1
-        request.paginate_page = page or 1
+
+        try:
+            paginators_data = request.paginators
+        except:
+            paginators_data = request.paginators = {'_tg_paginators_params':{}}
+
+        paginators_data['_tg_paginators_params'][self.page_param] = page_param
+        paginators_data[self.name] = paginator = Bunch()
+
+        paginator.paginate_page = page or 1
         items_per_page = params.pop(self.items_per_page_param, None)
         if items_per_page:
             try:
@@ -492,18 +501,21 @@ class paginate(object):
                 items_per_page = self.items_per_page
         else:
             items_per_page = self.items_per_page
-        request.paginate_items_per_page = items_per_page
-        request.paginate_params = params.copy()
+        paginator.paginate_items_per_page = items_per_page
+        paginator.paginate_params = params.copy()
+        paginator.paginate_params.update(paginators_data['_tg_paginators_params'])
         if items_per_page != self.items_per_page:
-            request.paginate_params[self.items_per_page_param] = items_per_page
+            paginator.paginate_params[self.items_per_page_param] = items_per_page
 
     def before_render(self, remainder, params, output):
         if not isinstance(output, dict) or not self.name in output:
             return
+
+        paginator = request.paginators[self.name]
         collection = output[self.name]
-        page = Page(collection, request.paginate_page,
-            request.paginate_items_per_page, controller='/')
-        page.kwargs = request.paginate_params
+        page = Page(collection, paginator.paginate_page,
+            paginator.paginate_items_per_page, controller='/')
+        page.kwargs = paginator.paginate_params
         if self.page_param != 'name':
             page.pager = partial(page.pager, page_param=self.page_param)
         if not getattr(tmpl_context, 'paginators', None):
