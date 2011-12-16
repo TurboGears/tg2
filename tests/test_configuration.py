@@ -2,10 +2,11 @@
 Testing for TG2 Configuration
 """
 from nose.tools import eq_, raises
-import atexit
+import atexit, sys
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
+from tg.configuration.app_config import TGConfigError
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
 
@@ -45,6 +46,16 @@ class TestPylonsConfigWrapper:
         del self.config.i_dont_exist
 
 class TestAppConfig:
+    def __init__(self):
+        class FakeAppGlobals(object):
+            pass
+
+        self.fake_package = Bunch({'__name__':'tests',
+                                   'lib':Bunch({'app_globals':Bunch({
+                                                    'Globals':FakeAppGlobals})
+                                               })
+                                   })
+
     def setup(self):
         self.config = AppConfig()
         # set up some required paths and config settings
@@ -52,6 +63,11 @@ class TestAppConfig:
         # other tests don't suffer - but that's a nasty
         # side-effect. setup for those tests actually needs
         # fixing.
+        self.config.package = self.fake_package
+        self.config['paths']['root'] = 'test'
+        self.config['paths']['controllers'] = 'test'
+        self.config.init_config({'cache_dir':'/tmp'}, {})
+
         config['paths']['static_files'] = "test"
         config["tg.app_globals"] = Bunch()
         config["use_sqlalchemy"] = False
@@ -60,6 +76,7 @@ class TestAppConfig:
         config["call_on_shutdown"] = "foo"
         config["render_functions"] = Bunch()
         config['beaker.session.secret'] = 'some_secret'
+
 
     def test_create(self):
         pass
@@ -92,7 +109,7 @@ class TestAppConfig:
         assert (func, (), {}) in atexit._exithandlers
 
     #this tests fails
-    def _test_setup_helpers_and_globals(self):
+    def test_setup_helpers_and_globals(self):
         self.config.setup_helpers_and_globals()
 
     def test_setup_sa_auth_backend(self):
@@ -139,3 +156,24 @@ class TestAppConfig:
     def test_add_static_file_middleware(self):
         self.config.add_static_file_middleware(None)
 
+    def test_register_hooks(self):
+        def dummy(*args):
+            pass
+
+        self.config.register_hook('startup', dummy)
+        self.config.register_hook('shutdown', dummy)
+        self.config.register_hook('controller_wrapper', dummy)
+        for hook_name in self.config.hooks.keys():
+            self.config.register_hook(hook_name, dummy)
+
+        for hooks in self.config.hooks.values():
+            assert hooks
+
+        assert self.config.call_on_startup
+        assert self.config.call_on_shutdown
+        assert self.config.controller_wrappers
+
+    @raises(TGConfigError)
+    def test_missing_secret(self):
+        del config['beaker.session.secret']
+        self.config.setup_sa_auth_backend()
