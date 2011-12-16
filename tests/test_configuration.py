@@ -108,7 +108,6 @@ class TestAppConfig:
         self.config.setup_startup_and_shutdown()
         assert (func, (), {}) in atexit._exithandlers
 
-    #this tests fails
     def test_setup_helpers_and_globals(self):
         self.config.setup_helpers_and_globals()
 
