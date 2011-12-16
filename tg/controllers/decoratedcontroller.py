@@ -82,9 +82,6 @@ class DecoratedController(object):
 
         tg_decoration = controller.decoration
         try:
-            if 'tg_format' in params:
-                tg.request.headers['tg_format'] = params['tg_format']
-
             tg_decoration.run_hooks('before_validate', remainder, params)
 
             validate_params = self._get_params_with_argspec(controller, params, remainder)
