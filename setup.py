@@ -32,7 +32,7 @@ test_requirements = ['coverage',
                     ]
 
 if sys.version_info[:2] == (2,4):
-    test_requirements.append('pysqlite')
+    test_requirements.extend(['pysqlite', 'hashlib'])
 
 setup(
     name='TurboGears2',

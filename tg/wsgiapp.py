@@ -3,6 +3,10 @@ from webob.exc import HTTPFound, HTTPNotFound
 
 log = logging.getLogger(__name__)
 
+import warnings
+if sys.version_info[:2] == (2,4):
+    warnings.warn('Python 2.4 support is deprecated, and will be removed in TurboGears 2.2', DeprecationWarning)
+
 import tg
 from tg import request_local
 from tg.i18n import _get_translator

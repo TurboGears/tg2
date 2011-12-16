@@ -63,6 +63,34 @@ class TestPagination:
         assert '/fake_url' in page
         url = '/paginate_with_params/42?page=2'
         page = self.app.get(url)
-        print page
         assert '<li>0</li>' not in page
         assert '<li>10</li>' in page
+
+    def test_multiple_paginators(self):
+        url = '/multiple_paginators/42'
+        page = self.app.get(url)
+
+        assert '/multiple_paginators/42?testdata2_page=2' in page
+        assert '/multiple_paginators/42?testdata_page=2' in page
+
+        url = '/multiple_paginators/42?testdata_page=2'
+        page = self.app.get(url)
+
+        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page
+        assert '/multiple_paginators/42?testdata_page=4' in page
+
+        assert '<li>0</li>' not in page
+        assert '<li>10</li>' in page
+        assert '<li>142</li>' in page
+        assert '<li>151</li>' in page
+
+        url = '/multiple_paginators/42?testdata2_page=2'
+        page = self.app.get(url)
+
+        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page, str(page)
+        assert '/multiple_paginators/42?testdata2_page=4' in page
+
+        assert '<li>0</li>' in page
+        assert '<li>9</li>' in page
+        assert '<li>151</li>' not in page
+        assert '<li>161</li>' in page

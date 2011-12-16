@@ -102,6 +102,13 @@ class RootController(TGController):
     def validated_paginated(self, n):
         return dict(testdata=range(n))
 
+    @expose('genshi:genshi_paginated.html')
+    @paginate('testdata', use_prefix=True)
+    @paginate('testdata2', use_prefix=True)
+    def multiple_paginators(self, n):
+        n = int(n)
+        return dict(testdata=range(n), testdata2=range(n+100, n+100+n))
+
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
         return {}
