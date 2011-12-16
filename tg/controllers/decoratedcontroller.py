@@ -28,12 +28,7 @@ from tg.jsonify import is_saobject, JsonEncodeError
 
 from util import pylons_formencode_gettext
 
-# @expose(content_type=CUSTOM_CONTENT_TYPE) won't
-# override pylons.request.content_type
-CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
-
 class NotAuthorizedError(Exception): pass
-
 
 class DecoratedController(object):
     """Creates an interface to hang decoration attributes on
@@ -252,12 +247,6 @@ class DecoratedController(object):
         # Save these objects as locals from the SOP to avoid expensive lookups
         tmpl_context = tg.tmpl_context._current_obj()
 
-        # what causes this condition?  there are no tests for it.
-        # this is caused when someone specifies a content_type, but no template
-        # because their controller returns a string.
-        if template_name is None:
-            return result
-
         # If there is an identity, push it to the Pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
@@ -378,16 +367,6 @@ class DecoratedController(object):
             tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-
-def _configured_engines():
-    """
-    Returns a set containing the names of the currently configured template
-    engines from the active application's globals
-    """
-    g = tg.app_globals._current_obj()
-    if not hasattr(g, 'tg_configured_engines'):
-        g.tg_configured_engines = set()
-    return g.tg_configured_engines
 
 __all__ = [
     "DecoratedController"

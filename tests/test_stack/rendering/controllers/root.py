@@ -242,3 +242,12 @@ class RootController(TGController):
         else:
             from tg.render import render
             return render({}, 'jinja', 'jinja_inherits.html')
+
+    @expose()
+    def no_template_generator(self):
+        def output():
+            num = 0
+            while num < 5:
+                num += 1
+                yield str(num)
+        return output()

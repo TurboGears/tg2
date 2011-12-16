@@ -13,7 +13,7 @@ def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
         'use_sqlalchemy': False,
        'use_legacy_renderer': False,
        # this is specific to mako  to make sure inheritance works
-       'use_dotted_templatenames': False,
+       'use_dotted_templatenames': False
     })
 
     deployment_config = {}
@@ -322,3 +322,8 @@ def test_pylons_rendering():
     pyresp = app.get('/manual_rendering?frompylons=1')
 
     assert str(tgresp) == str(pyresp), str(tgresp) + '\n------\n' + str(pyresp)
+
+def test_no_template():
+    app = setup_noDB()
+    resp = app.get('/no_template_generator')
+    assert '1234' in resp, resp

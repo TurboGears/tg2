@@ -124,7 +124,20 @@ class ControlPanel(TGController):
     def add_user(self, user_name):
         return "%s was just registered" % user_name
 
+class CustomAllowOnly(TGController):
+    class something(object):
+        def check_authorization(self, env):
+            from tg.controllers.decoratedcontroller import NotAuthorizedError
+            raise NotAuthorizedError()
+
+    @expose()
+    def index(self):
+        return 'HI'
+
+    allow_only = something()
+
 class RootController(TGController):
+    custom_allow = CustomAllowOnly()
 
     cp = ControlPanel()
 
@@ -211,6 +224,10 @@ class BaseIntegrationTests(TestCase):
 
 class TestRequire(BaseIntegrationTests):
     """Test case for the @require decorator"""
+
+    def test_authz_custom_allow_only(self):
+        environ = {'REMOTE_USER': 'developer'}
+        resp = self.app.get('/custom_allow', extra_environ=environ, status=401)
 
     def test_authz_granted_in_root_controller(self):
         environ = {'REMOTE_USER': 'developer'}

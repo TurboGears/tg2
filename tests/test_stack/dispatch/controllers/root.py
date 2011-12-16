@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tg
-from tg.controllers import TGController, CUSTOM_CONTENT_TYPE
+from tg.controllers import TGController
 from tg.decorators import expose, validate, https, variable_decode
 from formencode import validators
 
@@ -171,14 +171,14 @@ class RootController(TGController):
     def custom_content_type(self):
         return 'PNG'
 
-    @expose(content_type='text/plain')
-    def custom_content_text_plain_type(self):
-        return 'a<br/>bx'
-
-    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    @expose()
     def custom_content_type2(self):
         tg.response.headers['Content-Type'] = 'image/png'
         return 'PNG2'
+
+    @expose(content_type='text/plain')
+    def custom_content_text_plain_type(self):
+        return 'a<br/>bx'
 
     @expose()
     def check_params(self, *args, **kwargs):
