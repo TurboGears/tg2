@@ -51,6 +51,7 @@ class TestAppConfig:
             pass
 
         self.fake_package = Bunch({'__name__':'tests',
+                                   '__file__':__file__,
                                    'lib':Bunch({'app_globals':Bunch({
                                                     'Globals':FakeAppGlobals})
                                                })

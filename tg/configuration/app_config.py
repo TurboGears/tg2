@@ -537,33 +537,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from tg.render import render_json
         self.render_functions.json = render_json
 
-    def setup_default_renderer(self):
-        """Setup template defaults in the buffed plugin.
-
-        This is only used when use_legacy_renderer is set to True
-        and it will not get deprecated in the next major TurboGears release.
-
-        """
-        #T his is specific to buffet, will not be needed later
-        config['buffet.template_engines'].pop()
-        template_location = '%s.templates' % self.package_name
-        template_location = '%s.templates' % self.package_name
-        from genshi.filters import Translator
-
-        def template_loaded(template):
-            template.filters.insert(0, Translator(ugettext))
-
-        # Set some default options for genshi
-        options = {
-            'genshi.loader_callback': template_loaded,
-            'genshi.default_format': 'xhtml',
-        }
-
-        # Override those options from config
-        config['buffet.template_options'].update(options)
-        config.add_template_engine(self.default_renderer,
-                                   template_location,  {})
-
     def setup_mimetypes(self):
         lookup = {'.json':'application/json'}
         lookup.update(config.get('mimetype_lookup', {}))
@@ -678,10 +651,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     setup()
                 else:
                     raise Exception('This configuration object does not support the %s renderer'%renderer)
-
-
-            if self.use_legacy_renderer:
-                self.setup_default_renderer()
 
             self.setup_persistence()
 

@@ -254,23 +254,12 @@ class DecoratedController(object):
 
         # Save these objects as locals from the SOP to avoid expensive lookups
         tmpl_context = tg.tmpl_context._current_obj()
-        use_legacy_renderer = tg.configuration.config.get("use_legacy_renderer", True)
 
         # what causes this condition?  there are no tests for it.
         # this is caused when someone specifies a content_type, but no template
         # because their controller returns a string.
         if template_name is None:
             return result
-
-        # Prepare the engine, if it's not already been prepared.
-        if use_legacy_renderer == engine_name:
-            # get the buffet handler
-            buffet = tg.buffet._current_obj()
-
-            if engine_name not in _configured_engines():
-                template_options = dict(config).get('buffet.template_options', {})
-                buffet.prepare(engine_name, **template_options)
-                _configured_engines().add(engine_name)
 
         # If there is an identity, push it to the Pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
@@ -305,13 +294,7 @@ class DecoratedController(object):
             testing_variables['controller_output'] = response
 
         # Render the result.
-        if use_legacy_renderer == engine_name:
-            rendered = buffet.render(engine_name=engine_name,
-                               template_name=template_name,
-                               include_pylons_variables=False,
-                               namespace=namespace)
-        else:
-            rendered = tg_render(template_vars=namespace,
+        rendered = tg_render(template_vars=namespace,
                       template_engine=engine_name,
                       template_name=template_name)
 
