@@ -69,15 +69,16 @@ class DecoratedController(object):
         #This is necessary to prevent spurious Content Type header which would
         #cause problems to paste.response.replace_header calls and cause
         #responses wihout content type to get out with a wrong content type
-        if not tgl.response.headers.get('Content-Type'):
-            tgl.response.headers.pop('Content-Type', None)
+        resp_headers = tgl.response.headers
+        if not resp_headers.get('Content-Type'):
+            resp_headers.pop('Content-Type', None)
 
         remainder = remainder or []
         remainder = [url2pathname(r) for r in remainder]
 
         tg_decoration = controller.decoration
         try:
-            tg_decoration.run_hooks('before_validate', remainder, params)
+            tg_decoration.run_hooks(tgl, 'before_validate', remainder, params)
 
             validate_params = self._get_params_with_argspec(controller, params, remainder)
 
@@ -90,12 +91,12 @@ class DecoratedController(object):
 
             tgl.tmpl_context.form_values = params
 
-            tg_decoration.run_hooks('before_call', remainder, params)
+            tg_decoration.run_hooks(tgl, 'before_call', remainder, params)
 
             params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
-            controller_callable = tg_decoration.wrap_controller(controller)
+            controller_callable = tg_decoration.wrap_controller(tgl, controller)
 
             # call controller method
             output = controller_callable(*remainder, **dict(params))
@@ -118,11 +119,11 @@ class DecoratedController(object):
 
 
         # Render template
-        tg_decoration.run_hooks('before_render', remainder, params, output)
+        tg_decoration.run_hooks(tgl, 'before_render', remainder, params, output)
 
         response = self._render_response(tgl, controller, output)
         
-        tg_decoration.run_hooks('after_render', response)
+        tg_decoration.run_hooks(tgl, 'after_render', response)
         
         return response['response']
 

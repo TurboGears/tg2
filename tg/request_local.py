@@ -27,6 +27,12 @@ for c in [chr(i) for i in range(256)]:
         _faster_safe[c] = '%%%02X' % ord(c)
 _must_quote = re.compile(r'[^%s]' % _faster_safe_test)
 
+try:
+    WebObRequest.str_cookies
+    old_webob = True
+except:
+    old_webob = False
+
 class Request(WebObRequest):
     """WebOb Request subclass
 
@@ -43,17 +49,17 @@ class Request(WebObRequest):
     def languages_best_match(self, fallback=None):
         # And we now have the old best_matches code that webob ditched!
         al = self.accept_language
-        if hasattr(al, 'best_matches'): # webob<1.2
+        if old_webob: # webob<1.2
             items = al.best_matches(fallback)
         else:
             items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
             if fallback:
                 for index, item in enumerate(items):
-                    if al._match(item, self.language):
-                        items[index:] = [self.language]
+                    if al._match(item, fallback):
+                        items[index:] = [fallback]
                         break
                 else:
-                    items.append(self.language)
+                    items.append(fallback)
         return items
 
     @property
@@ -94,14 +100,14 @@ class Request(WebObRequest):
 
     @property
     def str_cookies(self):
-        if hasattr(super(Request, self), 'str_cookies'):
+        if old_webob:
             return super(Request, self).str_cookies
         
         return self.cookies
 
     @property
     def args_params(self):
-        if hasattr(super(Request, self), 'str_params'):
+        if old_webob:
             return self.params.mixed()
         
         if not hasattr(self, '_args_params_cache'):

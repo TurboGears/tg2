@@ -45,25 +45,35 @@ class Decoration(object):
                           after_render=[])
 
     def get_decoration(cls, func):
-        if not hasattr(func, 'decoration'):
-            func.decoration = cls(func)
-        return func.decoration
+        try:
+            dec = func.decoration
+        except:
+            dec = func.decoration = cls(func)
+        return dec
     get_decoration = classmethod(get_decoration)
 
     @property
     def exposed(self):
         return bool(self.engines) or bool(self.custom_engines)
 
-    def run_hooks(self, hook, *l, **kw):
-        for func in config.get('hooks', {}).get(hook, []):
-            func(*l, **kw)
+    def run_hooks(self, tgl, hook, *l, **kw):
+        try:
+            syswide_hooks = tgl.config['hooks'][hook]
+            for func in syswide_hooks:
+                func(*l, **kw)
+        except KeyError:
+            pass
+
         for func in self.hooks[hook]:
             func(*l, **kw)
 
-    def wrap_controller(self, controller):
+    def wrap_controller(self, tgl, controller):
         controller_callable = controller
-        for wrapper in config.get('controller_wrappers', []):
-            controller_callable = wrapper(self, controller_callable)
+        try:
+            for wrapper in tgl.config['controller_wrappers']:
+                controller_callable = wrapper(self, controller_callable)
+        except KeyError:
+            pass
         return controller_callable
 
     def register_template_engine(self, content_type, engine, template,
@@ -120,7 +130,6 @@ class Decoration(object):
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers).
         """
-
         if hasattr(request, 'response_type') and request.response_type in self.engines:
             accept_types = request.response_type
         else:
@@ -140,15 +149,17 @@ class Decoration(object):
                 content_type = 'text/html'
 
             # check for overridden content type from the controller call
-            controller_content_type = response.headers.get('Content-Type')
-
-            if controller_content_type:
+            try:
+                controller_content_type = response.headers['Content-Type']
                 # make sure we handle content_types like 'text/html; charset=utf-8'
                 content_type = controller_content_type.split(';')[0]
+            except KeyError:
+                pass
 
             # check for overridden templates
             try:
-                engine, template, exclude_names = request._override_mapping[self.controller][content_type.split(";")[0]]
+                cnt_override_mapping = request._override_mapping[self.controller]
+                engine, template, exclude_names = cnt_override_mapping[content_type.split(";")[0]]
             except (AttributeError, KeyError):
                 engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
 
@@ -157,7 +168,7 @@ class Decoration(object):
                                               content_type in ('application/xhtml+xml',
                                                                'application/xml',
                                                                'application/json')):
-            content_type = '%s; charset=utf-8' % content_type
+            content_type += '; charset=utf-8'
 
         return content_type, engine, template, exclude_names
 

@@ -112,7 +112,6 @@ class Dispatcher(object):
 
         if argvars and remainder:
             remainder_len = len(remainder)
-
             for i, var in enumerate(argvars):
                 if i >= remainder_len:
                     break
