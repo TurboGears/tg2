@@ -12,8 +12,16 @@ from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
 
+try:
+    import pylons
+    has_pylons = True
+except:
+    has_pylons = False
+
 class RequestLocals(object):
-    pass
+    __slots__ = ('response', 'request', 'app_globals',
+                 'config', 'tmpl_context', 'translator',
+                 'session', 'cache', 'url')
 
 class ContextObj(object):
     def __repr__(self):
@@ -77,8 +85,6 @@ class TGApp(object):
     def setup_pylons_compatibility(self, environ, controller):
         """Updates environ to be backward compatible with Pylons"""
         try:
-            import pylons
-
             environ['pylons.controller'] = controller
             environ['pylons.pylons'] = environ['tg.locals']
             environ['pylons.routes_dict'] = environ['tg.routes_dict']
@@ -146,25 +152,32 @@ class TGApp(object):
             charset=resp_options['charset'])
         response.headers.update(resp_options['headers'])
 
+        conf = self.config
+
         # Setup the translator object
-        lang = self.config['lang']
-        translator = _get_translator(lang, tg_config=self.config)
+        lang = conf['lang']
+        translator = _get_translator(lang, tg_config=conf)
 
         if self.strict_tmpl_context:
             tmpl_context = ContextObj()
         else:
             tmpl_context = AttribSafeContextObj()
 
+        app_globals = self.globals
+        session = environ.get('beaker.session')
+        cache = environ.get('beaker.cache')
+        url = environ.get('routes.url')
+
         locals = RequestLocals()
         locals.response = response
         locals.request = req
-        locals.app_globals = self.globals
-        locals.config = self.config
+        locals.app_globals = app_globals
+        locals.config = conf
         locals.tmpl_context = tmpl_context
         locals.translator = translator
-        locals.session = environ['beaker.session']
-        locals.cache = environ['beaker.cache']
-        locals.url = environ['routes.url']
+        locals.session = session
+        locals.cache = cache
+        locals.url = url
 
         environ['tg.locals'] = locals
 
@@ -172,13 +185,13 @@ class TGApp(object):
         registry = environ['paste.registry']
         registry.register(request_local.response, response)
         registry.register(request_local.request, req)
-        registry.register(request_local.app_globals, self.globals)
-        registry.register(request_local.config, self.config)
+        registry.register(request_local.app_globals, app_globals)
+        registry.register(request_local.config, conf)
         registry.register(request_local.tmpl_context, tmpl_context)
         registry.register(request_local.translator, translator)
-        registry.register(request_local.session, locals.session)
-        registry.register(request_local.cache, locals.cache)
-        registry.register(request_local.url, locals.url)
+        registry.register(request_local.session, session)
+        registry.register(request_local.cache, cache)
+        registry.register(request_local.url, url)
 
         if 'paste.testing_variables' in environ:
             testenv = environ['paste.testing_variables']
@@ -186,7 +199,7 @@ class TGApp(object):
             testenv['response'] = response
             testenv['tmpl_context'] = tmpl_context
             testenv['app_globals'] = testenv['g'] = self.globals
-            testenv['config'] = self.config
+            testenv['config'] = conf
             testenv['session'] = locals.session
             testenv['cache'] = locals.cache
             return True
@@ -263,7 +276,7 @@ class TGApp(object):
             controller = controller()
 
         #Setup pylons compatibility before calling controller
-        if self.pylons_compatible:
+        if has_pylons and self.pylons_compatible:
             self.setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to handle a WSGI call

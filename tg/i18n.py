@@ -49,23 +49,30 @@ def ungettext(singular, plural, n):
 lazy_ungettext = lazify(ungettext)
 
 
-def _get_translator(lang, **kwargs):
+def _get_translator(lang, tg_locals=None, tg_config=None, **kwargs):
     """Utility method to get a valid translator object from a language
     name"""
     if not lang:
         return NullTranslations()
 
-    if 'tg_config' in kwargs:
-        conf = kwargs.pop('tg_config')
+    if tg_config:
+        conf = tg_config
     else:
-        conf = tg.config.current_conf()
+        if tg_locals:
+            conf = tg_locals.config
+        else:
+            conf = tg.config.current_conf()
 
-    localedir = os.path.join(conf['paths']['root'], 'i18n')
+    try:
+        localedir = conf['localedir']
+    except KeyError:
+        localedir = os.path.join(conf['paths']['root'], 'i18n')
+
     if not isinstance(lang, list):
         lang = [lang]
+
     try:
-        translator = translation(conf['package'].__name__, localedir,
-                                 languages=lang, **kwargs)
+        translator = translation(conf['package'].__name__, localedir, languages=lang, **kwargs)
     except IOError, ioe:
         raise LanguageError('IOError: %s' % ioe)
 
@@ -92,7 +99,7 @@ def add_fallback(lang, **kwargs):
     """
     return tg.translator.add_fallback(_get_translator(lang, **kwargs))
 
-
+sanitized_language_cache = {}
 def sanitize_language_code(lang):
     """Sanitize the language code if the spelling is slightly wrong.
 
@@ -100,13 +107,21 @@ def sanitize_language_code(lang):
 
     """
     try:
-        lang = '_'.join(filter(None, parse_locale(lang)[:2]))
-    except ValueError:
-        if '-' in lang:
-            try:
-                lang = '_'.join(filter(None, parse_locale(lang, sep='-')[:2]))
-            except ValueError:
-                pass
+        lang = sanitized_language_cache[lang]
+    except:
+        orig_lang = lang
+
+        try:
+            lang = '_'.join(filter(None, parse_locale(lang)[:2]))
+        except ValueError:
+            if '-' in lang:
+                try:
+                    lang = '_'.join(filter(None, parse_locale(lang, sep='-')[:2]))
+                except ValueError:
+                    pass
+
+        sanitized_language_cache[orig_lang] = lang
+
     return lang
 
 
@@ -119,12 +134,13 @@ def setup_i18n():
     Should only be manually called if you override controllers function.
 
     """
-    session_ = tg.session._current_obj()
+    tg_locals = tg.request.environ['tg.locals']
+    session_ = tg_locals.session
     if session_:
         session_existed = session_.accessed()
         # If session is available, we try to see if there are languages set
-        languages = session_.get(tg.config.get('lang_session_key', 'tg_lang'))
-        if not session_existed and tg.config.get('beaker.session.tg_avoid_touch'):
+        languages = session_.get(tg_locals.config.get('lang_session_key', 'tg_lang'))
+        if not session_existed and tg_locals.config.get('beaker.session.tg_avoid_touch'):
             session_.__dict__['_sess'] = None
 
         if languages:
@@ -134,11 +150,11 @@ def setup_i18n():
             languages = []
     else:
         languages = []
-    languages.extend(map(sanitize_language_code, tg.request.languages_best_match()))
-    set_temporary_lang(languages)
+    languages.extend(map(sanitize_language_code, tg_locals.request.languages_best_match()))
+    set_temporary_lang(languages, tg_locals=tg_locals)
 
 
-def set_temporary_lang(languages):
+def set_temporary_lang(languages, tg_locals=None):
     """Set the current language(s) used for translations without touching
     the session language.
 
@@ -148,23 +164,25 @@ def set_temporary_lang(languages):
     """
     # the logging to the screen was removed because
     # the printing to the screen for every problem causes serious slow down.
+    if not tg_locals:
+        tg_locals = tg.request.environ['tg.locals']
 
     try:
-        translator = _get_translator(languages)
-        environ = tg.request.environ
-        environ['tg.locals'].translator = translator
-        if 'paste.registry' in environ:
-            environ['paste.registry'].replace(tg.translator, translator)
+        translator = _get_translator(languages, tg_locals=tg_locals)
+        environ = tg_locals.request.environ
+        tg_locals.translator = translator
+        try:
+            registry = environ['paste.registry']
+            registry.replace(tg.translator, translator)
+        except KeyError:
+            pass
     except LanguageError:
         pass
-        #log.warn("Language %s: not supported", languages)
 
     try:
-        set_formencode_translation(languages)
+        set_formencode_translation(languages, tg_locals=tg_locals)
     except LanguageError:
         pass
-        #log.warn("Language %s: not supported by FormEncode", languages)
-
 
 def set_lang(languages, **kwargs):
     """Set the current language(s) used for translations
@@ -174,23 +192,28 @@ def set_lang(languages, **kwargs):
     First lang will be used as main lang, others as fallbacks.
 
     """
-    set_temporary_lang(languages)
+    tg_locals = tg.request.environ['tg.locals']
 
-    if tg.session:
-        tg.session[tg.config.get('lang_session_key', 'tg_lang')] = languages
-        tg.session.save()
+    set_temporary_lang(languages, tg_locals)
+
+    if tg_locals.session:
+        tg_locals.session[tg_locals.config.get('lang_session_key', 'tg_lang')] = languages
+        tg_locals.session.save()
 
 
 _localdir = formencode.api.get_localedir()
 
-def set_formencode_translation(languages):
+def set_formencode_translation(languages, tg_locals=None):
     """Set request specific translation of FormEncode."""
+    if not tg_locals:
+        tg_locals = tg.request.environ['tg.locals']
+
     try:
         formencode_translation = translation(
             'FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
-    tg.tmpl_context.formencode_translation = formencode_translation
+    tg_locals.tmpl_context.formencode_translation = formencode_translation
 
 
 __all__ = [

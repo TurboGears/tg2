@@ -73,12 +73,13 @@ def _get_tg_vars():
 
     """
 
-    req = tg.request._current_obj()
-    conf = tg.config._current_obj()
-    tmpl_context = tg.tmpl_context._current_obj()
-    app_globals = tg.app_globals._current_obj()
-    translator = tg.translator._current_obj()
-    response = tg.response._current_obj()
+    tgl = tg.request.environ['tg.locals']
+    req = tgl.request
+    conf = tgl.config
+    tmpl_context = tgl.tmpl_context
+    app_globals = tgl.app_globals
+    translator = tgl.translator
+    response = tgl.response
 
     try:
         h = conf['package'].lib.helpers

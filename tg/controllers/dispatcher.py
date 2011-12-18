@@ -40,8 +40,9 @@ class DispatchState(object):
     us to attach things like routing args and to keep track of the
     path the controller takes along the system.
     """
-    def __init__(self, url_path, params):
+    def __init__(self, config, url_path, params):
         self.url_path = url_path
+        self.controller = None
         self.controller_path = []
         self.routing_args = {}
         self.method = None
@@ -51,13 +52,14 @@ class DispatchState(object):
         self._notfound_stack = []
 
         #remove the ignore params from self.params
-        remove_params = tg.config.get('ignore_parameters', [])
+        remove_params = config.get('ignore_parameters', [])
         for param in remove_params:
             if param in self.params:
                 del self.params[param]
 
     def add_controller(self, location, controller):
         """Add a controller object to the stack"""
+        self.controller = controller
         self.controller_path.append((location, controller))
 
     def add_method(self, method, remainder):
@@ -78,12 +80,6 @@ class DispatchState(object):
         remainder = remainder[i:]
         if var_args and remainder:
             self.routing_args[current_path] = remainder
-
-    @property
-    def controller(self):
-        """returns the current controller"""
-        return self.controller_path[-1][1]
-
 
 class Dispatcher(object):
     """
@@ -113,9 +109,12 @@ class Dispatcher(object):
         params = params.copy()
         argspec = self._get_argspec(func)
         argvars = argspec[0][1:]
-        if argvars and enumerate(remainder):
+
+        if argvars and remainder:
+            remainder_len = len(remainder)
+
             for i, var in enumerate(argvars):
-                if i >= len(remainder):
+                if i >= remainder_len:
                     break
                 params[var] = remainder[i]
         return params
@@ -174,7 +173,7 @@ class Dispatcher(object):
         """
         raise NotImplementedError
 
-    def _get_dispatchable(self, url_path):
+    def _get_dispatchable(self, thread_locals, url_path):
         """
         Returns a tuple (controller, remainder, params)
 
@@ -182,10 +181,9 @@ class Dispatcher(object):
           url
             url as string
         """
-
-        req = tg.request._current_obj()
+        req = thread_locals.request
         
-        if not tg.config.get('disable_request_extensions', False):
+        if not thread_locals.config.get('disable_request_extensions', False):
             req.response_type = None
             req.response_ext = None
             if url_path and '.' in url_path[-1]:
@@ -200,12 +198,12 @@ class Dispatcher(object):
 
         params = req.args_params
 
-        state = DispatchState(url_path, params)
+        state = DispatchState(thread_locals.config, url_path, params)
         state.add_controller('/', self)
         state.dispatcher = self
         state =  state.controller._dispatch(state, url_path)
 
-        tg.tmpl_context.controller_url = '/'.join(
+        thread_locals.tmpl_context.controller_url = '/'.join(
             url_path[:-len(state.remainder)])
 
         state.routing_args.update(params)
@@ -229,15 +227,18 @@ class Dispatcher(object):
     def _setup_wsgi_script_name(self, url_path, remainder, params):
         pass
 
-    def _perform_call(self):
+    def _perform_call(self, thread_locals):
         """
         This function is called from within Pylons and should not be overidden.
         """
-        if tg.config.get('i18n_enabled', True):
+        py_request = thread_locals.request
+        py_config = thread_locals.config
+
+        if py_config.get('i18n_enabled', True):
             setup_i18n()
 
-        script_name = tg.request.environ.get('SCRIPT_NAME', '')
-        url_path = tg.request.path
+        script_name = py_request.environ.get('SCRIPT_NAME', '')
+        url_path = py_request.fast_path
         if url_path.startswith(script_name):
             url_path = url_path[len(script_name):]
         url_path = url_path.split('/')[1:]
@@ -245,7 +246,7 @@ class Dispatcher(object):
         if url_path[-1] == '':
             url_path.pop()
 
-        func, controller, remainder, params = self._get_dispatchable(url_path)
+        func, controller, remainder, params = self._get_dispatchable(thread_locals, url_path)
 
         if hasattr(controller, '__before__') and not hasattr(controller, '_before'):
             warn("this functionality is going to removed in the next minor version,"\
@@ -293,7 +294,7 @@ class Dispatcher(object):
         py_request.start_response = repl_start_response
 
         try:
-            response = self._perform_call()
+            response = self._perform_call(thread_locals)
         except HTTPException, httpe:
             response = httpe
 

@@ -1,5 +1,4 @@
-import hmac, base64
-import binascii
+import hmac, base64, urllib, binascii, re
 from paste.registry import StackedObjectProxy
 from paste.config import DispatchingConfig
 
@@ -14,7 +13,19 @@ except ImportError:
     import sha as sha1
 
 from webob import Request as WebObRequest
+from webob.request import PATH_SAFE
 from webob import Response as WebObResponse
+
+#Precalc url quoting for fast_path property
+always_safe = ('ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+               'abcdefghijklmnopqrstuvwxyz'
+               '0123456789' '_.-')
+_faster_safe_test = always_safe + PATH_SAFE
+_faster_safe = dict(zip(_faster_safe_test, _faster_safe_test))
+for c in [chr(i) for i in range(256)]:
+    if c not in _faster_safe:
+        _faster_safe[c] = '%%%02X' % ord(c)
+_must_quote = re.compile(r'[^%s]' % _faster_safe_test)
 
 class Request(WebObRequest):
     """WebOb Request subclass
@@ -44,6 +55,13 @@ class Request(WebObRequest):
                 else:
                     items.append(self.language)
         return items
+
+    @property
+    def fast_path(self):
+        s = ''.join((self.script_name, self.path_info))
+        if not _must_quote.search(s):
+            return s
+        return ''.join(map(_faster_safe.get, s))
 
     @property
     def languages(self):
@@ -84,7 +102,7 @@ class Request(WebObRequest):
     @property
     def args_params(self):
         if hasattr(super(Request, self), 'str_params'):
-            return super(Request, self).params.mixed()
+            return self.params.mixed()
         
         if not hasattr(self, '_args_params_cache'):
             self._args_params_cache = dict([(str(n), v) for n,v in self.params.mixed().iteritems()])

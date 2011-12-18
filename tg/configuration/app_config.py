@@ -264,6 +264,8 @@ class AppConfig(Bunch):
         self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
         config['application_root_module'] = self.get_root_module()
 
+        self.localedir = os.path.join(conf['paths']['root'], 'i18n')
+
         config.update(self)
 
         #see http://trac.turbogears.org/ticket/2247

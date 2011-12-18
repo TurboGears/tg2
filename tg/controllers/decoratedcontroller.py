@@ -36,10 +36,9 @@ class DecoratedController(object):
     """
     
     def _is_exposed(self, controller, name):
-        if hasattr(controller, name):
-            method = getattr(controller, name)
-            if inspect.ismethod(method) and hasattr(method, 'decoration'):
-                return method.decoration.exposed
+        method = getattr(controller, name, None)
+        if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
+            return method.decoration.exposed
 
     def _call(self, controller, params, remainder=None):
         """
@@ -63,14 +62,15 @@ class DecoratedController(object):
         rendering.
 
         """
+        tgl = tg.request.environ['tg.locals']
 
-        self._initialize_validation_context()
+        self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
         #cause problems to paste.response.replace_header calls and cause
         #responses wihout content type to get out with a wrong content type
-        if not tg.response.headers.get('Content-Type'):
-            tg.response.headers.pop('Content-Type', None)
+        if not tgl.response.headers.get('Content-Type'):
+            tgl.response.headers.pop('Content-Type', None)
 
         remainder = remainder or []
         remainder = [url2pathname(r) for r in remainder]
@@ -88,7 +88,7 @@ class DecoratedController(object):
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 
-            tg.tmpl_context.form_values = params
+            tgl.tmpl_context.form_values = params
 
             tg_decoration.run_hooks('before_call', remainder, params)
 
@@ -120,7 +120,7 @@ class DecoratedController(object):
         # Render template
         tg_decoration.run_hooks('before_render', remainder, params, output)
 
-        response = self._render_response(controller, output)
+        response = self._render_response(tgl, controller, output)
         
         tg_decoration.run_hooks('after_render', response)
         
@@ -207,7 +207,7 @@ class DecoratedController(object):
 
         return new_params
 
-    def _render_response(self, controller, response):
+    def _render_response(self, tgl, controller, response):
         """
         Render response takes the dictionary returned by the
         controller calls the appropriate template engine. It uses
@@ -225,8 +225,8 @@ class DecoratedController(object):
         expose decorator.
         """
 
-        req = tg.request._current_obj()
-        resp = tg.response._current_obj()
+        req = tgl.request
+        resp = tgl.response
 
         content_type, engine_name, template_name, exclude_names = \
             controller.decoration.lookup_template_engine(req)
@@ -245,7 +245,7 @@ class DecoratedController(object):
             return result
 
         # Save these objects as locals from the SOP to avoid expensive lookups
-        tmpl_context = tg.tmpl_context._current_obj()
+        tmpl_context = tgl.tmpl_context
 
         # If there is an identity, push it to the Pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
@@ -284,7 +284,7 @@ class DecoratedController(object):
                       template_engine=engine_name,
                       template_name=template_name)
 
-        if isinstance(result, unicode) and not tg.response.charset:
+        if isinstance(result, unicode) and not resp.charset:
             resp.charset = 'UTF-8'
 
         result['response'] = rendered
@@ -333,9 +333,9 @@ class DecoratedController(object):
 
         return error_handler, output
 
-    def _initialize_validation_context(self):
-        tg.tmpl_context.form_errors = {}
-        tg.tmpl_context.form_values = {}
+    def _initialize_validation_context(self, tgl):
+        tgl.tmpl_context.form_errors = {}
+        tgl.tmpl_context.form_values = {}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
