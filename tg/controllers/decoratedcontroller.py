@@ -9,7 +9,6 @@ from urllib import url2pathname
 import inspect
 import formencode
 import tg
-from tg import config, request
 from tg.controllers.util import abort
 
 try:
@@ -40,7 +39,7 @@ class DecoratedController(object):
         if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
             return method.decoration.exposed
 
-    def _call(self, controller, params, remainder=None):
+    def _call(self, tgl, controller, params, remainder=None):
         """
         _call is called by _perform_call in Pylons' WSGIController.
 
@@ -62,8 +61,6 @@ class DecoratedController(object):
         rendering.
 
         """
-        tgl = tg.request.environ['tg.locals']
-
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
@@ -82,7 +79,7 @@ class DecoratedController(object):
 
             validate_params = self._get_params_with_argspec(controller, params, remainder)
 
-            for ignore in config.get('ignore_parameters', []):
+            for ignore in tgl.config.get('ignore_parameters', []):
                 if params.get(ignore):
                     del params[ignore]
 
@@ -106,7 +103,7 @@ class DecoratedController(object):
                                                                 remainder,
                                                                 params, inv)
         except Exception, e:
-            if config.get('use_toscawidgets2'):
+            if tgl.config.get('use_toscawidgets2'):
                 from tw2.core import ValidationError
                 if isinstance(e, ValidationError):
                     controller, output = self._handle_validation_errors(controller,
@@ -230,7 +227,7 @@ class DecoratedController(object):
         resp = tgl.response
 
         content_type, engine_name, template_name, exclude_names = \
-            controller.decoration.lookup_template_engine(req)
+            controller.decoration.lookup_template_engine(tgl)
 
         result = dict(response=response, content_type=content_type,
                       engine_name=engine_name, template_name=template_name)
@@ -252,7 +249,7 @@ class DecoratedController(object):
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         # Set up the ToscaWidgets renderer
-        if engine_name in ('genshi','mako') and config['use_toscawidgets']:
+        if engine_name in ('genshi','mako') and tgl.config['use_toscawidgets']:
             global tw
             if not tw:
                 try:
@@ -264,16 +261,13 @@ class DecoratedController(object):
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
-        namespace = dict(tmpl_context=tmpl_context)
-        if isinstance(response, dict):
-            namespace.update(response)
-
+        namespace = response
         for name in exclude_names:
-            namespace.pop(name)
+            namespace.pop(name, None)
 
         # If we are in a test request put the namespace where it can be
         # accessed directly
-        if req.environ.get('paste.testing'):
+        if 'paste.testing' in req.environ:
             testing_variables = req.environ['paste.testing_variables']
             testing_variables['namespace'] = namespace
             testing_variables['template_name'] = template_name
@@ -350,7 +344,7 @@ class DecoratedController(object):
                 # Should shortcircuit the rest, but if not we will still
                 # deny authorization
                 self._failed_authorization(reason)
-            if not_anonymous().is_met(request.environ):
+            if not_anonymous().is_met(tg.request.environ):
                 # The user is authenticated but not allowed.
                 code = 403
                 status = 'error'

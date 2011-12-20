@@ -47,7 +47,6 @@ class Request(WebObRequest):
         return self.accept_charset
 
     def languages_best_match(self, fallback=None):
-        # And we now have the old best_matches code that webob ditched!
         al = self.accept_language
         if old_webob: # webob<1.2
             items = al.best_matches(fallback)

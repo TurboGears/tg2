@@ -86,7 +86,7 @@ class Dispatcher(object):
        Extend this class to define your own mechanism for dispatch.
     """
 
-    def _call(self, controller, params, remainder=None):
+    def _call(self, thread_locals, controller, params, remainder=None):
         """
         Override this function to define how your controller method should be called.
         """
@@ -181,9 +181,9 @@ class Dispatcher(object):
             url as string
         """
         req = thread_locals.request
-        
+        req.response_type = None
+
         if not thread_locals.config.get('disable_request_extensions', False):
-            req.response_type = None
             req.response_ext = None
             if url_path and '.' in url_path[-1]:
                 last_remainder = url_path[-1]
@@ -234,7 +234,7 @@ class Dispatcher(object):
         py_config = thread_locals.config
 
         if py_config.get('i18n_enabled', True):
-            setup_i18n()
+            setup_i18n(thread_locals)
 
         script_name = py_request.environ.get('SCRIPT_NAME', '')
         url_path = py_request.fast_path
@@ -258,7 +258,7 @@ class Dispatcher(object):
 
         self._setup_wsgi_script_name(url_path, remainder, params)
 
-        r = self._call(func, params, remainder=remainder)
+        r = self._call(thread_locals, func, params, remainder=remainder)
 
         if hasattr(controller, '__after__'):
             warn("this functionality is going to removed in the next minor version,"
@@ -387,7 +387,7 @@ class ObjectDispatcher(Dispatcher):
         :Returns:
            True or None
         """
-        if ismethod(getattr(controller, name, None)):
+        if hasattr(controller, name) and ismethod(getattr(controller, name)):
             return True
 
     def _method_matches_args(self, method, state, remainder):
@@ -548,14 +548,16 @@ class ObjectDispatcher(Dispatcher):
         current_controller = state.controller
         if hasattr(current_controller, '_check_security'):
             current_controller._check_security()
-        if self._is_exposed(current_controller, '_lookup'):
+
+        if hasattr(current_controller, '_lookup') and self._is_exposed(current_controller, '_lookup'):
             state._notfound_stack.append(('lookup', current_controller._lookup, remainder, None))
-        elif self._is_exposed(current_controller, 'lookup'):
+        elif hasattr(current_controller, 'lookup') and self._is_exposed(current_controller, 'lookup'):
             state._notfound_stack.append(('lookup', current_controller.lookup, remainder,
                                           'lookup method is deprecated, please replace with _lookup'))
-        if self._is_exposed(current_controller, '_default'):
+
+        if hasattr(current_controller, '_default') and self._is_exposed(current_controller, '_default'):
             state._notfound_stack.append(('default', current_controller._default, remainder, None))
-        elif self._is_exposed(current_controller, 'default'):
+        elif hasattr(current_controller, 'default') and self._is_exposed(current_controller, 'default'):
             state._notfound_stack.append(('default', current_controller.default, remainder,
                                           'default method is deprecated, please replace with _default'))
 

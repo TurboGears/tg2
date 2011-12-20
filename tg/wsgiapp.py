@@ -127,8 +127,9 @@ class TGApp(object):
         finally:
             # Help Python collect ram a bit faster by removing the reference
             # cycle that the thread local objects cause
-            if 'tg.locals' in environ:
-                del environ['tg.locals']
+            del environ['tg.locals']
+            if has_pylons and 'pylons.pylons' in environ:
+                del environ['pylons.pylons']
 
     def setup_app_env(self, environ, start_response):
         """Setup and register all the Pylons objects with the registry
@@ -258,6 +259,11 @@ class TGApp(object):
         module_name = controller.split('/')[-1]
         class_name = self.class_name_from_module_name(module_name) + 'Controller'
         mycontroller = getattr(sys.modules[full_module_name], class_name)
+
+        # If it's a class, instantiate it
+        if hasattr(mycontroller, '__bases__'):
+            mycontroller = mycontroller()
+
         self.controller_classes[controller] = mycontroller
         return mycontroller
 
@@ -270,10 +276,6 @@ class TGApp(object):
         """
         if not controller:
             return HTTPNotFound()(environ, start_response)
-
-        # If it's a class, instantiate it
-        if hasattr(controller, '__bases__'):
-            controller = controller()
 
         #Setup pylons compatibility before calling controller
         if has_pylons and self.pylons_compatible:

@@ -80,6 +80,7 @@ def _get_tg_vars():
     app_globals = tgl.app_globals
     translator = tgl.translator
     response = tgl.response
+    session = tgl.session
 
     try:
         h = conf['package'].lib.helpers
@@ -105,7 +106,7 @@ def _get_tg_vars():
         url = tg.url,
         # this will be None if no identity
         identity = req.environ.get('repoze.who.identity'),
-        session = tg.session,
+        session = session,
         locale = req.languages_best_match(),
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
@@ -123,6 +124,7 @@ def _get_tg_vars():
         config=conf,
         app_globals=app_globals,
         g=app_globals,
+        session=session,
         url = tg.url,
         helpers = h,
         h = h,
@@ -132,9 +134,6 @@ def _get_tg_vars():
         _=tg.i18n.ugettext,
         N_=tg.i18n.gettext_noop,
         )
-
-    if 'beaker.session' in req.environ:
-        root_vars['session'] = tg.session._current_obj()
 
     # Allow users to provide a callable that defines extra vars to be
     # added to the template namespace

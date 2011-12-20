@@ -16,10 +16,9 @@ from decorator import decorator
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
 from tg.paginate import Page
 from tg.configuration import config
-from tg import request, response
 from tg.controllers.util import abort
 from formencode import variabledecode
-from tg import tmpl_context
+from tg import tmpl_context, request, response
 from tg.util import partial
 
 from tg.util import Bunch
@@ -35,6 +34,7 @@ class Decoration(object):
         self.controller = controller
         self.engines = {}
         self.engines_keys = []
+        self.default_engine = None
         self.custom_engines = {}
         self.render_custom_format = None
         self.validation = None
@@ -95,6 +95,12 @@ class Decoration(object):
             content_type = '*/*'
         self.engines[content_type] = engine, template, exclude_names
 
+        #Avoid engine lookup if we have only one engine registered
+        if len(self.engines) == 1:
+            self.default_engine = content_type
+        else:
+            self.default_engine = None
+
         #this is a work-around to make text/html prominent in respect
         #to other common choices when they have the same weight for
         # paste.util.mimeparse.best_match.
@@ -123,14 +129,17 @@ class Decoration(object):
             content_type = "*/*"
         self.custom_engines[custom_format] = content_type, engine, template, exclude_names
 
-    def lookup_template_engine(self, request):
+    def lookup_template_engine(self, tgl):
         """Return the template engine data.
 
         Provides a convenience method to get the proper engine,
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers).
         """
-        if hasattr(request, 'response_type') and request.response_type in self.engines:
+        request = tgl.request
+        response = tgl.response
+
+        if request.response_type and request.response_type in self.engines:
             accept_types = request.response_type
         else:
             accept_types = request.headers.get('accept', '*/*')
@@ -143,7 +152,9 @@ class Decoration(object):
         if render_custom_format:
             content_type, engine, template, exclude_names = self.custom_engines[render_custom_format]
         else:
-            if self.engines:
+            if self.default_engine:
+                content_type = self.default_engine
+            elif self.engines:
                 content_type = best_match(self.engines_keys, accept_types)
             else:
                 content_type = 'text/html'

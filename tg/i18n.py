@@ -49,7 +49,7 @@ def ungettext(singular, plural, n):
 lazy_ungettext = lazify(ungettext)
 
 
-def _get_translator(lang, tg_locals=None, tg_config=None, **kwargs):
+def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     """Utility method to get a valid translator object from a language
     name"""
     if not lang:
@@ -58,8 +58,8 @@ def _get_translator(lang, tg_locals=None, tg_config=None, **kwargs):
     if tg_config:
         conf = tg_config
     else:
-        if tg_locals:
-            conf = tg_locals.config
+        if tgl:
+            conf = tgl.config
         else:
             conf = tg.config.current_conf()
 
@@ -125,7 +125,7 @@ def sanitize_language_code(lang):
     return lang
 
 
-def setup_i18n():
+def setup_i18n(tgl=None):
     """Set languages from the request header and the session.
 
     The session language(s) take priority over the request languages.
@@ -134,13 +134,15 @@ def setup_i18n():
     Should only be manually called if you override controllers function.
 
     """
-    tg_locals = tg.request.environ['tg.locals']
-    session_ = tg_locals.session
+    if not tgl:
+        tgl = tg.request.environ['tg.locals']
+
+    session_ = tgl.session
     if session_:
         session_existed = session_.accessed()
         # If session is available, we try to see if there are languages set
-        languages = session_.get(tg_locals.config.get('lang_session_key', 'tg_lang'))
-        if not session_existed and tg_locals.config.get('beaker.session.tg_avoid_touch'):
+        languages = session_.get(tgl.config.get('lang_session_key', 'tg_lang'))
+        if not session_existed and tgl.config.get('beaker.session.tg_avoid_touch'):
             session_.__dict__['_sess'] = None
 
         if languages:
@@ -150,11 +152,11 @@ def setup_i18n():
             languages = []
     else:
         languages = []
-    languages.extend(map(sanitize_language_code, tg_locals.request.languages_best_match()))
-    set_temporary_lang(languages, tg_locals=tg_locals)
+    languages.extend(map(sanitize_language_code, tgl.request.languages_best_match()))
+    set_temporary_lang(languages, tgl=tgl)
 
 
-def set_temporary_lang(languages, tg_locals=None):
+def set_temporary_lang(languages, tgl=None):
     """Set the current language(s) used for translations without touching
     the session language.
 
@@ -164,13 +166,13 @@ def set_temporary_lang(languages, tg_locals=None):
     """
     # the logging to the screen was removed because
     # the printing to the screen for every problem causes serious slow down.
-    if not tg_locals:
-        tg_locals = tg.request.environ['tg.locals']
+    if not tgl:
+        tgl = tg.request.environ['tg.locals']
 
     try:
-        translator = _get_translator(languages, tg_locals=tg_locals)
-        environ = tg_locals.request.environ
-        tg_locals.translator = translator
+        translator = _get_translator(languages, tgl=tgl)
+        environ = tgl.request.environ
+        tgl.translator = translator
         try:
             registry = environ['paste.registry']
             registry.replace(tg.translator, translator)
@@ -180,7 +182,7 @@ def set_temporary_lang(languages, tg_locals=None):
         pass
 
     try:
-        set_formencode_translation(languages, tg_locals=tg_locals)
+        set_formencode_translation(languages, tgl=tgl)
     except LanguageError:
         pass
 
@@ -192,28 +194,28 @@ def set_lang(languages, **kwargs):
     First lang will be used as main lang, others as fallbacks.
 
     """
-    tg_locals = tg.request.environ['tg.locals']
+    tgl = tg.request.environ['tg.locals']
 
-    set_temporary_lang(languages, tg_locals)
+    set_temporary_lang(languages, tgl)
 
-    if tg_locals.session:
-        tg_locals.session[tg_locals.config.get('lang_session_key', 'tg_lang')] = languages
-        tg_locals.session.save()
+    if tgl.session:
+        tgl.session[tgl.config.get('lang_session_key', 'tg_lang')] = languages
+        tgl.session.save()
 
 
 _localdir = formencode.api.get_localedir()
 
-def set_formencode_translation(languages, tg_locals=None):
+def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
-    if not tg_locals:
-        tg_locals = tg.request.environ['tg.locals']
+    if not tgl:
+        tgl = tg.request.environ['tg.locals']
 
     try:
         formencode_translation = translation(
             'FormEncode',languages=languages, localedir=_localdir)
     except IOError, error:
         raise LanguageError('IOError: %s' % error)
-    tg_locals.tmpl_context.formencode_translation = formencode_translation
+    tgl.tmpl_context.formencode_translation = formencode_translation
 
 
 __all__ = [
