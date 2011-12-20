@@ -96,7 +96,7 @@ class DecoratedController(object):
             controller_callable = tg_decoration.wrap_controller(tgl, controller)
 
             # call controller method
-            output = controller_callable(*remainder, **dict(params))
+            output = controller_callable(*remainder, **params)
 
         except formencode.api.Invalid, inv:
             controller, output = self._handle_validation_errors(controller,

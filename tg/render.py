@@ -339,36 +339,36 @@ class RenderGenshi(object):
 
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Genshi template."""
-        config = tg.config._current_obj()
-        response = tg.response._current_obj()
-
-        template_vars.update(self.genshi_functions)
-
-        # Gets document type from content type or from config options
-        doctype = kwargs.get('doctype')
-        if not doctype:
-            doctype = config.get('templating.genshi.doctype')
-            if not doctype:
-                method = kwargs.get('method') or config.get(
-                    'templating.genshi.method') or 'xhtml'
-                doctype = self.doctypes_for_methods.get(method)
-            doctypes = self.doctypes_for_content_type.get(response.content_type)
-            if doctypes and (not doctype or doctype not in doctypes):
-                doctype = doctypes[0]
-            kwargs['doctype'] = doctype
-
-        # Gets rendering method from content type or from config options
-        method = kwargs.get('method')
-        if not method:
-            method = config.get('templating.genshi.method')
-            if not method:
-                method = self.method_for_doctype(doctype)
-            methods = self.methods_for_content_type.get(response.content_type)
-            if methods and (not method or method not in methods):
-                method = methods[0]
-            kwargs['method'] = method
-
         def render_template():
+            config = tg.config._current_obj()
+            response = tg.response._current_obj()
+
+            template_vars.update(self.genshi_functions)
+
+            # Gets document type from content type or from config options
+            doctype = kwargs.get('doctype')
+            if not doctype:
+                doctype = config.get('templating.genshi.doctype')
+                if not doctype:
+                    method = kwargs.get('method') or config.get(
+                        'templating.genshi.method') or 'xhtml'
+                    doctype = self.doctypes_for_methods.get(method)
+                doctypes = self.doctypes_for_content_type.get(response.content_type)
+                if doctypes and (not doctype or doctype not in doctypes):
+                    doctype = doctypes[0]
+                kwargs['doctype'] = doctype
+
+            # Gets rendering method from content type or from config options
+            method = kwargs.get('method')
+            if not method:
+                method = config.get('templating.genshi.method')
+                if not method:
+                    method = self.method_for_doctype(doctype)
+                methods = self.methods_for_content_type.get(response.content_type)
+                if methods and (not method or method not in methods):
+                    method = methods[0]
+                kwargs['method'] = method
+
             template = self.load_template(template_name)
             return literal(template.generate(**template_vars).render(
                     doctype=doctype, method=method, encoding=None))

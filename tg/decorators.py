@@ -139,8 +139,8 @@ class Decoration(object):
         request = tgl.request
         response = tgl.response
 
-        if request.response_type and request.response_type in self.engines:
-            accept_types = request.response_type
+        if request._response_type and request._response_type in self.engines:
+            accept_types = request._response_type
         else:
             accept_types = request.headers.get('accept', '*/*')
 
@@ -179,7 +179,7 @@ class Decoration(object):
                                               content_type in ('application/xhtml+xml',
                                                                'application/xml',
                                                                'application/json')):
-            content_type += '; charset=utf-8'
+            content_type = content_type + '; charset=utf-8'
 
         return content_type, engine, template, exclude_names
 
@@ -593,7 +593,7 @@ def without_trailing_slash(remainder, params):
     In the above example http://localhost:8080/sample/ redirects to http://localhost:8080/sample
     In addition, the URL http://localhost:8080/sample/1/ redirects to http://localhost:8080/sample/1
     """
-    if request.method == 'GET' and request.path.endswith('/') and not(request.response_type) and len(request.params)==0:
+    if request.method == 'GET' and request.path.endswith('/') and not(request._response_type) and len(request.params)==0:
         from tg.controllers import redirect
         redirect(request.url[:-1])
 
@@ -619,7 +619,7 @@ def with_trailing_slash(remainder, params):
     """
     if (request.method == 'GET'
         and not(request.path.endswith('/'))
-        and not(request.response_type)
+        and not(request._response_type)
         and len(request.params)==0):
         from tg.controllers import redirect
         redirect(request.url+'/')

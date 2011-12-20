@@ -72,10 +72,8 @@ class RestDispatcher(ObjectDispatcher):
                 break
         if method is None:
             return
-        args = self._get_argspec(getattr(current_controller, method))
-        fixed_args = args[0][1:]
+        fixed_args, var_args, kw_args = self._get_argspec(getattr(current_controller, method))
         fixed_arg_length = len(fixed_args)
-        var_args = args[1]
         if var_args:
             for i, item in enumerate(remainder):
                 if hasattr(current_controller, item) and self._is_controller(current_controller, item):

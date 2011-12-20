@@ -102,15 +102,21 @@ class Dispatcher(object):
         try:
             argspec = cached_argspecs[func.im_func]
         except KeyError:
-            argspec = cached_argspecs[func.im_func] = getargspec(func)
+            spec = getargspec(func)
+            argvals = spec[3]
+
+            # this is a work around for a crappy api choice in getargspec
+            if argvals is None:
+                argvals = []
+
+            argspec = cached_argspecs[func.im_func] = (spec[0][1:], spec[1], argvals)
         return argspec
 
     def _get_params_with_argspec(self, func, params, remainder):
-        params = params.copy()
-        argspec = self._get_argspec(func)
-        argvars = argspec[0][1:]
+        argvars, var_args, argvals = self._get_argspec(func)
 
         if argvars and remainder:
+            params = params.copy()
             remainder_len = len(remainder)
             for i, var in enumerate(argvars):
                 if i >= remainder_len:
@@ -124,18 +130,12 @@ class Dispatcher(object):
            Returns: params, remainder"""
 
         # figure out which of the vars in the argspec are required
-        argspec = self._get_argspec(func)
-        argvars = argspec[0][1:]
+        argvars, var_args, argvals = self._get_argspec(func)
 
         # if there are no required variables, or the remainder is none, we
         # have nothing to do
         if not argvars or not remainder:
             return params, remainder
-
-        # this is a work around for a crappy api choice in getargspec
-        argvals = argspec[3]
-        if argvals is None:
-            argvals = []
 
         required_vars = argvars
         optional_vars = []
@@ -149,8 +149,9 @@ class Dispatcher(object):
         # replace the existing required variables with the values that come in
         # from params these could be the parameters that come off of validation.
         remainder = list(remainder)
+        remainder_len = len(remainder)
         for i, var in enumerate(required_vars):
-            if i < len(remainder):
+            if i < remainder_len:
                 remainder[i] = params[var]
             elif params.get(var):
                 remainder.append(params[var])
@@ -181,19 +182,18 @@ class Dispatcher(object):
             url as string
         """
         req = thread_locals.request
-        req.response_type = None
 
         if not thread_locals.config.get('disable_request_extensions', False):
-            req.response_ext = None
+            #req.response_ext = None
             if url_path and '.' in url_path[-1]:
                 last_remainder = url_path[-1]
                 mime_type, encoding = mimetypes.guess_type(last_remainder)
                 if mime_type:
                     extension_spot = last_remainder.rfind('.')
-                    extension = last_remainder[extension_spot:]
+                    #extension = last_remainder[extension_spot:]
                     url_path[-1] = last_remainder[:extension_spot]
-                    req.response_type = mime_type
-                    req.response_ext = extension
+                    req._response_type = mime_type
+                    #req.response_ext = extension
 
         params = req.args_params
 
@@ -397,10 +397,8 @@ class ObjectDispatcher(Dispatcher):
 
         It is very likely that this method would go into ObjectDispatch in the future.
         """
-        argspec = self._get_argspec(method)
+        argvars, ovar_args, argvals = self._get_argspec(method)
         #skip self,
-        argvars = argspec[0][1:]
-        argvals = argspec[3]
 
         required_vars = argvars
         if argvals:
@@ -422,7 +420,7 @@ class ObjectDispatcher(Dispatcher):
             if var in params:
                 required_vars.pop(0)
             else:
-                break;
+                break
 
         var_in_params = 0
         for var in argvars:
@@ -431,11 +429,11 @@ class ObjectDispatcher(Dispatcher):
 
         #make sure all of the non-optional-vars are there
         if not required_vars:
-            var_args = argspec[0][1:]
+            var_args = argvars
             #there are more args in the remainder than are available in the argspec
-            if len(var_args)<len(remainder) and not argspec[1]:
+            if len(var_args)<len(remainder) and not ovar_args:
                 return False
-            defaults = argspec[3] or []
+            defaults = argvals or []
             var_args = var_args[len(remainder):-len(defaults)]
             for arg in var_args:
                 if arg not in state.params:

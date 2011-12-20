@@ -41,6 +41,14 @@ class Request(WebObRequest):
     compatibility with paste.wsgiwrappers.WSGIRequest.
 
     """
+
+    def __init__(self, *args, **kw):
+        super(Request, self).__init__(*args, **kw)
+        self.__dict__.update({'_response_type': None,
+                              '_render_custom_format':{},
+                              '_override_mapping':{},
+                              '_args_params_cache':None})
+
     def determine_browser_charset(self):
         """Legacy method to return the
         :attr:`webob.Request.accept_charset`"""
@@ -109,7 +117,7 @@ class Request(WebObRequest):
         if old_webob:
             return self.params.mixed()
         
-        if not hasattr(self, '_args_params_cache'):
+        if not self._args_params_cache:
             self._args_params_cache = dict([(str(n), v) for n,v in self.params.mixed().iteritems()])
         return self._args_params_cache
 
