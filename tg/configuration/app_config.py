@@ -261,7 +261,9 @@ class AppConfig(Bunch):
         # Load conf dict into the global config object
         config.update(conf)
 
-        self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
+        if 'auto_reload_templates' in config:
+            self.auto_reload_templates = asbool(config['auto_reload_templates'])
+
         config['application_root_module'] = self.get_root_module()
 
         self.localedir = os.path.join(conf['paths']['root'], 'i18n')
