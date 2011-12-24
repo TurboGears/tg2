@@ -79,10 +79,6 @@ class DecoratedController(object):
 
             validate_params = self._get_params_with_argspec(controller, params, remainder)
 
-            for ignore in tgl.config.get('ignore_parameters', []):
-                if params.get(ignore):
-                    del params[ignore]
-
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 

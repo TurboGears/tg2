@@ -1,6 +1,7 @@
 import hmac, base64, urllib, binascii, re
 from paste.registry import StackedObjectProxy
 from paste.config import DispatchingConfig
+from tg.caching import cached_property
 
 try:
     import cPickle as pickle
@@ -42,13 +43,6 @@ class Request(WebObRequest):
 
     """
 
-    def __init__(self, *args, **kw):
-        super(Request, self).__init__(*args, **kw)
-        self.__dict__.update({'_response_type': None,
-                              '_render_custom_format':{},
-                              '_override_mapping':{},
-                              '_args_params_cache':None})
-
     def determine_browser_charset(self):
         """Legacy method to return the
         :attr:`webob.Request.accept_charset`"""
@@ -70,15 +64,35 @@ class Request(WebObRequest):
         return items
 
     @property
+    def controller_state(self):
+        return self._controller_state
+
+    @property
     def fast_path(self):
-        s = ''.join((self.script_name, self.path_info))
+        s = self.path_info
         if not _must_quote.search(s):
             return s
         return ''.join(map(_faster_safe.get, s))
 
+    @cached_property
+    def plain_languages(self):
+        return self.languages_best_match()
+
     @property
     def languages(self):
-        return self.languages_best_match(self.language)
+        return self.languages_best_match(self._language)
+
+    @property
+    def language(self):
+        return self._language
+
+    @language.setter
+    def language(self, value):
+        self._language = value
+
+    @property
+    def response_type(self):
+        return self._response_type
 
     def match_accept(self, mimetypes):
         return self.accept.first_match(mimetypes)
@@ -112,14 +126,12 @@ class Request(WebObRequest):
         
         return self.cookies
 
-    @property
+    @cached_property
     def args_params(self):
         if old_webob:
             return self.params.mixed()
-        
-        if not self._args_params_cache:
-            self._args_params_cache = dict([(str(n), v) for n,v in self.params.mixed().iteritems()])
-        return self._args_params_cache
+        else:
+            return dict([(str(n), v) for n,v in self.params.mixed().iteritems()])
 
 class Response(WebObResponse):
     """WebOb Response subclass

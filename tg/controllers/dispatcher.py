@@ -27,7 +27,7 @@ from tg.decorators import cached_property
 HTTPNotFound = HTTPNotFound().exception
 
 def dispatched_controller():
-    state = tg.request.controller_state
+    state = tg.request._controller_state
     for location, cont in reversed(state.controller_path):
         if cont.mount_point:
             return cont
@@ -211,7 +211,7 @@ class Dispatcher(object):
                 url_path, state.remainder, state.routing_args)
 
         #save the controller state for possible use within the controller methods
-        req.controller_state = state
+        req._controller_state = state
 
         return state.method, state.controller, state.remainder, params
 
@@ -236,12 +236,7 @@ class Dispatcher(object):
         if py_config.get('i18n_enabled', True):
             setup_i18n(thread_locals)
 
-        script_name = py_request.environ.get('SCRIPT_NAME', '')
-        url_path = py_request.fast_path
-        if url_path.startswith(script_name):
-            url_path = url_path[len(script_name):]
-        url_path = url_path.split('/')[1:]
-
+        url_path = py_request.fast_path.split('/')[1:]
         if url_path[-1] == '':
             url_path.pop()
 

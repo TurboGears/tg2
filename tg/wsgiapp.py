@@ -80,7 +80,8 @@ class TGApp(object):
                                             charset='utf-8', errors='strict',
                                             headers={'Cache-Control': 'no-cache',
                                                      'Pragma': 'no-cache',
-                                                     'Content-Type': None}))
+                                                     'Content-Type': None,
+                                                     'Content-Length': '0'}))
 
     def setup_pylons_compatibility(self, environ, controller):
         """Updates environ to be backward compatible with Pylons"""
@@ -142,16 +143,19 @@ class TGApp(object):
 
         # Setup the basic global objects
         req_options = self.req_options
-        req = Request(environ, charset=req_options['charset'],
+        req = Request(environ,
+                      charset=req_options['charset'],
                       unicode_errors=req_options['errors'],
                       decode_param_names=req_options['decode_param_names'])
-        req.language = req_options['language']
+        req_props = req.__dict__
+        req_props['_language'] = req_options['language']
+        req_props['_response_type'] = None
 
         resp_options = self.resp_options
         response = Response(
             content_type=resp_options['content_type'],
-            charset=resp_options['charset'])
-        response.headers.update(resp_options['headers'])
+            charset=resp_options['charset'],
+            headers=resp_options['headers'])
 
         conf = self.config
 

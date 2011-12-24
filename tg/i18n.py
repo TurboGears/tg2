@@ -152,7 +152,7 @@ def setup_i18n(tgl=None):
             languages = []
     else:
         languages = []
-    languages.extend(map(sanitize_language_code, tgl.request.languages_best_match()))
+    languages.extend(map(sanitize_language_code, tgl.request.plain_languages))
     set_temporary_lang(languages, tgl=tgl)
 
 

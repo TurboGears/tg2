@@ -107,7 +107,7 @@ def _get_tg_vars():
         # this will be None if no identity
         identity = req.environ.get('repoze.who.identity'),
         session = session,
-        locale = req.languages_best_match(),
+        locale = req.plain_languages,
         errors = getattr(tmpl_context, "form_errors", {}),
         inputs = getattr(tmpl_context, "form_values", {}),
         request = req,

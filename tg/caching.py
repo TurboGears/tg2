@@ -3,6 +3,21 @@ import tg, inspect, time
 from decorator import decorator
 from paste.deploy.converters import asbool
 
+class cached_property(object):
+    def __init__(self, func):
+        self.__name__ = func.__name__
+        self.__module__ = func.__module__
+        self.__doc__ = func.__doc__
+        self.func = func
+
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self
+
+        value = self.func(obj)
+        obj.__dict__[self.__name__] = value
+        return value
+
 def beaker_cache(key="cache_default", expire="never", type=None,
                  query_args=False,
                  cache_headers=('content-type', 'content-length'),
