@@ -349,6 +349,9 @@ class AppConfig(Bunch):
         g.dotted_filename_finder = DottedFileNameFinder()
         config['tg.app_globals'] = g
 
+        if config.get('tg.pylons_compatible', True):
+            config['pylons.app_globals'] = g
+
     def setup_sa_auth_backend(self):
         """This method adds sa_auth information to the config."""
 
