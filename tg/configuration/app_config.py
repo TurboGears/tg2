@@ -690,10 +690,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
-        # Predicates booleanized:
-        from repoze.what.predicates import Predicate
-        Predicate.__nonzero__ = lambda self: self.is_met(tg.request.environ)
-
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
             self.sa_auth['log_stream'] = logging.getLogger('auth')
