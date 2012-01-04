@@ -63,6 +63,7 @@ class TGApp(object):
         self.package_name = config['package'].__name__
 
         self.controller_classes = {}
+        self.controller_instances = {}
         self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
@@ -227,7 +228,7 @@ class TGApp(object):
         if not controller:
             return None
 
-        return self.find_controller(controller)
+        return self.get_controller_instance(controller)
 
     def class_name_from_module_name(self, module_name):
         words = module_name.replace('-', '_').split('_')
@@ -264,12 +265,23 @@ class TGApp(object):
         class_name = self.class_name_from_module_name(module_name) + 'Controller'
         mycontroller = getattr(sys.modules[full_module_name], class_name)
 
+        self.controller_classes[controller] = mycontroller
+        return mycontroller
+
+    def get_controller_instance(self, controller):
+        # Check to see if we've cached the instance for this name
+        if controller in self.controller_instances:
+            return self.controller_instances[controller]
+
+        mycontroller = self.find_controller(controller)
+
         # If it's a class, instantiate it
         if hasattr(mycontroller, '__bases__'):
             mycontroller = mycontroller()
 
-        self.controller_classes[controller] = mycontroller
+        self.controller_instances[controller] = mycontroller
         return mycontroller
+
 
     def dispatch(self, controller, environ, start_response):
         """Dispatches to a controller, will instantiate the controller
