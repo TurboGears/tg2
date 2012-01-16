@@ -80,7 +80,7 @@ class SubController2(object):
         return "hello list"
 
     @expose()
-    def lookup(self, *args):
+    def _lookup(self, *args):
         lookup = LookupController()
         return lookup, args
 

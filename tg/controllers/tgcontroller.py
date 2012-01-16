@@ -1,10 +1,11 @@
 """
 This module contains the main TurboGears Controller implementation.
 """
-from dispatcher          import ObjectDispatcher
+from dispatcher import CoreDispatcher
+from crank.objectdispatcher import ObjectDispatcher
 from decoratedcontroller import DecoratedController
 
-class TGController(DecoratedController, ObjectDispatcher):
+class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
     """
     TGController is a specialized form of ObjectDispatchController that forms the
     basis of standard TurboGears controllers.  The "Root" controller of a standard
