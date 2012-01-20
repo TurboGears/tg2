@@ -189,15 +189,8 @@ class TGApp(object):
 
         #Register Global objects
         registry = environ['paste.registry']
-        registry.register(request_local.response, response)
-        registry.register(request_local.request, req)
-        registry.register(request_local.app_globals, app_globals)
         registry.register(request_local.config, conf)
-        registry.register(request_local.tmpl_context, tmpl_context)
-        registry.register(request_local.translator, translator)
-        registry.register(request_local.session, session)
-        registry.register(request_local.cache, cache)
-        registry.register(request_local.url, url)
+        registry.register(request_local.context, locals)
 
         if 'paste.testing_variables' in environ:
             testenv = environ['paste.testing_variables']

@@ -172,13 +172,81 @@ class Response(WebObResponse):
         self.set_cookie(name, sig + base64.encodestring(pickled), **kwargs)
 
 config = DispatchingConfig()
-app_globals = StackedObjectProxy(name="app_globals")
-cache = StackedObjectProxy(name="cache")
-request = StackedObjectProxy(name="request")
-response = StackedObjectProxy(name="response")
-session = StackedObjectProxy(name="session")
-tmpl_context = StackedObjectProxy(name="tmpl_context or C")
-url = StackedObjectProxy(name="url")
-translator = StackedObjectProxy(name="translator")
+context = StackedObjectProxy(name="context")
+
+class TurboGearsContextMember(object):
+    """Member of the TurboGears request context.
+
+    Mostly inspired by StackedObjectProxy it
+    provides access to turbogears context members
+    like request, response, template context and so on
+
+    """
+
+    def __init__(self, name):
+        self.__dict__['name'] = name
+
+    def _current_obj(self):
+        return getattr(context, self.name)
+
+    def __dir__(self):
+        dir_list = dir(self.__class__) + self.__dict__.keys()
+        try:
+            dir_list.extend(dir(self._current_obj()))
+        except TypeError:
+            pass
+        dir_list.sort()
+        return dir_list
+
+    def __getattr__(self, attr):
+        return getattr(self._current_obj(), attr)
+
+    def __setattr__(self, attr, value):
+        setattr(self._current_obj(), attr, value)
+
+    def __delattr__(self, name):
+        delattr(self._current_obj(), name)
+
+    def __getitem__(self, key):
+        return self._current_obj()[key]
+
+    def __setitem__(self, key, value):
+        self._current_obj()[key] = value
+
+    def __delitem__(self, key):
+        del self._current_obj()[key]
+
+    def __call__(self, *args, **kw):
+        return self._current_obj()(*args, **kw)
+
+    def __repr__(self):
+        try:
+            return repr(self._current_obj())
+        except (TypeError, AttributeError):
+            return '<%s.%s object at 0x%x>' % (self.__class__.__module__,
+                                               self.__class__.__name__,
+                                               id(self))
+
+    def __iter__(self):
+        return iter(self._current_obj())
+
+    def __len__(self):
+        return len(self._current_obj())
+
+    def __contains__(self, key):
+        return key in self._current_obj()
+
+    def __nonzero__(self):
+        return bool(self._current_obj())
+
+
+request = TurboGearsContextMember(name="request")
+app_globals = TurboGearsContextMember(name="app_globals")
+cache = TurboGearsContextMember(name="cache")
+response = TurboGearsContextMember(name="response")
+session = TurboGearsContextMember(name="session")
+tmpl_context = TurboGearsContextMember(name="tmpl_context")
+url = TurboGearsContextMember(name="url")
+translator = TurboGearsContextMember(name="translator")
 
 __all__ = ['app_globals', 'request', 'response', 'tmpl_context', 'session', 'cache', 'translator', 'url', 'config']

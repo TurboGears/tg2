@@ -40,7 +40,7 @@ class DecoratedController(object):
         if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
             return method.decoration.exposed
 
-    def _call(self, tgl, controller, params, remainder=None):
+    def _call(self, controller, params, remainder=None, tgl=None):
         """
         _call is called by _perform_call in Pylons' WSGIController.
 
@@ -62,6 +62,8 @@ class DecoratedController(object):
         rendering.
 
         """
+        if tgl is None:
+            tgl = tg.request['environ']['thread_locals']
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would

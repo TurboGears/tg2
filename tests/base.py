@@ -18,7 +18,7 @@ from tg import tmpl_context, request_local
 from tests.test_stack import app_from_config, TestConfig
 from routes import URLGenerator, Mapper
 
-from tg.wsgiapp import ContextObj, TGApp
+from tg.wsgiapp import ContextObj, TGApp, RequestLocals
 from tg.controllers import TGController
 
 from test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
@@ -81,20 +81,24 @@ def create_request(path, environ=None):
     reg = environ.setdefault('paste.registry', Registry())
     reg.prepare()
 
-    # setup tg.request to point to our Registry
-    reg.register(request_local.request, req)
+    # Setup turbogears context with request, url and tmpl_context
+    tgl = RequestLocals()
+    tgl.tmpl_context = ContextObj()
+    tgl.request = req
+    tgl.url = URLGenerator(default_map, environ)
 
-    # setup tmpl context
-    tmpl_context._push_object(ContextObj())
-    request_local.url._push_object(URLGenerator(default_map, environ))
+    request_local.context._push_object(tgl)
+
     return req
 
 class TestWSGIController(TestCase):
     def setUp(self):
         tmpl_options = {}
         tmpl_options['genshi.search_path'] = ['tests']
-        self._ctx = ContextObj()
-        tmpl_context._push_object(self._ctx)
+
+        self._tgl = RequestLocals()
+        self._tgl.tmpl_context = ContextObj()
+        request_local.context._push_object(self._tgl)
 
         warnings.simplefilter("ignore")
         tg.config.push_process_config(default_config)
@@ -102,7 +106,7 @@ class TestWSGIController(TestCase):
         setup_session_dir()
 
     def tearDown(self):
-        tmpl_context._pop_object(self._ctx)
+        request_local.context._pop_object(self._tgl)
         tg.config.pop_process_config()
         teardown_session_dir()
 

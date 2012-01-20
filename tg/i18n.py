@@ -135,7 +135,7 @@ def setup_i18n(tgl=None):
 
     """
     if not tgl:
-        tgl = tg.request.environ['tg.locals']
+        tgl = tg.request_local.context._current_obj()
 
     session_ = tgl.session
     if session_:
@@ -167,15 +167,14 @@ def set_temporary_lang(languages, tgl=None):
     # the logging to the screen was removed because
     # the printing to the screen for every problem causes serious slow down.
     if not tgl:
-        tgl = tg.request.environ['tg.locals']
+        tgl = tg.request_local.context._current_obj()
 
     try:
         translator = _get_translator(languages, tgl=tgl)
         environ = tgl.request.environ
         tgl.translator = translator
         try:
-            registry = environ['paste.registry']
-            registry.replace(tg.translator, translator)
+            tgl.translator = translator
         except KeyError:
             pass
     except LanguageError:
@@ -194,7 +193,7 @@ def set_lang(languages, **kwargs):
     First lang will be used as main lang, others as fallbacks.
 
     """
-    tgl = tg.request.environ['tg.locals']
+    tgl = tg.request_local.context._current_obj()
 
     set_temporary_lang(languages, tgl)
 
@@ -208,7 +207,7 @@ _localdir = formencode.api.get_localedir()
 def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
     if not tgl:
-        tgl = tg.request.environ['tg.locals']
+        tgl = tg.request_local.context._current_obj()
 
     try:
         formencode_translation = translation(

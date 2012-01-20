@@ -40,7 +40,7 @@ class CoreDispatcher(object):
     """
     _use_lax_params = True
 
-    def _call(self, thread_locals, controller, params, remainder=None):
+    def _call(self, tgl, controller, params, remainder=None):
         """
         Override this function to define how your controller method should be called.
         """
@@ -115,7 +115,7 @@ class CoreDispatcher(object):
 
         self._setup_wsgi_script_name(url_path, remainder, params)
 
-        r = self._call(thread_locals, func, params, remainder=remainder)
+        r = self._call(func, params, remainder=remainder, tgl=thread_locals)
 
         if hasattr(controller, '__after__'):
             warn("this functionality is going to removed in the next minor version,"
@@ -169,8 +169,7 @@ class CoreDispatcher(object):
                     else:
                         response.headers.setdefault(name, value)
                 try:
-                    registry = environ['paste.registry']
-                    registry.replace(tg.response, response)
+                    thread_locals.response = response
                 except KeyError:
                     # Ignore the case when someone removes the registry
                     pass

@@ -73,7 +73,7 @@ def _get_tg_vars():
 
     """
 
-    tgl = tg.request.environ['tg.locals']
+    tgl = tg.request_local.context._current_obj()
     req = tgl.request
     conf = tgl.config
     tmpl_context = tgl.tmpl_context
@@ -340,8 +340,9 @@ class RenderGenshi(object):
     def __call__(self, template_name, template_vars, **kwargs):
         """Render the template_vars with the Genshi template."""
         def render_template():
-            config = tg.config._current_obj()
-            response = tg.response._current_obj()
+            tgl = tg.request_local.context._current_obj()
+            config = tgl.config
+            response = tgl.response
 
             template_vars.update(self.genshi_functions)
 
