@@ -26,6 +26,7 @@ from tg.render import render as tg_render
 from tg.decorators import expose
 from tg.flash import flash
 from tg.jsonify import is_saobject, JsonEncodeError
+from crank.util import get_params_with_argspec, remove_argspec_params_from_params
 
 from util import pylons_formencode_gettext
 
@@ -90,7 +91,7 @@ class DecoratedController(object):
 
             tg_decoration.run_hooks('before_validate', remainder, params)
 
-            validate_params = self._get_params_with_argspec(controller, params, remainder)
+            validate_params = get_params_with_argspec(controller, params, remainder)
 
             for ignore in config.get('ignore_parameters', []):
                 if params.get(ignore):
@@ -103,7 +104,7 @@ class DecoratedController(object):
 
             tg_decoration.run_hooks('before_call', remainder, params)
 
-            params, remainder = self._remove_argspec_params_from_params(controller, params, remainder)
+            params, remainder = remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
             controller_callable = tg_decoration.wrap_controller(controller)

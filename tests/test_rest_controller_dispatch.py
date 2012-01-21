@@ -45,7 +45,7 @@ class LookupController(TGController):
 class DeprecatedLookupController(TGController):
 
     @expose()
-    def lookup(self, a, *args):
+    def _lookup(self, a, *args):
         return LookupHelper(a), args
 
 
@@ -253,12 +253,12 @@ class ExtraRestController(RestController):
     def post_delete(self, nr):
         return "rest post delete %s" % nr
 
-    class sub(TGController):
-
+    class SubClass(TGController):
         @expose()
         def index(self):
             return "rest sub index"
 
+    sub = SubClass()
     subrest = SubRestController()
     optsubrest = OptionalArgumentRestController()
     reqsubrest = RequiredArgumentRestController()

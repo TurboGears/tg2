@@ -242,7 +242,7 @@ class DefaultWithArgsController(TGController):
 class DeprecatedDefaultWithArgsController(TGController):
 
     @expose()
-    def default(self, a, b=None, **kw):
+    def _default(self, a, b=None, **kw):
         return "deprecated default with args %s %s" % (a, b)
 
 

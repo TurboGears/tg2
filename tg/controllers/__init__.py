@@ -1,4 +1,4 @@
-from dispatcher          import ObjectDispatcher
+from dispatcher          import CoreDispatcher
 from decoratedcontroller import DecoratedController, CUSTOM_CONTENT_TYPE
 from wsgiappcontroller   import WSGIAppController
 from tgcontroller        import TGController
