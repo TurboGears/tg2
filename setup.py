@@ -54,6 +54,7 @@ setup(
         'WebFlash >= 0.1a8',
         'WebError >= 0.10.1',
         'Babel',
+        'crank'
     ],
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
