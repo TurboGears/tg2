@@ -10,7 +10,7 @@ except ImportError:
 from webhelpers.html import literal
 
 import tg
-from tg.configuration import Bunch
+from tg.util import Bunch
 
 from webhelpers.html import literal
 

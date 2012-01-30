@@ -23,16 +23,9 @@ from formencode import variabledecode
 from tg import tmpl_context
 from tg.util import partial
 
-try:
-    from repoze.what.plugins.pylonshq import ActionProtector
-    from repoze.what.plugins.pylonshq.protectors import _BaseProtectionDecorator
-except ImportError:
-    class ActionProtector(object):
-        pass
-    class _BaseProtectionDecorator(object):
-        pass
+from repoze.what.predicates import NotAuthorizedError
 
-from tg.configuration import Bunch
+from tg.util import Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
 
@@ -618,9 +611,27 @@ def with_trailing_slash(remainder, params):
 #{ Authorization decorators
 
 
-class require(ActionProtector):
+class _BaseProtectionDecorator(object):
+    default_denial_handler = None
+
+    def __init__(self, predicate, denial_handler=None):
+        """
+        Make :mod:`repoze.what` verify that the predicate is met.
+
+        :param predicate: A :mod:`repoze.what` predicate.
+        :param denial_handler: The callable to be run if authorization is
+            denied (overrides :attr:`default_denial_handler` if defined).
+
+        If called, ``denial_handler`` will be passed a positional argument
+        which represents a message on why authorization was denied.
+
+        """
+        self.predicate = predicate
+        self.denial_handler = denial_handler or self.default_denial_handler
+
+class require(_BaseProtectionDecorator):
     """
-    TurboGears-specific repoze.what-pylons action protector.
+    TurboGears-specific repoze.what action protector.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
@@ -629,9 +640,30 @@ class require(ActionProtector):
     See :class:`allow_only` for controller-wide authorization.
 
     """
+    def __call__(self, action_):
+        return decorator(self.wrap_action, action_)
+
+    def wrap_action(self, action_, *args, **kwargs):
+        req = request._current_obj()
+
+        try:
+            self.predicate.check_authorization(req.environ)
+        except NotAuthorizedError, e:
+            reason = unicode(e)
+            if req.environ.get('repoze.who.identity'):
+                # The user is authenticated.
+                code = 403
+            else:
+                # The user is not authenticated.
+                code = 401
+            if self.denial_handler:
+                response.status = code
+                return self.denial_handler(reason)
+            abort(code, comment=reason)
+        return action_(*args, **kwargs)
 
     def default_denial_handler(self, reason):
-        """Authorization denial handler for repoze.what-pylons protectors."""
+        """Authorization denial handler for repoze.what protectors."""
         if response.status_int == 401:
             status = 'warning'
         else:
@@ -643,7 +675,7 @@ class require(ActionProtector):
 
 class allow_only(_BaseProtectionDecorator):
     """
-    TurboGears-specific repoze.what-pylons controller protector.
+    TurboGears-specific repoze.what controller protector.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the

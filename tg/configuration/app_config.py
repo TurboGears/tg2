@@ -700,7 +700,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 raise TGConfigError(msg)
 
         if self.auth_backend == "sqlalchemy":
-            from repoze.what.plugins.quickstart import setup_sql_auth
+            from sqlauth_config import setup_sql_auth
             app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
         elif self.auth_backend == "ming":
             from tgming import setup_ming_auth
