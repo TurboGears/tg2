@@ -129,6 +129,18 @@ class RootController(TGController):
     def jinja_inherits(self):
         return {}
 
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_noop')
+    def jinja_dotted(self):
+        return {}
+
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_inherits_dotted')
+    def jinja_inherits_dotted(self):
+        return {}
+
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_inherits')
+    def jinja_inherits_mixed(self):
+        return {}
+
     @expose('jinja:jinja_extensions.html')
     def jinja_extensions(self):
         test_autoescape_on = "<b>Test Autoescape On</b>"
