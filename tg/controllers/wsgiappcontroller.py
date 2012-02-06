@@ -2,8 +2,8 @@
 """
 """
 import tg
-from tgcontroller import TGController
-from util import redirect
+from tg.controllers.tgcontroller import TGController
+from tg.controllers.util import redirect
 from tg.decorators import expose
 
 class WSGIAppController(TGController):

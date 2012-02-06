@@ -5,17 +5,24 @@ call the methods can be expressed using expose, validate, and other
 decorators to effect a rendered page.
 """
 
-from urllib import url2pathname
+from tg.compat import url_url2pathname
 import inspect
-import formencode
 import tg
-from tg.controllers.util import abort
+from tg.controllers.util import abort, pylons_formencode_gettext
 
 try:
     from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
 except ImportError:
     class WhatNotAuthorizedError(Exception): pass
     def not_anonymous(): pass
+
+try:
+    import formencode
+    FormEncodeInvalid = formencode.api.Invalid
+    FormEncodeSchema = formencode.Schema
+except ImportError:
+    class FormEncodeInvalid(Exception): pass
+    class FormEncodeSchema(object): pass
 
 # demand load tw (ToscaWidets) if needed
 tw = None
@@ -25,8 +32,6 @@ from tg.decorators import expose
 from tg.flash import flash
 from tg.jsonify import is_saobject, JsonEncodeError
 from crank.util import get_params_with_argspec, remove_argspec_params_from_params
-
-from util import pylons_formencode_gettext
 
 class NotAuthorizedError(Exception): pass
 
@@ -97,11 +102,11 @@ class DecoratedController(object):
             # call controller method
             output = controller_callable(*remainder, **params)
 
-        except formencode.api.Invalid, inv:
+        except FormEncodeInvalid as inv:
             controller, output = self._handle_validation_errors(controller,
                                                                 remainder,
                                                                 params, inv)
-        except Exception, e:
+        except Exception as e:
             if tgl.config.get('use_toscawidgets2'):
                 from tw2.core import ValidationError
                 if isinstance(e, ValidationError):
@@ -172,7 +177,7 @@ class DecoratedController(object):
                     new_params[field] = validator.to_python(params.get(field),
                             state)
                 # catch individual validation errors into the errors dictionary
-                except formencode.api.Invalid, inv:
+                except FormEncodeInvalid as inv:
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -183,11 +188,11 @@ class DecoratedController(object):
             # If there are errors, create a compound validation error based on
             # the errors dictionary, and raise it as an exception
             if errors:
-                raise formencode.api.Invalid(
+                raise FormEncodeInvalid(
                     formencode.schema.format_compound_error(errors),
                     params, None, error_dict=errors)
 
-        elif isinstance(validation.validators, formencode.Schema):
+        elif isinstance(validation.validators, FormEncodeSchema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
             new_params = validation.validators.to_python(params, state)
@@ -340,7 +345,7 @@ class DecoratedController(object):
             return True
         try:
             predicate.check_authorization(tg.request.environ)
-        except WhatNotAuthorizedError, e:
+        except WhatNotAuthorizedError as e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still
@@ -357,7 +362,7 @@ class DecoratedController(object):
             tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-        except NotAuthorizedError, e:
+        except NotAuthorizedError as e:
             reason = getattr(e, 'msg', 'You are not Authorized to access this Resource')
             code   = getattr(e, 'code', 401)
             status = getattr(e, 'status', 'error')

@@ -6,20 +6,28 @@ import logging
 import warnings
 from copy import copy, deepcopy
 import mimetypes
-from UserDict import DictMixin
-from webhelpers.mimehelper import MIMETypes
+try:
+    from UserDict import DictMixin
+except:
+    from collections import MutableMapping as DictMixin
+
+try:
+    from webhelpers.mimehelper import MIMETypes
+except:
+    import mimetypes as MIMETypes
 
 from tg.i18n import ugettext
 
 from beaker.middleware import SessionMiddleware, CacheMiddleware
-from paste.cascade import Cascade
+from tg.statics import StaticsMiddleware
+
 from paste.registry import RegistryManager
-from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
 
 import tg
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
+from tg.compat import dict_iteritems
 
 from routes import Mapper
 from routes.middleware import RoutesMiddleware
@@ -82,6 +90,15 @@ class DispatchingConfigWrapper(DictMixin):
             del self.config_proxy.current_conf()[name]
         except KeyError:
             raise AttributeError(name)
+
+    def __delitem__(self, key):
+        self.__delattr__(key)
+
+    def __len__(self):
+        return len(self.config_proxy.current_conf())
+
+    def __iter__(self):
+        return iter(self.config_proxy.current_conf())
 
     def keys(self):
         return self.config_proxy.keys()
@@ -190,7 +207,7 @@ class AppConfig(Bunch):
             if callable(cmd):
                 try:
                     cmd()
-                except Exception, error:
+                except Exception as error:
                     log.debug("Error registering %s at startup: %s" % (cmd, error ))
             else:
                 log.debug("Unable to register %s for startup" % cmd )
@@ -234,7 +251,7 @@ class AppConfig(Bunch):
         conf['debug'] = asbool(conf.get('debug'))
 
         # Ensure all the keys from defaults are present, load them if not
-        for key, val in deepcopy(defaults).iteritems():
+        for key, val in dict_iteritems(deepcopy(defaults)):
             conf.setdefault(key, val)
 
         # Load the errorware configuration from the Paste configuration file
@@ -827,9 +844,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         return app
 
     def add_static_file_middleware(self, app):
-        static_app = StaticURLParser(config['paths']['static_files'])
-        app = Cascade([static_app, app])
-        return app
+        return StaticsMiddleware(app, config['paths']['static_files'])
 
     def commit_veto(self, environ, status, headers):
         """Veto a commit.

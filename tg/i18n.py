@@ -1,11 +1,87 @@
 import logging, os
 from gettext import NullTranslations, translation
-from babel.core import parse_locale
-import formencode
 import tg
 from tg.util import lazify
 
 log = logging.getLogger(__name__)
+
+def parse_locale(identifier, sep='_'):
+    """Took from Babel,
+    Parse a locale identifier into a tuple of the form::
+
+      ``(language, territory, script, variant)``
+
+    >>> parse_locale('zh_CN')
+    ('zh', 'CN', None, None)
+    >>> parse_locale('zh_Hans_CN')
+    ('zh', 'CN', 'Hans', None)
+
+    The default component separator is "_", but a different separator can be
+    specified using the `sep` parameter:
+
+    >>> parse_locale('zh-CN', sep='-')
+    ('zh', 'CN', None, None)
+
+    If the identifier cannot be parsed into a locale, a `ValueError` exception
+    is raised:
+
+    >>> parse_locale('not_a_LOCALE_String')
+    Traceback (most recent call last):
+      ...
+    ValueError: 'not_a_LOCALE_String' is not a valid locale identifier
+
+    Encoding information and locale modifiers are removed from the identifier:
+
+    >>> parse_locale('it_IT@euro')
+    ('it', 'IT', None, None)
+    >>> parse_locale('en_US.UTF-8')
+    ('en', 'US', None, None)
+    >>> parse_locale('de_DE.iso885915@euro')
+    ('de', 'DE', None, None)
+
+    :param identifier: the locale identifier string
+    :param sep: character that separates the different components of the locale
+                identifier
+    :return: the ``(language, territory, script, variant)`` tuple
+    :rtype: `tuple`
+    :raise `ValueError`: if the string does not appear to be a valid locale
+                         identifier
+
+    :see: `IETF RFC 4646 <http://www.ietf.org/rfc/rfc4646.txt>`_
+    """
+    if '.' in identifier:
+        # this is probably the charset/encoding, which we don't care about
+        identifier = identifier.split('.', 1)[0]
+    if '@' in identifier:
+        # this is a locale modifier such as @euro, which we don't care about
+        # either
+        identifier = identifier.split('@', 1)[0]
+
+    parts = identifier.split(sep)
+    lang = parts.pop(0).lower()
+    if not lang.isalpha():
+        raise ValueError('expected only letters, got %r' % lang)
+
+    script = territory = variant = None
+    if parts:
+        if len(parts[0]) == 4 and parts[0].isalpha():
+            script = parts.pop(0).title()
+
+    if parts:
+        if len(parts[0]) == 2 and parts[0].isalpha():
+            territory = parts.pop(0).upper()
+        elif len(parts[0]) == 3 and parts[0].isdigit():
+            territory = parts.pop(0)
+
+    if parts:
+        if len(parts[0]) == 4 and parts[0][0].isdigit() or\
+           len(parts[0]) >= 5 and parts[0][0].isalpha():
+            variant = parts.pop()
+
+    if parts:
+        raise ValueError('%r is not a valid locale identifier' % identifier)
+
+    return lang, territory, script, variant
 
 class LanguageError(Exception):
     """Exception raised when a problem occurs with changing languages"""
@@ -73,7 +149,7 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
 
     try:
         translator = translation(conf['package'].__name__, localedir, languages=lang, **kwargs)
-    except IOError, ioe:
+    except IOError as ioe:
         raise LanguageError('IOError: %s' % ioe)
 
     translator.tg_lang = lang
@@ -202,19 +278,25 @@ def set_lang(languages, **kwargs):
         tgl.session.save()
 
 
-_localdir = formencode.api.get_localedir()
+try:
+    import formencode
+    _localdir = formencode.api.get_localedir()
 
-def set_formencode_translation(languages, tgl=None):
-    """Set request specific translation of FormEncode."""
-    if not tgl:
-        tgl = tg.request_local.context._current_obj()
+    def set_formencode_translation(languages, tgl=None):
+        """Set request specific translation of FormEncode."""
+        if not tgl:
+            tgl = tg.request_local.context._current_obj()
 
-    try:
-        formencode_translation = translation(
-            'FormEncode',languages=languages, localedir=_localdir)
-    except IOError, error:
-        raise LanguageError('IOError: %s' % error)
-    tgl.tmpl_context.formencode_translation = formencode_translation
+        try:
+            formencode_translation = translation(
+                'FormEncode',languages=languages, localedir=_localdir)
+        except IOError as error:
+            raise LanguageError('IOError: %s' % error)
+        tgl.tmpl_context.formencode_translation = formencode_translation
+
+except ImportError:
+    def set_formencode_translation(languages, tgl=None):
+        pass
 
 
 __all__ = [

@@ -8,7 +8,6 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-from repoze.what.predicates import NotAuthorizedError, Predicate
 from warnings import warn
 from paste.util.mimeparse import best_match
 from decorator import decorator
@@ -17,7 +16,6 @@ from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
 from tg.paginate import Page
 from tg.configuration import config
 from tg.controllers.util import abort
-from formencode import variabledecode
 from tg import tmpl_context, request, response
 from tg.util import partial
 
@@ -25,10 +23,15 @@ from tg.util import Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
 
-from caching import beaker_cache, cached_property
+from tg.caching import beaker_cache, cached_property
 
-# Predicates booleanized:
-Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
+try:
+    from repoze.what.predicates import NotAuthorizedError, Predicate
+    # Predicates booleanized:
+    Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
+except ImportError:
+    class NotAuthorizedError(Exception):
+        pass
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -561,21 +564,27 @@ def https(remainder, params):
         redirect('https' + request.url[len(request.scheme):])
     raise HTTPMethodNotAllowed(headers=dict(Allow='GET')).exception
 
-@before_validate
-def variable_decode(remainder, params):
-    '''Best-effort formencode.variabledecode on the params before validation
+try:
+    from formencode import variabledecode
 
-    If any exceptions are raised due to invalid parameter names, they are
-    silently ignored, hopefully to be caught by the actual validator.  Note that
-    this decorator will *add* parameters to the method, not remove.  So for
-    instnace a method will move from {'foo-1':'1', 'foo-2':'2'} to
-    {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
-    '''
-    try:
-        new_params = variabledecode.variable_decode(params)
-        params.update(new_params)
-    except:
-        pass
+    @before_validate
+    def variable_decode(remainder, params):
+        '''Best-effort formencode.variabledecode on the params before validation
+
+        If any exceptions are raised due to invalid parameter names, they are
+        silently ignored, hopefully to be caught by the actual validator.  Note that
+        this decorator will *add* parameters to the method, not remove.  So for
+        instnace a method will move from {'foo-1':'1', 'foo-2':'2'} to
+        {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
+        '''
+        try:
+            new_params = variabledecode.variable_decode(params)
+            params.update(new_params)
+        except:
+            pass
+except ImportError:
+    pass
+
 
 @before_validate
 def without_trailing_slash(remainder, params):
@@ -666,7 +675,7 @@ class require(_BaseProtectionDecorator):
 
         try:
             self.predicate.check_authorization(req.environ)
-        except NotAuthorizedError, e:
+        except NotAuthorizedError as e:
             reason = unicode(e)
             if req.environ.get('repoze.who.identity'):
                 # The user is authenticated.

@@ -151,7 +151,7 @@ class CoreDispatcher(object):
 
         try:
             response = self._perform_call(thread_locals)
-        except HTTPException, httpe:
+        except HTTPException as httpe:
             response = httpe
 
         #If we reached a plain WSGI application do not build the response

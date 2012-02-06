@@ -1,7 +1,12 @@
-from webhelpers.paginate import Page as WhPage
-from webhelpers.html import HTML
 from tg import request
 from tg.controllers.util import url
+
+try:
+    from webhelpers.paginate import Page as WhPage
+    from webhelpers.html import HTML
+except ImportError:
+    class WhPage(object):
+        pass
 
 class Page(WhPage):
 

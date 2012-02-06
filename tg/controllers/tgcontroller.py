@@ -1,9 +1,9 @@
 """
 This module contains the main TurboGears Controller implementation.
 """
-from dispatcher import CoreDispatcher
+from tg.controllers.dispatcher import CoreDispatcher
 from crank.objectdispatcher import ObjectDispatcher
-from decoratedcontroller import DecoratedController
+from tg.controllers.decoratedcontroller import DecoratedController
 
 class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
     """

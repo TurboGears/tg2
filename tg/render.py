@@ -1,4 +1,4 @@
-from urllib import quote_plus
+from tg.compat import url_quote_plus
 
 from paste.deploy.converters import asbool
 
@@ -10,7 +10,10 @@ except ImportError:
 import tg
 from tg.util import Bunch
 
-from webhelpers.html import literal
+try:
+    from webhelpers.html import literal
+except:
+    def literal(s): return s
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -84,7 +87,7 @@ def _get_tg_vars():
 
     try:
         h = conf['package'].lib.helpers
-    except AttributeError, ImportError:
+    except (AttributeError, ImportError):
         h = Bunch()
 
 
@@ -102,7 +105,7 @@ def _get_tg_vars():
             "flash_status is deprecated, please use flash_obj.status instead "
             "or use the new flash_obj.render() method"
             ),
-        quote_plus = quote_plus,
+        quote_plus = url_quote_plus,
         url = tg.url,
         # this will be None if no identity
         identity = req.environ.get('repoze.who.identity'),

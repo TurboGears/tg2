@@ -1,6 +1,6 @@
 import os
 here = os.path.abspath(os.path.dirname(__file__))
-execfile(os.path.join(here, 'tg', 'release.py'))
+exec(compile(open(os.path.join(here, 'tg', 'release.py')).read(), 'release.py', 'exec'), globals(), locals())
 
 from setuptools import find_packages, setup
 
@@ -54,11 +54,10 @@ setup(
         'WebError >= 0.10.1',
         'Babel',
         'WebHelpers',
-        'Formencode',
+        'FormEncode',
         'Beaker',
         'routes',
         'decorator',
-        'simplejson',
         'crank'
     ],
     extras_require={

@@ -2,6 +2,15 @@
 Flash messaging system for sending info to the user in a non-obtrusive way
 """
 
+try:
+    from urllib.parse import quote, unquote
+    import urllib
+
+    urllib.quote = quote
+    urllib.unquote = unquote
+except ImportError:
+    pass
+
 from webflash import Flash
 from tg import response, request
 
@@ -18,7 +27,7 @@ class TGFlash(Flash):
             unicode(message), status, **extra_payload
             )
         if len(response.headers['Set-Cookie']) > 4096:
-            raise ValueError, 'Flash value is too long (cookie would be >4k)'
+            raise ValueError('Flash value is too long (cookie would be >4k)')
         return result
 
     @property
