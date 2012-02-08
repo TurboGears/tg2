@@ -346,7 +346,7 @@ class RenderGenshi(object):
 
         # Gets document type from content type or from config options
         doctype = kwargs.get('doctype')
-        if not doctype:
+        if 'doctype' not in kwargs:
             doctype = config.get('templating.genshi.doctype')
             if not doctype:
                 method = kwargs.get('method') or config.get(

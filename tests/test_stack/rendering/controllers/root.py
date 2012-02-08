@@ -247,7 +247,6 @@ class RootController(TGController):
             override_template(self.template_override_multiple_content_type, "mako:mako_noop.mak")
         return dict(format='something', status="ok")
 
-
     @expose()
     def manual_rendering(self, frompylons=False):
         if frompylons:
@@ -256,3 +255,8 @@ class RootController(TGController):
         else:
             from tg.render import render
             return render({}, 'jinja', 'jinja_inherits.html')
+
+    @expose()
+    def genshi_doctype_removal(self):
+        from tg.render import render
+        return render({}, 'genshi', 'index_autodoctype.html', doctype=None)

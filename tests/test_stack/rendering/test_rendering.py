@@ -332,3 +332,8 @@ def test_pylons_rendering():
     pyresp = app.get('/manual_rendering?frompylons=1')
 
     assert str(tgresp) == str(pyresp), str(tgresp) + '\n------\n' + str(pyresp)
+
+def test_genshi_doctype_removal():
+    app = setup_noDB()
+    tgresp = app.get('/genshi_doctype_removal')
+    assert 'DOCTYPE' not in tgresp, tgresp
