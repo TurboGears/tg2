@@ -33,68 +33,194 @@ def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/')
-    assert 'XHTML 1.0 Transitional' in resp, resp
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
-def test_genshi_autodoctype():
-    app = setup_noDB()
-    resp = app.get('/autodoctype')
-    assert 'XHTML 1.0 Transitional' in resp, resp
-    assert 'text/html; charset=utf-8' in resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_xhtml():
-    app = setup_noDB(genshi_method='xhtml')
-    resp = app.get('/autodoctype')
-    assert 'XHTML 1.0 Transitional' in resp, resp
-    assert 'text/html; charset=utf-8' in resp, resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_xhtml_strict():
-    app = setup_noDB(genshi_doctype='xhtml-strict')
-    resp = app.get('/autodoctype')
-    assert 'XHTML 1.0 Strict' in resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_xhtml_strict_from_content_type():
-    app = setup_noDB(genshi_method='html') # method from config should be ignored
-    resp = app.get('/autodoctype_xhtml_strict')
-    assert 'XHTML 1.0 Strict' in resp
-    assert 'application/xhtml+xml; charset=utf-8' in resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_html5():
-    app = setup_noDB(genshi_doctype='html5')
-    resp = app.get('/autodoctype')
-    assert '<!DOCTYPE html>' in resp
-    assert 'text/html; charset=utf-8' in resp, resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_html4():
-    app = setup_noDB(genshi_doctype='html')
-    resp = app.get('/autodoctype')
-    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
-        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
-    assert 'text/html; charset=utf-8' in resp, resp
-    assert "Welcome" in resp
-    assert "TurboGears" in resp
-
-def test_genshi_autodoctype_overwrite():
+def test_genshi_doctype_html5():
     app = setup_noDB(genshi_doctype='html5')
     resp = app.get('/')
     assert '<!DOCTYPE html>' in resp
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
+def test_genshi_auto_doctype():
+    app = setup_noDB()
+    resp = app.get('/auto_doctype')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_html():
+    app = setup_noDB(genshi_method='html')
+    resp = app.get('/auto_doctype')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"'
+        ' "http://www.w3.org/TR/html4/loose.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_xhtml():
+    app = setup_noDB(genshi_method='xhtml')
+    resp = app.get('/auto_doctype')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_doctype_html():
+    app = setup_noDB(genshi_doctype='html')
+    resp = app.get('/auto_doctype')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_doctype_html5():
+    app = setup_noDB(genshi_doctype='html5')
+    resp = app.get('/auto_doctype')
+    assert '<!DOCTYPE html>' in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_doctype_xhtml_strict():
+    app = setup_noDB(genshi_doctype='xhtml-strict')
+    resp = app.get('/auto_doctype')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_doctype_html_maps_to_xhtml():
+    app = setup_noDB(genshi_doctype={'text/html': ('xhtml', 'html')})
+    resp = app.get('/auto_doctype_html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_html_maps_to_xhtml():
+    app = setup_noDB(genshi_method={'text/html': ('xhtml', 'html')})
+    resp = app.get('/auto_doctype_html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_xml_overridden_by_content_type_html():
+    app = setup_noDB(genshi_method='xml')
+    resp = app.get('/auto_doctype_html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_xhtml_is_ok_with_content_type_html():
+    app = setup_noDB(genshi_method='xhtml')
+    resp = app.get('/auto_doctype_html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_doctype_xhtml_maps_to_html():
+    app = setup_noDB(
+        genshi_doctype={'application/xhtml+xml': ('html', 'xhtml')})
+    resp = app.get('/auto_doctype_xhtml')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="application/xhtml+xml; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_xhtml_maps_to_html():
+    app = setup_noDB(
+        genshi_doctype={'application/xhtml+xml': ('html', 'xhtml')},
+        genshi_method={'application/xhtml+xml': ('html', 'xhtml')})
+    resp = app.get('/auto_doctype_xhtml')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="application/xhtml+xml; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_xml_overridden_by_content_type_xhtml():
+    app = setup_noDB(genshi_method='xml')
+    resp = app.get('/auto_doctype_xhtml')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">') in resp
+    assert 'content="application/xhtml+xml; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_method_html_overridden_by_content_type_xhtml():
+    app = setup_noDB(genshi_method='html')
+    resp = app.get('/auto_doctype_xhtml')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">') in resp
+    assert 'content="application/xhtml+xml; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_explicit_no_doctype():
+    app = setup_noDB()
+    resp = app.get('/explicit_no_doctype')
+    assert 'DOCTYPE' not in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_explicit_doctype_html():
+    app = setup_noDB(genshi_doctype='xhtml')
+    resp = app.get('/explicit_doctype_html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_explicit_doctype_xhtml():
+    app = setup_noDB(genshi_doctype='html')
+    resp = app.get('/explicit_doctype_xhtml')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "doctype generation" in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
 def test_html_priority_for_ie():
     app = setup_noDB()
-    resp = app.get('/html_and_json', headers={'Accept':'application/x-ms-application, image/jpeg, application/xaml+xml, image/gif, image/pjpeg, application/x-ms-xbap, */*'})
+    resp = app.get('/html_and_json', headers={'Accept':
+        'application/x-ms-application, image/jpeg, application/xaml+xml,'
+        ' image/gif, image/pjpeg, application/x-ms-xbap, */*'})
     assert 'text/html' in str(resp), resp
 
 def test_genshi_foreign_characters():
@@ -326,14 +452,34 @@ def test_template_override_multiple_content_type():
         params=dict(override=True))
     assert 'This is the mako index page' in resp
 
-def test_pylons_rendering():
+def test_jinja2_manual_rendering():
     app = setup_noDB()
-    tgresp = app.get('/manual_rendering')
-    pyresp = app.get('/manual_rendering?frompylons=1')
+    tgresp = app.get('/jinja2_manual_rendering')
+    pyresp = app.get('/jinja2_manual_rendering?frompylons=1')
+    assert str(tgresp) == str(pyresp)
 
-    assert str(tgresp) == str(pyresp), str(tgresp) + '\n------\n' + str(pyresp)
-
-def test_genshi_doctype_removal():
+def test_genshi_manual_render_no_doctype():
     app = setup_noDB()
-    tgresp = app.get('/genshi_doctype_removal')
-    assert 'DOCTYPE' not in tgresp, tgresp
+    resp = app.get('/genshi_manual_rendering_with_doctype')
+    assert 'DOCTYPE' not in resp, resp
+    assert "<hr />" in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_manual_render_auto_doctype():
+    app = setup_noDB()
+    resp = app.get('/genshi_manual_rendering_with_doctype?doctype=auto')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'
+        ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "<hr />" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp
+
+def test_genshi_manual_render_html_doctype():
+    app = setup_noDB()
+    resp = app.get('/genshi_manual_rendering_with_doctype?doctype=html')
+    assert ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+        ' "http://www.w3.org/TR/html4/strict.dtd">') in resp
+    assert 'content="text/html; charset=utf-8"' in resp
+    assert "<hr>" in resp
+    assert "<p>Rendered with Genshi.</p>" in resp

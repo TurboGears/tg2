@@ -1,9 +1,9 @@
-"""
-This module contains the main TurboGears Controller implementation.
-"""
-from dispatcher          import CoreDispatcher
-from decoratedcontroller import DecoratedController
+"""This module contains the main TurboGears controller implementation."""
+
 from crank.objectdispatcher import ObjectDispatcher
+
+from tg.controllers.dispatcher import CoreDispatcher
+from tg.controllers.decoratedcontroller import DecoratedController
 
 
 class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
@@ -36,4 +36,6 @@ class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
       `Controller <../main/Controllers.html>`_  A basic overview on how to write controller methods.
 
     """
+
+__all__ = ['TGController']
 

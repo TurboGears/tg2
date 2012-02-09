@@ -15,17 +15,23 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-from inspect import ismethod, isclass, getargspec
-from warnings import warn
-import pylons, sys
+
 import mimetypes
+import sys
+from warnings import warn
+
+import pylons
 from pylons.controllers import WSGIController
-from tg.exceptions import HTTPNotFound
-from tg.i18n import setup_i18n
-from tg.decorators import cached_property
+
 from crank.dispatchstate import DispatchState
 
+from tg.decorators import cached_property
+from tg.exceptions import HTTPNotFound
+from tg.i18n import setup_i18n
+
+
 HTTPNotFound = HTTPNotFound().exception
+
 
 def dispatched_controller():
     state = pylons.request.controller_state
@@ -36,27 +42,23 @@ def dispatched_controller():
 
 
 class CoreDispatcher(WSGIController):
-    """
-       Extend this class to define your own mechanism for dispatch.
-    """
+    """Extend this class to define your own mechanism for dispatch."""
+
     _use_lax_params = True
 
     def _call(self, controller, params, remainder=None):
-        """
-        Override this function to define how your controller method should be called.
-        """
+        """Override to define how your controller method should be called."""
         response = controller(*remainder, **dict(params))
         return response
 
     def _get_dispatchable(self, url_path):
-        """
-        Returns a tuple (controller, remainder, params)
+        """Return a tuple (controller, remainder, params).
 
         :Parameters:
           url
             url as string
-        """
 
+        """
         if not pylons.config.get('disable_request_extensions', False):
             pylons.request.response_type = None
             pylons.request.response_ext = None
@@ -72,8 +74,9 @@ class CoreDispatcher(WSGIController):
 
         params = pylons.request.params.mixed()
 
-        state = DispatchState(pylons.request, self, params, url_path, pylons.config.get('ignore_parameters', []))
-        state =  state.controller._dispatch(state, url_path)
+        state = DispatchState(pylons.request,
+            self, params, url_path, pylons.config.get('ignore_parameters', []))
+        state = state.controller._dispatch(state, url_path)
 
         pylons.tmpl_context.controller_url = '/'.join(
             url_path[:-len(state.remainder)])
@@ -100,9 +103,7 @@ class CoreDispatcher(WSGIController):
         pass
 
     def _perform_call(self, func, args):
-        """
-        This function is called from within Pylons and should not be overidden.
-        """
+        """Called from within Pylons and should not be overridden."""
         if pylons.config.get('i18n_enabled', True):
             setup_i18n()
 
@@ -117,10 +118,10 @@ class CoreDispatcher(WSGIController):
 
         func, controller, remainder, params = self._get_dispatchable(url_path)
 
-        if hasattr(controller, '__before__') and not hasattr(controller, '_before'):
-            warn("this functionality is going to removed in the next minor version,"\
-                 " please use _before instead."
-                 )
+        if hasattr(controller, '__before__'
+                ) and not hasattr(controller, '_before'):
+            warn("Support for __before__ is going to removed"
+                " in the next minor version, please use _before instead.")
             controller.__before__(*args, **args)
 
         if hasattr(controller, '_before'):
@@ -131,20 +132,21 @@ class CoreDispatcher(WSGIController):
         r = self._call(func, params, remainder=remainder)
 
         if hasattr(controller, '__after__'):
-            warn("this functionality is going to removed in the next minor version,"
-                 " please use _after instead.")
+            warn("Support for __after__ is going to removed"
+                 " in the next minor version,  please use _after instead.")
             controller.__after__(*args, **args)
         if hasattr(controller, '_after'):
             controller._after(*args, **args)
         return r
 
     def routes_placeholder(self, url='/', start_response=None, **kwargs):
-        """
+        """Routes placeholder.
+
         This function does not do anything.  It is a placeholder that allows
         Routes to accept this controller as a target for its routing.
+
         """
         pass
-
 
     @cached_property
     def mount_point(self):
@@ -160,11 +162,12 @@ class CoreDispatcher(WSGIController):
                 if controller is item:
                     return parents + [(i, item)]
                 if hasattr(controller, '_dispatch'):
-                    v = find_url(controller.__class__, item, parents + [(i, controller)])
+                    v = find_url(controller.__class__,
+                        item, parents + [(i, controller)])
                     if v:
                         return v
             return []
 
-        root_controller = sys.modules[pylons.config['application_root_module']].RootController
+        root_controller = sys.modules[
+            pylons.config['application_root_module']].RootController
         return find_url(root_controller, self, [('/', root_controller)])
-
