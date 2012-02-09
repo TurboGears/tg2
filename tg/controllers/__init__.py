@@ -4,6 +4,9 @@ from wsgiappcontroller   import WSGIAppController
 from tgcontroller        import TGController
 from restcontroller import RestController
 
+from pylons.controllers.util import abort
 from util import redirect, url, lurl, pylons_formencode_gettext
 
-from pylons.controllers.util import abort
+__all__ = ['abort', 'redirect', 'url', 'lurl', 'pylons_formencode_gettext',
+    'CoreDispatcher', 'DecoratedController', 'CUSTOM_CONTENT_TYPE',
+    'RestController', 'TGController', 'WSGIAppController']

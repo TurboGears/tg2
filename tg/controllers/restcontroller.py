@@ -1,8 +1,8 @@
-"""
-This module contains the RestController implementation
+"""This module contains the RestController implementation.
 
 Rest controller provides a RESTful dispatch mechanism, and
 combines controller decoration for TG-Controller behavior.
+
 """
 import pylons
 from pylons.controllers.util import abort
@@ -292,3 +292,5 @@ class RestController(DecoratedController, RestDispatcher):
       `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
 
     """
+
+__all__ = ['RestController']
