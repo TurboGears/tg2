@@ -128,6 +128,8 @@ class DecoratedController(object):
             else:
                 raise
 
+        #Be sure that we run hooks if the controller changed due to validation errors
+        tg_decoration = controller.decoration
 
         # Render template
         tg_decoration.run_hooks('before_render', remainder, params, output)
