@@ -2,6 +2,7 @@
 
 from tg import expose, redirect, config, validate, override_template, response
 from tg.decorators import paginate, use_custom_format, with_trailing_slash
+from tg.render import render
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -19,11 +20,13 @@ base_movie_form = MovieForm("movie_form", action='create')
 
 
 class GoodJsonObject(object):
+
     def __json__(self):
         return {'Json':'Rocks'}
 
 class BadJsonObject(object):
     pass
+
 
 class JsonController(TGController):
 
@@ -48,6 +51,7 @@ class JsonController(TGController):
     def json_with_bad_object(self):
         return dict(obj=BadJsonObject())
 
+
 class RootController(TGController):
 
     j = JsonController()
@@ -56,12 +60,28 @@ class RootController(TGController):
     def index(self):
         return {}
 
-    @expose('genshi:index_autodoctype.html')
-    def autodoctype(self):
+    @expose('genshi:genshi_doctype.html')
+    def auto_doctype(self):
         return {}
 
-    @expose('genshi:index_autodoctype.html', content_type='application/xhtml+xml')
-    def autodoctype_xhtml_strict(self):
+    @expose('genshi:genshi_doctype.html', content_type='text/html')
+    def auto_doctype_html(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', content_type='application/xhtml+xml')
+    def auto_doctype_xhtml(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype=None))
+    def explicit_no_doctype(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype='html'))
+    def explicit_doctype_html(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype='xhtml'))
+    def explicit_doctype_xhtml(self):
         return {}
 
     @expose('genshi:genshi_form.html')
@@ -248,15 +268,16 @@ class RootController(TGController):
         return dict(format='something', status="ok")
 
     @expose()
-    def manual_rendering(self, frompylons=False):
+    def jinja2_manual_rendering(self, frompylons=False):
         if frompylons:
             from pylons.templating import render_jinja2
             return render_jinja2('jinja_inherits.html')
         else:
-            from tg.render import render
             return render({}, 'jinja', 'jinja_inherits.html')
 
     @expose()
-    def genshi_doctype_removal(self):
-        from tg.render import render
-        return render({}, 'genshi', 'index_autodoctype.html', doctype=None)
+    def genshi_manual_rendering_with_doctype(self, doctype=None):
+        response.content_type = 'text/html'
+        response.charset = 'utf-8'
+        return render({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
+

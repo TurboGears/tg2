@@ -1,15 +1,19 @@
 
 syntax: glob
 *~
+*.egg
 *.egg-info
 *.mak.py
 *.pyc
 *.pyo
 *.swp
-.coverage
-.noseids
-*.egg
 *.DS_Store
+.coverage
+.idea
+.noseids
+.project
+.pydevproject
+.settings
 
 syntax: regexp
 ^build

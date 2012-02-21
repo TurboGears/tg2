@@ -1,9 +1,12 @@
 """Genshi template loader that supports dotted names."""
 
 from os.path import exists, getmtime
+
 from jinja2.exceptions import TemplateNotFound
 from jinja2.loaders import FileSystemLoader
+
 from tg import config
+
 
 class JinjaTemplateLoader(FileSystemLoader):
     """Jinja template loader supporting dotted filenames. Based on Genshi Loader
@@ -32,8 +35,11 @@ class JinjaTemplateLoader(FileSystemLoader):
         mtime = getmtime(template)
 
         # Read the source
-        with file(template, "r") as fd:
+        fd = file(template)
+        try:
             source = fd.read().decode('utf-8')
+        finally:
+            fd.close()
 
         return source, template, lambda: mtime == getmtime(template)
 
