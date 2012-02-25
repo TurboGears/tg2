@@ -145,6 +145,8 @@ class AppConfig(Bunch):
                           before_call=[],
                           before_render=[],
                           after_render=[],
+                          before_render_call=[],
+                          after_render_call=[],
                           before_config=[],
                           after_config=[])
         # The codes TG should display an error page for. All other HTTP errors are
@@ -169,7 +171,7 @@ class AppConfig(Bunch):
         elif hook_name == 'controller_wrapper':
             self.controller_wrappers.append(func)
         else:
-            self.hooks[hook_name].append(func)
+            self.hooks.setdefault(hook_name, []).append(func)
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:

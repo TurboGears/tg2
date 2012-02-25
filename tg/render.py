@@ -171,18 +171,26 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     kwargs['cache_expire'] = caching_options.get('expire')
     kwargs['cache_type'] = caching_options.get('type')
 
+    for func in config.get('hooks', {}).get('before_render_call', []):
+        func(template_engine, template_name, template_vars, kwargs)
+
+    tg_vars = template_vars
     if template_engine not in ("json", 'amf'):
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
-        template_vars = tg_vars
 
     if not render_function:
         # getting the default renderer, if no engine was defined in @expose()
         render_function = config[
             'render_functions'][config['default_renderer']]
 
-    return render_function(template_name, template_vars, **kwargs)
+    kwargs['result'] = render_function(template_name, tg_vars, **kwargs)
+
+    for func in config.get('hooks', {}).get('after_render_call', []):
+        func(template_engine, template_name, template_vars, kwargs)
+
+    return kwargs['result']
 
 
 def cached_template(template_name, render_func, ns_options=(),
