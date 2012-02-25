@@ -15,6 +15,7 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
+from inspect import getargspec, isclass, ismethod
 
 import mimetypes
 import sys

@@ -8,5 +8,5 @@ from pylons.controllers.util import abort
 from util import redirect, url, lurl, pylons_formencode_gettext
 
 __all__ = ['abort', 'redirect', 'url', 'lurl', 'pylons_formencode_gettext',
-    'CoreDispatcher', 'DecoratedController', 'CUSTOM_CONTENT_TYPE',
+    'DecoratedController', 'CUSTOM_CONTENT_TYPE',
     'RestController', 'TGController', 'WSGIAppController']
