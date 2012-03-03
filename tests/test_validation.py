@@ -8,7 +8,7 @@ from formencode import validators, Schema
 from simplejson import loads
 
 from tg.controllers import TGController
-from tg.decorators import expose, validate
+from tg.decorators import expose, validate, before_render
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
@@ -141,6 +141,15 @@ class BasicTGController(TGController):
         else:
             return "Password ok!"
 
+    @expose('json')
+    @before_render(lambda rem,params,output:output.update({'GOT_ERROR':'HOOKED'}))
+    def hooked_error_handler(self, *args, **kw):
+        return dict(GOT_ERROR='MISSED HOOK')
+
+    @expose()
+    @validate({'v':validators.Int()}, error_handler=hooked_error_handler)
+    def with_hooked_error_handler(self, *args, **kw):
+        return dict(GOT_ERROR='NO ERROR')
 
 class TestTGController(TestWSGIController):
 
@@ -265,3 +274,7 @@ class TestTGController(TestWSGIController):
         """Test controller based validation"""
         resp = self.app.post('/validate_controller_based_validator')
         assert 'ok' in resp, resp
+
+    def test_hook_after_validation_error(self):
+        resp = self.app.post('/with_hooked_error_handler?v=a')
+        assert 'HOOKED' in resp, resp

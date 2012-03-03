@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Helper functions for controller operation.
+"""Helper functions for controller operation.
 
-Url definition and browser redirection are defined here.
+URL definition and browser redirection are defined here.
+
 """
 import re
 from webob.exc import status_map
 
 import tg
+
 import urllib
 from warnings import warn
 
 from tg.exceptions import HTTPFound
+
 
 def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     """
@@ -19,9 +21,10 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
 
     If strings_only is True, don't convert (some) non-string-like objects.
 
-    This function was borrowed from Django
+    This function was borrowed from Django.
+
     """
-    if strings_only and isinstance(s, (types.NoneType, int)):
+    if strings_only and (s is None or isinstance(s, int)):
         return s
     elif not isinstance(s, basestring):
         try:
@@ -42,14 +45,17 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     else:
         return s
 
+
 def generate_smart_str(params):
     for key, value in params.iteritems():
-        if value is None: continue
+        if value is None:
+            continue
         if isinstance(value, (list, tuple)):
             for item in value:
                 yield smart_str(key), smart_str(item)
         else:
             yield smart_str(key), smart_str(value)
+
 
 def urlencode(params):
     """
@@ -58,6 +64,7 @@ def urlencode(params):
     then encoded as per normal.
     """
     return urllib.urlencode([i for i in generate_smart_str(params)])
+
 
 def url(base_url=None, params=None, **kwargs):
     """Generate an absolute URL that's specific to this application.
@@ -69,19 +76,19 @@ def url(base_url=None, params=None, **kwargs):
     For backwards compatibility you can also pass in keyword parameters.
 
     """
-    #remove in 2.2
+    # remove in 2.2
     if base_url is None:
         base_url = '/'
     if params is None:
         params = {}
 
-    #First we handle the possibility that the user passed in params
+    # First we handle the possibility that the user passed in params
     if base_url and isinstance(base_url, basestring):
-        #remove in 2.2
+        # remove in 2.2
         if kwargs.keys():
-            warn('Passing in keyword arguments as url components is deprecated.'
-                ' Please pass arguments as a dictionary to the params argument.',
-                DeprecationWarning, stacklevel=2)
+            warn('Passing in keyword arguments as URL components to url()'
+                ' is deprecated. Please pass arguments as a dictionary'
+                ' to the params argument.', DeprecationWarning, stacklevel=2)
             params = params.copy()
             params.update(kwargs)
 
@@ -92,6 +99,7 @@ def url(base_url=None, params=None, **kwargs):
     if params:
         return '?'.join((base_url, urlencode(params)))
     return base_url
+
 
 class LazyUrl(object):
     """
@@ -138,6 +146,7 @@ class LazyUrl(object):
     def format(self, other):
         return self._id.format(other)
 
+
 def lurl(base_url=None, params=None):
     """
     Like tg.url but is lazily evaluated.
@@ -151,6 +160,7 @@ def lurl(base_url=None, params=None):
     displayed for the first time.
     """
     return LazyUrl(base_url, params)
+
 
 def redirect(*args, **kwargs):
     """Generate an HTTP redirect.
@@ -199,21 +209,22 @@ def abort(status_code=None, detail="", headers=None, comment=None):
                                   comment=comment)
     raise exc.exception
 
-
 def use_wsgi_app(wsgi_app):
     return wsgi_app(tg.request.environ, tg.request.start_response)
 
 
+NullTranslations = tg_gettext = None
+
 # Idea stolen from Pylons
 def pylons_formencode_gettext(value):
-    from tg.i18n import ugettext as tg_gettext
-    from gettext import NullTranslations
+    global NullTranslations, tg_gettext
+    if tg_gettext is None:
+        from tg.i18n import ugettext as tg_gettext
+        from gettext import NullTranslations
 
     trans = tg_gettext(value)
-
     # Translation failed, try formencode
     if trans == value:
-
         try:
             fetrans = tg.tmpl_context.formencode_translation
         except AttributeError, attrerror:
@@ -229,6 +240,4 @@ def pylons_formencode_gettext(value):
 
     return trans
 
-__all__ = [
-    "url", "lurl", "redirect", "etag_cache", "abort"
-    ]
+__all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort']

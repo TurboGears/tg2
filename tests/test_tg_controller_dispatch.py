@@ -555,19 +555,19 @@ class TestTGController(TestWSGIController):
 
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
-        self.failUnless('Hello from /mounted_app' in r, r)
+        assert 'Hello from /mounted_app' in r, r
 
     def test_mounted_wsgi_app_at_subcontroller(self):
         r = self.app.get('/sub/mounted_app/')
-        self.failUnless('Hello from /sub/mounted_app/' in r, r)
+        assert 'Hello from /sub/mounted_app/' in r, r
 
     def test_request_for_wsgi_app_with_extension(self):
         r = self.app.get('/sub/mounted_app/some_document.pdf')
-        self.failUnless('Hello from /sub/mounted_app//some_document.pdf' in r, r)
+        assert 'Hello from /sub/mounted_app//some_document.pdf' in r, r
 
     def test_posting_to_mounted_app(self):
         r = self.app.post('/mounted_app/', params={'data':'Foooo'})
-        self.failUnless('Foooo' in r, r)
+        assert 'Foooo' in r, r
 
     def test_custom_content_type_replace_header(self):
         s = '''<?xml version="1.0"?>

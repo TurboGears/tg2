@@ -254,7 +254,6 @@ class ExtraRestController(RestController):
         return "rest post delete %s" % nr
 
     class SubClass(TGController):
-
         @expose()
         def index(self):
             return "rest sub index"

@@ -3,13 +3,14 @@
 Decorators use by the TurboGears controllers.
 
 Not all of these decorators are traditional wrappers. They are much simplified
-from the turbogears 1 decorators, because all they do is register attributes on
+from the TurboGears 1 decorators, because all they do is register attributes on
 the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
 from repoze.what.predicates import NotAuthorizedError, Predicate
 from warnings import warn
+
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
@@ -19,9 +20,7 @@ from tg.configuration import config
 from tg.controllers.util import abort
 from formencode import variabledecode
 from tg import tmpl_context, request, response
-from tg.util import partial
-
-from tg.util import Bunch
+from tg.util import partial, Bunch
 from tg.flash import flash
 #from tg.controllers import redirect
 
@@ -79,8 +78,8 @@ class Decoration(object):
             pass
         return controller_callable
 
-    def register_template_engine(self, content_type, engine, template,
-                                 exclude_names):
+    def register_template_engine(self,
+            content_type, engine, template, exclude_names, render_params):
         """Registers an engine on the controller.
 
         Multiple engines can be registered, but only one engine per
@@ -93,10 +92,17 @@ class Decoration(object):
         into the template.  This allows you to exclude some information
         from JSONification, and other 'automatic' engines which don't
         require a template.
+
+        render_params registers extra parameters which will be sent
+        to the rendering method.  This allows you to influence things
+        like the rendering method or the injected doctype.
+
         """
-        if content_type is None:
-            content_type = '*/*'
-        self.engines[content_type] = engine, template, exclude_names
+
+        content_type = content_type or '*/*'
+
+        self.engines[content_type] = (
+            engine, template, exclude_names, render_params or {})
 
         #Avoid engine lookup if we have only one engine registered
         if len(self.engines) == 1:
@@ -104,13 +110,13 @@ class Decoration(object):
         else:
             self.default_engine = None
 
-        #this is a work-around to make text/html prominent in respect
-        #to other common choices when they have the same weight for
+        # this is a work-around to make text/html prominent in respect
+        # to other common choices when they have the same weight for
         # paste.util.mimeparse.best_match.
-        self.engines_keys = sorted(self.engines.keys(), reverse=True)
+        self.engines_keys = sorted(self.engines, reverse=True)
 
-    def register_custom_template_engine(self, custom_format, content_type, engine, template,
-                                        exclude_names):
+    def register_custom_template_engine(self, custom_format,
+            content_type, engine, template, exclude_names, render_params):
         """Registers a custom engine on the controller.
 
         Multiple engines can be registered, but only one engine per
@@ -126,11 +132,15 @@ class Decoration(object):
         into the template.  This allows you to exclude some information
         from JSONification, and other 'automatic' engines which don't
         require a template.
+
+        render_params registers extra parameters which will be sent
+        to the rendering method.  This allows you to influence things
+        like the rendering method or the injected doctype.
+
         """
 
-        if content_type is None:
-            content_type = "*/*"
-        self.custom_engines[custom_format] = content_type, engine, template, exclude_names
+        self.custom_engines[custom_format or '"*/*"'] = (
+            content_type, engine, template, exclude_names, render_params or {})
 
     def lookup_template_engine(self, tgl):
         """Return the template engine data.
@@ -138,6 +148,7 @@ class Decoration(object):
         Provides a convenience method to get the proper engine,
         content_type, template, and exclude_names for a particular
         tg_format (which is pulled off of the request headers).
+
         """
         request = tgl.request
         response = tgl.response
@@ -148,12 +159,14 @@ class Decoration(object):
             accept_types = request.headers.get('accept', '*/*')
 
         try:
-            render_custom_format = request._render_custom_format[self.controller]
+            render_custom_format = request._render_custom_format[
+                self.controller]
         except:
             render_custom_format = self.render_custom_format
 
         if render_custom_format:
-            content_type, engine, template, exclude_names = self.custom_engines[render_custom_format]
+            (content_type, engine, template, exclude_names, render_params
+                ) = self.custom_engines[render_custom_format]
         else:
             if self.default_engine:
                 content_type = self.default_engine
@@ -173,18 +186,17 @@ class Decoration(object):
             # check for overridden templates
             try:
                 cnt_override_mapping = request._override_mapping[self.controller]
-                engine, template, exclude_names = cnt_override_mapping[content_type.split(";")[0]]
+                engine, template, exclude_names, render_params = cnt_override_mapping[content_type.split(";")[0]]
             except (AttributeError, KeyError):
-                engine, template, exclude_names = self.engines.get(content_type, (None, None, None))
+                (engine, template, exclude_names, render_params
+                    ) = self.engines.get(content_type, (None,) * 4)
 
+        if 'charset' not in content_type and (content_type.startswith('text')
+                or  content_type in ('application/xhtml+xml',
+                        'application/xml', 'application/json')):
+            content_type += '; charset=utf-8'
 
-        if 'charset' not in content_type and (content_type.startswith('text') or \
-                                              content_type in ('application/xhtml+xml',
-                                                               'application/xml',
-                                                               'application/json')):
-            content_type = content_type + '; charset=utf-8'
-
-        return content_type, engine, template, exclude_names
+        return content_type, engine, template, exclude_names, render_params
 
     def register_hook(self, hook_name, func):
         """Registers the specified function as a hook.
@@ -192,16 +204,19 @@ class Decoration(object):
         We now have four core hooks that can be applied by adding
         decorators: before_validate, before_call, before_render, and
         after_render. register_hook attaches the function to the hook
-        which get's called at the apropriate time in the request life
+        which get's called at the appropriate time in the request life
         cycle.)
         """
         self.hooks[hook_name].append(func)
 
 
 class _hook_decorator(object):
-    """SuperClass for all the specific TG2 hook validators.
+    """Superclass for all the specific TG2 hook validators.
+
+    Its `hook_name` must be overridden by a specific hook.
+
     """
-    # must be overridden by a particular hook
+
     hook_name = None
 
     def __init__(self, hook_func):
@@ -214,31 +229,35 @@ class _hook_decorator(object):
 
 
 class before_validate(_hook_decorator):
-    """A list of callables to be run before validation is performed"""
+    """A list of callables to be run before validation is performed."""
+
     hook_name = 'before_validate'
 
 
 class before_call(_hook_decorator):
-    """A list of callables to be run before the controller method is called"""
+    """A list of callables to be run before the controller method is called."""
+
     hook_name = 'before_call'
 
 
 class before_render(_hook_decorator):
-    """A list of callables to be run before the template is rendered"""
+    """A list of callables to be run before the template is rendered."""
+
     hook_name = 'before_render'
 
 
 class after_render(_hook_decorator):
     """A list of callables to be run after the template is rendered.
 
-    Will be run before it is returned returned up the WSGI stack"""
+    Will be run before it is returned returned up the WSGI stack.
+
+    """
 
     hook_name = 'after_render'
 
 
 class expose(object):
-    """
-    Registers attributes on the decorated function
+    """Register attributes on the decorated function.
 
     :Parameters:
       template
@@ -250,6 +269,8 @@ class expose(object):
         The default content type is 'text/html'.
       exclude_names
         Assign exclude names
+      render_params
+        Assign parameters that shall be passed to the rendering method.
 
     The expose decorator registers a number of attributes on the
     decorated function, but does not actually wrap the function the way
@@ -259,8 +280,13 @@ class expose(object):
     maintain the signature of the exposed function.
 
     The exclude_names parameter is new, and it takes a list of keys that
-    ought to be scrubbed from the dictinary before passing it on to the
-    rendering engine.  This is particularly usefull for JSON.
+    ought to be scrubbed from the dictionary before passing it on to the
+    rendering engine.  This is particularly useful for JSON.
+
+    The render_parameters is also new.  It takes a dictionary of arguments
+    that ought to be sent to the rendering engine, like this::
+
+        render_params={'method': 'xml', 'doctype': None}
 
     Expose decorator can be stacked like this::
 
@@ -290,15 +316,16 @@ class expose(object):
     By default expose assumes that the template is for html.  All other
     content_types must be explicitly matched to a template and engine.
 
-    The last expose uses the custom_format parameter which takes an
-    arbitrary value (in this case 'special_xml').  You can then use
-    the`use_custom_format` function within the method to decide which
-    of the 'custom_format' registered expose decorators to use to
-    render the template.
+    The last expose decorator example uses the custom_format parameter
+    which takes an arbitrary value (in this case 'special_xml').
+    You can then use the`use_custom_format` function within the method
+    to decide which of the 'custom_format' registered expose decorators
+    to use to render the template.
+
     """
 
     def __init__(self, template='', content_type=None, exclude_names=None,
-                 custom_format=None):
+                 custom_format=None, render_params=None):
         if exclude_names is None:
             exclude_names = []
 
@@ -325,7 +352,7 @@ class expose(object):
             else:
                 content_type = 'text/html'
 
-        if (engine == 'json' or engine == 'amf') and 'tmpl_context' not in exclude_names:
+        if engine in ('json', 'amf') and 'tmpl_context' not in exclude_names:
             exclude_names.append('tmpl_context')
 
         self.engine = engine
@@ -333,16 +360,18 @@ class expose(object):
         self.content_type = content_type
         self.exclude_names = exclude_names
         self.custom_format = custom_format
+        self.render_params = render_params
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
         if self.custom_format:
             deco.register_custom_template_engine(
                 self.custom_format, self.content_type, self.engine,
-                self.template, self.exclude_names)
+                self.template, self.exclude_names, self.render_params)
         else:
             deco.register_template_engine(
-                self.content_type, self.engine, self.template, self.exclude_names)
+                self.content_type, self.engine,
+                self.template, self.exclude_names, self.render_params)
         return func
 
 
@@ -352,7 +381,7 @@ def use_custom_format(controller, custom_format):
     deco = Decoration.get_decoration(controller)
 
     # Check the custom_format passed is available for use
-    if not custom_format in deco.custom_engines.keys():
+    if custom_format not in deco.custom_engines:
         raise ValueError("'%s' is not a valid custom_format" % custom_format)
 
     try:
@@ -361,10 +390,12 @@ def use_custom_format(controller, custom_format):
         render_custom_format = request._render_custom_format = {}
     render_custom_format[controller.im_func] = custom_format
 
+
 def override_template(controller, template):
-    """Use overide_template in a controller in order to change the
-    template that will be used to render the response dictionary
-    dynamically.
+    """Override the template to be used.
+
+    Use override_template in a controller in order to change the template
+    that will be used to render the response dictionary dynamically.
 
     The template string passed in requires that
     you include the template engine name, even if you're using the default.
@@ -375,12 +406,13 @@ def override_template(controller, template):
 
     future versions may make the `genshi:` optional if you want to use
     the default engine.
+
     """
     try:
         engines = controller.decoration.engines
     except:
         return
-    
+
     for content_type, content_engine in engines.iteritems():
         tmpl = template.split(':', 1)
         tmpl.extend(content_engine[2:])
@@ -390,11 +422,12 @@ def override_template(controller, template):
             override_mapping = request._override_mapping = {}
         override_mapping.setdefault(controller.im_func, {}).update({content_type: tmpl})
 
+
 class validate(object):
-    """Regesters which validators ought to be applied
+    """Registers which validators ought to be applied.
 
     If you want to validate the contents of your form,
-    you can use the ``@validate()`` decorator to regester
+    you can use the ``@validate()`` decorator to register
     the validators that ought to be called.
 
     :Parameters:
@@ -538,10 +571,10 @@ class paginate(object):
 
 @decorator
 def postpone_commits(func, *args, **kwargs):
-    """Turns sqlalchemy commits into flushes in the decorated method
+    """Turns SQLAlchemy commits into flushes in the decorated method.
 
     This has the end-result of postponing the commit to the normal TG2
-    transaction boundry. """
+    transaction boundary. """
 
     #TODO: Test and document this.
     s = config.get('DBSession', None)
@@ -552,34 +585,39 @@ def postpone_commits(func, *args, **kwargs):
     s.commit = old_commit
     return retval
 
+
 @before_validate
 def https(remainder, params):
-    '''Ensure that the decorated method is always called with https://'''
+    """Ensure that the decorated method is always called with https."""
     from tg.controllers import redirect
     if request.scheme.lower() == 'https': return
     if request.method.upper() == 'GET':
         redirect('https' + request.url[len(request.scheme):])
     raise HTTPMethodNotAllowed(headers=dict(Allow='GET')).exception
 
+
 @before_validate
 def variable_decode(remainder, params):
-    '''Best-effort formencode.variabledecode on the params before validation
+    """Best-effort formencode.variabledecode on the params before validation.
 
     If any exceptions are raised due to invalid parameter names, they are
-    silently ignored, hopefully to be caught by the actual validator.  Note that
-    this decorator will *add* parameters to the method, not remove.  So for
-    instnace a method will move from {'foo-1':'1', 'foo-2':'2'} to
-    {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
-    '''
+    silently ignored, hopefully to be caught by the actual validator.
+    Note that this decorator will *add* parameters to the method, not remove.
+    So for instance a method will move from {'foo-1':'1', 'foo-2':'2'}
+    to {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
+
+    """
     try:
         new_params = variabledecode.variable_decode(params)
         params.update(new_params)
     except:
         pass
 
+
 @before_validate
 def without_trailing_slash(remainder, params):
-    """This decorator allows you to ensure that the URL does not end in "/"
+    """This decorator allows you to ensure that the URL does not end in "/".
+
     The decorator accomplish this by redirecting to the correct URL.
 
     :Usage:
@@ -595,6 +633,7 @@ def without_trailing_slash(remainder, params):
 
     In the above example http://localhost:8080/sample/ redirects to http://localhost:8080/sample
     In addition, the URL http://localhost:8080/sample/1/ redirects to http://localhost:8080/sample/1
+
     """
     if request.method == 'GET' and request.path.endswith('/') and not(request._response_type) and len(request.params)==0:
         from tg.controllers import redirect
@@ -603,7 +642,8 @@ def without_trailing_slash(remainder, params):
 
 @before_validate
 def with_trailing_slash(remainder, params):
-    """This decorator allows you to ensure that the URL ends in "/"
+    """This decorator allows you to ensure that the URL ends in "/".
+
     The decorator accomplish this by redirecting to the correct URL.
 
     :Usage:
@@ -619,6 +659,7 @@ def with_trailing_slash(remainder, params):
 
     In the above example http://localhost:8080/sample redirects to http://localhost:8080/sample/
     In addition, the URL http://localhost:8080/sample/1 redirects to http://localhost:8080/sample/1/
+
     """
     if (request.method == 'GET'
         and not(request.path.endswith('/'))
@@ -650,7 +691,6 @@ class _BaseProtectionDecorator(object):
 class require(_BaseProtectionDecorator):
     """
     TurboGears-specific repoze.what action protector.
-
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
     flash status if the HTTP status code is 401 or 403, respectively.
@@ -661,6 +701,28 @@ class require(_BaseProtectionDecorator):
     def __call__(self, action_):
         return decorator(self.wrap_action, action_)
     
+    def wrap_action(self, action_, *args, **kwargs):
+        req = request._current_obj()
+
+        try:
+            self.predicate.check_authorization(req.environ)
+        except NotAuthorizedError, e:
+            reason = unicode(e)
+            if req.environ.get('repoze.who.identity'):
+                # The user is authenticated.
+                code = 403
+            else:
+                # The user is not authenticated.
+                code = 401
+            if self.denial_handler:
+                response.status = code
+                return self.denial_handler(reason)
+            abort(code, comment=reason)
+        return action_(*args, **kwargs)
+
+    def __call__(self, action_):
+        return decorator(self.wrap_action, action_)
+
     def wrap_action(self, action_, *args, **kwargs):
         req = request._current_obj()
 
@@ -691,8 +753,7 @@ class require(_BaseProtectionDecorator):
         abort(response.status_int, reason)
 
 class allow_only(_BaseProtectionDecorator):
-    """
-    TurboGears-specific repoze.what controller protector.
+    """TurboGears-specific repoze.what controller protector.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
@@ -708,12 +769,11 @@ class allow_only(_BaseProtectionDecorator):
 
     def __call__(self, cls, *args, **kwargs):
         if hasattr(self.protector, 'predicate'):
-            cls.allow_only=self.protector.predicate
+            cls.allow_only = self.protector.predicate
         if hasattr(cls, '_failed_authorization'):
             self.denial_handler = cls._failed_authorization
         sup = super(allow_only, self)
         if hasattr(sup, '__call__'):
             return super(allow_only, self).__call__(cls, *args, **kwargs)
-
 
 #}

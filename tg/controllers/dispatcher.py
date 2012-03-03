@@ -15,7 +15,6 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-from inspect import ismethod
 from warnings import warn
 import tg, sys
 import mimetypes
@@ -35,9 +34,7 @@ def dispatched_controller():
     return None
 
 class CoreDispatcher(object):
-    """
-       Extend this class to define your own mechanism for dispatch.
-    """
+    """Extend this class to define your own mechanism for dispatch."""
     _use_lax_params = True
 
     def _call(self, tgl, controller, params, remainder=None):
@@ -104,11 +101,11 @@ class CoreDispatcher(object):
 
         func, controller, remainder, params = self._get_dispatchable(thread_locals, url_path)
 
-        if hasattr(controller, '__before__') and not hasattr(controller, '_before'):
-            warn("this functionality is going to removed in the next minor version,"\
-                 " please use _before instead."
-                 )
-            controller.__before__(*remainder, **params)
+        if hasattr(controller, '__before__'
+                ) and not hasattr(controller, '_before'):
+            warn("Support for __before__ is going to removed"
+                " in the next minor version, please use _before instead.")
+            controller.__before__(*args, **args)
 
         if hasattr(controller, '_before'):
             controller._before(*remainder, **params)
@@ -118,15 +115,17 @@ class CoreDispatcher(object):
         r = self._call(func, params, remainder=remainder, tgl=thread_locals)
 
         if hasattr(controller, '__after__'):
-            warn("this functionality is going to removed in the next minor version,"
-                 " please use _after instead.")
-            controller.__after__(*remainder, **params)
+            warn("Support for __after__ is going to removed"
+                 " in the next minor version,  please use _after instead.")
+            controller.__after__(*args, **args)
+        
         if hasattr(controller, '_after'):
             controller._after(*remainder, **params)
         return r
 
     def routes_placeholder(self, url='/', start_response=None, **kwargs):
-        """
+        """Routes placeholder.
+
         This function does not do anything.  It is a placeholder that allows
         Routes to accept this controller as a target for its routing.
         """
@@ -188,20 +187,6 @@ class CoreDispatcher(object):
 
         return response
 
-    def _is_exposed(self, controller, name):
-        """Override this function to define how a controller method is
-        determined to be exposed.
-
-        :Arguments:
-          controller - controller with methods that may or may not be exposed.
-          name - name of the method that is tested.
-
-        :Returns:
-           True or None
-        """
-        if hasattr(controller, name) and ismethod(getattr(controller, name)):
-            return True
-
     @cached_property
     def mount_point(self):
         if not self.mount_steps:
@@ -216,10 +201,12 @@ class CoreDispatcher(object):
                 if controller is item:
                     return parents + [(i, item)]
                 if hasattr(controller, '_dispatch'):
-                    v = find_url(controller.__class__, item, parents + [(i, controller)])
+                    v = find_url(controller.__class__,
+                        item, parents + [(i, controller)])
                     if v:
                         return v
             return []
 
-        root_controller = sys.modules[tg.config['application_root_module']].RootController
+        root_controller = sys.modules[
+            tg.config['application_root_module']].RootController
         return find_url(root_controller, self, [('/', root_controller)])

@@ -159,6 +159,8 @@ class AppConfig(Bunch):
                           before_call=[],
                           before_render=[],
                           after_render=[],
+                          before_render_call=[],
+                          after_render_call=[],
                           before_config=[],
                           after_config=[])
         # The codes TG should display an error page for. All other HTTP errors are
@@ -183,7 +185,7 @@ class AppConfig(Bunch):
         elif hook_name == 'controller_wrapper':
             self.controller_wrappers.append(func)
         else:
-            self.hooks[hook_name].append(func)
+            self.hooks.setdefault(hook_name, []).append(func)
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -504,9 +506,14 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_jinja_renderer(self):
         """Setup a renderer and loader for Jinja2 templates."""
-        from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+        from jinja2 import ChoiceLoader, Environment
         from jinja2.filters import FILTERS
         from tg.render import render_jinja
+
+        if config.get('use_dotted_templatenames', True):
+            from tg.dottednames.jinja_lookup import JinjaTemplateLoader as TemplateLoader
+        else:
+            from jinja2 import FileSystemLoader as TemplateLoader
 
         if not 'jinja_extensions' in self :
             self.jinja_extensions = []
@@ -514,8 +521,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if not 'jinja_filters' in self:
             self.jinja_filters = {}
 
-        config['tg.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
-                 [FileSystemLoader(path) for path in self.paths['templates']]),
+        loader = ChoiceLoader(
+            [TemplateLoader(path) for path in self.paths['templates']])
+
+        config['tg.app_globals'].jinja2_env = Environment(loader=loader,
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
         # Try to load custom filters module under app_package.lib.templatetools

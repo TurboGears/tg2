@@ -1,15 +1,13 @@
-"""
-This module contains the RestController implementation
+"""This module contains the RestController implementation.
 
 Rest controller provides a RESTful dispatch mechanism, and
 combines controller decoration for TG-Controller behavior.
 """
-import tg
-from tg.controllers.util import abort
-import inspect
-from dispatcher import CoreDispatcher
+
 from crank.restdispatcher import RestDispatcher
-from decoratedcontroller import DecoratedController
+
+from tg.controllers.dispatcher import CoreDispatcher
+from tg.controllers.decoratedcontroller import DecoratedController
 
 class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
     """A Decorated Controller that dispatches in a RESTful Manner.
@@ -70,3 +68,5 @@ class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
       `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
 
     """
+
+__all__ = ['RestController']

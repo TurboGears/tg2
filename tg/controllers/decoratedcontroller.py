@@ -7,32 +7,40 @@ decorators to effect a rendered page.
 
 from urllib import url2pathname
 import inspect
+
 import formencode
 import tg
 from tg.controllers.util import abort
 
-try:
-    from repoze.what.predicates import NotAuthorizedError as WhatNotAuthorizedError, not_anonymous
-except ImportError:
-    class WhatNotAuthorizedError(Exception): pass
-    def not_anonymous(): pass
+from crank.util import (get_params_with_argspec,
+    remove_argspec_params_from_params)
 
-# demand load tw (ToscaWidets) if needed
+from tg.flash import flash
+from tg.jsonify import JsonEncodeError
+from tg.render import render as tg_render
+from tg.controllers.util import pylons_formencode_gettext
+
+try:
+    from repoze.what.predicates import (not_anonymous,
+        NotAuthorizedError as WhatNotAuthorizedError)
+except ImportError:
+    class WhatNotAuthorizedError(Exception):
+        """Repoze.what not authorized error."""
+    def not_anonymous():
+        return False
+
+# Load tw (ToscaWidets) only on demand
 tw = None
 
-from tg.render import render as tg_render
-from tg.decorators import expose
-from tg.flash import flash
-from tg.jsonify import is_saobject, JsonEncodeError
-from crank.util import get_params_with_argspec, remove_argspec_params_from_params
-
-from util import pylons_formencode_gettext
-
-class NotAuthorizedError(Exception): pass
+class NotAuthorizedError(Exception):
+    """Not authorized error."""
 
 class DecoratedController(object):
-    """Creates an interface to hang decoration attributes on
+    """Decorated controller object.
+
+    Creates an interface to hang decoration attributes on
     controller methods for the purpose of rendering web content.
+
     """
 
     def _is_exposed(self, controller, name):
@@ -41,7 +49,8 @@ class DecoratedController(object):
             return method.decoration.exposed
 
     def _call(self, controller, params, remainder=None, tgl=None):
-        """
+        """Run the controller with the given parameters.
+
         _call is called by _perform_call in Pylons' WSGIController.
 
         Any of the before_validate hook, the validation, the before_call hook,
@@ -73,8 +82,7 @@ class DecoratedController(object):
         if not resp_headers.get('Content-Type'):
             resp_headers.pop('Content-Type', None)
 
-        remainder = remainder or []
-        remainder = [url2pathname(r) for r in remainder]
+        remainder = map(url2pathname, remainder or [])
 
         tg_decoration = controller.decoration
         try:
@@ -98,21 +106,18 @@ class DecoratedController(object):
             output = controller_callable(*remainder, **params)
 
         except formencode.api.Invalid, inv:
-            controller, output = self._handle_validation_errors(controller,
-                                                                remainder,
-                                                                params, inv)
+            controller, output = self._handle_validation_errors(
+                controller, remainder, params, inv)
         except Exception, e:
             if tgl.config.get('use_toscawidgets2'):
                 from tw2.core import ValidationError
                 if isinstance(e, ValidationError):
-                    controller, output = self._handle_validation_errors(controller,
-                                                                remainder,
-                                                                params, e)
+                    controller, output = self._handle_validation_errors(
+                        controller, remainder, params, e)
                 else:
                     raise
             else:
                 raise
-
 
         #Be sure that we run hooks if the controller changed due to validation errors
         tg_decoration = controller.decoration
@@ -126,9 +131,9 @@ class DecoratedController(object):
         
         return response['response']
 
-
     def _perform_validate(self, controller, params):
-        """
+        """Run validation for the controller with the given parameters.
+
         Validation is stored on the "validation" attribute of the controller's
         decoration.
 
@@ -145,6 +150,7 @@ class DecoratedController(object):
         Validation can "clean" or otherwise modify the parameters that were
         passed in, not just raise an exception.  Validation exceptions should
         be FormEncode Invalid objects.
+
         """
 
         validation = getattr(controller.decoration, 'validation', None)
@@ -195,15 +201,16 @@ class DecoratedController(object):
         elif (hasattr(validation.validators, 'validate')
               and getattr(validation, 'needs_controller', False)):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(controller, params, state)
+            new_params = validation.validators.validate(
+                controller, params, state)
 
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
             new_params = validation.validators.validate(params, state)
 
         # Theoretically this should not happen...
-        #if new_params is None:
-        #    return params
+        # if new_params is None:
+        #     return params
 
         return new_params
 
@@ -228,8 +235,8 @@ class DecoratedController(object):
         req = tgl.request
         resp = tgl.response
 
-        content_type, engine_name, template_name, exclude_names = \
-            controller.decoration.lookup_template_engine(tgl)
+        (content_type, engine_name, template_name, exclude_names, render_params
+            ) = controller.decoration.lookup_template_engine(tgl)
 
         result = dict(response=response, content_type=content_type,
                       engine_name=engine_name, template_name=template_name)
@@ -240,8 +247,9 @@ class DecoratedController(object):
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
             if engine_name == 'json' and isinstance(response, list):
-                raise JsonEncodeError('You may not expose with json a list return value.  This is because'\
-                                      ' it leaves your application open to CSRF attacks')
+                raise JsonEncodeError(
+                    'You may not expose with JSON a list return value because'
+                    ' it leaves your application open to CSRF attacks.')
             return result
 
         # Save these objects as locals from the SOP to avoid expensive lookups
@@ -258,8 +266,8 @@ class DecoratedController(object):
                     import tw
                 except ImportError:
                     pass
-
-            tw.framework.default_view = engine_name
+            if tw:
+                tw.framework.default_view = engine_name
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
@@ -274,12 +282,14 @@ class DecoratedController(object):
             testing_variables['namespace'] = namespace
             testing_variables['template_name'] = template_name
             testing_variables['exclude_names'] = exclude_names
+            testing_variables['render_params'] = render_params
             testing_variables['controller_output'] = response
 
         # Render the result.
         rendered = tg_render(template_vars=namespace,
                       template_engine=engine_name,
-                      template_name=template_name)
+                      template_name=template_name,
+                      **render_params)
 
         if isinstance(result, unicode) and not resp.charset:
             resp.charset = 'UTF-8'
@@ -287,15 +297,19 @@ class DecoratedController(object):
         result['response'] = rendered
         return result
 
-    def _handle_validation_errors(self, controller, remainder, params, exception):
-        """
-        Sets up pylons.tmpl_context.form_values and pylons.tmpl_context.form_errors
-        to assist generating a form with given values and the validation failure
-        messages.
+    def _handle_validation_errors(self,
+            controller, remainder, params, exception):
+        """Handle validation errors.
 
-        The error handler in decoration.validation.error_handler is called. If
-        an error_handler isn't given, the original controller is used as the
-        error handler instead.
+        Sets up tg.tmpl_context.form_values
+        and tg.tmpl_context.form_errors
+        to assist generating a form with given values
+        and the validation failure messages.
+
+        The error handler in decoration.validation.error_handler is called.
+        If an error_handler isn't given, the original controller is used
+        as the error handler instead.
+
         """
 
         tg.tmpl_context.validation_exception = exception
@@ -323,10 +337,13 @@ class DecoratedController(object):
         if error_handler is None:
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
-        elif hasattr(error_handler, 'im_self') and error_handler.im_self != controller:
-            output = error_handler(error_handler.im_self, *remainder, **dict(params))
+        elif hasattr(error_handler, 'im_self'
+                ) and error_handler.im_self != controller:
+            output = error_handler(
+                error_handler.im_self, *remainder, **dict(params))
         else:
-            output = error_handler(controller.im_self, *remainder, **dict(params))
+            output = error_handler(
+                controller.im_self, *remainder, **dict(params))
 
         return error_handler, output
 
@@ -358,13 +375,25 @@ class DecoratedController(object):
             flash(reason, status=status)
             abort(code, comment=reason)
         except NotAuthorizedError, e:
-            reason = getattr(e, 'msg', 'You are not Authorized to access this Resource')
-            code   = getattr(e, 'code', 401)
+            reason = getattr(e, 'msg',
+                'You are not authorized to access this resource')
+            code = getattr(e, 'code', 401)
             status = getattr(e, 'status', 'error')
             tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
 
-__all__ = [
-    "DecoratedController"
-    ]
+def _configured_engines():
+    """Get the configured engines.
+
+    Returns a set containing the names of the currently configured template
+    engines from the active application's globals.
+
+    """
+    g = tg.app_globals._current_obj()
+    if not hasattr(g, 'tg_configured_engines'):
+        g.tg_configured_engines = set()
+    return g.tg_configured_engines
+
+
+__all__ = ['DecoratedController']
