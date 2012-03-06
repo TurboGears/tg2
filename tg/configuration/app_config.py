@@ -133,9 +133,10 @@ class AppConfig(Bunch):
 
         self.use_ming = False
         self.use_sqlalchemy = False
-        self.use_toscawidgets = True
         self.use_transaction_manager = True
+        self.use_toscawidgets = True
         self.use_toscawidgets2 = False
+        self.prefer_toscawidgets2 = False
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -216,6 +217,10 @@ class AppConfig(Bunch):
         pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
                         paths=self.paths)
+
+        if self.prefer_toscawidgets2:
+            self.use_toscawidgets = False
+            self.use_toscawidgets2 = True
 
         self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
         pylons_config['application_root_module'] = self.get_root_module()
@@ -816,7 +821,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from tw2.core.middleware import Config, TwMiddleware
         default_tw2_config = dict( default_engine=self.default_renderer,
                                    translator=ugettext,
-                                   auto_reload_templates=asbool(self.get('templating.mako.reloadfromdisk', 'false'))
+                                   auto_reload_templates=self.auto_reload_templates,
+                                   controller_prefix='/widgets_controllers',
+                                   res_prefix='/widgets_resources'
                                    )
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)
