@@ -23,12 +23,13 @@ from tg import tmpl_context
 from tg.paginate import Page
 from tg.util import partial
 
-from repoze.what.predicates import NotAuthorizedError
+from repoze.what.predicates import NotAuthorizedError, Predicate
 
 from tg.util import Bunch
 from tg.flash import flash
-#from tg.controllers import redirect
 
+# Predicates booleanized:
+Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators

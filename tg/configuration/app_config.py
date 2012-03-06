@@ -686,11 +686,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
-        from repoze.what.plugins.pylonshq import booleanize_predicates
-
-        # Predicates booleanized:
-        booleanize_predicates()
-
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
             self.sa_auth['log_stream'] = logging.getLogger('auth')
