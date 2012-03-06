@@ -6,9 +6,9 @@ decorators to effect a rendered page.
 """
 
 from urllib import url2pathname
-import inspect
+import inspect, operator
 
-import formencode
+strip_string = operator.methodcaller('strip')
 
 try:
     from repoze.what.predicates import (
@@ -31,9 +31,28 @@ from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
 from tg.controllers.util import pylons_formencode_gettext
+from tg.util import _navigate_tw2form_children
 
 # Load tw (ToscaWidets) only on demand
 tw = None
+
+try:
+    from tw2.core import ValidationError as Tw2ValidationError
+except ImportError:
+    class Tw2ValidationError(Exception):
+        """ToscaWidgets2 Validation Error"""
+
+try:
+    from formencode.api import Invalid as FormEncodeValidationError
+    from formencode import Schema as FormEncodeSchema
+    from formencode.schema import format_compound_error
+except ImportError:
+    class FormEncodeValidationError(Exception):
+        """FormEncode Invalid"""
+    class FormEncodeSchema(object):
+        """FormEncode Schema"""
+    def format_compound_error(*arg, **kw):
+        """FormEncode format_compound_error"""
 
 # @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
@@ -124,19 +143,9 @@ class DecoratedController(object):
             # call controller method
             output = controller_callable(*remainder, **dict(params))
 
-        except formencode.api.Invalid, inv:
+        except (FormEncodeValidationError, Tw2ValidationError) , inv:
             controller, output = self._handle_validation_errors(
                 controller, remainder, params, inv)
-        except Exception, e:
-            if config.get('use_toscawidgets2'):
-                from tw2.core import ValidationError
-                if isinstance(e, ValidationError):
-                    controller, output = self._handle_validation_errors(
-                        controller, remainder, params, e)
-                else:
-                    raise
-            else:
-                raise
 
         #Be sure that we run hooks if the controller changed due to validation errors
         tg_decoration = controller.decoration
@@ -197,7 +206,7 @@ class DecoratedController(object):
                     new_params[field] = validator.to_python(params.get(field),
                             state)
                 # catch individual validation errors into the errors dictionary
-                except formencode.api.Invalid, inv:
+                except FormEncodeValidationError, inv:
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -208,11 +217,10 @@ class DecoratedController(object):
             # If there are errors, create a compound validation error based on
             # the errors dictionary, and raise it as an exception
             if errors:
-                raise formencode.api.Invalid(
-                    formencode.schema.format_compound_error(errors),
+                raise FormEncodeValidationError(format_compound_error(errors),
                     params, None, error_dict=errors)
 
-        elif isinstance(validation.validators, formencode.Schema):
+        elif isinstance(validation.validators, FormEncodeSchema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
             new_params = validation.validators.to_python(params, state)
@@ -356,28 +364,34 @@ class DecoratedController(object):
 
         """
 
-        pylons.tmpl_context.validation_exception = exception
-        pylons.tmpl_context.form_errors = {}
+        tmpl_context = pylons.tmpl_context
+        tmpl_context.validation_exception = exception
+        tmpl_context.form_errors = {}
 
-        # Most Invalid objects come back with a list of errors in the format:
-        #"fieldname1: error\nfieldname2: error"
+        if isinstance(exception, Tw2ValidationError):
+            #Fetch all the children and grandchildren of a widget
+            widget = exception.widget
+            widget_children = _navigate_tw2form_children(widget.child)
 
-        error_list = exception.__str__().split('\n')
+            errors = [(child.id, child.error_msg) for child in widget_children]
+            tmpl_context.form_errors.update(errors)
+            tmpl_context.form_values = widget.child.value
+        else:
+            # Most Invalid objects come back with a list of errors in the format:
+            #"fieldname1: error\nfieldname2: error"
+            error_list = exception.__str__().split('\n')
+            for error in error_list:
+                field_value = map(strip_string, error.split(':', 1))
 
-        for error in error_list:
-            field_value = error.split(':', 1)
+                #if the error has no field associated with it,
+                #return the error as a global form error
+                if len(field_value) == 1:
+                    tmpl_context.form_errors['_the_form'] = field_value[0]
+                    continue
 
-            #if the error has no field associated with it,
-            #return the error as a global form error
-            if len(field_value) == 1:
-                pylons.tmpl_context.form_errors[
-                    '_the_form'] = field_value[0].strip()
-                continue
+                tmpl_context.form_errors[field_value[0]] = field_value[1]
 
-            pylons.tmpl_context.form_errors[
-                field_value[0]] = field_value[1].strip()
-
-        pylons.tmpl_context.form_values = getattr(exception, 'value', {})
+            tmpl_context.form_values = getattr(exception, 'value', {})
 
         error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
