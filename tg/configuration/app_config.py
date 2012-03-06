@@ -822,8 +822,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         default_tw2_config = dict( default_engine=self.default_renderer,
                                    translator=ugettext,
                                    auto_reload_templates=self.auto_reload_templates,
-                                   controller_prefix='/widgets_controllers',
-                                   res_prefix='/widgets_resources'
+                                   controller_prefix='/widgets_controllers/',
+                                   res_prefix='/widgets_resources/',
+                                   debug=config['debug'],
                                    )
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)
