@@ -69,6 +69,7 @@ class TGApp(object):
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
         self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
+        self.enable_routes = self.config.get('enable_routes', False)
 
         self.req_options = config.get('tg.request_options',
                                       dict(charset='utf-8',
@@ -89,7 +90,6 @@ class TGApp(object):
         try:
             environ['pylons.controller'] = controller
             environ['pylons.pylons'] = environ['tg.locals']
-            environ['pylons.routes_dict'] = environ['tg.routes_dict']
 
             self.config['pylons.app_globals'] = self.globals
 
@@ -99,9 +99,12 @@ class TGApp(object):
             pylons.app_globals = request_local.app_globals
             pylons.session = request_local.session
             pylons.translator = request_local.translator
-            pylons.url = request_local.url
             pylons.response = request_local.response
             pylons.tmpl_context = request_local.tmpl_context
+
+            if self.enable_routes:
+                environ['pylons.routes_dict'] = environ['tg.routes_dict']
+                pylons.url = request_local.url
         except ImportError:
             pass
 
@@ -172,7 +175,6 @@ class TGApp(object):
         app_globals = self.globals
         session = environ.get('beaker.session')
         cache = environ.get('beaker.cache')
-        url = environ.get('routes.url')
 
         locals = RequestLocals()
         locals.response = response
@@ -183,7 +185,10 @@ class TGApp(object):
         locals.translator = translator
         locals.session = session
         locals.cache = cache
-        locals.url = url
+
+        if self.enable_routes:
+            url = environ.get('routes.url')
+            locals.url = url
 
         environ['tg.locals'] = locals
 
@@ -215,11 +220,14 @@ class TGApp(object):
         returned.
 
         """
-        match = environ['wsgiorg.routing_args'][1]
-        environ['tg.routes_dict'] = match
-        controller = match.get('controller')
-        if not controller:
-            return None
+        if self.enable_routes:
+            match = environ['wsgiorg.routing_args'][1]
+            environ['tg.routes_dict'] = match
+            controller = match.get('controller')
+            if not controller:
+                return None
+        else:
+            controller = 'root'
 
         return self.get_controller_instance(controller)
 

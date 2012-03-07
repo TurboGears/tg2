@@ -21,8 +21,6 @@ from tg.request_local import config as reqlocal_config
 import tg
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
 
-from routes import Mapper
-from routes.middleware import RoutesMiddleware
 from webob import Request
 
 log = logging.getLogger(__name__)
@@ -145,6 +143,7 @@ class AppConfig(Bunch):
         # legacy renderers are buffet interface plugins
         self.use_legacy_renderer = False
 
+        self.enable_routes = False
         self.use_ming = False
         self.use_sqlalchemy = False
         self.use_transaction_manager = True
@@ -335,6 +334,7 @@ class AppConfig(Bunch):
             base_config = MyAppConfig()
 
         """
+        from routes import Mapper
 
         map = Mapper(directory=config['paths']['controllers'],
                     always_scan=config['debug'])
@@ -659,7 +659,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             #from self.call_on_startup and shutdown respectively.
             self.setup_startup_and_shutdown()
 
-            self.setup_routes()
+            if self.enable_routes:
+                self.setup_routes()
+
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
             self.setup_auth()
@@ -748,7 +750,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     return app
             base_config = MyAppConfig()
         """
-        app = RoutesMiddleware(app, config['routes.map'])
+        if self.enable_routes:
+            from routes.middleware import RoutesMiddleware
+            app = RoutesMiddleware(app, config['routes.map'])
+
         app = SessionMiddleware(app, config)
         app = CacheMiddleware(app, config)
         return app

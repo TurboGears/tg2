@@ -57,7 +57,6 @@ setup(
         'WebHelpers',
         'Formencode',
         'Beaker',
-        'routes',
         'decorator',
         'simplejson',
         'crank'
