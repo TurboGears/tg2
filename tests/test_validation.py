@@ -5,7 +5,7 @@ from nose.tools import raises
 import tg
 import tests
 from formencode import validators, Schema
-from simplejson import loads
+from simplejson import loads, dumps
 
 from tg.controllers import TGController
 from tg.decorators import expose, validate, before_render
@@ -14,6 +14,14 @@ from tests.base import (TestWSGIController, data_dir,
 
 from tw.forms import TableForm, TextField
 from tw.api import WidgetsList
+
+import tw2.core as tw2c
+import tw2.forms as tw2f
+
+class MovieForm(tw2f.TableForm):
+    title = tw2f.TextField(validator=tw2c.Required)
+    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
+movie_form = MovieForm(action='save_movie')
 
 def setup():
     setup_session_dir()
@@ -128,6 +136,15 @@ class BasicTGController(TGController):
         return dict(kwargs)
 
     @expose()
+    def tw2form_error_handler(self, **kwargs):
+        return dumps(dict(errors=tg.tmpl_context.form_errors))
+
+    @expose('json')
+    @validate(form=movie_form, error_handler=tw2form_error_handler)
+    def send_tw2_to_error_handler(self, **kwargs):
+        return 'passed validation'
+
+    @expose()
     def set_lang(self, lang=None):
         tg.session['tg_lang'] = lang
         tg.session.save()
@@ -238,6 +255,13 @@ class TestTGController(TestWSGIController):
         values = loads(resp.body)
         assert "Please enter an integer value" in values['errors']['year'], \
             'Error message not found: %r' % values['errors']
+
+    def test_tw2form_validation(self):
+        form_values = {'title': 'Razer', 'year': "t007"}
+        resp = self.app.post('/send_tw2_to_error_handler', form_values)
+        values = loads(resp.body)
+        assert "Must be an integer" in values['errors']['year'],\
+        'Error message not found: %r' % values['errors']
 
     def test_form_validation_translation(self):
         """Test translation of form validation error messages"""

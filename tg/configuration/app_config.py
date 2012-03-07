@@ -147,9 +147,10 @@ class AppConfig(Bunch):
 
         self.use_ming = False
         self.use_sqlalchemy = False
-        self.use_toscawidgets = True
         self.use_transaction_manager = True
+        self.use_toscawidgets = True
         self.use_toscawidgets2 = False
+        self.prefer_toscawidgets2 = False
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -259,6 +260,10 @@ class AppConfig(Bunch):
             conf.setdefault('beaker.session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
             conf.setdefault('beaker.cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
         conf['tg.cache_dir'] = conf.pop('cache_dir', conf['app_conf'].get('cache_dir'))
+
+        if self.prefer_toscawidgets2:
+            self.use_toscawidgets = False
+            self.use_toscawidgets2 = True
 
         # Load conf dict into the global config object
         config.update(conf)
@@ -829,7 +834,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         from tw2.core.middleware import Config, TwMiddleware
         default_tw2_config = dict( default_engine=self.default_renderer,
                                    translator=ugettext,
-                                   auto_reload_templates=asbool(self.get('templating.mako.reloadfromdisk', 'false'))
+                                   auto_reload_templates=self.auto_reload_templates,
+                                   controller_prefix='/widgets_controllers/',
+                                   res_prefix='/widgets_resources/',
+                                   debug=config['debug'],
                                    )
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)

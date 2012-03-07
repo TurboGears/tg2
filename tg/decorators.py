@@ -8,7 +8,6 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-from repoze.what.predicates import NotAuthorizedError, Predicate
 from warnings import warn
 
 from paste.util.mimeparse import best_match
@@ -22,11 +21,11 @@ from formencode import variabledecode
 from tg import tmpl_context, request, response
 from tg.util import partial, Bunch
 from tg.flash import flash
-#from tg.controllers import redirect
 
 from caching import beaker_cache, cached_property
 
 # Predicates booleanized:
+from repoze.what.predicates import NotAuthorizedError, Predicate
 Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
 
 class Decoration(object):

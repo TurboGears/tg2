@@ -236,7 +236,6 @@ def no_warn(f, *args, **kwargs):
         warnings.resetwarnings()
     return wrap(_f, f)
 
-
 class LazyString(object):
     """Has a number of lazily evaluated functions replicating a
     string. Just override the eval() method to produce the actual value.
@@ -270,3 +269,11 @@ def lazify(func):
     newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
         (func.__name__, func.__doc__)
     return newfunc
+
+def _navigate_tw2form_children(w):
+    if getattr(w, 'id', None):
+        yield w
+    else:
+        for c in getattr(w, 'children', []):
+            for cc in _navigate_tw2form_children(c):
+                yield cc
