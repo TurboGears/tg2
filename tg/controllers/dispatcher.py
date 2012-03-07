@@ -101,12 +101,6 @@ class CoreDispatcher(object):
 
         func, controller, remainder, params = self._get_dispatchable(thread_locals, url_path)
 
-        if hasattr(controller, '__before__'
-                ) and not hasattr(controller, '_before'):
-            warn("Support for __before__ is going to removed"
-                " in the next minor version, please use _before instead.")
-            controller.__before__(*args, **args)
-
         if hasattr(controller, '_before'):
             controller._before(*remainder, **params)
 
@@ -114,13 +108,9 @@ class CoreDispatcher(object):
 
         r = self._call(func, params, remainder=remainder, tgl=thread_locals)
 
-        if hasattr(controller, '__after__'):
-            warn("Support for __after__ is going to removed"
-                 " in the next minor version,  please use _after instead.")
-            controller.__after__(*args, **args)
-        
         if hasattr(controller, '_after'):
             controller._after(*remainder, **params)
+
         return r
 
     def routes_placeholder(self, url='/', start_response=None, **kwargs):
