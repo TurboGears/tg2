@@ -45,6 +45,7 @@ class CoreDispatcher(WSGIController):
     """Extend this class to define your own mechanism for dispatch."""
 
     _use_lax_params = True
+    _use_index_fallback = False
 
     def _call(self, controller, params, remainder=None):
         """Override to define how your controller method should be called."""

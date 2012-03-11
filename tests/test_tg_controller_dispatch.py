@@ -231,6 +231,10 @@ class RemoteErrorHandler(TGController):
 class NotFoundController(TGController):
     pass
 
+class NotFoundWithIndexController(TGController):
+    @expose()
+    def index(self, *args, **kw):
+        return 'INDEX'
 
 class DefaultWithArgsController(TGController):
 
@@ -476,6 +480,16 @@ class TestNotFoundController(TestWSGIController):
 
     def test_not_found_unicode(self):
         r = self.app.get('/права', status=404)
+        assert '404 Not Found' in r, r
+
+class TestNotFoundWithIndexController(TestWSGIController):
+
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(NotFoundWithIndexController)
+
+    def test_not_found(self):
+        r = self.app.get('/something', status=404)
         assert '404 Not Found' in r, r
 
 
