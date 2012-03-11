@@ -36,6 +36,7 @@ def dispatched_controller():
 class CoreDispatcher(object):
     """Extend this class to define your own mechanism for dispatch."""
     _use_lax_params = True
+    _use_index_fallback = False
 
     def _call(self, tgl, controller, params, remainder=None):
         """
