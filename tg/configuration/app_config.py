@@ -837,7 +837,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         option that is set within your application's ini file.)
         """
         from tw2.core.middleware import Config, TwMiddleware
+
+        tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
         default_tw2_config = dict( default_engine=self.default_renderer,
+                                   preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
                                    auto_reload_templates=self.auto_reload_templates,
                                    controller_prefix='/tw2/controllers/',
