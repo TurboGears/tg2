@@ -699,28 +699,6 @@ class require(_BaseProtectionDecorator):
     """
     def __call__(self, action_):
         return decorator(self.wrap_action, action_)
-    
-    def wrap_action(self, action_, *args, **kwargs):
-        req = request._current_obj()
-
-        try:
-            self.predicate.check_authorization(req.environ)
-        except NotAuthorizedError, e:
-            reason = unicode(e)
-            if req.environ.get('repoze.who.identity'):
-                # The user is authenticated.
-                code = 403
-            else:
-                # The user is not authenticated.
-                code = 401
-            if self.denial_handler:
-                response.status = code
-                return self.denial_handler(reason)
-            abort(code, comment=reason)
-        return action_(*args, **kwargs)
-
-    def __call__(self, action_):
-        return decorator(self.wrap_action, action_)
 
     def wrap_action(self, action_, *args, **kwargs):
         req = request._current_obj()
