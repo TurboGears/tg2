@@ -92,7 +92,7 @@ class DecoratedController(object):
 
         """
         if tgl is None:
-            tgl = tg.request['environ']['thread_locals']
+            tgl = tg.request.environ['tg.locals']
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
