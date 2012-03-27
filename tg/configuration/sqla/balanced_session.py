@@ -10,6 +10,8 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 class BalancedSession(Session):
+    _force_engine = None
+
     def get_bind(self, mapper=None, clause=None):
         config = tg.config._current_obj()
         engines = config.get('balanced_engines')
@@ -37,12 +39,23 @@ class BalancedSession(Session):
             log.debug('Choose engine: %s', choosen_slave)
             return engines['slaves'][choosen_slave]
 
-    _force_engine = None
     def using_engine(self, engine_name):
-        s = BalancedSession()
-        vars(s).update(vars(self))
-        s._force_engine = engine_name
-        return s
+        return UsingEngineContext(engine_name, self)
+
+class UsingEngineContext(object):
+    def __init__(self, engine_name, DBSession=None):
+        self.engine_name = engine_name
+        if not DBSession:
+            DBSession = tg.config['DBSession']()
+        self.session = DBSession
+        self.past_engine = self.session._force_engine
+
+    def __enter__(self):
+        self.session._force_engine = self.engine_name
+        return self.session
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session._force_engine = self.past_engine
 
 def force_request_engine(engine_name):
     tg.request._tg_force_sqla_engine = engine_name
