@@ -8,8 +8,6 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-from warnings import warn
-
 from paste.util.mimeparse import best_match
 from decorator import decorator
 
@@ -20,13 +18,18 @@ from tg.controllers.util import abort
 from formencode import variabledecode
 from tg import tmpl_context, request, response
 from tg.util import partial, Bunch
+from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 
 from caching import beaker_cache, cached_property
 
 # Predicates booleanized:
-from repoze.what.predicates import NotAuthorizedError, Predicate
-Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
+try:
+    from repoze.what.predicates import NotAuthorizedError, Predicate
+    Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
+except ImportError:
+    class NotAuthorizedError(object):
+        """Repoze.what not authorized error."""
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -753,4 +756,44 @@ class allow_only(_BaseProtectionDecorator):
         if hasattr(sup, '__call__'):
             return super(allow_only, self).__call__(cls, *args, **kwargs)
 
+class with_engine(object):
+    """
+    Decorator to force usage of a specific database engine
+    in TurboGears SQLAlchemy BalancedSession.
+    
+    :param engine_name: 'master' or the name of one of the slaves, if is ``None``
+             it will not force any specific engine.
+    :param master_params: A dictionary or GET parameters that when present will force
+             usage of the master node. The keys of the dictionary will be the
+             name of the parameters to look for, while the values must be whenever
+             to pop the paramter from the parameters passed to the controller (True/False).
+             If `master_params` is a list then it is converted to a dictionary where
+             the keys are the entries of the list and the value is always True.
+    """
+
+    def __init__(self, engine_name=None, master_params={}):
+        self.engine_name = engine_name
+
+        if not hasattr(master_params, 'keys'):
+            self.master_params = dict((p, True) for p in master_params)
+        else:
+            self.master_params = master_params
+
+    def before_validate(self, remainder, params):
+        force_request_engine(self.engine_name)
+        for p, pop in self.master_params.items():
+            if p in params:
+                if pop:
+                    v = params.pop(p, None)
+                else:
+                    v = params.get(p)
+
+                if v:
+                    force_request_engine('master')
+                    break
+
+    def __call__(self, func):
+        decoration = Decoration.get_decoration(func)
+        decoration.register_hook('before_validate', self.before_validate)
+        return func
 #}

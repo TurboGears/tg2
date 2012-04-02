@@ -623,9 +623,32 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         """
         from sqlalchemy import engine_from_config
-        engine = engine_from_config(config, 'sqlalchemy.')
-        config['tg.app_globals'].sa_engine = engine
+
+        balanced_master = config.get('sqlalchemy.master.url')
+        if not balanced_master:
+            engine = engine_from_config(config, 'sqlalchemy.')
+        else:
+            engine = engine_from_config(config, 'sqlalchemy.master.')
+            config['balanced_engines'] = {'master':engine,
+                                          'slaves':{},
+                                          'all':{'master':engine}}
+
+            all_engines = config['balanced_engines']['all']
+            slaves = config['balanced_engines']['slaves']
+            for entry in config.keys():
+                if entry.startswith('sqlalchemy.slaves.'):
+                    slave_path = entry.split('.')
+                    slave_name = slave_path[2]
+                    if slave_name == 'master':
+                        raise TGConfigError('A slave node cannot be named master')
+                    slave_config = '.'.join(slave_path[:3])
+                    all_engines[slave_name] = slaves[slave_name] = engine_from_config(config, slave_config+'.')
+
+            if not config['balanced_engines']['slaves']:
+                raise TGConfigError('When running in balanced mode your must specify at least a slave node')
+
         # Pass the engine to initmodel, to be able to introspect tables
+        config['tg.app_globals'].sa_engine = engine
         self.package.model.init_model(engine)
 
     def setup_auth(self):
@@ -724,7 +747,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 raise TGConfigError(msg)
 
         if self.auth_backend == "sqlalchemy":
-            from sqlauth_config import setup_sql_auth
+            from tg.configuration.sqla.auth import setup_sql_auth
             app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
         elif self.auth_backend == "ming":
             from tgming import setup_ming_auth
