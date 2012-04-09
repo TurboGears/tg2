@@ -51,7 +51,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'WebOb == 1.0.8',
+        'WebOb == 1.1.1',
         'Pylons >= 0.9.7',
         'WebFlash >= 0.1a8',
         'WebError >= 0.10.1',
