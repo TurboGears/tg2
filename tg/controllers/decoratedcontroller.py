@@ -8,7 +8,12 @@ decorators to effect a rendered page.
 from urllib import url2pathname
 import inspect, operator
 
-strip_string = operator.methodcaller('strip')
+try:
+    strip_string = operator.methodcaller('strip')
+except AttributeError:
+    def strip_string(s):
+        """Strip string compatibility method for Python2.5"""
+        return s.strip()
 
 import tg
 from tg.controllers.util import abort

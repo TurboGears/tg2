@@ -1,8 +1,7 @@
 """Main Controller"""
 
-from tg import expose, redirect, config, validate, override_template, response
+from tg import expose, redirect, config, validate, override_template, response, render_template
 from tg.decorators import paginate, use_custom_format, with_trailing_slash
-from tg.render import render
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -278,7 +277,7 @@ class RootController(TGController):
             from pylons.templating import render_jinja2
             return render_jinja2('jinja_inherits.html')
         else:
-            return render({}, 'jinja', 'jinja_inherits.html')
+            return render_template({}, 'jinja', 'jinja_inherits.html')
 
     @expose()
     def no_template_generator(self):
@@ -293,5 +292,5 @@ class RootController(TGController):
     def genshi_manual_rendering_with_doctype(self, doctype=None):
         response.content_type = 'text/html'
         response.charset = 'utf-8'
-        return render({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
+        return render_template({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
 

@@ -64,6 +64,7 @@ from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
 from tg.controllers.util import use_wsgi_app
 from tg.controllers.dispatcher import dispatched_controller
+from tg.render import render as render_template
 
 __version__ = version
 
@@ -71,4 +72,4 @@ __all__ = ['__version__',
     'allow_only', 'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
     'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'url', 'lurl',
-    'dispatched_controller', 'use_custom_format', 'with_engine']
+    'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template']
