@@ -33,8 +33,14 @@ test_requirements = ['coverage',
                     'tgext.admin>=0.3.9',
                     ]
 
-if sys.version_info[:2] == (2,4):
-    test_requirements.extend(['pysqlite', 'hashlib'])
+install_requires=[
+    'WebOb == 1.1.1',
+    'Pylons >= 0.9.7',
+    'WebFlash >= 0.1a8',
+    'WebError >= 0.10.1',
+    'Babel',
+    'crank >= 0.6.2'
+    ]
 
 setup(
     name='TurboGears2',
@@ -50,14 +56,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'WebOb == 1.1.1',
-        'Pylons >= 0.9.7',
-        'WebFlash >= 0.1a8',
-        'WebError >= 0.10.1',
-        'Babel',
-        'crank'
-    ],
+    install_requires=install_requires,
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
         #     since tests_require takes care of that as long as TG is tested
@@ -75,6 +74,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://www.turbogears.org/2.1/downloads/current/"
+        "http://tg.gy/"
         ]
 )
