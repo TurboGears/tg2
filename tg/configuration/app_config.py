@@ -390,7 +390,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 module_directory=compiled_dir,
-                default_filters=['escape'])
+                default_filters=['escape'],
+                auto_reload_templates=self.auto_reload_templates)
 
         else:
             from mako.lookup import TemplateLookup
