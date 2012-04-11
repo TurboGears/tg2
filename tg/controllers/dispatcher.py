@@ -119,12 +119,6 @@ class CoreDispatcher(WSGIController):
 
         func, controller, remainder, params = self._get_dispatchable(url_path)
 
-        if hasattr(controller, '__before__'
-                ) and not hasattr(controller, '_before'):
-            warn("Support for __before__ is going to removed"
-                " in the next minor version, please use _before instead.")
-            controller.__before__(*args, **args)
-
         if hasattr(controller, '_before'):
             controller._before(*args, **args)
 
@@ -132,10 +126,6 @@ class CoreDispatcher(WSGIController):
 
         r = self._call(func, params, remainder=remainder)
 
-        if hasattr(controller, '__after__'):
-            warn("Support for __after__ is going to removed"
-                 " in the next minor version,  please use _after instead.")
-            controller.__after__(*args, **args)
         if hasattr(controller, '_after'):
             controller._after(*args, **args)
         return r
