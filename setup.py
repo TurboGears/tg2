@@ -74,6 +74,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://tg.gy/"
+        "http://tg.gy/beta"
         ]
 )
