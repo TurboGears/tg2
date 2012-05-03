@@ -750,8 +750,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     auth_args, sqlauth = create_default_authenticator(**auth_args)
                     auth_args['authenticators'] = [('sqlauth', sqlauth)]
                 elif self.auth_backend == "ming":
-                    from tgming.auth import MingAuthenticatorPlugin
-                    mingauth = MingAuthenticatorPlugin(auth_args.pop('user_class', None))
+                    from tg.configuration.mongo.auth import create_default_authenticator
+                    auth_args, mingauth = create_default_authenticator(**auth_args)
                     auth_args['authenticators'] = [('mingauth', mingauth)]
             app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
 
