@@ -15,14 +15,7 @@ except AttributeError:
         """Strip string compatibility method for Python2.5"""
         return s.strip()
 
-try:
-    from repoze.what.predicates import (
-        NotAuthorizedError as WhatNotAuthorizedError, not_anonymous)
-except ImportError:
-    class WhatNotAuthorizedError(Exception):
-        """Repoze.what not authorized error."""
-    def not_anonymous():
-        return False
+from tg.predicates import NotAuthorizedError, not_anonymous
 
 import pylons
 from pylons.configuration import config
@@ -62,11 +55,6 @@ except ImportError:
 # @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
-
-
-class NotAuthorizedError(Exception):
-    """Not authorized error."""
-
 
 class DecoratedController(object):
     """Decorated controller object.
@@ -421,8 +409,8 @@ class DecoratedController(object):
         if predicate is None:
             return True
         try:
-            predicate.check_authorization(pylons.request.environ)
-        except WhatNotAuthorizedError, e:
+            predicate.check_authorization(request.environ)
+        except NotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still
@@ -439,15 +427,6 @@ class DecoratedController(object):
             pylons.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-        except NotAuthorizedError, e:
-            reason = getattr(e, 'msg',
-                'You are not authorized to access this resource')
-            code = getattr(e, 'code', 401)
-            status = getattr(e, 'status', 'error')
-            pylons.response.status = code
-            flash(reason, status=status)
-            abort(code, comment=reason)
-
 
 def _configured_engines():
     """Get the configured engines.

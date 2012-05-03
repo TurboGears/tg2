@@ -24,13 +24,7 @@ from tg.util import Bunch, partial
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 
-# Predicates booleanized:
-try:
-    from repoze.what.predicates import NotAuthorizedError, Predicate
-    Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
-except ImportError:
-    class NotAuthorizedError(object):
-        """Repoze.what not authorized error."""
+from tg.predicates import NotAuthorizedError
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -661,9 +655,10 @@ class _BaseProtectionDecorator(object):
     default_denial_handler = None
 
     def __init__(self, predicate, denial_handler=None):
-        """Make :mod:`repoze.what` verify that the predicate is met.
+        """Verify that the predicate is met.
 
-        :param predicate: A :mod:`repoze.what` predicate.
+        :param predicate: An object with a check_authorization(environ) method which
+            must raise a tg.predicates.NotAuthorizedError if not met.
         :param denial_handler: The callable to be run if authorization is
             denied (overrides :attr:`default_denial_handler` if defined).
 
@@ -677,7 +672,7 @@ class _BaseProtectionDecorator(object):
 
 
 class require(_BaseProtectionDecorator):
-    """TurboGears-specific repoze.what action protector.
+    """TurboGears-specific action protector.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
@@ -710,7 +705,7 @@ class require(_BaseProtectionDecorator):
         return action_(*args, **kwargs)
 
     def default_denial_handler(self, reason):
-        """Authorization denial handler for repoze.what protectors."""
+        """Authorization denial handler for protectors."""
         if response.status_int == 401:
             status = 'warning'
         else:
@@ -721,7 +716,7 @@ class require(_BaseProtectionDecorator):
 
 
 class allow_only(_BaseProtectionDecorator):
-    """TurboGears-specific repoze.what controller protector.
+    """TurboGears controller wide protector.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the

@@ -734,12 +734,27 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 "sa_auth.cookie_secret in development.ini"
                 raise TGConfigError(msg)
 
-        if self.auth_backend == "sqlalchemy":
-            from tg.configuration.sqla.auth import setup_sql_auth
-            app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
-        elif self.auth_backend == "ming":
-            from tgming import setup_ming_auth
-            app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        if 'authmetadata' not in auth_args:
+            #authmetadata not provided, fallback to old authentication setup
+            if self.auth_backend == "sqlalchemy":
+                from repoze.what.plugins.quickstart import setup_sql_auth
+                app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
+            elif self.auth_backend == "ming":
+                from tgming import setup_ming_auth
+                app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        else:
+            from tg.configuration.auth import setup_auth
+            if 'authenticators' not in auth_args:
+                if self.auth_backend == "sqlalchemy":
+                    from tg.configuration.sqla.auth import create_default_authenticator
+                    auth_args, sqlauth = create_default_authenticator(**auth_args)
+                    auth_args['authenticators'] = [('sqlauth', sqlauth)]
+                elif self.auth_backend == "ming":
+                    from tgming.auth import MingAuthenticatorPlugin
+                    mingauth = MingAuthenticatorPlugin(auth_args.pop('user_class', None))
+                    auth_args['authenticators'] = [('mingauth', mingauth)]
+            app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
+
         return app
 
     def add_core_middleware(self, app):
