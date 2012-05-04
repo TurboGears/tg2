@@ -126,10 +126,12 @@ def setup_auth(app, authmetadata,
     who_args['log_level'] = log_level
 
     # Setting up the metadata provider for the user informations
-    authmd = AuthMetadataProvider(authmetadata)
     if 'mdproviders' not in who_args:
         who_args['mdproviders'] = []
-    who_args['mdproviders'].append(('authmd', authmd))
+
+    if authmetadata:
+        authmd = AuthMetadataProvider(authmetadata)
+        who_args['mdproviders'].append(('authmd', authmd))
 
     # Set up default classifier
     if 'classifier' not in who_args:
