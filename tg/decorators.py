@@ -277,7 +277,7 @@ class expose(object):
         def my_exposed_method(self):
             return dict(a=1, b=2, d="username")
 
-    The expose('json') syntax is a special case.  json is a buffet
+    The expose('json') syntax is a special case.  json is a
     rendering engine, but unlike others it does not require a template,
     and expose assumes that it matches content_type='application/json'
 
@@ -316,11 +316,7 @@ class expose(object):
 
         elif template:
             # Use the default templating engine from the config
-            if config.get('use_legacy_renderer'):
-                engine = config['buffet.template_engines'][0]['engine']
-
-            else:
-                engine = config.get('default_renderer')
+            engine = config.get('default_renderer')
 
         else:
             engine, template = None, None

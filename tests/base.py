@@ -61,8 +61,6 @@ default_config = {
         'pylons.strict_tmpl_context':False,
         'pylons.c_attach_args': True,
         'pylons.tmpl_context_attach_args': True,
-        'buffet.template_engines': [],
-        'buffet.template_options': {},
         'default_renderer':'genshi',
         'renderers':['json'],
         'render_functions':{'json':tg.render.render_json},
