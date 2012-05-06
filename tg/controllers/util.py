@@ -65,38 +65,25 @@ def urlencode(params):
     return urllib.urlencode([i for i in generate_smart_str(params)])
 
 
-def url(base_url=None, params=None, **kwargs):
+def url(base_url='/', params={}, qualified=False):
     """Generate an absolute URL that's specific to this application.
 
     The URL function takes a string (base_url) and, appends the
     SCRIPT_NAME and adds parameters for all of the
     parameters passed into the params dict.
 
-    For backwards compatibility you can also pass in keyword parameters.
-
     """
-    # remove in 2.2
-    if base_url is None:
-        base_url = '/'
-    if params is None:
-        params = {}
-
-    # First we handle the possibility that the user passed in params
-    if base_url and isinstance(base_url, basestring):
-        # remove in 2.2
-        if kwargs.keys():
-            warn('Passing in keyword arguments as URL components to url()'
-                ' is deprecated. Please pass arguments as a dictionary'
-                ' to the params argument.', DeprecationWarning, stacklevel=2)
-            params = params.copy()
-            params.update(kwargs)
-
-    elif hasattr(base_url, '__iter__'):
+    if not isinstance(base_url, basestring) and hasattr(base_url, '__iter__'):
         base_url = '/'.join(base_url)
+
     if base_url.startswith('/'):
         base_url = pylons.request.environ['SCRIPT_NAME'] + base_url
+        if qualified:
+            base_url = pylons.request.host_url + base_url
+
     if params:
         return '?'.join((base_url, urlencode(params)))
+
     return base_url
 
 
@@ -161,7 +148,7 @@ def lurl(base_url=None, params=None):
     return LazyUrl(base_url, params)
 
 
-def redirect(*args, **kwargs):
+def redirect(base_url='/', params={}, **kwargs):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -173,7 +160,11 @@ def redirect(*args, **kwargs):
     second request.
     """
 
-    new_url = url(*args, **kwargs)
+    if kwargs:
+        params = params.copy()
+        params.update(kwargs)
+
+    new_url = url(base_url, params=params)
     found = HTTPFound(location=new_url).exception
     raise found
 
