@@ -139,11 +139,8 @@ class AppConfig(Bunch):
         self.default_renderer = 'genshi'
         self.stand_alone = True
 
-        # this is to activate the legacy renderers
-        # legacy renderers are buffet interface plugins
-        self.use_legacy_renderer = False
-
         self.enable_routes = False
+
         self.use_ming = False
         self.use_sqlalchemy = False
         self.use_transaction_manager = True
@@ -439,7 +436,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 module_directory=compiled_dir,
-                default_filters=['escape'])
+                default_filters=['escape'],
+                auto_reload_templates=self.auto_reload_templates)
 
         else:
             from mako.lookup import TemplateLookup
@@ -503,9 +501,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_kajiki_renderer(self):
         """Setup a renderer and loader for the fastpt engine."""
-        from kajiki.loader import PackageLoader
+        from tg.dottednames.kajiki_lookup import KajikiTemplateLoader
         from tg.render import render_kajiki
-        loader = PackageLoader()
+        loader = KajikiTemplateLoader(self.paths.templates[0],
+                                      force_mode='xml',
+                                      reload=self.auto_reload_templates)
         config['tg.app_globals'].kajiki_loader = loader
         self.render_functions.kajiki = render_kajiki
 
@@ -746,12 +746,27 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 "sa_auth.cookie_secret in development.ini"
                 raise TGConfigError(msg)
 
-        if self.auth_backend == "sqlalchemy":
-            from tg.configuration.sqla.auth import setup_sql_auth
-            app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
-        elif self.auth_backend == "ming":
-            from tgming import setup_ming_auth
-            app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        if 'authmetadata' not in auth_args:
+            #authmetadata not provided, fallback to old authentication setup
+            if self.auth_backend == "sqlalchemy":
+                from repoze.what.plugins.quickstart import setup_sql_auth
+                app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
+            elif self.auth_backend == "ming":
+                from tgming import setup_ming_auth
+                app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        else:
+            from tg.configuration.auth import setup_auth
+            if 'authenticators' not in auth_args:
+                if self.auth_backend == "sqlalchemy":
+                    from tg.configuration.sqla.auth import create_default_authenticator
+                    auth_args, sqlauth = create_default_authenticator(**auth_args)
+                    auth_args['authenticators'] = [('sqlauth', sqlauth)]
+                elif self.auth_backend == "ming":
+                    from tg.configuration.mongo.auth import create_default_authenticator
+                    auth_args, mingauth = create_default_authenticator(**auth_args)
+                    auth_args['authenticators'] = [('mingauth', mingauth)]
+            app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
+
         return app
 
     def add_core_middleware(self, app):

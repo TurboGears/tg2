@@ -17,6 +17,7 @@ except AttributeError:
 
 import tg
 from tg.controllers.util import abort
+from tg.predicates import NotAuthorizedError, not_anonymous
 
 from crank.util import (get_params_with_argspec,
     remove_argspec_params_from_params)
@@ -26,18 +27,6 @@ from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
 from tg.controllers.util import pylons_formencode_gettext
 from tg.util import _navigate_tw2form_children
-
-try:
-    from repoze.what.predicates import (not_anonymous,
-        NotAuthorizedError as WhatNotAuthorizedError)
-except ImportError:
-    class WhatNotAuthorizedError(Exception):
-        """Repoze.what not authorized error."""
-    def not_anonymous():
-        return False
-
-class NotAuthorizedError(Exception):
-    """Not authorized error."""
 
 # Load tw (ToscaWidets) only on demand
 tw = None
@@ -300,10 +289,8 @@ class DecoratedController(object):
             testing_variables['controller_output'] = response
 
         # Render the result.
-        rendered = tg_render(template_vars=namespace,
-                      template_engine=engine_name,
-                      template_name=template_name,
-                      **render_params)
+        rendered = tg_render(template_vars=namespace, template_engine=engine_name,
+                             template_name=template_name, **render_params)
 
         if isinstance(result, unicode) and not resp.charset:
             resp.charset = 'UTF-8'
@@ -378,7 +365,7 @@ class DecoratedController(object):
             return True
         try:
             predicate.check_authorization(tg.request.environ)
-        except WhatNotAuthorizedError, e:
+        except NotAuthorizedError, e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still
@@ -392,14 +379,6 @@ class DecoratedController(object):
                 # The user has not been not authenticated.
                 code = 401
                 status = 'warning'
-            tg.response.status = code
-            flash(reason, status=status)
-            abort(code, comment=reason)
-        except NotAuthorizedError, e:
-            reason = getattr(e, 'msg',
-                'You are not authorized to access this resource')
-            code = getattr(e, 'code', 401)
-            status = getattr(e, 'status', 'error')
             tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)

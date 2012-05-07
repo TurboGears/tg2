@@ -1,4 +1,4 @@
-{% extends "jinja_base.html" %}
+{% extends "jinja_base.jinja" %}
 
 {% block title %}Index{% endblock %}
 
@@ -13,7 +13,12 @@
 {% block content %}
     <h1>Index</h1>
     <p class="important">
-        {{ "Hello Jinja!"|codify }}
+        {% autoescape true %}
+            {{ test_autoescape_on }}
+        {% endautoescape %}
+
+        {% autoescape false %}
+            {{ test_autoescape_off }}
+        {% endautoescape %}
     </p>
-    {{ "Some Title"|title }}
 {% endblock %}

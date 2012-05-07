@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-repoze.what **integration** tests.
+repoze.who **integration** tests.
 
 Note that it is not necessary to have integration tests for the other auth*
 software in this package. They must be in tg.devtools, specifically in the test
@@ -29,8 +29,8 @@ from baseutils import ControllerWrap, FakeRoutes, default_config
 
 
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
-from repoze.what.middleware import setup_auth
-from repoze.what.predicates import Not, is_user, not_anonymous
+from tg.configuration.auth import setup_auth, TGAuthMetadata
+from tg.predicates import is_user, not_anonymous
 
 from tg.middlewares import StatusCodeRedirect
 from tg.error import ErrorHandler
@@ -59,17 +59,13 @@ def make_app(controller_klass, environ={}, with_errors=False):
     app = SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
 
-    # We're not going to use groups or permissions-related predicates here:
-    groups_adapters = None
-    permissions_adapters = None
-
     # Setting repoze.who up:
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
     identifiers = [('cookie', cookie)]
 
-    app = setup_auth(app, groups_adapters, permissions_adapters,
-                     identifiers=identifiers, authenticators=[],
-                     challengers=[], skip_authentication=True)
+    app = setup_auth(app, TGAuthMetadata(),
+                     identifiers=identifiers, skip_authentication=True,
+                     authenticators=[], challengers=[])
 
     app = httpexceptions.make_middleware(app)
     return TestApp(app)
@@ -226,8 +222,8 @@ class TestRequire(BaseIntegrationTests):
     """Test case for the @require decorator"""
 
     def test_authz_custom_allow_only(self):
-        environ = {'REMOTE_USER': 'developer'}
-        resp = self.app.get('/custom_allow', extra_environ=environ, status=401)
+        #environ = {'REMOTE_USER': 'developer'}
+        resp = self.app.get('/custom_allow', extra_environ={}, status=401)
 
     def test_authz_granted_in_root_controller(self):
         environ = {'REMOTE_USER': 'developer'}

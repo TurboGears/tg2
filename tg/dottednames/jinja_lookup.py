@@ -13,7 +13,7 @@ class JinjaTemplateLoader(FileSystemLoader):
 
     """
 
-    template_extension = '.html'
+    template_extension = '.jinja'
 
     def get_source(self, environment, template):
 

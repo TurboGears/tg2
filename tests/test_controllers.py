@@ -33,10 +33,10 @@ def test_lowerapproots():
 @no_warn
 def test_multi_values():
     create_request('/')
-    r = url("/foo", bar=(u"asdf",u"qwer"))
+    r = url("/foo", params=dict(bar=(u"asdf",u"qwer")))
     assert r in \
             ["/foo?bar=qwer&bar=asdf", "/foo?bar=asdf&bar=qwer"], r
-    r = url("/foo", bar=[1,2])
+    r = url("/foo", params=dict(bar=[1,2]))
     assert  r in \
             ["/foo?bar=1&bar=2", "/foo?bar=2&bar=1"], r
 
@@ -49,7 +49,7 @@ def test_unicode():
         u'\N{LATIN SMALL LETTER I WITH GRAVE}'
         u'\N{LATIN SMALL LETTER O WITH GRAVE}'
         u'\N{LATIN SMALL LETTER U WITH GRAVE}')
-    eq_(url('/', x=unicodestring),
+    eq_(url('/', params=dict(x=unicodestring)),
         '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
         )
 
@@ -57,14 +57,14 @@ def test_unicode():
 def test_list():
     """url() can handle list parameters, with unicode too"""
     create_request("/")
-    value = url('/', foo=['bar', u'\N{LATIN SMALL LETTER A WITH GRAVE}']),
+    value = url('/', params=dict(foo=['bar', u'\N{LATIN SMALL LETTER A WITH GRAVE}'])),
     assert '/?foo=bar&foo=%C3%A0' in value, value
 
 @no_warn
-def test_url_kwargs_overwrite_tgparams():
+def test_url_positional_params():
     params = {'spamm': 'eggs'}
-    result = url('/foo', params, spamm='ham')
-    assert 'spamm=ham' in result
+    result = url('/foo', params)
+    assert 'spamm=eggs' in result
 
 def test_url_with_params_key():
     params = {'spamm': 'eggs'}
@@ -76,12 +76,6 @@ def test_url_strip_None():
     params = {'spamm':'eggs', 'hamm':None }
     result = url('/foo', params=params)
     assert 'hamm' not in result, result
-
-@no_warn
-def test_url_doesnt_change_tgparams():
-    params = {'spamm': 'eggs'}
-    result = url('/foo', params, spamm='ham')
-    eq_(params['spamm'], 'eggs')
 
 def test_lurl():
     params = {'spamm':'eggs', 'hamm':None }

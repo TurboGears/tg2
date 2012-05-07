@@ -2,12 +2,8 @@ from urllib import quote_plus
 
 from paste.deploy.converters import asbool
 
-try:
-    from repoze.what import predicates
-except ImportError:
-    predicates = []
-
 import tg
+from tg import predicates
 from tg.util import Bunch
 
 from webhelpers.html import literal
@@ -70,7 +66,7 @@ def _get_tg_vars():
     auth_stack_enabled
         A boolean that determines if the auth stack is present in the environment
     predicates
-        The :mod:`repoze.what.predicates` module.
+        The :mod:`tg.predicates` module.
 
     """
 

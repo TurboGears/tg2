@@ -29,7 +29,8 @@ for c in [chr(i) for i in range(256)]:
 _must_quote = re.compile(r'[^%s]' % _faster_safe_test)
 
 try:
-    WebObRequest.str_cookies
+    from webob.acceptparse import Accept
+    Accept.best_matches
     old_webob = True
 except:
     old_webob = False
@@ -53,7 +54,12 @@ class Request(WebObRequest):
         if old_webob: # webob<1.2
             items = al.best_matches(fallback)
         else:
-            items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
+            try:
+                items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
+            except AttributeError:
+                #NilAccept has no _parsed, here for test units
+                items = []
+
             if fallback:
                 for index, item in enumerate(items):
                     if al._match(item, fallback):
@@ -61,6 +67,7 @@ class Request(WebObRequest):
                         break
                 else:
                     items.append(fallback)
+
         return items
 
     @property
@@ -72,7 +79,12 @@ class Request(WebObRequest):
         s = self.path_info
         if not _must_quote.search(s):
             return s
-        return ''.join(map(_faster_safe.get, s))
+
+        try:
+            return ''.join(map(_faster_safe.get, s))
+        except TypeError:
+            #In some cases like unicode urls fast_path fails
+            return self.path
 
     @cached_property
     def plain_languages(self):

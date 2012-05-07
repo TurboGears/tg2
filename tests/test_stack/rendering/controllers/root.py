@@ -140,11 +140,11 @@ class RootController(TGController):
     def genshi_inherits_sub_from_bottom(self):
         return {}
 
-    @expose('jinja:jinja_noop.html')
+    @expose('jinja:jinja_noop.jinja')
     def jinja_index(self):
         return {}
 
-    @expose('jinja:jinja_inherits.html')
+    @expose('jinja:jinja_inherits.jinja')
     def jinja_inherits(self):
         return {}
 
@@ -160,18 +160,18 @@ class RootController(TGController):
     def jinja_inherits_mixed(self):
         return {}
 
-    @expose('jinja:jinja_extensions.html')
+    @expose('jinja:jinja_extensions.jinja')
     def jinja_extensions(self):
         test_autoescape_on = "<b>Test Autoescape On</b>"
         test_autoescape_off = "<b>Autoescape Off</b>"
         return dict(test_autoescape_off=test_autoescape_off,
                 test_autoescape_on=test_autoescape_on)
 
-    @expose('jinja:jinja_filters.html')
+    @expose('jinja:jinja_filters.jinja')
     def jinja_filters(self):
         return {}
 
-    @expose('jinja:jinja_buildins.html')
+    @expose('jinja:jinja_buildins.jinja')
     def jinja_buildins(self):
         return {}
 
@@ -275,9 +275,9 @@ class RootController(TGController):
 
         if frompylons:
             from pylons.templating import render_jinja2
-            return render_jinja2('jinja_inherits.html')
+            return render_jinja2('jinja_inherits.jinja')
         else:
-            return render_template({}, 'jinja', 'jinja_inherits.html')
+            return render_template({}, 'jinja', 'jinja_inherits.jinja')
 
     @expose()
     def no_template_generator(self):

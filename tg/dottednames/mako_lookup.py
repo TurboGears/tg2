@@ -36,7 +36,8 @@ class DottedTemplateLookup(object):
     """
 
     def __init__(self, input_encoding, output_encoding,
-            imports, default_filters, module_directory=None):
+            imports, default_filters, module_directory=None,
+            auto_reload_templates=False):
 
         self.input_encoding = input_encoding
         self.output_encoding = output_encoding
@@ -47,7 +48,7 @@ class DottedTemplateLookup(object):
         # implement a cache for the filename lookups
         self.template_filenames_cache = dict()
         self.module_directory = module_directory
-        self.auto_reload = asbool(tg.config.get('templating.mako.reloadfromdisk', 'false'))
+        self.auto_reload = auto_reload_templates
 
         # a mutex to ensure thread safeness during template loading
         self._mutex = threading.Lock()

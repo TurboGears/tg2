@@ -12,7 +12,6 @@ from paste.registry import RegistryManager
 from webtest import TestApp
 from paste import httpexceptions
 
-
 import tg
 from tg import tmpl_context, request_local
 from tests.test_stack import app_from_config, TestConfig

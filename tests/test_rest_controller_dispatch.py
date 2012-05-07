@@ -337,7 +337,7 @@ class BasicTGController(TGController):
 
     @expose()
     def _default(self, *remainder):
-        return "Main default page called for url /%s" % list(remainder)
+        return "Main default page called for url /%s" % [str(r) for r in remainder]
 
     @expose()
     def hello(self, name, silly=None):

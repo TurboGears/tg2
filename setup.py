@@ -13,10 +13,8 @@ test_requirements = ['coverage',
                     'jinja2',
                     'Chameleon < 2.0a',
                     'simplegeneric',
-                    'repoze.what >= 1.0.3',
                     'repoze.who >= 1.0.18, <= 1.99',
                     'repoze.who.plugins.sa >= 1.0.1',
-                    'repoze.what.plugins.sql >= 1.0rc2',
                     'repoze.who-testutil >= 1.0.1',
                     "repoze.who-friendlyform >=1.0.4",
                     'repoze.tm2 >= 1.0a4',
@@ -32,8 +30,18 @@ test_requirements = ['coverage',
                     'tgext.admin>=0.3.9',
                     ]
 
-if sys.version_info[:2] == (2,4):
-    test_requirements.extend(['pysqlite', 'hashlib'])
+install_requires=[
+    'WebOb >= 1.1.1',
+    'WebFlash >= 0.1a8',
+    'WebError >= 0.10.1',
+    'Babel',
+    'crank >= 0.6.2',
+    'WebHelpers',
+    'Formencode',
+    'Beaker',
+    'decorator',
+    'simplejson'
+    ]
 
 setup(
     name='TurboGears2',
@@ -49,18 +57,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'WebOb >= 1.1.1',
-        'WebFlash >= 0.1a8',
-        'WebError >= 0.10.1',
-        'Babel',
-        'WebHelpers',
-        'Formencode',
-        'Beaker',
-        'decorator',
-        'simplejson',
-        'crank'
-    ],
+    install_requires=install_requires,
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
         #     since tests_require takes care of that as long as TG is tested
@@ -78,6 +75,6 @@ setup(
         shell = tg.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://www.turbogears.org/2.1/downloads/current/"
+        "http://tg.gy/beta"
         ]
 )

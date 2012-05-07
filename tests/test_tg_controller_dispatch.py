@@ -295,7 +295,7 @@ class HelperWithSpecificArgs(TGController):
 
     @expose()
     def method(self, arg1, arg2, **kw):
-        return str((arg1, arg2, kw))
+        return str((str(arg1), str(arg2), kw))
 
 
 class SelfCallingLookupController(TGController):
@@ -335,7 +335,7 @@ class BasicTGController(TGController):
 
     @expose()
     def _default(self, *remainder):
-        return "Main default page called for url /%s" % list(remainder)
+        return "Main default page called for url /%s" % [str(r) for r in remainder]
 
     @expose()
     def feed(self, feed=None):
