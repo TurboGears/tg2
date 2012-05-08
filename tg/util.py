@@ -277,3 +277,6 @@ def _navigate_tw2form_children(w):
         for c in getattr(w, 'children', []):
             for cc in _navigate_tw2form_children(c):
                 yield cc
+
+def call_controller(controller, remainder, params):
+    return controller(*remainder, **params)

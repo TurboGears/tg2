@@ -26,7 +26,7 @@ from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
 from tg.controllers.util import pylons_formencode_gettext
-from tg.util import _navigate_tw2form_children
+from tg.util import _navigate_tw2form_children, call_controller
 
 # Load tw (ToscaWidets) only on demand
 tw = None
@@ -114,10 +114,13 @@ class DecoratedController(object):
             params, remainder = remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
-            controller_callable = tg_decoration.wrap_controller(tgl, controller)
+            try:
+                controller_caller = tgl.config['controller_caller']
+            except KeyError:
+                controller_caller = call_controller
 
             # call controller method
-            output = controller_callable(*remainder, **params)
+            output = controller_caller(controller, remainder, params)
 
         except (FormEncodeValidationError, Tw2ValidationError) , inv:
             controller, output = self._handle_validation_errors(

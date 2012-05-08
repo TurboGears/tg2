@@ -19,7 +19,7 @@ from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
 
 import tg
-from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
+from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
 
 from webob import Request
 
@@ -151,7 +151,9 @@ class AppConfig(Bunch):
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
         self.call_on_shutdown = []
+        self.controller_caller = call_controller
         self.controller_wrappers = []
+        self.application_wrappers = []
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -660,6 +662,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if self.auth_backend in ("ming", "sqlalchemy"):
             self.setup_sa_auth_backend()
 
+    def setup_controller_wrappers(self):
+        controller_caller = config.get('controller_caller')
+        for wrapper in self.get('controller_wrappers', []):
+            controller_caller = wrapper(self, controller_caller)
+        config['controller_caller'] = controller_caller
+
     def make_load_environment(self):
         """Return a load_environment function.
 
@@ -990,6 +998,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
             for hook in self.hooks['before_config']:
                 app = hook(app)
+
+            #Apply controller wrappers to controller caller
+            self.setup_controller_wrappers()
 
             avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
             config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)

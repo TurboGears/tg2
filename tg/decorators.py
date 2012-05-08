@@ -63,15 +63,6 @@ class Decoration(object):
         for func in self.hooks[hook]:
             func(*l, **kw)
 
-    def wrap_controller(self, tgl, controller):
-        controller_callable = controller
-        try:
-            for wrapper in tgl.config['controller_wrappers']:
-                controller_callable = wrapper(self, controller_callable)
-        except KeyError:
-            pass
-        return controller_callable
-
     def register_template_engine(self,
             content_type, engine, template, exclude_names, render_params):
         """Registers an engine on the controller.

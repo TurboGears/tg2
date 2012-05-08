@@ -85,6 +85,10 @@ class TGApp(object):
                                                      'Content-Type': None,
                                                      'Content-Length': '0'}))
 
+        self.wrapped_dispatch = self.dispatch
+        for wrapper in self.config.get('application_wrappers', []):
+            self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
+
     def setup_pylons_compatibility(self, environ, controller):
         """Updates environ to be backward compatible with Pylons"""
         try:
@@ -117,7 +121,7 @@ class TGApp(object):
                 return ['%s' % paste.registry.restorer.get_request_id(environ)]
 
         controller = self.resolve(environ, start_response)
-        response = self.dispatch(controller, environ, start_response)
+        response = self.wrapped_dispatch(controller, environ, start_response)
 
         if testmode and hasattr(response, 'wsgi_response'):
             environ['paste.testing_variables']['response'] = response
