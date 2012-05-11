@@ -204,6 +204,8 @@ class _hook_decorator(object):
     hook_name = None
 
     def __init__(self, hook_func):
+        self.__name__ = hook_func.__name__
+        self.__doc__ = hook_func.__doc__
         self.hook_func = hook_func
 
     def __call__(self, func):
