@@ -18,7 +18,7 @@ def call_wsgi_application(application, environ, catch_exc_info=False):
     output = []
     def start_response(status, headers, exc_info=None):
         if exc_info is not None and not catch_exc_info:
-            raise exc_info[0], exc_info[1], exc_info[2]
+            raise (exc_info[0], exc_info[1], exc_info[2])
         captured[:] = [status, headers, exc_info]
         return output.append
     app_iter = application(environ, start_response)
@@ -86,3 +86,8 @@ class StatusCodeRedirect(object):
                     self.app, new_environ, catch_exc_info=True)
         start_response(status, headers, exc_info)
         return app_iter
+
+from .beaker_middlewares import CacheMiddleware, SessionMiddleware
+from .statics import StaticsMiddleware
+
+__all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware']

@@ -69,7 +69,7 @@ def get_partial_dict(prefix, dictionary):
     n = len(match)
 
     new_dict = Bunch([(key[n:], dictionary[key])
-                       for key in dictionary.iterkeys()
+                       for key in dictionary.keys()
                        if key.startswith(match)])
     if new_dict:
         return new_dict
@@ -159,7 +159,7 @@ class DottedFileNameFinder(object):
                 basename = template_name[divider + 1:] + template_extension
                 try:
                     result = resource_filename(package, basename)
-                except ImportError, e:
+                except ImportError as e:
                     raise DottedFileLocatorError(e.message +". Perhaps you have forgotten an __init__.py in that folder.")
             else:
                 result = template_name

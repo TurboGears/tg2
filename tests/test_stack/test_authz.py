@@ -18,21 +18,19 @@ from paste import httpexceptions
 from paste.registry import RegistryManager
 from webob import Response, Request
 from webtest import TestApp
-from beaker.middleware import CacheMiddleware, SessionMiddleware
 
 from tg import request, response, expose, require, allow_only
 from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort
 from tg.wsgiapp import ContextObj, TGApp
+from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 
 from baseutils import ControllerWrap, FakeRoutes, default_config
-
 
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from tg.configuration.auth import setup_auth, TGAuthMetadata
 from tg.predicates import is_user, not_anonymous
 
-from tg.middlewares import StatusCodeRedirect
 from tg.error import ErrorHandler
 
 #{ AUT's setup

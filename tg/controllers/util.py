@@ -219,7 +219,7 @@ def pylons_formencode_gettext(value):
     if trans == value:
         try:
             fetrans = tg.tmpl_context.formencode_translation
-        except AttributeError, attrerror:
+        except AttributeError:
             # the translator was not set in the Pylons context
             # we are certainly in the test framework
             # let's make sure won't return something that is ok with the caller

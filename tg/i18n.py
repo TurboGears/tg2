@@ -1,7 +1,5 @@
 import logging, os
 from gettext import NullTranslations, translation
-from babel.core import parse_locale
-import formencode
 import tg
 from tg.util import lazify
 
@@ -10,6 +8,58 @@ log = logging.getLogger(__name__)
 class LanguageError(Exception):
     """Exception raised when a problem occurs with changing languages"""
     pass
+
+def _parse_locale(identifier, sep='_'):
+    """
+    Took from Babel,
+    Parse a locale identifier into a tuple of the form::
+
+      ``(language, territory, script, variant)``
+
+    >>> parse_locale('zh_CN')
+    ('zh', 'CN', None, None)
+    >>> parse_locale('zh_Hans_CN')
+    ('zh', 'CN', 'Hans', None)
+
+    The default component separator is "_", but a different separator can be
+    specified using the `sep` parameter:
+
+    :see: `IETF RFC 4646 <http://www.ietf.org/rfc/rfc4646.txt>`_
+    """
+    if '.' in identifier:
+        # this is probably the charset/encoding, which we don't care about
+        identifier = identifier.split('.', 1)[0]
+    if '@' in identifier:
+        # this is a locale modifier such as @euro, which we don't care about
+        # either
+        identifier = identifier.split('@', 1)[0]
+
+    parts = identifier.split(sep)
+    lang = parts.pop(0).lower()
+    if not lang.isalpha():
+        raise ValueError('expected only letters, got %r' % lang)
+
+    script = territory = variant = None
+    if parts:
+        if len(parts[0]) == 4 and parts[0].isalpha():
+            script = parts.pop(0).title()
+
+    if parts:
+        if len(parts[0]) == 2 and parts[0].isalpha():
+            territory = parts.pop(0).upper()
+        elif len(parts[0]) == 3 and parts[0].isdigit():
+            territory = parts.pop(0)
+
+    if parts:
+        if len(parts[0]) == 4 and parts[0][0].isdigit() or\
+           +           len(parts[0]) >= 5 and parts[0][0].isalpha():
+            variant = parts.pop()
+
+    if parts:
+        raise ValueError('%r is not a valid locale identifier' % identifier)
+
+    return lang, territory, script, variant
+
 
 def gettext_noop(value):
     """Mark a string for translation without translating it. Returns
@@ -73,7 +123,7 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
 
     try:
         translator = translation(conf['package'].__name__, localedir, languages=lang, **kwargs)
-    except IOError, ioe:
+    except IOError as ioe:
         raise LanguageError('IOError: %s' % ioe)
 
     translator.tg_lang = lang
@@ -112,11 +162,11 @@ def sanitize_language_code(lang):
         orig_lang = lang
 
         try:
-            lang = '_'.join(filter(None, parse_locale(lang)[:2]))
+            lang = '_'.join(filter(None, _parse_locale(lang)[:2]))
         except ValueError:
             if '-' in lang:
                 try:
-                    lang = '_'.join(filter(None, parse_locale(lang, sep='-')[:2]))
+                    lang = '_'.join(filter(None, _parse_locale(lang, sep='-')[:2]))
                 except ValueError:
                     pass
 
@@ -182,7 +232,7 @@ def set_temporary_lang(languages, tgl=None):
 
     try:
         set_formencode_translation(languages, tgl=tgl)
-    except LanguageError:
+    except (ImportError, LanguageError):
         pass
 
 def set_lang(languages, **kwargs):
@@ -202,17 +252,23 @@ def set_lang(languages, **kwargs):
         tgl.session.save()
 
 
-_localdir = formencode.api.get_localedir()
+formencode = None
+_localdir = None
 
 def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
+    global formencode, _localdir
+    if formencode is None:
+        import formencode
+        _localdir = formencode.api.get_localedir()
+
     if not tgl:
         tgl = tg.request_local.context._current_obj()
 
     try:
         formencode_translation = translation(
             'FormEncode',languages=languages, localedir=_localdir)
-    except IOError, error:
+    except IOError as error:
         raise LanguageError('IOError: %s' % error)
     tgl.tmpl_context.formencode_translation = formencode_translation
 

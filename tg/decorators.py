@@ -8,20 +8,19 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
-from paste.util.mimeparse import best_match
 from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
-from tg.paginate import Page
+from tg.support.paginate import Page
 from tg.configuration import config
 from tg.controllers.util import abort
-from formencode import variabledecode
 from tg import tmpl_context, request, response
 from tg.util import partial, Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 from tg.caching import beaker_cache, cached_property
 from tg.predicates import NotAuthorizedError
+from webob.acceptparse import Accept
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
@@ -156,7 +155,7 @@ class Decoration(object):
             if self.default_engine:
                 content_type = self.default_engine
             elif self.engines:
-                content_type = best_match(self.engines_keys, accept_types)
+                content_type = Accept(accept_types).best_match(self.engines_keys, self.engines_keys[0])
             else:
                 content_type = 'text/html'
 
@@ -540,8 +539,7 @@ class paginate(object):
 
         paginator = request.paginators[self.name]
         collection = output[self.name]
-        page = Page(collection, paginator.paginate_page,
-            paginator.paginate_items_per_page, controller='/')
+        page = Page(collection, paginator.paginate_page, paginator.paginate_items_per_page)
         page.kwargs = paginator.paginate_params
         if self.page_param != 'name':
             page.pager = partial(page.pager, page_param=self.page_param)
@@ -577,6 +575,7 @@ def https(remainder, params):
     raise HTTPMethodNotAllowed(headers=dict(Allow='GET')).exception
 
 
+_variabledecode = None
 @before_validate
 def variable_decode(remainder, params):
     """Best-effort formencode.variabledecode on the params before validation.
@@ -588,8 +587,12 @@ def variable_decode(remainder, params):
     to {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
 
     """
+    global _variabledecode
+    if _variabledecode is None:
+        from formencode import variabledecode as _variabledecode
+
     try:
-        new_params = variabledecode.variable_decode(params)
+        new_params = _variabledecode.variable_decode(params)
         params.update(new_params)
     except:
         pass
@@ -689,7 +692,7 @@ class require(_BaseProtectionDecorator):
 
         try:
             self.predicate.check_authorization(req.environ)
-        except NotAuthorizedError, e:
+        except NotAuthorizedError as e:
             reason = unicode(e)
             if req.environ.get('repoze.who.identity'):
                 # The user is authenticated.

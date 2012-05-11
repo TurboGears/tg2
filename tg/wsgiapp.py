@@ -89,6 +89,9 @@ class TGApp(object):
         for wrapper in self.config.get('application_wrappers', []):
             self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
 
+        if 'tg.root_controller' in self.config:
+            self.controller_instances['root'] = self.config['tg.root_controller']
+
     def setup_pylons_compatibility(self, environ, controller):
         """Updates environ to be backward compatible with Pylons"""
         try:

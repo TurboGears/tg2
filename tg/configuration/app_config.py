@@ -6,15 +6,13 @@ import logging
 import warnings
 from copy import copy, deepcopy
 import mimetypes
-from UserDict import DictMixin
-from webhelpers.mimehelper import MIMETypes
+from collections import MutableMapping as DictMixin
 
 from tg.i18n import ugettext
 
-from beaker.middleware import SessionMiddleware, CacheMiddleware
-from paste.cascade import Cascade
-from paste.registry import RegistryManager
-from paste.urlparser import StaticURLParser
+from tg.support.middlewares import SessionMiddleware, CacheMiddleware
+from tg.support.middlewares import StaticsMiddleware
+from tg.support.registry import RegistryManager
 from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
 
@@ -80,6 +78,18 @@ class DispatchingConfigWrapper(DictMixin):
             del self.config_proxy.current_conf()[name]
         except KeyError:
             raise AttributeError(name)
+
+    def __delitem__(self, key):
+        self.__delattr__(key)
+
+    def __len__(self):
+        return len(self.config_proxy.current_conf())
+
+    def __iter__(self):
+        return iter(self.config_proxy.current_conf())
+
+    def __repr__(self):
+        return repr(self.config_proxy.current_conf())
 
     def keys(self):
         return self.config_proxy.keys()
@@ -191,7 +201,7 @@ class AppConfig(Bunch):
             if callable(cmd):
                 try:
                     cmd()
-                except Exception, error:
+                except Exception as error:
                     log.debug("Error registering %s at startup: %s" % (cmd, error ))
             else:
                 log.debug("Unable to register %s for startup" % cmd )
@@ -221,8 +231,8 @@ class AppConfig(Bunch):
         in base_config into the ``tg.config`` objects.
 
         """
-        # Load the MIMETypes with its default types
-        MIMETypes.init()
+        # Load the mimetypes with its default types
+        mimetypes.init()
         self.package_name = self.package.__name__
         
         log.debug("Initializing configuration, package: '%s'", self.package_name)
@@ -235,7 +245,7 @@ class AppConfig(Bunch):
         conf['debug'] = asbool(conf.get('debug'))
 
         # Ensure all the keys from defaults are present, load them if not
-        for key, val in deepcopy(defaults).iteritems():
+        for key, val in deepcopy(defaults).items():
             conf.setdefault(key, val)
 
         # Load the errorware configuration from the Paste configuration file
@@ -713,7 +723,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def add_error_middleware(self, global_conf, app):
         """Add middleware which handles errors and exceptions."""
-        from tg.middlewares import StatusCodeRedirect
+        from tg.support.middlewares import StatusCodeRedirect
         from tg.error import ErrorHandler
 
         app = ErrorHandler(app, global_conf, **config['tg.errorware'])
@@ -898,8 +908,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         return app
 
     def add_static_file_middleware(self, app):
-        static_app = StaticURLParser(config['paths']['static_files'])
-        app = Cascade([static_app, app])
+        app = StaticsMiddleware(app, config['paths']['static_files'])
         return app
 
     def commit_veto(self, environ, status, headers):

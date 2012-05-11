@@ -9,6 +9,7 @@ original "identity" framework of TurboGears 1, plus others.
 
 """
 
+from __future__ import unicode_literals
 from tg import request
 
 __all__ = ['Predicate', 'CompoundPredicate', 'All', 'Any',
@@ -74,7 +75,7 @@ except ImportError:
             credentials = environ.get('repoze.what.credentials', {})
             try:
                 self.evaluate(environ, credentials)
-            except NotAuthorizedError, error:
+            except NotAuthorizedError:
                 raise
 
         def is_met(self, environ):
@@ -89,7 +90,7 @@ except ImportError:
             try:
                 self.evaluate(environ, credentials)
                 return True
-            except NotAuthorizedError, error:
+            except NotAuthorizedError:
                 return False
 
         def __nonzero__(self):
@@ -115,7 +116,7 @@ class Not(Predicate):
         p = Not(not_anonymous())
 
     """
-    message = u"The condition must not be met"
+    message = "The condition must not be met"
 
     def __init__(self, predicate, **kwargs):
         super(Not, self).__init__(**kwargs)
@@ -124,7 +125,7 @@ class Not(Predicate):
     def evaluate(self, environ, credentials):
         try:
             self.predicate.evaluate(environ, credentials)
-        except NotAuthorizedError, error:
+        except NotAuthorizedError:
             return
         self.unmet()
 
@@ -169,8 +170,7 @@ class Any(CompoundPredicate):
         p = Any(is_user('rms'), is_user('linus'))
 
     """
-    message = u"At least one of the following predicates must be met: "\
-              "%(failed_predicates)s"
+    message = "At least one of the following predicates must be met: %(failed_predicates)s"
 
     def evaluate(self, environ, credentials):
         """
@@ -186,7 +186,7 @@ class Any(CompoundPredicate):
             try:
                 p.evaluate(environ, credentials)
                 return
-            except NotAuthorizedError, exc:
+            except NotAuthorizedError as exc:
                 errors.append(unicode(exc))
         failed_predicates = ', '.join(errors)
         self.unmet(failed_predicates=failed_predicates)
@@ -205,7 +205,7 @@ class is_user(Predicate):
 
     """
 
-    message = u'The current user must be "%(user_name)s"'
+    message = 'The current user must be "%(user_name)s"'
 
     def __init__(self, user_name, **kwargs):
         super(is_user, self).__init__(**kwargs)
@@ -231,7 +231,7 @@ class in_group(Predicate):
 
     """
 
-    message = u'The current user must belong to the group "%(group_name)s"'
+    message = 'The current user must belong to the group "%(group_name)s"'
 
     def __init__(self, group_name, **kwargs):
         super(in_group, self).__init__(**kwargs)
@@ -273,8 +273,7 @@ class in_any_group(Any):
 
     """
 
-    message = u"The member must belong to at least one of the following "\
-              "groups: %(group_list)s"
+    message = "The member must belong to at least one of the following groups: %(group_list)s"
 
     def __init__(self, *groups, **kwargs):
         self.group_list = ", ".join(groups)
@@ -295,7 +294,7 @@ class is_anonymous(Predicate):
 
     """
 
-    message = u"The current user must be anonymous"
+    message = "The current user must be anonymous"
 
     def evaluate(self, environ, credentials):
         if credentials:
@@ -313,7 +312,7 @@ class not_anonymous(Predicate):
 
     """
 
-    message = u"The current user must have been authenticated"
+    message = "The current user must have been authenticated"
 
     def evaluate(self, environ, credentials):
         if not credentials:
@@ -332,7 +331,7 @@ class has_permission(Predicate):
         p = has_permission('hire')
 
     """
-    message = u'The user must have the "%(permission_name)s" permission'
+    message = 'The user must have the "%(permission_name)s" permission'
 
     def __init__(self, permission_name, **kwargs):
         super(has_permission, self).__init__(**kwargs)
@@ -378,8 +377,7 @@ class has_any_permission(Any):
 
     """
 
-    message = u"The user must have at least one of the following "\
-              "permissions: %(permission_list)s"
+    message = "The user must have at least one of the following permissions: %(permission_list)s"
 
     def __init__(self, *permissions, **kwargs):
         self.permission_list = ", ".join(permissions)

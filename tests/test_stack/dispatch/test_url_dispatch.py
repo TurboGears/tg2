@@ -113,7 +113,7 @@ def test_bigflash_redirect():
 
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
-    assert 'Wow, flash!' in resp
+    assert 'Wow, flash!' in resp, resp
 
 def test_flash_unicode():
     resp = app.get('/flash_unicode').follow()

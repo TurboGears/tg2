@@ -3,7 +3,7 @@
 import datetime
 import decimal
 
-from simplejson import JSONEncoder
+from json import JSONEncoder
 
 from webob.multidict import MultiDict
 

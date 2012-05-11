@@ -1,13 +1,14 @@
-from urllib import quote_plus
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 from paste.deploy.converters import asbool
+from markupsafe import Markup
 
 import tg
 from tg import predicates
 from tg.util import Bunch
-
-from webhelpers.html import literal
-
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
@@ -81,7 +82,7 @@ def _get_tg_vars():
 
     try:
         h = conf['package'].lib.helpers
-    except AttributeError, ImportError:
+    except (AttributeError, ImportError):
         h = Bunch()
 
     # TODO: Implement user_agent and other missing features.
@@ -283,7 +284,7 @@ class RenderChameleonGenshi(object):
 
         def render_template():
             template = self.load_template(template_name, format=format)
-            return literal(template.render(**template_vars))
+            return Markup(template.render(**template_vars))
 
         return cached_template(template_name, render_template,
                                ns_options=('doctype', 'method'), **kwargs)
@@ -398,7 +399,7 @@ class RenderGenshi(object):
 
         def render_template():
             template = self.load_template(template_name)
-            return literal(template.generate(**template_vars).render(
+            return Markup(template.generate(**template_vars).render(
                     doctype=doctype, method=method, encoding=None))
 
         return cached_template(template_name, render_template,
@@ -418,7 +419,7 @@ def render_mako(template_name, globs,
     def render_template():
         # Grab a template reference
         template = globs['app_globals'].mako_lookup.get_template(template_name)
-        return literal(template.render_unicode(**globs))
+        return Markup(template.render_unicode(**globs))
 
     return cached_template(template_name, render_template, cache_key=cache_key,
                            cache_type=cache_type, cache_expire=cache_expire)
@@ -441,7 +442,7 @@ def render_kajiki(template_name, globs, cache_key=None,
     def render_template():
         # Grab a template reference
         template = globs['app_globals'].kajiki_loader.load(template_name)
-        return literal(template(globs).render())
+        return Markup(template(globs).render())
 
     return cached_template(template_name, render_template,
         cache_key=cache_key, cache_type=cache_type, cache_expire=cache_expire,
@@ -460,7 +461,7 @@ def render_jinja(template_name, globs, cache_key=None,
     def render_template():
         # Grab a template reference
         template = globs['app_globals'].jinja2_env.get_template(template_name)
-        return literal(template.render(**globs))
+        return Markup(template.render(**globs))
 
     return cached_template(template_name, render_template,
         cache_key=cache_key, cache_type=cache_type, cache_expire=cache_expire)

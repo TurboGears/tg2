@@ -1,10 +1,14 @@
 import os
 here = os.path.abspath(os.path.dirname(__file__))
-execfile(os.path.join(here, 'tg', 'release.py'))
+exec(compile(open(os.path.join(here, 'tg', 'release.py')).read(), 'release.py', 'exec'), globals(), locals())
 
 from setuptools import find_packages, setup
 
 import sys
+py_version = sys.version_info[:2]
+
+if py_version < (2, 6):
+    raise RuntimeError('TurboGears2 requires Python 2.6 or better')
 
 test_requirements = ['coverage',
                     'nose',
@@ -32,15 +36,10 @@ test_requirements = ['coverage',
 
 install_requires=[
     'WebOb >= 1.1.1',
-    'WebFlash >= 0.1a8',
     'WebError >= 0.10.1',
-    'Babel',
     'crank >= 0.6.2',
-    'WebHelpers',
-    'Formencode',
     'Beaker',
     'decorator',
-    'simplejson'
     ]
 
 setup(

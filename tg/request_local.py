@@ -1,6 +1,5 @@
-import hmac, base64, urllib, binascii, re
-from paste.registry import StackedObjectProxy
-from paste.config import DispatchingConfig
+import hmac, base64, binascii, re
+from tg.support.registry import StackedObjectProxy, DispatchingConfig
 from tg.caching import cached_property
 
 try:
@@ -143,7 +142,7 @@ class Request(WebObRequest):
         if old_webob:
             return self.params.mixed()
         else:
-            return dict([(str(n), v) for n,v in self.params.mixed().iteritems()])
+            return dict([(str(n), v) for n,v in self.params.mixed().items()])
 
 class Response(WebObResponse):
     """WebOb Response subclass

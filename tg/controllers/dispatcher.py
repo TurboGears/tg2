@@ -19,6 +19,7 @@ from warnings import warn
 import tg, sys
 import mimetypes
 from webob.exc import HTTPException
+from webob.compat import bytes_, text_type
 from tg.exceptions import HTTPNotFound
 from tg.i18n import setup_i18n
 from tg.decorators import cached_property
@@ -141,17 +142,17 @@ class CoreDispatcher(object):
 
         try:
             response = self._perform_call(thread_locals)
-        except HTTPException, httpe:
+        except HTTPException as httpe:
             response = httpe
 
         #If we reached a plain WSGI application do not build the response
         #but simply pass the response as is.
         if not start_response_called:
             py_request.start_response = start_response
-            if isinstance(response, str):
+            if isinstance(response, bytes):
                 py_response.body = py_response.body + response
-            elif isinstance(response, unicode):
-                py_response.unicode_body = py_response.unicode_body + response
+            elif isinstance(response, text_type):
+                py_response.text = py_response.text + response
             elif hasattr(response, 'wsgi_response'):
                 for name, value in py_response.headers.items():
                     if name.lower() == 'set-cookie':

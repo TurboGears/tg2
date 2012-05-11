@@ -5,7 +5,10 @@ call the methods can be expressed using expose, validate, and other
 decorators to effect a rendered page.
 """
 
-from urllib import url2pathname
+try:
+    from urllib import url2pathname
+except ImportError:
+    from urllib.request import url2pathname
 import inspect, operator
 
 try:
@@ -122,7 +125,7 @@ class DecoratedController(object):
             # call controller method
             output = controller_caller(controller, remainder, params)
 
-        except (FormEncodeValidationError, Tw2ValidationError) , inv:
+        except (FormEncodeValidationError, Tw2ValidationError) as inv:
             controller, output = self._handle_validation_errors(
                 controller, remainder, params, inv)
 
@@ -185,7 +188,7 @@ class DecoratedController(object):
                     new_params[field] = validator.to_python(params.get(field),
                             state)
                 # catch individual validation errors into the errors dictionary
-                except FormEncodeValidationError, inv:
+                except FormEncodeValidationError as inv:
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -368,7 +371,7 @@ class DecoratedController(object):
             return True
         try:
             predicate.check_authorization(tg.request.environ)
-        except NotAuthorizedError, e:
+        except NotAuthorizedError as e:
             reason = unicode(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still

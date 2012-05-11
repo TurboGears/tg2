@@ -70,14 +70,14 @@ class TestPagination:
         url = '/multiple_paginators/42'
         page = self.app.get(url)
 
-        assert '/multiple_paginators/42?testdata2_page=2' in page
-        assert '/multiple_paginators/42?testdata_page=2' in page
+        assert '/multiple_paginators/42?testdata2_page=2' in page, str(page)
+        assert '/multiple_paginators/42?testdata_page=2' in page, str(page)
 
         url = '/multiple_paginators/42?testdata_page=2'
         page = self.app.get(url)
 
-        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page
-        assert '/multiple_paginators/42?testdata_page=4' in page
+        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page, str(page)
+        assert '/multiple_paginators/42?testdata_page=4' in page, str(page)
 
         assert '<li>0</li>' not in page
         assert '<li>10</li>' in page
@@ -88,7 +88,7 @@ class TestPagination:
         page = self.app.get(url)
 
         assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page, str(page)
-        assert '/multiple_paginators/42?testdata2_page=4' in page
+        assert '/multiple_paginators/42?testdata2_page=4' in page, str(page)
 
         assert '<li>0</li>' in page
         assert '<li>9</li>' in page
