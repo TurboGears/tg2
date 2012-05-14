@@ -395,7 +395,7 @@ def override_template(controller, template):
     except:
         return
 
-    for content_type, content_engine in engines.iteritems():
+    for content_type, content_engine in engines.items():
         tmpl = template.split(':', 1)
         tmpl.extend(content_engine[2:])
         try:

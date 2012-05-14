@@ -26,7 +26,7 @@ class RequestLocals(object):
 class ContextObj(object):
     def __repr__(self):
         attrs = sorted((name, value)
-                       for name, value in self.__dict__.iteritems()
+                       for name, value in self.__dict__.items()
                        if not name.startswith('_'))
         parts = []
         for name, value in attrs:
@@ -60,7 +60,7 @@ class TGApp(object):
         """
         self.config = config = config or tg.config._current_obj()
         self.globals = config.get('tg.app_globals')
-        self.package_name = config['package'].__name__
+        self.package_name = config['package_name']
 
         self.controller_classes = {}
         self.controller_instances = {}

@@ -100,7 +100,7 @@ defaults = {
     'package': None,
     'paths': {'root': None,
               'controllers': None,
-              'templates': [],
+              'templates': ['.'],
               'static_files': None},
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
@@ -137,8 +137,12 @@ class AppConfig(Bunch):
         """Creates some configuration defaults"""
 
         # Create a few bunches we know we'll use
-        self.paths = Bunch()
+        self.paths = Bunch(defaults['paths'])
         self.render_functions = Bunch()
+
+        # Provide a default app_globals for single file applications
+        self['tg.app_globals'] = Bunch({'dotted_filename_finder':DottedFileNameFinder()})
+
         # And also very often...
         self.sa_auth = Bunch()
         self.sa_auth.translations = Bunch()
@@ -181,6 +185,9 @@ class AppConfig(Bunch):
 
     def get_root_module(self):
         root_module_path = self.paths['root']
+        if not root_module_path:
+            return None
+
         base_controller_path = self.paths['controllers']
         controller_path = base_controller_path[len(root_module_path)+1:]
         root_controller_module = '.'.join([self.package_name] + controller_path.split(os.sep) + ['root'])
@@ -233,7 +240,11 @@ class AppConfig(Bunch):
         """
         # Load the mimetypes with its default types
         mimetypes.init()
-        self.package_name = self.package.__name__
+
+        try:
+            self.package_name = self.package.__name__
+        except AttributeError:
+            self.package_name = None
         
         log.debug("Initializing configuration, package: '%s'", self.package_name)
         conf = global_conf.copy()
@@ -273,6 +284,10 @@ class AppConfig(Bunch):
             self.use_toscawidgets = False
             self.use_toscawidgets2 = True
 
+        if not self.use_sqlalchemy:
+            #Transaction manager is useless with Ming
+            self.use_transaction_manager = False
+
         # Load conf dict into the global config object
         config.update(conf)
 
@@ -280,8 +295,13 @@ class AppConfig(Bunch):
             self.auto_reload_templates = asbool(config['auto_reload_templates'])
 
         config['application_root_module'] = self.get_root_module()
+        if conf['paths']['root']:
+            self.localedir = os.path.join(conf['paths']['root'], 'i18n')
+        else:
+            self.i18n_enabled = False
 
-        self.localedir = os.path.join(conf['paths']['root'], 'i18n')
+        if not conf['paths']['static_files']:
+            self.serve_static = False
 
         config.update(self)
 
@@ -446,7 +466,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             from tg.dottednames.mako_lookup import DottedTemplateLookup
             config['tg.app_globals'].mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
-                imports=['from webhelpers.html import escape'],
+                imports=['from markupsafe import escape_silent as escape'],
                 module_directory=compiled_dir,
                 default_filters=['escape'],
                 auto_reload_templates=self.auto_reload_templates)
@@ -457,7 +477,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 directories=self.paths['templates'],
                 module_directory=compiled_dir,
                 input_encoding='utf-8', output_encoding='utf-8',
-                imports=['from webhelpers.html import escape'],
+                imports=['from markupsafe import escape_silent as escape'],
                 default_filters=['escape'],
                 filesystem_checks=self.auto_reload_templates)
 
@@ -574,7 +594,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         lookup = {'.json':'application/json'}
         lookup.update(config.get('mimetype_lookup', {}))
 
-        for key, value in lookup.iteritems():
+        for key, value in lookup.items():
             mimetypes.add_type(value, key)
 
     def setup_persistence(self):
@@ -678,6 +698,16 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             controller_caller = wrapper(self, controller_caller)
         config['controller_caller'] = controller_caller
 
+    def setup_renderers(self):
+        if not 'json' in self.renderers: self.renderers.append('json')
+
+        for renderer in self.renderers:
+            setup = getattr(self, 'setup_%s_renderer'%renderer, None)
+            if setup:
+                setup()
+            else:
+                raise Exception('This configuration object does not support the %s renderer'%renderer)
+
     def make_load_environment(self):
         """Return a load_environment function.
 
@@ -706,16 +736,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             self.setup_helpers_and_globals()
             self.setup_mimetypes()
             self.setup_auth()
-
-            if not 'json' in self.renderers: self.renderers.append('json')
-
-            for renderer in self.renderers:
-                setup = getattr(self, 'setup_%s_renderer'%renderer, None)
-                if setup:
-                    setup()
-                else:
-                    raise Exception('This configuration object does not support the %s renderer'%renderer)
-
+            self.setup_renderers()
             self.setup_persistence()
 
         return load_environment
@@ -852,7 +873,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     'toscawidgets.framework.translator': ugettext,
                     'toscawidgets.middleware.inject_resources': True,
                     }
-        for k,v in config.iteritems():
+        for k,v in config.items():
             if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'):
                 twconfig[k] = v
 
@@ -999,8 +1020,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             """
             from tg import TGApp
             
-            # Configure the Pylons environment
-            load_environment(global_conf, app_conf)
+            # Configure the Application environment
+            if load_environment:
+                load_environment(global_conf, app_conf)
+
             app = TGApp()
             if wrap_app:
                 app = wrap_app(app)

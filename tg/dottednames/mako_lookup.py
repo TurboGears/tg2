@@ -159,7 +159,7 @@ class DottedTemplateLookup(object):
         instance based on a given template name
         """
 
-        if not self.template_cache.has_key(template_name):
+        if template_name not in self.template_cache:
             # the template string is not yet loaded into the cache.
             # Do so now
             self.__load(template_name)

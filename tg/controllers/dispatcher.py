@@ -199,6 +199,8 @@ class CoreDispatcher(object):
                         return v
             return []
 
-        root_controller = sys.modules[
-            tg.config['application_root_module']].RootController
+        if 'tg.root_controller' in self.config:
+            root_controller = tg.config['tg.root_controller']
+        else:
+            root_controller = sys.modules[tg.config['application_root_module']].RootController
         return find_url(root_controller, self, [('/', root_controller)])

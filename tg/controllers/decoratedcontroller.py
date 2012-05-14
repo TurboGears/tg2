@@ -35,6 +35,11 @@ from tg.util import _navigate_tw2form_children, call_controller
 tw = None
 
 try:
+    unicode_text = unicode
+except:
+    unicode_text = str
+
+try:
     from tw2.core import ValidationError as Tw2ValidationError
 except ImportError:
     class Tw2ValidationError(Exception):
@@ -183,7 +188,7 @@ class DecoratedController(object):
             # of validated params.
 
             errors = {}
-            for field, validator in validation.validators.iteritems():
+            for field, validator in validation.validators.items():
                 try:
                     new_params[field] = validator.to_python(params.get(field),
                             state)
@@ -298,7 +303,7 @@ class DecoratedController(object):
         rendered = tg_render(template_vars=namespace, template_engine=engine_name,
                              template_name=template_name, **render_params)
 
-        if isinstance(result, unicode) and not resp.charset:
+        if isinstance(result, unicode_text) and not resp.charset:
             resp.charset = 'UTF-8'
 
         result['response'] = rendered
@@ -372,7 +377,7 @@ class DecoratedController(object):
         try:
             predicate.check_authorization(tg.request.environ)
         except NotAuthorizedError as e:
-            reason = unicode(e)
+            reason = unicode_text(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still
                 # deny authorization

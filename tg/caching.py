@@ -149,7 +149,7 @@ def create_cache_key(func, key_dict=None, self=None):
         cache_key = func.__name__
     if key_dict:
         cache_key += " " + " ".join("%s=%s" % (k, v)
-                                    for k, v in key_dict.iteritems())
+                                    for k, v in key_dict.items())
 
     if not kls and self:
         kls = getattr(self, '__class__', None)

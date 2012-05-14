@@ -47,7 +47,7 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
 
 
 def generate_smart_str(params):
-    for key, value in params.iteritems():
+    for key, value in params.items():
         if value is None:
             continue
         if isinstance(value, (list, tuple)):
