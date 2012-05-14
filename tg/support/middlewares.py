@@ -1,4 +1,5 @@
 from tg.request_local import Request, Response
+from tg.support.registry import StackedObjectProxy
 
 def call_wsgi_application(application, environ, catch_exc_info=False):
     """
@@ -87,7 +88,15 @@ class StatusCodeRedirect(object):
         start_response(status, headers, exc_info)
         return app_iter
 
-from .beaker_middlewares import CacheMiddleware, SessionMiddleware
+from beaker.middleware import CacheMiddleware as BeakerCacheMiddleware
+from beaker.middleware import SessionMiddleware as BeakerSessionMiddleware
+
+class SessionMiddleware(BeakerSessionMiddleware):
+    session = StackedObjectProxy(name="Beaker Session")
+
+class CacheMiddleware(BeakerCacheMiddleware):
+    cache = StackedObjectProxy(name="Cache Manager")
+
 from .statics import StaticsMiddleware
 
 __all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware']
