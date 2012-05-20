@@ -1,7 +1,7 @@
 """Main Controller"""
 
 from tg import expose, redirect, config, validate, override_template, response, render_template
-from tg.decorators import paginate, use_custom_format, with_trailing_slash
+from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -280,3 +280,9 @@ class RootController(TGController):
         response.charset = 'utf-8'
         return render_template({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
 
+    @expose('mako:mako_custom_format.mak')
+    @expose('genshi:genshi_custom_format.html')
+    def multiple_engines(self):
+        deco = Decoration.get_decoration(self.multiple_engines)
+        used_engine = deco.engines.get('text/html')[0]
+        return dict(format=used_engine, status='ok')

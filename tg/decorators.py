@@ -26,6 +26,9 @@ from tg.flash import flash
 
 from tg.predicates import NotAuthorizedError
 
+import logging
+log = logging.getLogger(__name__)
+
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
     """
@@ -84,9 +87,19 @@ class Decoration(object):
         like the rendering method or the injected doctype.
 
         """
+        default_renderer = config.get('default_renderer')
+        available_renderers = config.get('renderers', [])
 
-        self.engines[content_type or '*/*'] = (
-            engine, template, exclude_names, render_params or {})
+        if engine and engine not in available_renderers:
+            log.debug('Registering template %s for engine %s not available. Skipping it', template, engine)
+            return
+
+        content_type = content_type or '*/*'
+        if content_type in self.engines and engine != default_renderer:
+            #Avoid overwriting the default renderer when there is already a template registered
+            return
+
+        self.engines[content_type] = (engine, template, exclude_names, render_params or {})
 
         # this is a work-around to make text/html prominent in respect
         # to other common choices when they have the same weight for

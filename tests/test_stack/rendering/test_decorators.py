@@ -3,6 +3,7 @@ from tg.util import Bunch
 from webtest import TestApp
 from pylons import tmpl_context
 from tg.util import no_warn
+from tg.configuration import config
 
 def make_app():
     base_config = TestConfig(folder = 'rendering',
@@ -49,3 +50,8 @@ class TestTGController(object):
         except TypeError, e:
             pass
         assert "is not JSON serializable" in str(e), str(e)
+
+    def test_multiple_engines(self):
+        default_renderer = config['default_renderer']
+        resp = self.app.get('/multiple_engines')
+        assert default_renderer in resp, resp
