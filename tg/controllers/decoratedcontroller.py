@@ -30,7 +30,6 @@ from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
 from tg.controllers.util import pylons_formencode_gettext
 from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
-                           _FormEncodeValidationError, _format_compound_error,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 

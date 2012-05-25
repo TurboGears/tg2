@@ -8,7 +8,6 @@ try:
     from formencode.api import Invalid as _FormEncodeValidationError
     from formencode.api import Validator as _FormEncodeValidator
     from formencode import Schema as _FormEncodeSchema
-    from formencode.schema import format_compound_error as _format_compound_error
 except ImportError, e:
     class _FormEncodeValidationError(Exception):
         """FormEncode Invalid"""
@@ -16,8 +15,6 @@ except ImportError, e:
         """FormEncode Validator"""
     class _FormEncodeSchema(object):
         """FormEncode Schema"""
-    def _format_compound_error(*arg, **kw):
-        """FormEncode format_compound_error"""
 
 def _navigate_tw2form_children(w):
     if getattr(w, 'id', None):
