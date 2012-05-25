@@ -236,11 +236,3 @@ def no_warn(f, *args, **kwargs):
         f(*args, **kwargs)
         warnings.resetwarnings()
     return wrap(_f, f)
-
-def _navigate_tw2form_children(w):
-    if getattr(w, 'id', None):
-        yield w
-    else:
-        for c in getattr(w, 'children', []):
-            for cc in _navigate_tw2form_children(c):
-                yield cc

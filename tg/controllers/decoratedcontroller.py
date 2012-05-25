@@ -29,28 +29,13 @@ from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
 from tg.controllers.util import pylons_formencode_gettext
-from tg.util import _navigate_tw2form_children
+from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
+                           _FormEncodeValidationError, _format_compound_error,
+                           _Tw2ValidationError, validation_errors,
+                           _FormEncodeValidator, TGValidationError)
 
 # Load tw (ToscaWidets) only on demand
 tw = None
-
-try:
-    from tw2.core import ValidationError as Tw2ValidationError
-except ImportError:
-    class Tw2ValidationError(Exception):
-        """ToscaWidgets2 Validation Error"""
-
-try:
-    from formencode.api import Invalid as FormEncodeValidationError
-    from formencode import Schema as FormEncodeSchema
-    from formencode.schema import format_compound_error
-except ImportError:
-    class FormEncodeValidationError(Exception):
-        """FormEncode Invalid"""
-    class FormEncodeSchema(object):
-        """FormEncode Schema"""
-    def format_compound_error(*arg, **kw):
-        """FormEncode format_compound_error"""
 
 # @expose(content_type=CUSTOM_CONTENT_TYPE) won't
 # override pylons.request.content_type
@@ -136,7 +121,7 @@ class DecoratedController(object):
             # call controller method
             output = controller_callable(*remainder, **dict(params))
 
-        except (FormEncodeValidationError, Tw2ValidationError) , inv:
+        except validation_errors, inv:
             controller, output = self._handle_validation_errors(
                 controller, remainder, params, inv)
 
@@ -180,8 +165,7 @@ class DecoratedController(object):
             return params
 
         # An object used by FormEncode to get translator function
-        state = type('state', (),
-                {'_': staticmethod(pylons_formencode_gettext)})
+        formencode_state = type('state', (), {'_': staticmethod(pylons_formencode_gettext)})
 
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}
@@ -196,10 +180,13 @@ class DecoratedController(object):
             errors = {}
             for field, validator in validation.validators.iteritems():
                 try:
-                    new_params[field] = validator.to_python(params.get(field),
-                            state)
+                    if isinstance(validator, _FormEncodeValidator):
+                        new_params[field] = validator.to_python(params.get(field),
+                                                                formencode_state)
+                    else:
+                        new_params[field] = validator.to_python(params.get(field))
                 # catch individual validation errors into the errors dictionary
-                except FormEncodeValidationError, inv:
+                except validation_errors, inv:
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -210,23 +197,24 @@ class DecoratedController(object):
             # If there are errors, create a compound validation error based on
             # the errors dictionary, and raise it as an exception
             if errors:
-                raise FormEncodeValidationError(format_compound_error(errors),
-                    params, None, error_dict=errors)
+                raise TGValidationError(TGValidationError.make_compound_message(errors),
+                                        value=params,
+                                        error_dict=errors)
 
-        elif isinstance(validation.validators, FormEncodeSchema):
+        elif isinstance(validation.validators, _FormEncodeSchema):
             # A FormEncode Schema object - to_python converts the incoming
             # parameters to sanitized Python values
-            new_params = validation.validators.to_python(params, state)
+            new_params = validation.validators.to_python(params, formencode_state)
 
         elif (hasattr(validation.validators, 'validate')
               and getattr(validation, 'needs_controller', False)):
             # An object with a "validate" method - call it with the parameters
             new_params = validation.validators.validate(
-                controller, params, state)
+                controller, params, formencode_state)
 
         elif hasattr(validation.validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(params, state)
+            new_params = validation.validators.validate(params, formencode_state)
 
         # Theoretically this should not happen...
         # if new_params is None:
@@ -343,7 +331,7 @@ class DecoratedController(object):
         tmpl_context.validation_exception = exception
         tmpl_context.form_errors = {}
 
-        if isinstance(exception, Tw2ValidationError):
+        if isinstance(exception, _Tw2ValidationError):
             #Fetch all the children and grandchildren of a widget
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
@@ -351,6 +339,9 @@ class DecoratedController(object):
             errors = [(child.id, child.error_msg) for child in widget_children]
             tmpl_context.form_errors.update(errors)
             tmpl_context.form_values = widget.child.value
+        elif isinstance(exception, TGValidationError):
+            tmpl_context.form_errors = exception.error_dict
+            tmpl_context.form_values = exception.value
         else:
             # Most Invalid objects come back with a list of errors in the format:
             #"fieldname1: error\nfieldname2: error"
