@@ -4,12 +4,14 @@ New TurboGears2 identification, authentication and authorization setup.
 This aims to provide an easier way to setup auth layer in TurboGears2
 and removes the dependency from repoze.what.
 """
-import sys, logging
+import sys, logging, re
+from paste.deploy.converters import asbool
 from zope.interface import implements
-from repoze.who.plugins.testutil import make_middleware
-from repoze.who.interfaces import IMetadataProvider
+from repoze.who.middleware import PluggableAuthenticationMiddleware
+from repoze.who.interfaces import IMetadataProvider, IIdentifier, IAuthenticator, IChallenger
 from repoze.who.classifiers import default_challenge_decider, default_request_classifier
 from repoze.who.config import _LEVELS
+from webob.exc import HTTPUnauthorized
 
 class TGAuthMetadata(object):
     """
@@ -29,7 +31,7 @@ class TGAuthMetadata(object):
     def get_permissions(self, identity, userid):
         return []
 
-class AuthMetadataProvider(object):
+class _AuthMetadataProvider(object):
     """
     repoze.who metadata provider to load groups and permissions data for
     the current user. This uses a :class:`TGAuthMetadata` to fetch
@@ -60,6 +62,84 @@ class AuthMetadataProvider(object):
         environ['repoze.what.credentials'].update(identity)
         environ['repoze.what.credentials']['repoze.what.userid'] = userid
 
+class _AuthenticationForgerPlugin(object):
+    """
+    Took from repoze.who_testutil.
+    This is meant for internal use only to setup tests with fake
+    authentication. It is a repoze.who plugin which skips
+    all challenger, authentication and identifiers and returns
+    the user contained in REMOTE_USER environment key.
+    Has been made internal part of TG to make
+    possible to switch to repoze.who v2
+    """
+    implements(IIdentifier, IAuthenticator, IChallenger)
+    _HTTP_STATUS_PATTERN = re.compile(r'^(?P<code>[0-9]{3}) (?P<reason>.*)$')
+
+    def __init__(self, fake_user_key='REMOTE_USER',
+                 remote_user_key='repoze.who.testutil.userid'):
+        self.fake_user_key = fake_user_key
+        self.remote_user_key = remote_user_key
+
+    def identify(self, environ):
+        if self.fake_user_key in environ:
+            identity = {'fake-userid': environ[self.fake_user_key]}
+            return identity
+
+    def remember(self, environ, identity):
+        pass
+
+    def forget(self, environ, identity):
+        pass
+
+    def authenticate(self, environ, identity):
+        if 'fake-userid' in identity:
+            environ[self.remote_user_key] = identity.pop('fake-userid')
+            return environ[self.remote_user_key]
+
+    def challenge(self, environ, status, app_headers, forget_headers):
+        """Return a 401 page unconditionally."""
+        headers = app_headers + forget_headers
+        #remove content-length header
+        headers = filter(lambda h:h[0].lower() != 'content-length', headers)
+        # The HTTP status code and reason may not be the default ones:
+        status_parts = self._HTTP_STATUS_PATTERN.search(status)
+        if status_parts:
+            reason = status_parts.group('reason')
+            code = int(status_parts.group('code'))
+        else:
+            reason = 'HTTP Unauthorized'
+            code = 401
+            # Building the response:
+        response = HTTPUnauthorized(headers=headers)
+        response.title = reason
+        response.code = code
+        return response
+
+
+class _AuthenticationForgerMiddleware(PluggableAuthenticationMiddleware):
+    def __init__(self, app, identifiers, authenticators, challengers,
+                 mdproviders, classifier, challenge_decider, log_stream=None,
+                 log_level=logging.INFO, remote_user_key='REMOTE_USER'):
+        """
+        Took from repoze.who_testutil.
+        This is meant for internal use only to setup tests with fake
+        authentication. Has been made internal part of TG to make
+        possible to switch to repoze.who v2
+        """
+
+        self.actual_remote_user_key = remote_user_key
+        forger = _AuthenticationForgerPlugin(fake_user_key=remote_user_key)
+        forger = ('auth_forger', forger)
+        identifiers.insert(0, forger)
+        authenticators = [forger]
+        challengers = [forger]
+
+        # Calling the parent's constructor:
+        init = super(_AuthenticationForgerMiddleware, self).__init__
+        init(app, identifiers, authenticators, challengers, mdproviders,
+            classifier, challenge_decider, log_stream, log_level,
+            'repoze.who.testutil.userid')
+
 def setup_auth(app, authmetadata,
               form_plugin=None, form_identifies=True,
               cookie_secret='secret', cookie_name='authtkt',
@@ -86,6 +166,7 @@ def setup_auth(app, authmetadata,
                                      timeout=cookie_timeout,
                                      reissue_time=cookie_reissue_time)
         who_args['identifiers'] = [('cookie', cookie)]
+        who_args['authenticators'].insert(0, ('cookie', cookie))
 
     # If no form plugin is provided then create a default
     # one using the provided options.
@@ -130,7 +211,7 @@ def setup_auth(app, authmetadata,
         who_args['mdproviders'] = []
 
     if authmetadata:
-        authmd = AuthMetadataProvider(authmetadata)
+        authmd = _AuthMetadataProvider(authmetadata)
         who_args['mdproviders'].append(('authmd', authmd))
 
     # Set up default classifier
@@ -142,5 +223,7 @@ def setup_auth(app, authmetadata,
         who_args['challenge_decider'] = default_challenge_decider
 
     skip_authn = who_args.pop('skip_authentication', False)
-    middleware = make_middleware(skip_authn, app, **who_args)
-    return middleware
+    if asbool(skip_authn):
+        return _AuthenticationForgerMiddleware(app, **who_args)
+    else:
+        return PluggableAuthenticationMiddleware(app, **who_args)
