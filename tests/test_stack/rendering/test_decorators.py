@@ -55,3 +55,23 @@ class TestTGController(object):
         default_renderer = config['default_renderer']
         resp = self.app.get('/multiple_engines')
         assert default_renderer in resp, resp
+
+class TestExposeInheritance(object):
+    def setup(self):
+        self.app = app
+
+    def test_inherited_expose_template(self):
+        resp1 = self.app.get('/sub1/index')
+        resp2 = self.app.get('/sub2/index')
+        assert resp1.body == resp2.body
+
+    def test_inherited_expose_override(self):
+        resp1 = self.app.get('/sub1/index_override')
+        resp2 = self.app.get('/sub2/index_override')
+        assert resp1.body != resp2.body
+
+    def test_inherited_expose_hooks(self):
+        resp1 = self.app.get('/sub1/data')
+        assert ('"v"' in resp1 and '"parent_value"' in resp1)
+        resp2 = self.app.get('/sub2/data')
+        assert ('"v"' in resp2 and '"parent_value"' in resp2 and '"child_value"' in resp2)

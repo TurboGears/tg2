@@ -39,7 +39,7 @@ class Decoration(object):
         self.custom_engines = {}
         self.render_custom_format = None
         self.validation = None
-        self.error_handler = None
+        self.inherit = False
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -54,6 +54,19 @@ class Decoration(object):
     @property
     def exposed(self):
         return bool(self.engines) or bool(self.custom_engines)
+
+    def merge(self, deco):
+        self.engines = dict(deco.engines.items() + self.engines.items())
+        self.engines_keys = sorted(self.engines, reverse=True)
+        self.custom_engines = dict(deco.custom_engines.items() + self.engines.items())
+
+        #inherit all the parent hooks
+        #parent hooks before current hooks so that they get called before
+        for hook_name, hooks in deco.hooks.items():
+            self.hooks[hook_name] = hooks + self.hooks[hook_name]
+
+        if not self.validation:
+            self.validation = deco.validation
 
     def run_hooks(self, hook, *l, **kw):
         for func in config.get('hooks', {}).get(hook, []):
@@ -212,8 +225,10 @@ class _hook_decorator(object):
     hook_name = None
 
     def __init__(self, hook_func):
-        self.__name__ = hook_func.__name__
-        self.__doc__ = hook_func.__doc__
+        if hasattr(hook_func, '__name__'):
+            self.__name__ = hook_func.__name__
+        if hasattr(hook_func, '__doc__'):
+            self.__doc__ = hook_func.__doc__
         self.hook_func = hook_func
 
     def __call__(self, func):
@@ -263,8 +278,16 @@ class expose(object):
         The default content type is 'text/html'.
       exclude_names
         Assign exclude names
+      custom_format
+        Registers as a custom format which can later be activated calling
+        use_custom_format
       render_params
         Assign parameters that shall be passed to the rendering method.
+      inherit
+        Inherit all the decorations from the same method in the parent
+        class. This will let the exposed method expose the same template
+        as the overridden method template and keep the same hooks and
+        validation that the parent method had.
 
     The expose decorator registers a number of attributes on the
     decorated function, but does not actually wrap the function the way
@@ -319,7 +342,7 @@ class expose(object):
     """
 
     def __init__(self, template='', content_type=None, exclude_names=None,
-                 custom_format=None, render_params=None):
+                 custom_format=None, render_params=None, inherit=False):
         if exclude_names is None:
             exclude_names = []
 
@@ -351,9 +374,15 @@ class expose(object):
         self.exclude_names = exclude_names
         self.custom_format = custom_format
         self.render_params = render_params
+        self.inherit = inherit
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
+        if self.inherit:
+            deco.inherit = True
+            if not self.template and not self.engine:
+                return func
+
         if self.custom_format:
             deco.register_custom_template_engine(
                 self.custom_format, self.content_type, self.engine,

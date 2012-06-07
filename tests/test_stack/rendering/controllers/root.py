@@ -1,7 +1,7 @@
 """Main Controller"""
 
 from tg import expose, redirect, config, validate, override_template, response, render_template
-from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration
+from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -51,9 +51,45 @@ class JsonController(TGController):
         return dict(obj=BadJsonObject())
 
 
+class SubClassableController(TGController):
+    @expose('genshi:index.html')
+    def index(self):
+        return {}
+
+    @expose('genshi:index.html')
+    def index_override(self):
+        return {}
+
+    def before_render_data(remainder, params, output):
+        output['parent_value'] = 'PARENT'
+
+    @expose('json')
+    @before_render(before_render_data)
+    def data(self):
+        return {'v':5}
+
+class SubClassingController(SubClassableController):
+    @expose(inherit=True)
+    def index(self, *args, **kw):
+        return super(SubClassingController, self).index(*args, **kw)
+
+    @expose('genshi:genshi_doctype.html', inherit=True)
+    def index_override(self, *args, **kw):
+        return super(SubClassingController, self).index_override(*args, **kw)
+
+    def before_render_data(remainder, params, output):
+        output['child_value'] = 'CHILD'
+
+    @expose(inherit=True)
+    @before_render(before_render_data)
+    def data(self, *args, **kw):
+        return super(SubClassingController, self).data(*args, **kw)
+
 class RootController(TGController):
 
     j = JsonController()
+    sub1 = SubClassableController()
+    sub2 = SubClassingController()
 
     @expose('genshi:index.html')
     def index(self):

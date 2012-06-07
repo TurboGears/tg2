@@ -40,6 +40,17 @@ tw = None
 # override pylons.request.content_type
 CUSTOM_CONTENT_TYPE = 'CUSTOM/LEAVE'
 
+class _DecoratedControllerMeta(type):
+    def __init__(cls, name, bases, attrs):
+        super(_DecoratedControllerMeta, cls).__init__(name, bases, attrs)
+        for name, value in attrs.items():
+            #Inherit decorations for methods exposed with inherit=True
+            if hasattr(value, 'decoration') and value.decoration.inherit:
+                for pcls in reversed(bases):
+                    parent_method = getattr(pcls, name, None)
+                    if parent_method and hasattr(parent_method, 'decoration'):
+                        value.decoration.merge(parent_method.decoration)
+
 class DecoratedController(object):
     """Decorated controller object.
 
@@ -47,6 +58,7 @@ class DecoratedController(object):
     controller methods for the purpose of rendering web content.
 
     """
+    __metaclass__ = _DecoratedControllerMeta
 
     def _is_exposed(self, controller, name):
         if hasattr(controller, name):
