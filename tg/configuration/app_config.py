@@ -834,7 +834,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                                    controller_prefix='/tw2/controllers/',
                                    res_prefix='/tw2/resources/',
                                    debug=config['debug'],
-                                   )
+                                   rendering_extension_lookup={
+                                        'mako': ['mak', 'mako'],
+                                        'genshi': ['genshi', 'html'],
+                                        'jinja':['jinja', 'jinja2'],
+                                        'kajiki':['kajiki', 'xml']
+                                   })
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)
         return app
