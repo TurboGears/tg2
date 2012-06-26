@@ -52,13 +52,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'WebOb == 1.0.8',
-        'Pylons >= 0.9.7',
-        'WebFlash >= 0.1a8',
-        'WebError >= 0.10.1',
-        'Babel',
-    ],
+    install_requires=install_requires,
     extras_require={
         #XXX: Perhaps this 'core-testing' extras_require can be removed
         #     since tests_require takes care of that as long as TG is tested
