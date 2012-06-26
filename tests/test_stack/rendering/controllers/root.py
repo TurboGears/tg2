@@ -1,7 +1,7 @@
 """Main Controller"""
 
-from tg import expose, redirect, config, validate, override_template, response
-from tg.decorators import paginate, use_custom_format, with_trailing_slash
+from tg import expose, redirect, config, validate, override_template, response, render_template
+from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
 from tw.api import WidgetsList
@@ -19,11 +19,13 @@ base_movie_form = MovieForm("movie_form", action='create')
 
 
 class GoodJsonObject(object):
+
     def __json__(self):
         return {'Json':'Rocks'}
 
 class BadJsonObject(object):
     pass
+
 
 class JsonController(TGController):
 
@@ -48,20 +50,73 @@ class JsonController(TGController):
     def json_with_bad_object(self):
         return dict(obj=BadJsonObject())
 
+
+class SubClassableController(TGController):
+    @expose('genshi:index.html')
+    def index(self):
+        return {}
+
+    @expose('genshi:index.html')
+    def index_override(self):
+        return {}
+
+    def before_render_data(remainder, params, output):
+        output['parent_value'] = 'PARENT'
+
+    @expose('json')
+    @before_render(before_render_data)
+    def data(self):
+        return {'v':5}
+
+class SubClassingController(SubClassableController):
+    @expose(inherit=True)
+    def index(self, *args, **kw):
+        return super(SubClassingController, self).index(*args, **kw)
+
+    @expose('genshi:genshi_doctype.html', inherit=True)
+    def index_override(self, *args, **kw):
+        return super(SubClassingController, self).index_override(*args, **kw)
+
+    def before_render_data(remainder, params, output):
+        output['child_value'] = 'CHILD'
+
+    @expose(inherit=True)
+    @before_render(before_render_data)
+    def data(self, *args, **kw):
+        return super(SubClassingController, self).data(*args, **kw)
+
 class RootController(TGController):
 
     j = JsonController()
+    sub1 = SubClassableController()
+    sub2 = SubClassingController()
 
     @expose('genshi:index.html')
     def index(self):
         return {}
 
-    @expose('genshi:index_autodoctype.html')
-    def autodoctype(self):
+    @expose('genshi:genshi_doctype.html')
+    def auto_doctype(self):
         return {}
 
-    @expose('genshi:index_autodoctype.html', content_type='application/xhtml+xml')
-    def autodoctype_xhtml_strict(self):
+    @expose('genshi:genshi_doctype.html', content_type='text/html')
+    def auto_doctype_html(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', content_type='application/xhtml+xml')
+    def auto_doctype_xhtml(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype=None))
+    def explicit_no_doctype(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype='html'))
+    def explicit_doctype_html(self):
+        return {}
+
+    @expose('genshi:genshi_doctype.html', render_params=dict(doctype='xhtml'))
+    def explicit_doctype_xhtml(self):
         return {}
 
     @expose('genshi:genshi_form.html')
@@ -102,6 +157,13 @@ class RootController(TGController):
     def validated_paginated(self, n):
         return dict(testdata=range(n))
 
+    @expose('genshi:genshi_paginated.html')
+    @paginate('testdata', use_prefix=True)
+    @paginate('testdata2', use_prefix=True)
+    def multiple_paginators(self, n):
+        n = int(n)
+        return dict(testdata=range(n), testdata2=range(n+100, n+100+n))
+
     @expose('genshi:genshi_inherits.html')
     def genshi_inherits(self):
         return {}
@@ -114,26 +176,38 @@ class RootController(TGController):
     def genshi_inherits_sub_from_bottom(self):
         return {}
 
-    @expose('jinja:jinja_noop.html')
+    @expose('jinja:jinja_noop.jinja')
     def jinja_index(self):
         return {}
 
-    @expose('jinja:jinja_inherits.html')
+    @expose('jinja:jinja_inherits.jinja')
     def jinja_inherits(self):
         return {}
 
-    @expose('jinja:jinja_extensions.html')
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_noop')
+    def jinja_dotted(self):
+        return {}
+
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_inherits_dotted')
+    def jinja_inherits_dotted(self):
+        return {}
+
+    @expose('jinja:tests.test_stack.rendering.templates.jinja_inherits')
+    def jinja_inherits_mixed(self):
+        return {}
+
+    @expose('jinja:jinja_extensions.jinja')
     def jinja_extensions(self):
         test_autoescape_on = "<b>Test Autoescape On</b>"
         test_autoescape_off = "<b>Autoescape Off</b>"
         return dict(test_autoescape_off=test_autoescape_off,
                 test_autoescape_on=test_autoescape_on)
 
-    @expose('jinja:jinja_filters.html')
+    @expose('jinja:jinja_filters.jinja')
     def jinja_filters(self):
         return {}
 
-    @expose('jinja:jinja_buildins.html')
+    @expose('jinja:jinja_buildins.jinja')
     def jinja_buildins(self):
         return {}
 
@@ -228,12 +302,23 @@ class RootController(TGController):
             override_template(self.template_override_multiple_content_type, "mako:mako_noop.mak")
         return dict(format='something', status="ok")
 
-
     @expose()
-    def manual_rendering(self, frompylons=False):
+    def jinja2_manual_rendering(self, frompylons=False):
         if frompylons:
             from pylons.templating import render_jinja2
-            return render_jinja2('jinja_inherits.html')
+            return render_jinja2('jinja_inherits.jinja')
         else:
-            from tg.render import render
-            return render({}, 'jinja', 'jinja_inherits.html')
+            return render_template({}, 'jinja', 'jinja_inherits.jinja')
+
+    @expose()
+    def genshi_manual_rendering_with_doctype(self, doctype=None):
+        response.content_type = 'text/html'
+        response.charset = 'utf-8'
+        return render_template({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
+
+    @expose('mako:mako_custom_format.mak')
+    @expose('genshi:genshi_custom_format.html')
+    def multiple_engines(self):
+        deco = Decoration.get_decoration(self.multiple_engines)
+        used_engine = deco.engines.get('text/html')[0]
+        return dict(format=used_engine, status='ok')

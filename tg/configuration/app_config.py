@@ -127,15 +127,12 @@ class AppConfig(Bunch):
         self.default_renderer = 'genshi'
         self.stand_alone = True
 
-        # this is to activate the legacy renderers
-        # legacy renderers are buffet interface plugins
-        self.use_legacy_renderer = False
-
         self.use_ming = False
         self.use_sqlalchemy = False
-        self.use_toscawidgets = True
         self.use_transaction_manager = True
+        self.use_toscawidgets = True
         self.use_toscawidgets2 = False
+        self.prefer_toscawidgets2 = False
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -145,6 +142,8 @@ class AppConfig(Bunch):
                           before_call=[],
                           before_render=[],
                           after_render=[],
+                          before_render_call=[],
+                          after_render_call=[],
                           before_config=[],
                           after_config=[])
         # The codes TG should display an error page for. All other HTTP errors are
@@ -169,7 +168,7 @@ class AppConfig(Bunch):
         elif hook_name == 'controller_wrapper':
             self.controller_wrappers.append(func)
         else:
-            self.hooks[hook_name].append(func)
+            self.hooks.setdefault(hook_name, []).append(func)
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -214,6 +213,10 @@ class AppConfig(Bunch):
         pylons_config.init_app(global_conf, app_conf,
                         package=self.package.__name__,
                         paths=self.paths)
+
+        if self.prefer_toscawidgets2:
+            self.use_toscawidgets = False
+            self.use_toscawidgets2 = True
 
         self.auto_reload_templates = asbool(config.get('auto_reload_templates', True))
         pylons_config['application_root_module'] = self.get_root_module()
@@ -383,7 +386,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from webhelpers.html import escape'],
                 module_directory=compiled_dir,
-                default_filters=['escape'])
+                default_filters=['escape'],
+                auto_reload_templates=self.auto_reload_templates)
 
         else:
             from mako.lookup import TemplateLookup
@@ -447,17 +451,24 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_kajiki_renderer(self):
         """Setup a renderer and loader for the fastpt engine."""
-        from kajiki.loader import PackageLoader
+        from tg.dottednames.kajiki_lookup import KajikiTemplateLoader
         from tg.render import render_kajiki
-        loader = PackageLoader()
+        loader = KajikiTemplateLoader(self.paths.templates[0],
+                                      force_mode='xml',
+                                      reload=self.auto_reload_templates)
         config['pylons.app_globals'].kajiki_loader = loader
         self.render_functions.kajiki = render_kajiki
 
     def setup_jinja_renderer(self):
         """Setup a renderer and loader for Jinja2 templates."""
-        from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+        from jinja2 import ChoiceLoader, Environment
         from jinja2.filters import FILTERS
         from tg.render import render_jinja
+
+        if config.get('use_dotted_templatenames', True):
+            from tg.dottednames.jinja_lookup import JinjaTemplateLoader as TemplateLoader
+        else:
+            from jinja2 import FileSystemLoader as TemplateLoader
 
         if not 'jinja_extensions' in self :
             self.jinja_extensions = []
@@ -465,8 +476,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if not 'jinja_filters' in self:
             self.jinja_filters = {}
 
-        config['pylons.app_globals'].jinja2_env = Environment(loader=ChoiceLoader(
-                 [FileSystemLoader(path) for path in self.paths['templates']]),
+        loader = ChoiceLoader(
+            [TemplateLoader(path) for path in self.paths['templates']])
+
+        config['pylons.app_globals'].jinja2_env = Environment(loader=loader,
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
         # Try to load custom filters module under app_package.lib.templatetools
@@ -498,33 +511,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def setup_json_renderer(self):
         from tg.render import render_json
         self.render_functions.json = render_json
-
-    def setup_default_renderer(self):
-        """Setup template defaults in the buffed plugin.
-
-        This is only used when use_legacy_renderer is set to True
-        and it will not get deprecated in the next major TurboGears release.
-
-        """
-        #T his is specific to buffet, will not be needed later
-        config['buffet.template_engines'].pop()
-        template_location = '%s.templates' % self.package.__name__
-        template_location = '%s.templates' % self.package.__name__
-        from genshi.filters import Translator
-
-        def template_loaded(template):
-            template.filters.insert(0, Translator(ugettext))
-
-        # Set some default options for genshi
-        options = {
-            'genshi.loader_callback': template_loaded,
-            'genshi.default_format': 'xhtml',
-        }
-
-        # Override those options from config
-        config['buffet.template_options'].update(options)
-        config.add_template_engine(self.default_renderer,
-                                   template_location,  {})
 
     def setup_mimetypes(self):
         lookup = {'.json':'application/json'}
@@ -592,9 +578,32 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         """
         from sqlalchemy import engine_from_config
-        engine = engine_from_config(pylons_config, 'sqlalchemy.')
-        config['pylons.app_globals'].sa_engine = engine
+
+        balanced_master = config.get('sqlalchemy.master.url')
+        if not balanced_master:
+            engine = engine_from_config(pylons_config, 'sqlalchemy.')
+        else:
+            engine = engine_from_config(config, 'sqlalchemy.master.')
+            config['balanced_engines'] = {'master':engine,
+                                          'slaves':{},
+                                          'all':{'master':engine}}
+
+            all_engines = config['balanced_engines']['all']
+            slaves = config['balanced_engines']['slaves']
+            for entry in config.keys():
+                if entry.startswith('sqlalchemy.slaves.'):
+                    slave_path = entry.split('.')
+                    slave_name = slave_path[2]
+                    if slave_name == 'master':
+                        raise TGConfigError('A slave node cannot be named master')
+                    slave_config = '.'.join(slave_path[:3])
+                    all_engines[slave_name] = slaves[slave_name] = engine_from_config(config, slave_config+'.')
+
+            if not config['balanced_engines']['slaves']:
+                raise TGConfigError('When running in balanced mode your must specify at least a slave node')
+
         # Pass the engine to initmodel, to be able to introspect tables
+        config['pylons.app_globals'].sa_engine = engine
         self.package.model.init_model(engine)
 
     def setup_auth(self):
@@ -642,10 +651,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 else:
                     raise Exception('This configuration object does not support the %s renderer'%renderer)
 
-
-            if self.use_legacy_renderer:
-                self.setup_default_renderer()
-
             self.setup_persistence()
 
         return load_environment
@@ -677,11 +682,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
-        from repoze.what.plugins.pylonshq import booleanize_predicates
-
-        # Predicates booleanized:
-        booleanize_predicates()
-
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
             self.sa_auth['log_stream'] = logging.getLogger('auth')
@@ -699,12 +699,27 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 "sa_auth.cookie_secret in development.ini"
                 raise TGConfigError(msg)
 
-        if self.auth_backend == "sqlalchemy":
-            from repoze.what.plugins.quickstart import setup_sql_auth
-            app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
-        elif self.auth_backend == "ming":
-            from tgming import setup_ming_auth
-            app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        if 'authmetadata' not in auth_args:
+            #authmetadata not provided, fallback to old authentication setup
+            if self.auth_backend == "sqlalchemy":
+                from repoze.what.plugins.quickstart import setup_sql_auth
+                app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
+            elif self.auth_backend == "ming":
+                from tgming import setup_ming_auth
+                app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
+        else:
+            from tg.configuration.auth import setup_auth
+            if 'authenticators' not in auth_args:
+                if self.auth_backend == "sqlalchemy":
+                    from tg.configuration.sqla.auth import create_default_authenticator
+                    auth_args, sqlauth = create_default_authenticator(**auth_args)
+                    auth_args['authenticators'] = [('sqlauth', sqlauth)]
+                elif self.auth_backend == "ming":
+                    from tg.configuration.mongo.auth import create_default_authenticator
+                    auth_args, mingauth = create_default_authenticator(**auth_args)
+                    auth_args['authenticators'] = [('mingauth', mingauth)]
+            app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
+
         return app
 
     def add_core_middleware(self, app):
@@ -810,10 +825,21 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         option that is set within your application's ini file.)
         """
         from tw2.core.middleware import Config, TwMiddleware
+
+        tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
         default_tw2_config = dict( default_engine=self.default_renderer,
+                                   preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
-                                   auto_reload_templates=asbool(self.get('templating.mako.reloadfromdisk', 'false'))
-                                   )
+                                   auto_reload_templates=self.auto_reload_templates,
+                                   controller_prefix='/tw2/controllers/',
+                                   res_prefix='/tw2/resources/',
+                                   debug=config['debug'],
+                                   rendering_extension_lookup={
+                                        'mako': ['mak', 'mako'],
+                                        'genshi': ['genshi', 'html'],
+                                        'jinja':['jinja', 'jinja2'],
+                                        'kajiki':['kajiki', 'xml']
+                                   })
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)
         return app

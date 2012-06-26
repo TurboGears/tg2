@@ -13,15 +13,13 @@ test_requirements = ['coverage',
                     'jinja2',
                     'Chameleon < 2.0a',
                     'simplegeneric',
-                    'repoze.what >= 1.0.8',
-                    'repoze.what-quickstart >= 1.0.3',
-                    'repoze.who-testutil >= 1.0.1',
-                    'repoze.what-pylons >= 1.0',
-                    "repoze.who-friendlyform >=1.0.4",
                     'repoze.who',
+                    'repoze.who.plugins.sa >= 1.0.1',
+                    "repoze.who-friendlyform >=1.0.4",
                     'repoze.tm2 >= 1.0a4',
                     'wsgiref',
                     'tw.forms',
+                    'tw2.forms',
                     'Kajiki>=0.2.2',
                     'Genshi >= 0.5.1',
                     'TurboKid >= 1.0.4',
@@ -31,8 +29,14 @@ test_requirements = ['coverage',
                     'tgext.admin>=0.3.9',
                     ]
 
-if sys.version_info[:2] == (2,4):
-    test_requirements.extend(['pysqlite', 'hashlib'])
+install_requires=[
+    'WebOb == 1.1.1',
+    'Pylons == 1.0',
+    'WebFlash >= 0.1a8',
+    'WebError >= 0.10.1',
+    'Babel',
+    'crank >= 0.6.2'
+    ]
 
 setup(
     name='TurboGears2',
@@ -50,7 +54,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'WebOb == 1.0.8',
-        'Pylons == 1.0',
+        'Pylons >= 0.9.7',
         'WebFlash >= 0.1a8',
         'WebError >= 0.10.1',
         'Babel',
@@ -72,6 +76,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://www.turbogears.org/2.1/downloads/current/"
+        "http://tg.gy/beta"
         ]
 )

@@ -231,6 +231,10 @@ class RemoteErrorHandler(TGController):
 class NotFoundController(TGController):
     pass
 
+class NotFoundWithIndexController(TGController):
+    @expose()
+    def index(self, *args, **kw):
+        return 'INDEX'
 
 class DefaultWithArgsController(TGController):
 
@@ -242,7 +246,7 @@ class DefaultWithArgsController(TGController):
 class DeprecatedDefaultWithArgsController(TGController):
 
     @expose()
-    def default(self, a, b=None, **kw):
+    def _default(self, a, b=None, **kw):
         return "deprecated default with args %s %s" % (a, b)
 
 
@@ -478,6 +482,16 @@ class TestNotFoundController(TestWSGIController):
         r = self.app.get('/права', status=404)
         assert '404 Not Found' in r, r
 
+class TestNotFoundWithIndexController(TestWSGIController):
+
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(NotFoundWithIndexController)
+
+    def test_not_found(self):
+        r = self.app.get('/something', status=404)
+        assert '404 Not Found' in r, r
+
 
 class TestWSGIAppController(TestWSGIController):
 
@@ -547,19 +561,19 @@ class TestTGController(TestWSGIController):
 
     def test_mounted_wsgi_app_at_root(self):
         r = self.app.get('/mounted_app/')
-        self.failUnless('Hello from /mounted_app' in r, r)
+        assert 'Hello from /mounted_app' in r, r
 
     def test_mounted_wsgi_app_at_subcontroller(self):
         r = self.app.get('/sub/mounted_app/')
-        self.failUnless('Hello from /sub/mounted_app/' in r, r)
+        assert 'Hello from /sub/mounted_app/' in r, r
 
     def test_request_for_wsgi_app_with_extension(self):
         r = self.app.get('/sub/mounted_app/some_document.pdf')
-        self.failUnless('Hello from /sub/mounted_app//some_document.pdf' in r, r)
+        assert 'Hello from /sub/mounted_app//some_document.pdf' in r, r
 
     def test_posting_to_mounted_app(self):
         r = self.app.post('/mounted_app/', params={'data':'Foooo'})
-        self.failUnless('Foooo' in r, r)
+        assert 'Foooo' in r, r
 
     def test_custom_content_type_replace_header(self):
         s = '''<?xml version="1.0"?>
@@ -568,7 +582,7 @@ class TestTGController(TestWSGIController):
 </methodCall>
 '''
         r = self.app.post('/xml_rpc/', s, [('Content-Type', 'text/xml')])
-        assert len(r.headers.getall('Content-Type')) == 1, r.headers.getall('Content-Type')
+        assert len(r.headers.getall('Content-Type')) == 1
 
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')

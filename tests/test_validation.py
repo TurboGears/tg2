@@ -4,15 +4,23 @@ from nose.tools import raises
 
 import pylons
 from formencode import validators, Schema
-from simplejson import loads
+from simplejson import loads, dumps
 
 from tg.controllers import TGController
-from tg.decorators import expose, validate
+from tg.decorators import expose, validate, before_render
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tw.forms import TableForm, TextField
 from tw.api import WidgetsList
+
+import tw2.core as tw2c
+import tw2.forms as tw2f
+
+class MovieForm(tw2f.TableForm):
+    title = tw2f.TextField(validator=tw2c.Required)
+    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
+movie_form = MovieForm(action='save_movie')
 
 def setup():
     setup_session_dir()
@@ -127,6 +135,20 @@ class BasicTGController(TGController):
         return dict(kwargs)
 
     @expose()
+    def tw2form_error_handler(self, **kwargs):
+        return dumps(dict(errors=pylons.tmpl_context.form_errors))
+
+    @expose('json')
+    @validate(form=movie_form, error_handler=tw2form_error_handler)
+    def send_tw2_to_error_handler(self, **kwargs):
+        return 'passed validation'
+
+    @expose()
+    @validate({'param':tw2c.IntValidator()})
+    def tw2_dict_validation(self, **kwargs):
+        return str(pylons.tmpl_context.form_errors)
+
+    @expose()
     def set_lang(self, lang=None):
         pylons.session['tg_lang'] = lang
         pylons.session.save()
@@ -140,6 +162,15 @@ class BasicTGController(TGController):
         else:
             return "Password ok!"
 
+    @expose('json')
+    @before_render(lambda rem,params,output:output.update({'GOT_ERROR':'HOOKED'}))
+    def hooked_error_handler(self, *args, **kw):
+        return dict(GOT_ERROR='MISSED HOOK')
+
+    @expose()
+    @validate({'v':validators.Int()}, error_handler=hooked_error_handler)
+    def with_hooked_error_handler(self, *args, **kw):
+        return dict(GOT_ERROR='NO ERROR')
 
 class TestTGController(TestWSGIController):
 
@@ -229,6 +260,20 @@ class TestTGController(TestWSGIController):
         assert "Please enter an integer value" in values['errors']['year'], \
             'Error message not found: %r' % values['errors']
 
+    def test_tw2form_validation(self):
+        form_values = {'title': 'Razer', 'year': "t007"}
+        resp = self.app.post('/send_tw2_to_error_handler', form_values)
+        values = loads(resp.body)
+        assert "Must be an integer" in values['errors']['year'],\
+        'Error message not found: %r' % values['errors']
+
+    def test_tw2dict_validation(self):
+        resp = self.app.post('/tw2_dict_validation', {'param': "7"})
+        assert '{}' in resp.body
+
+        resp = self.app.post('/tw2_dict_validation', {'param': "hello"})
+        assert 'Must be an integer' in resp.body
+
     def test_form_validation_translation(self):
         """Test translation of form validation error messages"""
         form_values = {'title': 'Razer', 'year': "t007"}
@@ -264,3 +309,7 @@ class TestTGController(TestWSGIController):
         """Test controller based validation"""
         resp = self.app.post('/validate_controller_based_validator')
         assert 'ok' in resp, resp
+
+    def test_hook_after_validation_error(self):
+        resp = self.app.post('/with_hooked_error_handler?v=a')
+        assert 'HOOKED' in resp, resp

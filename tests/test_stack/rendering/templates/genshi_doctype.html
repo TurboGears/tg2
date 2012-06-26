@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+  <meta http-equiv="content-type"
+      content="${response.content_type or 'none'}; charset=${response.charset or 'none'}" />
+  <title>TurboGears 2 doctype generation test</title>
+</head>
+
+<body>
+  <p>TurboGears 2 is a rapid web application development toolkit.</p>
+  <hr/>
+  <p py:content="'Rendered with Genshi.'">This is a Genshi template.</p>
+</body>
+</html>

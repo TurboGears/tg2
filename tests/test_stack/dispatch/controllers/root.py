@@ -80,7 +80,7 @@ class SubController2(object):
         return "hello list"
 
     @expose()
-    def lookup(self, *args):
+    def _lookup(self, *args):
         lookup = LookupController()
         return lookup, args
 
@@ -193,7 +193,7 @@ class RootController(TGController):
         eq_('/foo', url('/foo'))
 
 
-        u = url("/foo", bar=1, baz=2)
+        u = url("/foo", params=dict(bar=1, baz=2))
         assert u in \
                 ["/foo?bar=1&baz=2", "/foo?baz=2&bar=1"], u
 

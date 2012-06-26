@@ -27,6 +27,22 @@ def test_default_kajiki_renderer():
     assert "Welcome" in resp, resp
     assert "TurboGears" in resp, resp
 
+def test_jinja_dotted():
+    app = setup_noDB()
+    resp = app.get('/jinja_dotted')
+    assert "move along, nothing to see here" in resp, resp
+
+def test_jinja_inherits_dotted():
+    app = setup_noDB()
+    resp = app.get('/jinja_inherits_dotted')
+    assert "Welcome on my awsome homepage" in resp, resp
+
+def test_jinja_inherits_mixed():
+    # Mixed notation, dotted and regular
+    app = setup_noDB()
+    resp = app.get('/jinja_inherits_mixed')
+    assert "Welcome on my awsome homepage" in resp, resp
+
 def test_default_genshi_renderer():
     app = setup_noDB()
     resp = app.get('/index_dotted')

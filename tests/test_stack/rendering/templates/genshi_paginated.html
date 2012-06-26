@@ -9,9 +9,15 @@
 <py:if test="not defined('url_params')">
     <div id="pager" py:content="c.paginators.testdata.pager()"/>
 </py:if>
+<py:if test="defined('testdata2')">
+    <div id="pager2" py:content="c.paginators.testdata2.pager()"/>
+</py:if>
 <py:if test="defined('url_params')">
     <div id="pager" py:content="c.paginators.testdata.pager(link='/fake_url', partial='/partial_url', **url_params)"/>
 </py:if>
 <ul id="data"><li py:for="item in testdata" py:content="item"/></ul>
+<py:if test="defined('testdata2')">
+    <ul id="data2"><li py:for="item in testdata2" py:content="item"/></ul>
+</py:if>
 </body>
 </html>

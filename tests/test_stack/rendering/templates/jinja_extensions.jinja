@@ -1,4 +1,5 @@
-{% extends "jinja_base.html" %}
+{% extends "jinja_base.jinja" %}
+
 {% block title %}Index{% endblock %}
 
 {% block html_head %}
@@ -12,7 +13,12 @@
 {% block content %}
     <h1>Index</h1>
     <p class="important">
-      Welcome on my awsome homepage.
-      Use some template context variables: {{tg.url('/')}}, {{N_('fake translation')}}
+        {% autoescape true %}
+            {{ test_autoescape_on }}
+        {% endautoescape %}
+
+        {% autoescape false %}
+            {{ test_autoescape_off }}
+        {% endautoescape %}
     </p>
 {% endblock %}
