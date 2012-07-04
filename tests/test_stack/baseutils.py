@@ -6,6 +6,7 @@ class FakePackage(object):
 default_config = {
         'debug': False,
         'package': FakePackage,
+        'package_name' : 'FakePackage',
         'paths': {'root': None,
                          'controllers': None,
                          'templates': [],

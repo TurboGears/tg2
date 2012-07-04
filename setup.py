@@ -31,6 +31,8 @@ test_requirements = ['coverage',
                     'TurboJson >= 1.3',
                     'Babel >=0.9.4',
                     'tgext.admin>=0.3.9',
+                    'WebTest',
+                    'routes'
                     ]
 
 install_requires=[

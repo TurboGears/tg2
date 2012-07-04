@@ -147,7 +147,7 @@ class BasicTGController(TGController):
     @expose()
     @validate({'param':tw2c.IntValidator()})
     def tw2_dict_validation(self, **kwargs):
-        return str(pylons.tmpl_context.form_errors)
+        return str(tg.tmpl_context.form_errors)
 
     @expose()
     def set_lang(self, lang=None):
