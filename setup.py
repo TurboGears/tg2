@@ -17,9 +17,8 @@ test_requirements = ['coverage',
                     'jinja2',
                     'Chameleon < 2.0a',
                     'simplegeneric',
-                    'repoze.who >= 1.0.18, <= 1.99',
+                    'repoze.who',
                     'repoze.who.plugins.sa >= 1.0.1',
-                    'repoze.who-testutil >= 1.0.1',
                     "repoze.who-friendlyform >=1.0.4",
                     'repoze.tm2 >= 1.0a4',
                     'wsgiref',
@@ -74,6 +73,6 @@ setup(
         shell = tg.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://tg.gy/beta"
+        "http://tg.gy/220rc2"
         ]
 )

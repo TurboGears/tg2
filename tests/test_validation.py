@@ -145,6 +145,11 @@ class BasicTGController(TGController):
         return 'passed validation'
 
     @expose()
+    @validate({'param':tw2c.IntValidator()})
+    def tw2_dict_validation(self, **kwargs):
+        return str(pylons.tmpl_context.form_errors)
+
+    @expose()
     def set_lang(self, lang=None):
         tg.session['tg_lang'] = lang
         tg.session.save()
@@ -262,6 +267,13 @@ class TestTGController(TestWSGIController):
         values = loads(resp.body)
         assert "Must be an integer" in values['errors']['year'],\
         'Error message not found: %r' % values['errors']
+
+    def test_tw2dict_validation(self):
+        resp = self.app.post('/tw2_dict_validation', {'param': "7"})
+        assert '{}' in resp.body
+
+        resp = self.app.post('/tw2_dict_validation', {'param': "hello"})
+        assert 'Must be an integer' in resp.body
 
     def test_form_validation_translation(self):
         """Test translation of form validation error messages"""

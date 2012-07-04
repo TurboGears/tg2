@@ -209,7 +209,6 @@ class LazyString(object):
     def format(self, other):
         return self.eval().format(other)
 
-
 def lazify(func):
     """Decorator to return a lazy-evaluated version of the original"""
     def newfunc(*args, **kwargs):
@@ -218,14 +217,6 @@ def lazify(func):
     newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
         (func.__name__, func.__doc__)
     return newfunc
-
-def _navigate_tw2form_children(w):
-    if getattr(w, 'id', None):
-        yield w
-    else:
-        for c in getattr(w, 'children', []):
-            for cc in _navigate_tw2form_children(c):
-                yield cc
 
 def call_controller(controller, remainder, params):
     return controller(*remainder, **params)
