@@ -37,10 +37,11 @@ test_requirements = ['coverage',
 
 install_requires=[
     'WebOb >= 1.1.1',
-    'WebError >= 0.10.1',
     'crank >= 0.6.2',
     'Beaker',
     'decorator',
+    'PasteDeploy',
+    'markupsafe'
     ]
 
 setup(
@@ -49,7 +50,7 @@ setup(
     description=description,
     long_description=long_description,
     classifiers=[],
-    keywords='turbogears pylons',
+    keywords='turbogears',
     author=author,
     author_email=email,
     url=url,
@@ -68,11 +69,6 @@ setup(
     test_suite='nose.collector',
     tests_require = test_requirements,
     entry_points='''
-        [paste.global_paster_command]
-        tginfo = tg.commands.info:InfoCommand
-        [turbogears2.command]
-        serve = paste.script.serve:ServeCommand [Config]
-        shell = tg.commands:ShellCommand
     ''',
     dependency_links=[
         "http://tg.gy/220rc2"

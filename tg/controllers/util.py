@@ -10,8 +10,7 @@ from webob.exc import status_map
 import tg
 
 import urllib
-from warnings import warn
-
+from tg._compat import string_type
 from tg.exceptions import HTTPFound
 
 
@@ -74,7 +73,7 @@ def url(base_url='/', params={}, qualified=False):
     parameters passed into the params dict.
 
     """
-    if not isinstance(base_url, basestring) and hasattr(base_url, '__iter__'):
+    if not isinstance(base_url, string_type) and hasattr(base_url, '__iter__'):
         base_url = '/'.join(base_url)
 
     if base_url.startswith('/'):

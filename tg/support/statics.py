@@ -59,7 +59,7 @@ class FileServeApp(object):
     def make_date(self, d):
         if isinstance(d, datetime):
             d = d.utctimetuple()
-        elif isinstance(d, (int, long, float)):
+        else:
             d = gmtime(d)
 
         return '%s, %02d%s%s%s%s %02d:%02d:%02d GMT' % (

@@ -34,13 +34,10 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
+from tg._compat import unicode_text
+
 # Load tw (ToscaWidets) only on demand
 tw = None
-
-try:
-    unicode_text = unicode
-except:
-    unicode_text = str
 
 class _DecoratedControllerMeta(type):
     def __init__(cls, name, bases, attrs):

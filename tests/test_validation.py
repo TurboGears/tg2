@@ -5,7 +5,7 @@ from nose.tools import raises
 import tg
 import tests
 from formencode import validators, Schema
-from simplejson import loads, dumps
+from json import loads, dumps
 
 from tg.controllers import TGController
 from tg.decorators import expose, validate, before_render

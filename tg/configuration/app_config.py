@@ -137,7 +137,7 @@ class AppConfig(Bunch):
         """Creates some configuration defaults"""
 
         # Create a few bunches we know we'll use
-        self.paths = Bunch(defaults['paths'])
+        self.paths = Bunch()
         self.render_functions = Bunch()
 
         # Provide a default app_globals for single file applications
@@ -231,7 +231,7 @@ class AppConfig(Bunch):
         paths.update(self.paths)
         self.paths = paths
 
-    def init_config(self, global_conf=None, app_conf=None):
+    def init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
         Besides basic initialization, this method copies all the values
@@ -240,12 +240,6 @@ class AppConfig(Bunch):
         """
         # Load the mimetypes with its default types
         mimetypes.init()
-
-        if global_conf is None:
-            global_conf = {}
-
-        if app_conf is None:
-            app_conf = {}
 
         try:
             self.package_name = self.package.__name__
@@ -264,6 +258,10 @@ class AppConfig(Bunch):
         # Ensure all the keys from defaults are present, load them if not
         for key, val in deepcopy(defaults).items():
             conf.setdefault(key, val)
+
+        # Ensure all paths are set, load default ones otherwise
+        for key, val in defaults['paths'].items():
+            conf['paths'].setdefault(key, val)
 
         # Load the errorware configuration from the Paste configuration file
         # These all have defaults, and emails are only sent if configured and
