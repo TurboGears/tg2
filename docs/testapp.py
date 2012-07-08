@@ -18,8 +18,7 @@ class RootController(TGController):
     def test(self):
         return dict(ip=tg.request.remote_addr)
 
-app_config = AppConfig()
-app_config.use_toscawidgets = False
+app_config = AppConfig(minimal=True)
 app_config['tg.root_controller'] = RootController()
 
 #Setup support for MAKO.
@@ -27,9 +26,6 @@ app_config.renderers = ['mako']
 app_config.default_renderer = 'mako'
 app_config.use_dotted_templatenames = False
 
-app_config.init_config({}, {})
-app_config.setup_renderers()
-
-app = app_config.setup_tg_wsgi_app(None)({}, full_stack=False)
+app = app_config.make_wsgi_app()
 make_server('', 8080, app).serve_forever()
 

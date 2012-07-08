@@ -133,7 +133,7 @@ class AppConfig(Bunch):
 
     """
 
-    def __init__(self):
+    def __init__(self, minimal=False):
         """Creates some configuration defaults"""
 
         # Create a few bunches we know we'll use
@@ -158,7 +158,7 @@ class AppConfig(Bunch):
         self.use_ming = False
         self.use_sqlalchemy = False
         self.use_transaction_manager = True
-        self.use_toscawidgets = True
+        self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
 
@@ -219,7 +219,7 @@ class AppConfig(Bunch):
             else:
                 log.debug("Unable to register %s for shutdown" % cmd )
 
-    def setup_paths(self):
+    def setup_package_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
         paths = Bunch(root=root,
@@ -231,7 +231,7 @@ class AppConfig(Bunch):
         paths.update(self.paths)
         self.paths = paths
 
-    def init_config(self, global_conf, app_conf):
+    def init_config(self, global_conf=None, app_conf=None):
         """Initialize the config object.
 
         Besides basic initialization, this method copies all the values
@@ -240,6 +240,12 @@ class AppConfig(Bunch):
         """
         # Load the mimetypes with its default types
         mimetypes.init()
+
+        if global_conf is None:
+            global_conf = {}
+
+        if app_conf is None:
+            app_conf = {}
 
         try:
             self.package_name = self.package.__name__
@@ -723,7 +729,17 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             global_conf=Bunch(global_conf)
             app_conf=Bunch(app_conf)
 
-            self.setup_paths()
+            try:
+                app_package = self.package
+            except AttributeError:
+                #if we don't have a specified package, don't try
+                #to detect paths and helpers from the package.
+                #Expect the user to specify them.
+                app_package = None
+
+            if app_package:
+                self.setup_package_paths()
+
             self.init_config(global_conf, app_conf)
 
             #Registers functions to be called at startup and shutdown
@@ -733,7 +749,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             if self.enable_routes:
                 self.setup_routes()
 
-            self.setup_helpers_and_globals()
+            if app_package:
+                self.setup_helpers_and_globals()
+
             self.setup_mimetypes()
             self.setup_auth()
             self.setup_renderers()
@@ -985,7 +1003,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 self.DBSession.remove()
         return remover
 
-    def setup_tg_wsgi_app(self, load_environment):
+    def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
 
         ``load_environment``
@@ -997,7 +1015,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         """
 
-        def make_base_app(global_conf, wrap_app=None, full_stack=True, **app_conf):
+        def make_base_app(global_conf=None, wrap_app=None, full_stack=False, **app_conf):
             """Create a tg WSGI application and return it.
 
             ``wrap_app``
@@ -1024,6 +1042,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
             """
             from tg import TGApp
+
+            if global_conf is None:
+                global_conf = {}
             
             # Configure the Application environment
             if load_environment:
@@ -1105,6 +1126,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             return app
 
         return make_base_app
+
+    def make_wsgi_app(self, **app_conf):
+        loadenv = self.make_load_environment()
+        return self.setup_tg_wsgi_app(loadenv)(**app_conf)
 
 def maybe_make_body_seekable(app):
     def wrapper(environ, start_response):
