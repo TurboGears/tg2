@@ -8,7 +8,7 @@ try:
     from formencode.api import Invalid as _FormEncodeValidationError
     from formencode.api import Validator as _FormEncodeValidator
     from formencode import Schema as _FormEncodeSchema
-except ImportError, e:
+except ImportError:
     class _FormEncodeValidationError(Exception):
         """FormEncode Invalid"""
     class _FormEncodeValidator(object):
