@@ -8,12 +8,10 @@ else: # pragma: no cover
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
 
-try:
-    unicode_text = unicode
-except:
-    unicode_text = str
-
 if PY3:
     string_type = str
+    unicode_text = str
 else:
     string_type = basestring
+    unicode_text = unicode
+
