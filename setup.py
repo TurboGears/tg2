@@ -70,6 +70,6 @@ setup(
         shell = pylons.commands:ShellCommand
     ''',
     dependency_links=[
-        "http://tg.gy/220rc2"
+        "http://tg.gy/220"
         ]
 )
