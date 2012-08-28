@@ -479,7 +479,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         loader = ChoiceLoader(
             [TemplateLoader(path) for path in self.paths['templates']])
 
-        config['pylons.app_globals'].jinja2_env = Environment(loader=loader,
+        config['pylons.app_globals'].jinja2_env = Environment(loader=loader, autoescape=True,
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
 
         # Try to load custom filters module under app_package.lib.templatetools
