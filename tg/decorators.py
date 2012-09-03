@@ -103,7 +103,11 @@ class Decoration(object):
         default_renderer = config.get('default_renderer')
         available_renderers = config.get('renderers', [])
 
-        if engine and engine not in available_renderers:
+        if engine and not available_renderers:
+            log.warn('Renderers not registered yet while exposing template %s for engine %s, '
+                     'skipping engine availability check', template, engine)
+
+        if engine and available_renderers and engine not in available_renderers:
             log.debug('Registering template %s for engine %s not available. Skipping it', template, engine)
             return
 

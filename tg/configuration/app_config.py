@@ -153,6 +153,17 @@ class AppConfig(Bunch):
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
 
+    def __setitem__(self, key, value):
+        #some entries are required at application setup time
+        #so we need to keep them in sync between tg.config and AppConfig.
+
+        #This is especially true for available renderers which enable
+        #engine check in tg.decorators.Decorator.register_template_engine
+        if key in ['default_renderer', 'renderers']:
+            config[key] = value
+        return super(AppConfig, self).__setattr__(key, value)
+    __setattr__ = __setitem__
+
     def get_root_module(self):
         root_module_path = self.paths['root']
         base_controller_path = self.paths['controllers']
