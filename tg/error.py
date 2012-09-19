@@ -1,8 +1,7 @@
+import logging
 from paste.deploy.converters import asbool
-from weberror.evalexception import EvalException
-from weberror.errormiddleware import ErrorMiddleware
 
-report_libs = ['TurboGears', 'genshi', 'sqlalchemy', 'tg.devtools']
+log = logging.getLogger(__name__)
 
 def ErrorHandler(app, global_conf, **errorware):
     """ErrorHandler Toggle
@@ -18,14 +17,13 @@ def ErrorHandler(app, global_conf, **errorware):
     
     """
 
-    if asbool(global_conf.get('debug')):
-        app = EvalException(app, global_conf,
-                            templating_formatters=[],
-                            media_paths={},
-                            head_html='',
-                            footer_html='',
-                            libraries=report_libs)
-    else:
-        app = ErrorMiddleware(app, global_conf, **errorware)
+    if not asbool(global_conf.get('debug')):
+        return app
+
+    try:
+        from backlash import DebuggedApplication
+        app = DebuggedApplication(app)
+    except ImportError:
+        log.warn('backlash not installed while debug mode enabled, skipping debug mode')
 
     return app
