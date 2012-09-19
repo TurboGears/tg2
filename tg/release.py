@@ -1,5 +1,5 @@
 """TurboGears project related information"""
-version = "2.2.0rc2"
+version = "2.3.0dev"
 description = "Next generation TurboGears built on Pylons"
 long_description="""
 TurboGears brings together a best of breed python tools
