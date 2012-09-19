@@ -11,6 +11,7 @@ import tg
 from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
+from tg.support import registry
 
 try:
     import pylons
@@ -119,9 +120,9 @@ class TGApp(object):
         testmode = self.setup_app_env(environ, start_response)
         if testmode:
             if environ['PATH_INFO'] == '/_test_vars':
-                paste.registry.restorer.save_registry_state(environ)
+                registry.restorer.save_registry_state(environ)
                 start_response('200 OK', [('Content-type', 'text/plain')])
-                return ['%s' % paste.registry.restorer.get_request_id(environ)]
+                return [str(registry.restorer.get_request_id(environ)).encode('utf-8')]
 
         controller = self.resolve(environ, start_response)
         response = self.wrapped_dispatch(controller, environ, start_response)

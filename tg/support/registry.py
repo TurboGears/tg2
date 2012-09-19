@@ -89,6 +89,7 @@ is provided solely in the extremely rare case that it is an issue so that a
 quick way to work around it is documented.
 
 """
+import itertools, time
 import threading as threadinglocal
 
 __all__ = ['StackedObjectProxy', 'RegistryManager', 'StackedObjectRestorer', 'restorer']
@@ -544,8 +545,12 @@ class StackedObjectRestorer(object):
 
     def get_request_id(self, environ):
         """Return a unique identifier for the current request"""
-        from paste.evalexception.middleware import get_debug_count
-        return get_debug_count(environ)
+        if 'paste.evalexception.debug_count' in environ:
+            return environ['paste.evalexception.debug_count']
+        else:
+            goto_next = getattr(_debug_counter, '__next__', getattr(_debug_counter, 'next', None))
+            environ['paste.evalexception.debug_count'] = next = goto_next()
+            return next
 
     def restoration_begin(self, request_id):
         """Enable a restoration context in the current thread for the specified
@@ -648,3 +653,5 @@ class DispatchingConfig(StackedObjectProxy):
                 "No configuration has been registered for this process "
                 "or thread")
     current = current_conf = _current_obj
+
+_debug_counter = itertools.count(int(time.time()))
