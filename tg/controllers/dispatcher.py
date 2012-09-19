@@ -25,8 +25,6 @@ from tg.i18n import setup_i18n
 from tg.decorators import cached_property
 from crank.dispatchstate import DispatchState
 
-HTTPNotFound = HTTPNotFound().exception
-
 def dispatched_controller():
     state = tg.request._controller_state
     for location, cont in reversed(state.controller_path):
