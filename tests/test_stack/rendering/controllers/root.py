@@ -4,8 +4,9 @@ from tg import expose, redirect, config, validate, override_template, response, 
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tg.validation import TGValidationError
+from tg._compat import PY3
 
-try:
+if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
     from tw.api import WidgetsList
 
@@ -18,7 +19,7 @@ try:
 
     #then, we create an instance of this form
     base_movie_form = MovieForm("movie_form", action='create')
-except ImportError:
+else:
     base_movie_form = None
 
 class IntValidator(object):

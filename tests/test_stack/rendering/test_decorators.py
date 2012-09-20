@@ -10,6 +10,8 @@ def make_app():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     return app_from_config(base_config)
@@ -26,7 +28,7 @@ class TestTGController(object):
 
     def test_simple_jsonification(self):
         resp = self.app.get('/j/json')
-        assert '{"a": "hello world", "b": true}' in resp.body
+        assert '{"a": "hello world", "b": true}' in str(resp.body)
 
     def test_multi_dispatch_json(self):
         resp = self.app.get('/j/xml_or_json', headers={'accept':'application/json'})
@@ -36,15 +38,15 @@ class TestTGController(object):
 
     def test_json_with_object(self):
         resp = self.app.get('/j/json_with_object')
-        assert '''"Json": "Rocks"''' in resp.body
+        assert '''"Json": "Rocks"''' in str(resp.body)
 
     @no_warn
     def test_json_with_bad_object(self):
         try:
             resp = self.app.get('/j/json_with_bad_object')
-        except TypeError, e:
-            pass
-        assert "is not JSON serializable" in str(e), str(e)
+            assert False
+        except Exception as e:
+            assert "is not JSON serializable" in str(e), str(e)
 
     def test_multiple_engines(self):
         default_renderer = config['default_renderer']

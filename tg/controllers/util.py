@@ -165,8 +165,7 @@ def redirect(base_url='/', params={}, **kwargs):
         params.update(kwargs)
 
     new_url = url(base_url, params=params)
-    found = HTTPFound(location=new_url).exception
-    raise found
+    raise HTTPFound(location=new_url)
 
 IF_NONE_MATCH = re.compile('(?:W/)?(?:"([^"]*)",?\s*)')
 def etag_cache(key=None):
