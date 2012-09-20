@@ -56,9 +56,9 @@ class Decoration(object):
         return bool(self.engines) or bool(self.custom_engines)
 
     def merge(self, deco):
-        self.engines = dict(deco.engines.items() + self.engines.items())
+        self.engines = dict(tuple(deco.engines.items()) + tuple(self.engines.items()))
         self.engines_keys = sorted(self.engines, reverse=True)
-        self.custom_engines = dict(deco.custom_engines.items() + self.engines.items())
+        self.custom_engines = dict(tuple(deco.custom_engines.items()) + tuple(self.engines.items()))
 
         #inherit all the parent hooks
         #parent hooks before current hooks so that they get called before

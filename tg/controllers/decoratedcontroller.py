@@ -34,7 +34,7 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
-from tg._compat import unicode_text
+from tg._compat import unicode_text, with_metaclass
 
 # Load tw (ToscaWidets) only on demand
 tw = None
@@ -50,15 +50,13 @@ class _DecoratedControllerMeta(type):
                     if parent_method and hasattr(parent_method, 'decoration'):
                         value.decoration.merge(parent_method.decoration)
 
-class DecoratedController(object):
+class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
     """Decorated controller object.
 
     Creates an interface to hang decoration attributes on
     controller methods for the purpose of rendering web content.
 
     """
-    __metaclass__ = _DecoratedControllerMeta
-
     def _is_exposed(self, controller, name):
         method = getattr(controller, name, None)
         if method and inspect.ismethod(method) and hasattr(method, 'decoration'):

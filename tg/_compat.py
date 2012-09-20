@@ -22,3 +22,7 @@ def im_func(f):
         return f.__func__
     else:
         return f.im_func
+
+def with_metaclass(meta, base=object):
+    """Create a base class with a metaclass."""
+    return meta("NewBase", (base,), {})
