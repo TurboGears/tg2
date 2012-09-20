@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from nose.tools import raises
+from nose import SkipTest
 
 import tg
 import tests
-from formencode import validators, Schema
 from json import loads, dumps
 
 from tg.controllers import TGController
@@ -12,39 +13,81 @@ from tg.decorators import expose, validate, before_render
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
-from tw.forms import TableForm, TextField
-from tw.api import WidgetsList
+from tg._compat import PY3, unicode_text
+from tg.validation import TGValidationError
 
-import tw2.core as tw2c
-import tw2.forms as tw2f
+if not PY3:
+    from formencode import validators, Schema
 
-class MovieForm(tw2f.TableForm):
-    title = tw2f.TextField(validator=tw2c.Required)
-    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
-movie_form = MovieForm(action='save_movie')
+    from tw.forms import TableForm, TextField
+    from tw.api import WidgetsList
+
+    import tw2.core as tw2c
+    import tw2.forms as tw2f
+
+    class MovieForm(tw2f.TableForm):
+        title = tw2f.TextField(validator=tw2c.Required)
+        year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
+    movie_form = MovieForm(action='save_movie')
+
+    class MyForm(TableForm):
+        class fields(WidgetsList):
+            """This WidgetsList is just a container."""
+            title=TextField(validator = validators.NotEmpty())
+            year = TextField(size=4, validator=validators.Int())
+    myform = MyForm("my_form", action='create')
+
+    class Pwd(Schema):
+        pwd1 = validators.String(not_empty=True)
+        pwd2 = validators.String(not_empty=True)
+        chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
+else:
+    movie_form = None
+    myform = None
+
+    class validators(object):
+        """Simulate Formencode"""
+        Invalid = TGValidationError
+
+        class FancyValidator(object):
+            def _to_python(self, value):
+                return value
+
+            def validate_python(self, value, state=None):
+                if not value:
+                    raise TGValidationError('Empty')
+
+            def to_python(self, value, state=None):
+                try:
+                    pyv = self._to_python(value)
+                except Exception as e:
+                    raise TGValidationError(str(e))
+
+                self.validate_python(pyv, None)
+                return pyv
+
+        class Int(FancyValidator):
+            def _to_python(self, value):
+                try:
+                    return int(value)
+                except:
+                    raise TGValidationError('Must be an integer')
+
+        class Email(FancyValidator):
+            def _to_python(self, value):
+                if '@' not in value:
+                    raise TGValidationError('not email')
+                return value
+
+    class tw2c(object):
+        class IntValidator(validators.Int):
+            pass
 
 def setup():
     setup_session_dir()
 
 def teardown():
     teardown_session_dir()
-
-class MyForm(TableForm):
-
-    class fields(WidgetsList):
-        """This WidgetsList is just a container."""
-        title=TextField(validator = validators.NotEmpty())
-        year = TextField(size=4, validator=validators.Int())
-
-# then, we create an instance of this form
-myform = MyForm("my_form", action='create')
-
-
-class Pwd(Schema):
-    pwd1 = validators.String(not_empty=True)
-    pwd2 = validators.String(not_empty=True)
-    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
-
 
 class controller_based_validate(validate):
 
@@ -64,17 +107,17 @@ class ColonValidator(validators.FancyValidator):
 
 class BasicTGController(TGController):
 
-    @expose('json')
+    @expose('json:')
     @validate(validators={"some_int": validators.Int()})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
 
-    @expose('json')
+    @expose('json:')
     @validate(validators={"a": validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode)
+        assert isinstance(b, unicode_text)
         return dict(int=a, str=b)
 
     @expose()
@@ -82,15 +125,15 @@ class BasicTGController(TGController):
     def validate_controller_based_validator(self, *args, **kw):
         return 'ok'
 
-    @expose('json')
-    @validate(validators={"a": validators.Int(), "someemail": validators.Email})
+    @expose('json:')
+    @validate(validators={"a": validators.Int(), "someemail": validators.Email()})
     def two_validators(self, a=None, someemail=None, *args):
         errors = tg.tmpl_context.form_errors
         values =  tg.tmpl_context.form_values
         return dict(a=a, someemail=someemail,
                 errors=str(errors), values=str(values))
 
-    @expose('json')
+    @expose('json:')
     @validate(validators={"a": validators.Int()})
     def with_default_shadow(self, a, b=None ):
         """A default value should not cause the validated value to disappear"""
@@ -99,13 +142,13 @@ class BasicTGController(TGController):
             'int': a,
         }
 
-    @expose('json')
+    @expose('json:')
     @validate(validators={"e": ColonValidator()})
     def error_with_colon(self, e):
         errors = tg.tmpl_context.form_errors
         return dict(errors=str(errors))
 
-    @expose('json')
+    @expose('json:')
     @validate(validators={
         "a": validators.Int(),"b":validators.Int(),"c":validators.Int(),"d":validators.Int()
     })
@@ -123,13 +166,13 @@ class BasicTGController(TGController):
     def display_form(self, **kwargs):
         return str(myform.render(values=kwargs))
 
-    @expose('json')
+    @expose('json:')
     @validate(form=myform)
     def process_form(self, **kwargs):
         kwargs['errors'] = tg.tmpl_context.form_errors
         return dict(kwargs)
 
-    @expose('json')
+    @expose('json:')
     @validate(form=myform, error_handler=process_form)
     def send_to_error_handler(self, **kwargs):
         kwargs['errors'] = tg.tmpl_context.form_errors
@@ -139,7 +182,7 @@ class BasicTGController(TGController):
     def tw2form_error_handler(self, **kwargs):
         return dumps(dict(errors=tg.tmpl_context.form_errors))
 
-    @expose('json')
+    @expose('json:')
     @validate(form=movie_form, error_handler=tw2form_error_handler)
     def send_tw2_to_error_handler(self, **kwargs):
         return 'passed validation'
@@ -155,15 +198,16 @@ class BasicTGController(TGController):
         tg.session.save()
         return 'ok'
 
-    @expose()
-    @validate(validators=Pwd())
-    def password(self, pwd1, pwd2):
-        if tg.tmpl_context.form_errors:
-            return "There was an error"
-        else:
-            return "Password ok!"
+    if not PY3:
+        @expose()
+        @validate(validators=Pwd())
+        def password(self, pwd1, pwd2):
+            if tg.tmpl_context.form_errors:
+                return "There was an error"
+            else:
+                return "Password ok!"
 
-    @expose('json')
+    @expose('json:')
     @before_render(lambda rem,params,output:output.update({'GOT_ERROR':'HOOKED'}))
     def hooked_error_handler(self, *args, **kw):
         return dict(GOT_ERROR='MISSED HOOK')
@@ -214,14 +258,14 @@ class TestTGController(TestWSGIController):
         """Ensure that multiple validators are applied correctly"""
         form_values = {'a': '1', 'someemail': "guido@google.com"}
         resp = self.app.post('/two_validators', form_values)
-        content = loads(resp.body)
+        content = loads(resp.body.decode('utf-8'))
         assert content['a'] == 1
 
     def test_validation_errors(self):
         """Ensure that dict validation produces a full set of errors"""
         form_values = {'a': '1', 'someemail': "guido~google.com"}
         resp = self.app.post('/two_validators', form_values)
-        content = loads(resp.body)
+        content = loads(resp.body.decode('utf-8'))
         errors = content.get('errors', None)
         assert errors, 'There should have been at least one error'
         assert 'someemail' in errors, \
@@ -229,17 +273,21 @@ class TestTGController(TestWSGIController):
 
     def test_form_validation(self):
         """Check @validate's handing of ToscaWidget forms instances"""
+        if PY3: raise SkipTest()
+
         form_values = {'title': 'Razer', 'year': "2007"}
         resp = self.app.post('/process_form', form_values)
-        values = loads(resp.body)
+        values = loads(resp.body.decode('utf-8'))
         assert values['year'] == 2007
 
     def test_error_with_colon(self):
         resp = self.app.post('/error_with_colon', {'e':"fakeparam"})
-        assert 'Description' in resp.body, resp.body       
+        assert 'Description' in str(resp.body), resp.body
 
     def test_form_render(self):
         """Test that myform renders properly"""
+        if PY3: raise SkipTest()
+
         resp = self.app.post('/display_form')
         assert 'id="my_form_title.label"' in resp, resp
         assert 'class="fieldlabel required"' in resp, resp
@@ -247,58 +295,70 @@ class TestTGController(TestWSGIController):
 
     def test_form_validation_error(self):
         """Test form validation with error message"""
+        if PY3: raise SkipTest()
+
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values)
-        values = loads(resp.body)
+        values = loads(resp.body.decode('utf-8'))
         assert "Please enter an integer value" in values['errors']['year'], \
             'Error message not found: %r' % values['errors']
 
     def test_form_validation_redirect(self):
         """Test form validation error message with redirect"""
+        if PY3: raise SkipTest()
+
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_to_error_handler', form_values)
-        values = loads(resp.body)
+        values = loads(resp.body.decode('utf-8'))
         assert "Please enter an integer value" in values['errors']['year'], \
             'Error message not found: %r' % values['errors']
 
     def test_tw2form_validation(self):
+        if PY3: raise SkipTest()
+
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_tw2_to_error_handler', form_values)
-        values = loads(resp.body)
+        values = loads(resp.body.decode('utf-8'))
         assert "Must be an integer" in values['errors']['year'],\
         'Error message not found: %r' % values['errors']
 
     def test_tw2dict_validation(self):
+        if PY3: raise SkipTest()
+
         resp = self.app.post('/tw2_dict_validation', {'param': "7"})
-        assert '{}' in resp.body
+        assert '{}' in str(resp.body)
 
         resp = self.app.post('/tw2_dict_validation', {'param': "hello"})
-        assert 'Must be an integer' in resp.body
+        assert 'Must be an integer' in str(resp.body)
 
     def test_form_validation_translation(self):
+        if PY3: raise SkipTest()
+
         """Test translation of form validation error messages"""
         form_values = {'title': 'Razer', 'year': "t007"}
         # check with language set in request header
         resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'de,ru,it'})
-        values = loads(resp.body)
-        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+        values = loads(resp.body.decode('utf-8'))
+        assert "Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
             'No German error message: %r' % values['errors']
         resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'ru,de,it'})
-        values = loads(resp.body)
-        assert u"Введите числовое значение" in values['errors']['year'], \
+        values = loads(resp.body.decode('utf-8'))
+        assert "Введите числовое значение" in values['errors']['year'], \
             'No Russian error message: %r' % values['errors']
         # check with language set in session
         self.app.post('/set_lang/de')
         resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'ru,it'})
-        values = loads(resp.body)
-        assert u"Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
+        values = loads(resp.body.decode('utf-8'))
+        assert "Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
             'No German error message: %r' % values['errors']
 
     def test_form_validation_error(self):
         """Test schema validation"""
+        if PY3: raise SkipTest()
+
         form_values = {'pwd1': 'me', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
         assert "There was an error" in resp, resp

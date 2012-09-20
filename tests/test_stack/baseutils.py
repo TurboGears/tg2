@@ -15,8 +15,8 @@ default_config = {
         'tg.strict_tmpl_context':False,
         'buffet.template_engines': [],
         'buffet.template_options': {},
-        'default_renderer':'genshi',
-        'renderers':['json'],
+        'default_renderer':'json',
+        'renderers': ['json'],
         'render_functions':{'json':tg.render.render_json},
         'use_legacy_renderers':False,
         'use_sqlalchemy': False

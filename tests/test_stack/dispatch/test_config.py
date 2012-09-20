@@ -8,7 +8,9 @@ def setup_noDB():
                      'smtp_server': 'localhost'}
     
     base_config = TestConfig(folder = 'config', 
-                             values = {'use_sqlalchemy': False}
+                             values = {'use_sqlalchemy': False,
+                                       'use_toscawidgets':False,
+                                       'use_toscawidgets2':False}
                              )
                              
     env_loader = base_config.make_load_environment()

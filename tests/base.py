@@ -2,25 +2,26 @@
 
 import os, shutil
 from unittest import TestCase
-from xmlrpclib import loads, dumps
+
+try:
+    from xmlrpclib import loads, dumps
+except ImportError:
+    from xmlrpc.client import loads, dumps
 import warnings
 
-import webob
 import beaker
-from paste.registry import Registry
-from paste.registry import RegistryManager
+
+from tg.support.registry import Registry, RegistryManager
+
 from webtest import TestApp
-from paste import httpexceptions
 
 import tg
 from tg import tmpl_context, request_local
-from tests.test_stack import app_from_config, TestConfig
-from routes import URLGenerator, Mapper
 
 from tg.wsgiapp import ContextObj, TGApp, RequestLocals
 from tg.controllers import TGController
 
-from test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
+from .test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
 
 from beaker.middleware import CacheMiddleware
 
@@ -34,18 +35,12 @@ def setup_session_dir():
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
-default_map = Mapper()
-
-# Setup a default route for the error controller:
-default_map.connect('error/:action/:id', controller='error')
-# Setup a default route for the root of object dispatch
-default_map.connect('*url', controller='root', action='routes_placeholder')
-
 def make_app(controller_klass=None, environ=None):
     """Creates a `TestApp` instance."""
     if controller_klass is None:
         controller_klass = TGController
 
+    tg.config['renderers'] = default_config['renderers']
     app = TGApp(config=default_config)
     app.controller_classes['root'] = ControllerWrap(controller_klass)
 
@@ -54,7 +49,6 @@ def make_app(controller_klass=None, environ=None):
     app = RegistryManager(app)
     app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
-    app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
 def create_request(path, environ=None):
@@ -84,7 +78,6 @@ def create_request(path, environ=None):
     tgl = RequestLocals()
     tgl.tmpl_context = ContextObj()
     tgl.request = req
-    tgl.url = URLGenerator(default_map, environ)
 
     request_local.context._push_object(tgl)
 
