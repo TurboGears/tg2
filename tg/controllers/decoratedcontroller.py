@@ -34,7 +34,7 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
-from tg._compat import unicode_text, with_metaclass
+from tg._compat import unicode_text, with_metaclass, im_self
 
 # Load tw (ToscaWidets) only on demand
 tw = None
@@ -353,13 +353,10 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if error_handler is None:
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
-        elif hasattr(error_handler, 'im_self'
-                ) and error_handler.im_self != controller:
-            output = error_handler(
-                error_handler.im_self, *remainder, **dict(params))
+        elif im_self(error_handler) != controller:
+            output = error_handler(im_self(error_handler), *remainder, **dict(params))
         else:
-            output = error_handler(
-                controller.im_self, *remainder, **dict(params))
+            output = error_handler(im_self(controller), *remainder, **dict(params))
 
         return error_handler, output
 

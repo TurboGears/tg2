@@ -23,6 +23,12 @@ def im_func(f):
     else:
         return f.im_func
 
+def im_self(f):
+    if PY3:
+        return getattr(f, '__self__', None)
+    else:
+        return getattr(f, 'im_self', None)
+
 def with_metaclass(meta, base=object):
     """Create a base class with a metaclass."""
     return meta("NewBase", (base,), {})
