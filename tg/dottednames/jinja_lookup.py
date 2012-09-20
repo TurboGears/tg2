@@ -20,7 +20,7 @@ class JinjaTemplateLoader(FileSystemLoader):
         # Check if dottedname
         if not template.endswith(self.template_extension):
             # Get the actual filename from dotted finder
-            finder = config['pylons.app_globals'].dotted_filename_finder
+            finder = config['tg.app_globals'].dotted_filename_finder
             template = finder.get_dotted_filename(
                 template_name=template,
                 template_extension=self.template_extension)
@@ -35,7 +35,7 @@ class JinjaTemplateLoader(FileSystemLoader):
         mtime = getmtime(template)
 
         # Read the source
-        fd = file(template)
+        fd = open(template, 'rb')
         try:
             source = fd.read().decode('utf-8')
         finally:
