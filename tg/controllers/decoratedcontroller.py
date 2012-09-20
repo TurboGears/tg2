@@ -98,7 +98,7 @@ class DecoratedController(object):
         if not resp_headers.get('Content-Type'):
             resp_headers.pop('Content-Type', None)
 
-        remainder = map(url2pathname, remainder or [])
+        remainder = tuple(map(url2pathname, remainder or []))
 
         tg_decoration = controller.decoration
         try:
