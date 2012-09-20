@@ -20,6 +20,7 @@ from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 from tg.caching import beaker_cache, cached_property
 from tg.predicates import NotAuthorizedError
+from tg._compat import im_func
 from webob.acceptparse import Accept
 
 import logging
@@ -416,7 +417,7 @@ def use_custom_format(controller, custom_format):
         render_custom_format = request._render_custom_format
     except AttributeError:
         render_custom_format = request._render_custom_format = {}
-    render_custom_format[controller.im_func] = custom_format
+    render_custom_format[im_func(controller)] = custom_format
 
 
 def override_template(controller, template):
@@ -448,7 +449,7 @@ def override_template(controller, template):
             override_mapping = request._override_mapping
         except AttributeError:
             override_mapping = request._override_mapping = {}
-        override_mapping.setdefault(controller.im_func, {}).update({content_type: tmpl})
+        override_mapping.setdefault(im_func(controller), {}).update({content_type: tmpl})
 
 
 class validate(object):
