@@ -3,19 +3,30 @@
 from tg import expose, redirect, config, validate, override_template, response, render_template
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
-from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
-from tw.api import WidgetsList
-from formencode import validators
+from tg.validation import TGValidationError
 
-class MovieForm(TableForm):
-    # This WidgetsList is just a container
-    class fields(WidgetsList):
-        title = TextField()
-        year = TextField(size=4, default=1984)
-        description = TextArea()
+try:
+    from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
+    from tw.api import WidgetsList
 
-#then, we create an instance of this form
-base_movie_form = MovieForm("movie_form", action='create')
+    class MovieForm(TableForm):
+        # This WidgetsList is just a container
+        class fields(WidgetsList):
+            title = TextField()
+            year = TextField(size=4, default=1984)
+            description = TextArea()
+
+    #then, we create an instance of this form
+    base_movie_form = MovieForm("movie_form", action='create')
+except ImportError:
+    base_movie_form = None
+
+class IntValidator(object):
+    def to_python(self, value):
+        try:
+            return int(value)
+        except:
+            raise TGValidationError('Not a number')
 
 
 class GoodJsonObject(object):
@@ -147,12 +158,12 @@ class RootController(TGController):
 
     @expose('genshi:genshi_paginated.html')
     @paginate('testdata')
-    @validate(dict(n=validators.Int()))
+    @validate(dict(n=IntValidator()))
     def paginated_validated(self, n):
         return dict(testdata=range(n))
 
     @expose('genshi:genshi_paginated.html')
-    @validate(dict(n=validators.Int()))
+    @validate(dict(n=IntValidator()))
     @paginate('testdata')
     def validated_paginated(self, n):
         return dict(testdata=range(n))
@@ -321,7 +332,7 @@ class RootController(TGController):
             num = 0
             while num < 5:
                 num += 1
-                yield str(num)
+                yield str(num).encode('ascii')
         return output()
     
     @expose()

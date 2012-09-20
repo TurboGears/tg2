@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from nose import SkipTest
 
 import tg
 #import tg.configuration
@@ -7,13 +8,16 @@ import tg
 
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
+from tg._compat import PY3
 
 def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
     base_config = TestConfig(folder='rendering', values={
         'use_sqlalchemy': False,
        'use_legacy_renderer': False,
        # this is specific to mako  to make sure inheritance works
-       'use_dotted_templatenames': False
+       'use_dotted_templatenames': False,
+       'use_toscawidgets': False,
+       'use_toscawidgets2': False
     })
 
     deployment_config = {}
@@ -249,12 +253,16 @@ def test_genshi_sub_inheritance_from_bottom():
     assert "Master template" in resp
 
 def test_chameleon_genshi_base():
+    if PY3: raise SkipTest()
+
     app = setup_noDB()
     resp = app.get('/chameleon_genshi_index')
     assert ("<p>TurboGears 2 is rapid web application development toolkit"
         " designed to make your life easier.</p>") in resp
 
 def test_chameleon_genshi_inheritance():
+    if PY3: raise SkipTest()
+
     try:
         import lxml
     except ImportError:
@@ -264,11 +272,11 @@ def test_chameleon_genshi_inheritance():
     app = setup_noDB()
     try:
         resp = app.get('/chameleon_genshi_inherits')
-    except NameError, e:
+    except NameError as e:
         # known issue with chameleon.genshi 1.0
         if 'match_templates' not in str(e):
             raise
-    except AttributeError, e:
+    except AttributeError as e:
         # known issue with chameleon.genshi 1.3
         if 'XPathResult' not in str(e):
             raise
@@ -290,7 +298,9 @@ def test_jinja_extensions():
                                        'use_dotted_templatenames': False,
                                        'renderers':['jinja'],
                                        'jinja_extensions': ['jinja2.ext.do', 'jinja2.ext.i18n',
-                                                            'jinja2.ext.with_', 'jinja2.ext.autoescape']
+                                                            'jinja2.ext.with_', 'jinja2.ext.autoescape'],
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -310,7 +320,7 @@ def test_jinja_custom_filters():
             from hashlib import md5
         except ImportError:
             from md5 import md5
-        string_hash = md5(value)
+        string_hash = md5(value.encode('ascii'))
         return string_hash.hexdigest()
 
     base_config = TestConfig(folder = 'rendering',
@@ -320,7 +330,9 @@ def test_jinja_custom_filters():
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
                                        'renderers':['jinja'],
-                                       'jinja_filters': {'codify': codify}
+                                       'jinja_filters': {'codify': codify},
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -351,7 +363,9 @@ def test_template_override():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'renderers':['genshi']
+                                       'renderers':['genshi'],
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -372,7 +386,9 @@ def test_template_override_wts():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'renderers':['genshi']
+                                       'renderers':['genshi'],
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)
@@ -393,7 +409,9 @@ def test_template_override_content_type():
                                        # this is specific to mako
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': True,
-                                       'renderers':['mako', 'genshi']
+                                       'renderers':['mako', 'genshi'],
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)

@@ -4,7 +4,9 @@ from tests.test_stack import TestConfig, app_from_config
 def setup_noDB():
     base_config = TestConfig(folder='rendering',
             values={
-                'use_sqlalchemy': False
+                'use_sqlalchemy': False,
+                'use_toscawidgets': False,
+                'use_toscawidgets2': False
             })
     return app_from_config(base_config)
 

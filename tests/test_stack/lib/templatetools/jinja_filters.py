@@ -7,6 +7,6 @@ except ImportError:
 __all__ = ['codify']
 
 def codify(value):
-    string_hash = sha1(value)
+    string_hash = sha1(value.encode('ascii'))
     return string_hash.hexdigest()
 

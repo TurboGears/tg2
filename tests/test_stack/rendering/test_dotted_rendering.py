@@ -1,6 +1,8 @@
+from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
 from webtest import TestApp
+from tg._compat import PY3
 
 def setup_noDB():
     base_config = TestConfig(folder = 'rendering',
@@ -9,17 +11,23 @@ def setup_noDB():
                                'use_legacy_renderer': False,
                                # in this test we want dotted names support
                                'use_dotted_templatenames': True,
+                               'use_toscawidgets': False,
+                               'use_toscawidgets2': False
                                }
                              )
     return app_from_config(base_config)
 
 def test_default_chameleon_genshi_renderer():
+    if PY3: raise SkipTest()
+
     app = setup_noDB()
     resp = app.get('/chameleon_index_dotted')
     assert "Welcome" in resp, resp
     assert "TurboGears" in resp, resp
 
 def test_default_kajiki_renderer():
+    if PY3: raise SkipTest()
+
     app = setup_noDB()
     resp = app.get('/kajiki_index_dotted')
     assert "Welcome" in resp, resp

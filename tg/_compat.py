@@ -17,4 +17,8 @@ else:
     unicode_text = unicode
     from urllib import urlencode as url_encode
 
-
+def im_func(f):
+    if PY3:
+        return f.__func__
+    else:
+        return f.im_func

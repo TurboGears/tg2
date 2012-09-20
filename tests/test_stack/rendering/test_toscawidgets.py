@@ -2,6 +2,10 @@ from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
 from webtest import TestApp
 
+from nose import SkipTest
+from tg._compat import PY3
+
+
 def setup_noDB():
 
     base_config = TestConfig(folder = 'rendering',
@@ -22,6 +26,8 @@ expected_field = """\
             </td>"""
 
 def test_basic_form_rendering():
+    if PY3: raise SkipTest()
+    
     app = setup_noDB()
     resp = app.get('/form')
     assert "form" in resp

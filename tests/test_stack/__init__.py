@@ -4,6 +4,8 @@ import tg
 import tests
 from tg.util import DottedFileNameFinder
 from tg.configuration import AppConfig
+from tg._compat import PY3
+
 
 class TestConfig(AppConfig):
 
@@ -12,7 +14,10 @@ class TestConfig(AppConfig):
             values = {}
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako', 'chameleon_genshi', 'jinja','json', 'kajiki']
+        self.renderers = ['genshi', 'mako', 'jinja','json']
+        if not PY3:
+            self.renderers.extend(['chameleon_genshi', 'kajiki'])
+
         self.render_functions = tg.util.Bunch()
         self.package = tests.test_stack
         self.default_renderer = 'genshi'
