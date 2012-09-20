@@ -71,6 +71,6 @@ setup(
     entry_points='''
     ''',
     dependency_links=[
-        "http://tg.gy/220rc2"
+        "http://tg.gy/220"
         ]
 )
