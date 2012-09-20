@@ -74,13 +74,11 @@ class TGApp(object):
 
         self.req_options = config.get('tg.request_options',
                                       dict(charset='utf-8',
-                                           errors='replace',
-                                           decode_param_names=False,
                                            language='en-us'))
 
         self.resp_options = config.get('tg.response_options',
                                        dict(content_type='text/html',
-                                            charset='utf-8', errors='strict',
+                                            charset='utf-8',
                                             headers={'Cache-Control': 'no-cache',
                                                      'Pragma': 'no-cache',
                                                      'Content-Type': None,
@@ -156,9 +154,7 @@ class TGApp(object):
         # Setup the basic global objects
         req_options = self.req_options
         req = Request(environ,
-                      charset=req_options['charset'],
-                      unicode_errors=req_options['errors'],
-                      decode_param_names=req_options['decode_param_names'])
+                      charset=req_options['charset'])
         req_props = req.__dict__
         req_props['_language'] = req_options['language']
         req_props['_response_type'] = None
