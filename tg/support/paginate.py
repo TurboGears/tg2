@@ -62,7 +62,7 @@ class Page(object):
         else:
             #Otherwise compute the actual pagination values
             self.first_page = 1
-            self.page_count = ((self.item_count - 1) / self.items_per_page) + 1
+            self.page_count = ((self.item_count - 1) // self.items_per_page) + 1
             self.last_page = self.first_page + self.page_count - 1
 
             # Make sure that the requested page number is the range of valid pages
@@ -338,7 +338,7 @@ class Page(object):
                 text = _make_span(text, **self.dotdot_attr)
             nav_items.append(text)
 
-        for thispage in xrange(leftmost_page, rightmost_page+1):
+        for thispage in range(leftmost_page, rightmost_page+1):
             # Hilight the current page number and do not use a link
             if thispage == self.page:
                 text = '%s' % (thispage,)
