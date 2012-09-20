@@ -2,6 +2,7 @@ import logging, os
 from gettext import NullTranslations, translation
 import tg
 from tg.util import lazify
+from tg._compat import PY3
 
 log = logging.getLogger(__name__)
 
@@ -77,7 +78,10 @@ def ugettext(value):
         _('This should be in lots of languages')
 
     """
-    return tg.translator.ugettext(value)
+    if PY3:
+        return tg.translator.gettext(value)
+    else:
+        return tg.translator.ugettext(value)
 lazy_ugettext = lazify(ugettext)
 
 def ungettext(singular, plural, n):
@@ -95,7 +99,10 @@ def ungettext(singular, plural, n):
                   n) % {'num': n}
 
     """
-    return tg.translator.ungettext(singular, plural, n)
+    if PY3:
+        return tg.translator.ngettext(singular, plural, n)
+    else:
+        return tg.translator.ungettext(singular, plural, n)
 lazy_ungettext = lazify(ungettext)
 
 
@@ -275,6 +282,6 @@ def set_formencode_translation(languages, tgl=None):
 
 __all__ = [
     "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang",
-    "ugettext", "lazy_ugettext", "ungettext"
+    "ugettext", "lazy_ugettext", "ungettext", "lazy_ungettext"
 ]
 
