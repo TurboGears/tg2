@@ -9,8 +9,7 @@ from webob.exc import status_map
 
 import tg
 
-import urllib
-from tg._compat import string_type
+from tg._compat import string_type, url_encode, unicode_text
 from tg.exceptions import HTTPFound
 
 
@@ -25,9 +24,9 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     """
     if strings_only and (s is None or isinstance(s, int)):
         return s
-    elif not isinstance(s, basestring):
+    elif not isinstance(s, string_type):
         try:
-            return str(s)
+            return string_type(s)
         except UnicodeEncodeError:
             if isinstance(s, Exception):
                 # An Exception subclass containing non-ASCII data that doesn't
@@ -35,8 +34,8 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
                 # further exception.
                 return ' '.join([smart_str(arg, encoding, strings_only,
                         errors) for arg in s])
-            return unicode(s).encode(encoding, errors)
-    elif isinstance(s, unicode):
+            return unicode_text(s).encode(encoding, errors)
+    elif isinstance(s, unicode_text):
         r = s.encode(encoding, errors)
         return r
     elif s and encoding != 'utf-8':
@@ -62,7 +61,7 @@ def urlencode(params):
     unicode strings. The parameters are first case to UTF-8 encoded strings and
     then encoded as per normal.
     """
-    return urllib.urlencode([i for i in generate_smart_str(params)])
+    return url_encode([i for i in generate_smart_str(params)])
 
 
 def url(base_url='/', params={}, qualified=False):

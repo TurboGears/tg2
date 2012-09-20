@@ -6,6 +6,7 @@ import decimal
 from json import JSONEncoder
 
 from webob.multidict import MultiDict
+from tg._compat import string_type
 
 class NotExistingImport:
     pass
@@ -84,7 +85,7 @@ except ImportError:
 
 def encode(obj):
     """Return a JSON string representation of a Python object."""
-    if isinstance(obj, basestring):
+    if isinstance(obj, string_type):
         return _instance.encode(obj)
     try:
         value = obj['test']
