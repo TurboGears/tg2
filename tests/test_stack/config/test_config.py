@@ -11,24 +11,28 @@ def setup_noDB():
 def test_basic_stack():
     app = setup_noDB()
     resp = app.get('/')
-    assert resp.body == "my foo"
+    assert resp.body.decode('ascii') == "my foo"
 
 def test_config_reading():
     """Ensure that the config object can be read via dict and attr access"""
     app = setup_noDB()
     resp = app.get('/config_test')
-    assert "default_renderer" in resp.body
+    resp_body = resp.body.decode('ascii')
+
+    assert "default_renderer" in resp_body
     resp = app.get('/config_attr_lookup')
-    assert "genshi" in resp.body
+    assert "genshi" in resp_body
     resp = app.get('/config_dotted_values')
-    assert "root" in resp.body
+    assert "root" in resp_body
 
 def test_config_writing():
     """Ensure that new values can be added to the config object"""
     app = setup_noDB()
     value = "gooberblue"
     resp = app.get('/config_attr_set/'+value)
-    assert value in resp.body
+    resp_body = resp.body.decode('ascii')
+
+    assert value in resp_body
     resp = app.get('/config_dict_set/'+value)
-    assert value in resp.body
+    assert value in resp_body
 

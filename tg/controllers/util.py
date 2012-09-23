@@ -184,7 +184,7 @@ def etag_cache(key=None):
         response.headers.pop('Content-Type', None)
         response.headers.pop('Cache-Control', None)
         response.headers.pop('Pragma', None)
-        raise status_map[304]().exception
+        raise status_map[304]()
 
 def abort(status_code=None, detail="", headers=None, comment=None):
     """Aborts the request immediately by returning an HTTP exception
