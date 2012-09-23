@@ -19,15 +19,25 @@ else:
 
 def im_func(f):
     if PY3:
-        return f.__func__
+        return getattr(f, '__func__', None)
     else:
-        return f.im_func
+        return getattr(f, 'im_func', None)
 
 def im_self(f):
     if PY3:
         return getattr(f, '__self__', None)
     else:
         return getattr(f, 'im_self', None)
+
+def im_class(f):
+    if PY3:
+        self = im_self(f)
+        if self is not None:
+            return self.__class__
+        else:
+            return None
+    else:
+        return getattr(f, 'im_class', None)
 
 def with_metaclass(meta, base=object):
     """Create a base class with a metaclass."""

@@ -2,6 +2,7 @@
 import tg, inspect, time
 from decorator import decorator
 from paste.deploy.converters import asbool
+from tg._compat import im_func, im_class
 
 class cached_property(object):
     def __init__(self, func):
@@ -141,9 +142,10 @@ def create_cache_key(func, key_dict=None, self=None):
 
     """
     kls = None
-    if hasattr(func, 'im_func'):
-        kls = func.im_class
-        func = func.im_func
+    imfunc = im_func(func)
+    if imfunc:
+        kls = im_class(func)
+        func = imfunc
         cache_key = func.__name__
     else:
         cache_key = func.__name__

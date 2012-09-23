@@ -79,23 +79,23 @@ class TestSimpleCaching(TestWSGIController):
     def test_simple_cache(self):
         """ test that caches get different results for different cache keys. """
         resp = self.app.get('/simple/', params={'a':'foo'})
-        assert resp.body == 'cached foo'
+        assert resp.body.decode('ascii') == 'cached foo'
         resp = self.app.get('/simple/', params={'a':'bar'})
-        assert resp.body == 'cached bar'
+        assert resp.body.decode('ascii') == 'cached bar'
         resp = self.app.get('/simple/', params={'a':'baz'})
-        assert resp.body == 'cached baz'
+        assert resp.body.decode('ascii') == 'cached baz'
 
     def test_expiry(self):
         """ test that values expire from a single cache key. """
         mocktime.set_time(0)
         resp = self.app.get('/expiry/', params={'a':'foo1'})
-        assert resp.body == 'cached foo1'
+        assert resp.body.decode('ascii') == 'cached foo1'
         mocktime.set_time(1)
         resp = self.app.get('/expiry/', params={'a':'foo2'})
-        assert resp.body == 'cached foo1'
+        assert resp.body.decode('ascii') == 'cached foo1'
         mocktime.set_time(200) # wind clock past expiry
         resp = self.app.get('/expiry/', params={'a':'foo2'})
-        assert resp.body == 'cached foo2'
+        assert resp.body.decode('ascii') == 'cached foo2'
 
 class DecoratorController(TGController):
     
@@ -118,15 +118,15 @@ class TestDecoratorCaching(TestWSGIController):
         mocktime.set_time(0)
         mockdb['DecoratorController.simple'] = 'foo1'
         resp = self.app.get('/simple/')
-        assert resp.body == 'cached foo1'
+        assert resp.body.decode('ascii') == 'cached foo1'
         mocktime.set_time(1)
         mockdb['DecoratorController.simple'] = 'foo2'
         resp = self.app.get('/simple/')
-        assert resp.body == 'cached foo1'
+        assert resp.body.decode('ascii') == 'cached foo1'
         mocktime.set_time(200)
         mockdb['DecoratorController.simple'] = 'foo2'
         resp = self.app.get('/simple/')
-        assert resp.body == 'cached foo2'
+        assert resp.body.decode('ascii') == 'cached foo2'
 
 class EtagController(TGController):
 
@@ -272,6 +272,7 @@ class TestBeakerCacheTouch(TestWSGIController):
         o = Something()
         namespace, key = create_cache_key(o.method)
 
+        print(namespace)
         assert namespace == 'tests.test_caching.Something'
         assert key == 'method'
 
