@@ -87,6 +87,7 @@ def encode(obj):
     """Return a JSON string representation of a Python object."""
     if isinstance(obj, string_type):
         return _instance.encode(obj)
+
     try:
         value = obj['test']
     except TypeError:
@@ -94,6 +95,7 @@ def encode(obj):
             raise JsonEncodeError('Your Encoded object must be dict-like.')
     except:
         pass
+
     return _instance.encode(obj)
 
 

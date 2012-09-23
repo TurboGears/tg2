@@ -1,6 +1,7 @@
 from tg.jsonify import jsonify, encode
-from simplejson import loads
 from datetime import date
+
+from json import loads
 
 class Person(object):
     def __init__(self, first_name, last_name):

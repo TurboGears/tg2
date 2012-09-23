@@ -27,7 +27,7 @@ def test_list():
 
 @raises(jsonify.JsonEncodeError)
 def test_list_iter():
-    d = range(3)
+    d = list(range(3))
     encoded = jsonify.encode_iter(d)
     assert ''.join(jsonify.encode_iter(d)) == jsonify.encode(d)
 
@@ -41,7 +41,7 @@ def test_nospecificjson():
     b = Baz()
     try:
         encoded = jsonify.encode(b)
-    except TypeError, e:
+    except TypeError as e:
         pass
     assert  "is not JSON serializable" in e.message 
 
