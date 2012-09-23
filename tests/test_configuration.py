@@ -1,6 +1,7 @@
 """
 Testing for TG2 Configuration
 """
+from nose import SkipTest
 from nose.tools import eq_, raises
 import atexit, sys
 
@@ -9,12 +10,16 @@ from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
+from tg._compat import PY3
 
 
 def setup():
     setup_session_dir()
 def teardown():
     teardown_session_dir()
+
+class AtExitTestException(Exception):
+    pass
 
 class TestPylonsConfigWrapper:
 
@@ -102,12 +107,14 @@ class TestAppConfig:
         self.config.call_on_shutdown = ['not callable']
         self.config.setup_startup_and_shutdown()
 
+    @raises(AtExitTestException)
     def test_setup_startup_and_shutdown_shutdown_callable(self):
         def func():
-            a = 7
+            raise AtExitTestException()
+
         self.config.call_on_shutdown = [func]
         self.config.setup_startup_and_shutdown()
-        assert (func, (), {}) in atexit._exithandlers
+        atexit._run_exitfuncs()
 
     def test_setup_helpers_and_globals(self):
         self.config.setup_helpers_and_globals()
@@ -116,8 +123,16 @@ class TestAppConfig:
         self.config.setup_sa_auth_backend()
 
     def test_setup_chameleon_genshi_renderer(self):
+        if PY3: raise SkipTest()
+
         self.config.paths.templates = 'template_path'
         self.config.setup_chameleon_genshi_renderer()
+
+    def test_setup_kajiki_renderer(self):
+        if PY3: raise SkipTest()
+
+        self.config.paths.templates = 'template_path'
+        self.config.setup_kajiki_renderer()
 
     def test_setup_genshi_renderer(self):
         self.config.paths.templates = 'template_path'
