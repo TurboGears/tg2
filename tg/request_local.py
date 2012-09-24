@@ -13,19 +13,7 @@ except ImportError:
     import sha as sha1
 
 from webob import Request as WebObRequest
-from webob.request import PATH_SAFE
 from webob import Response as WebObResponse
-
-#Precalc url quoting for fast_path property
-always_safe = ('ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-               'abcdefghijklmnopqrstuvwxyz'
-               '0123456789' '_.-')
-_faster_safe_test = always_safe + PATH_SAFE
-_faster_safe = dict(zip(_faster_safe_test, _faster_safe_test))
-for c in [chr(i) for i in range(256)]:
-    if c not in _faster_safe:
-        _faster_safe[c] = '%%%02X' % ord(c)
-_must_quote = re.compile(r'[^%s]' % _faster_safe_test)
 
 try:
     from webob.acceptparse import Accept
@@ -75,15 +63,7 @@ class Request(WebObRequest):
 
     @property
     def fast_path(self):
-        s = self.path_info
-        if not _must_quote.search(s):
-            return s
-
-        try:
-            return ''.join(map(_faster_safe.get, s))
-        except TypeError:
-            #In some cases like unicode urls fast_path fails
-            return self.path
+        return self.path
 
     @cached_property
     def plain_languages(self):

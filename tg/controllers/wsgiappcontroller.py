@@ -34,7 +34,7 @@ class WSGIAppController(TGController):
         request = tg.request._current_obj()
         new_req = request.copy()
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
-        for i in xrange(to_pop):
+        for i in range(to_pop):
             new_req.path_info_pop()
         if not new_req.path_info:
             # Append trailing slash and redirect

@@ -8,14 +8,10 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
-try:
-    from urllib import quote as url_quote
-    from urllib import unquote as url_unquote
-except ImportError:
-    from urllib.parse import quote as url_quote
-    from urllib.parse import unquote as url_unquote
+from tg._compat import unicode_text, url_quote, url_unquote
 
 from markupsafe import escape_silent as escape
+
 
 class TGFlash(object):
     """
@@ -58,7 +54,7 @@ return{payload:h,render:d}}})();webflash.lj=function(s){var r;eval("r="+s);retur
 
     def __call__(self, message, status=None, **extra_payload):
         # Force the message to be unicode so lazystrings, etc... are coerced
-        message = unicode(message)
+        message = unicode_text(message)
 
         payload = self.prepare_payload(message = message,
                                        status = status or self.default_status,

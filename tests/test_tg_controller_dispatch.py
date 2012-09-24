@@ -1,26 +1,32 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import unicode_literals
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 
-from formencode import validators
+from tests.test_validation import validators
 
 from webob import Response, Request
+from webob.compat import unquote
+from tg._compat import unicode_text
 
 try:
     from pylons.controllers.xmlrpc import XMLRPCController
 except ImportError:
-    import xmlrpclib
+    try:
+        from xmlrpclib import dumps
+    except ImportError:
+        from xmlrpc.client import dumps
+
     class XMLRPCController(object):
         def __call__(self, environ, start_response):
             raw_response = self.textvalue()
-            response = xmlrpclib.dumps((raw_response,), methodresponse=True, allow_none=False)
+            response = dumps((raw_response,), methodresponse=True, allow_none=False).encode('utf-8')
 
             headers = []
             headers.append(('Content-Length', str(len(response))))
             headers.append(('Content-Type', 'text/xml'))
             start_response("200 OK", headers)
-            return list(response)
+            return [response]
 
 
 import tg
@@ -385,7 +391,7 @@ class BasicTGController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash(u"Привет, мир!")
+        tg.flash("Привет, мир!")
         tg.redirect("/flash_after_redirect")
 
     @expose()
@@ -411,7 +417,7 @@ class BasicTGController(TGController):
     @validate(validators=dict(a=validators.Int()))
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode)
+        assert isinstance(b, unicode_text)
         return dict(int=a,str=b)
 
     @expose()
@@ -423,7 +429,7 @@ class BasicTGController(TGController):
         error_handler=error_handler)
     def validated_with_error_handler(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode)
+        assert isinstance(b, unicode_text)
         return dict(int=a,str=b)
 
     @expose('json')
@@ -431,7 +437,7 @@ class BasicTGController(TGController):
         error_handler=error_controller.errors_here)
     def validated_with_remote_error_handler(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode)
+        assert isinstance(b, unicode_text)
         return dict(int=a,str=b)
 
     @expose()
@@ -446,7 +452,7 @@ class BasicTGController(TGController):
     @expose()
     def custom_content_type_in_controller(self):
         tg.response.headers['content-type'] = 'image/png'
-        return 'PNG'
+        return b'PNG'
 
     @expose('json', content_type='application/json')
     def custom_content_type_in_controller_charset(self):
@@ -455,12 +461,12 @@ class BasicTGController(TGController):
 
     @expose(content_type='image/png')
     def custom_content_type_in_decorator(self):
-        return 'PNG'
+        return b'PNG'
 
     @expose()
     def test_204(self, *args, **kw):
         from webob.exc import HTTPNoContent
-        raise HTTPNoContent().exception
+        raise HTTPNoContent()
 
     @expose()
     def custom_content_type_replace_header(self):
@@ -487,7 +493,7 @@ class TestNotFoundController(TestWSGIController):
         assert '404 Not Found' in r, r
 
     def test_not_found_unicode(self):
-        r = self.app.get('/права', status=404)
+        r = self.app.get('/%D0%BF%D1%80%D0%B0%D0%B2%D0%B0', status=404)
         assert '404 Not Found' in r, r
 
 class TestNotFoundWithIndexController(TestWSGIController):
@@ -517,7 +523,7 @@ class TestWSGIAppController(TestWSGIController):
     def test_valid_wsgi(self):
         try:
             r = self.app.get('/some_url')
-        except Exception, e:
+        except Exception as e:
             raise AssertionError(str(e))
         assert 'some_url' in r
 
@@ -541,12 +547,12 @@ class TestTGController(TestWSGIController):
     def test_lookup_with_args(self):
         r = self.app.get('/lookup_with_args/get_here/got_here')
         msg = 'got_here'
-        assert r.body==msg, r
+        assert r.body.decode('utf-8')==msg, r
 
     def test_post_with_mixed_args(self):
         r = self.app.post('/lookup_with_args/post_with_mixed_args/test', params={'arg2': 'time'})
         msg = 'testtime'
-        assert r.body==msg, r
+        assert r.body.decode('utf-8')==msg, r
 
     def test_validated_int(self):
         r = self.app.get('/validated_int/1')
@@ -595,7 +601,7 @@ class TestTGController(TestWSGIController):
 
     def test_response_type(self):
         r = self.app.post('/stacked_expose.json')
-        assert 'got_json' in r.body, r
+        assert 'got_json' in r.body.decode('utf-8'), r
 
     def test_multi_value_kw(self):
         r = self.app.get('/multi_value_kws?foo=1&foo=2')
@@ -614,54 +620,54 @@ class TestTGController(TestWSGIController):
 
     @no_warn
     def test_unicode_default_dispatch(self):
-        r =self.app.get('/sub/äö')
-        assert "\\xc3\\xa4\\xc3\\xb6" in r, r
+        r =self.app.get('/sub/%C3%A4%C3%B6')
+        assert "äö" in r, r
 
     def test_default_with_empty_second_arg(self):
         r =self.app.get('/sub4/default_with_args/a')
-        assert "default with args a None" in r.body, r
-        assert "deprecated" not in r.body
+        assert "default with args a None" in r.body.decode('utf-8'), r
+        assert "deprecated" not in r.body.decode('utf-8')
         import warnings
         warnings.filterwarnings('ignore', category=DeprecationWarning)
         r = self.app.get('/sub4/deprecated_default_with_args/a')
         warnings.resetwarnings()
-        assert "deprecated default with args a None" in r.body, r
+        assert "deprecated default with args a None" in r.body.decode('utf-8'), r
 
     def test_default_with_args_a_b(self):
         r =self.app.get('/sub4/default_with_args/a/b')
-        assert "default with args a b" in r.body, r
-        assert "deprecated" not in r.body
+        assert "default with args a b" in r.body.decode('utf-8'), r
+        assert "deprecated" not in r.body.decode('utf-8')
         import warnings
         warnings.filterwarnings('ignore', category=DeprecationWarning)
         r = self.app.get('/sub4/deprecated_default_with_args/a/b')
         warnings.resetwarnings()
-        assert "deprecated default with args a b" in r.body, r
+        assert "deprecated default with args a b" in r.body.decode('utf-8'), r
 
     def test_default_with_query_arg(self):
         r =self.app.get('/sub4/default_with_args?a=a')
-        assert "default with args a None" in r.body, r
-        assert "deprecated" not in r.body
+        assert "default with args a None" in  r.body.decode('utf-8'), r
+        assert "deprecated" not in  r.body.decode('utf-8')
         import warnings
         warnings.filterwarnings('ignore', category=DeprecationWarning)
         r = self.app.get('/sub4/deprecated_default_with_args?a=a')
         warnings.resetwarnings()
-        assert "deprecated default with args a None" in r.body, r
+        assert "deprecated default with args a None" in  r.body.decode('utf-8'), r
 
     def test_default_with_validator_fail(self):
         r =self.app.get('/sub5/default_with_args?a=True')
-        assert "failure" in r.body, r
+        assert "failure" in  r.body.decode('utf-8'), r
 
     def test_default_with_validator_pass(self):
         r =self.app.get('/sub5/default_with_args?a=66')
-        assert "default with args and validators 66 None" in r.body, r
+        assert "default with args and validators 66 None" in  r.body.decode('utf-8'), r
 
     def test_default_with_validator_pass2(self):
         r =self.app.get('/sub5/default_with_args/66')
-        assert "default with args and validators 66 None" in r.body, r
+        assert "default with args and validators 66 None" in  r.body.decode('utf-8'), r
 
     def test_default_with_validator_fail2(self):
         r =self.app.get('/sub5/default_with_args/True/more')
-        assert "failure" in r.body, r
+        assert "failure" in  r.body.decode('utf-8'), r
 
     def test_custom_content_type_in_controller(self):
         resp = self.app.get('/custom_content_type_in_controller')
@@ -684,73 +690,73 @@ class TestTGController(TestWSGIController):
 
     def test_optional_and_req_args(self):
         resp = self.app.get('/optional_and_req_args/test/one')
-        assert "name=test, one=one, two=2, three=3" in  resp, resp
+        assert "name=test, one=one, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_optional_and_req_args_at_root(self):
         resp = self.app.get('/test_args/test/one')
-        assert "name=test, one=one, two=2, three=3" in  resp, resp
+        assert "name=test, one=one, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_no_args(self):
         resp = self.app.get('/test_args/test/')
-        assert "name=test, one=None, two=2, three=3" in  resp, resp
+        assert "name=test, one=None, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_one_extra_arg(self):
         resp = self.app.get('/test_args/test/1')
-        assert "name=test, one=1, two=2, three=3" in  resp, resp
+        assert "name=test, one=1, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_two_extra_args(self):
         resp = self.app.get('/test_args/test/1/2')
-        assert "name=test, one=1, two=2, three=3" in  resp, resp
+        assert "name=test, one=1, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_three_extra_args(self):
         resp = self.app.get('/test_args/test/1/2/3')
-        assert "name=test, one=1, two=2, three=3" in  resp, resp
+        assert "name=test, one=1, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_extra_args_forces_default_lookup(self):
         resp = self.app.get('/test_args/test/1/2/3/4')
-        assert resp.body == """Main default page called for url /['test_args', 'test', '1', '2', '3', '4']""", resp
+        assert resp.body.decode('utf-8') == """Main default page called for url /['test_args', 'test', '1', '2', '3', '4']""", resp
 
     def test_not_enough_args(self):
         resp = self.app.get('/test_args/test/1')
-        assert "name=test, one=1, two=2, three=3" in  resp, resp
+        assert "name=test, one=1, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_ticket_2412_with_ordered_arg(self):
         # this is failing
         resp = self.app.get('/ticket2412/Abip%C3%B3n')
-        assert """Abipón""" in  resp, resp
+        assert """Abipón""" in resp.body.decode('utf-8'), resp
 
     def test_ticket_2412_with_named_arg(self):
         resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
-        assert """Abipón""" in  resp, resp
+        assert """Abipón""" in resp.body.decode('utf-8'), resp
 
     def test_ticket_2351_bad_content_type(self):
         resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})
-        assert 'test' in resp, resp
+        assert 'test' in resp.body.decode('utf-8'), resp
 
     def test_embedded_lookup_with_index_first(self):
         resp = self.app.get('/embedded_lookup_with_index/')
-        assert 'first controller with index' in resp, resp
+        assert 'first controller with index' in resp.body.decode('utf-8'), resp
 
     def test_embedded_lookup_with_index_second(self):
         resp = self.app.get('/embedded_lookup_with_index/a')
-        assert 'second controller with index' in resp, resp
+        assert 'second controller with index' in resp.body.decode('utf-8'), resp
 
     def test_embedded_lookup_with_index_helper(self):
         resp = self.app.get('/embedded_lookup_with_index/a/b')
-        assert 'helper index' in resp, resp
+        assert 'helper index' in resp.body.decode('utf-8'), resp
 
     def test_embedded_lookup_with_index_method(self):
         resp = self.app.get('/embedded_lookup_with_index/a/b/method')
-        assert 'helper method' in resp, resp
+        assert 'helper method' in resp.body.decode('utf-8'), resp
 
     def test_self_calling_lookup_simple_index(self):
         resp = self.app.get('/self_calling')
-        assert '((), {})' in resp, resp
+        assert '((), {})' in resp.body.decode('utf-8'), resp
 
     def test_self_calling_lookup_method(self):
         resp = self.app.get('/self_calling/a/method/a/b')
-        assert "('a', 'b', {})" in resp, resp
+        assert "('a', 'b', {})" in resp.body.decode('utf-8'), resp
 
     def test_self_calling_lookup_multiple_calls_method(self):
         resp = self.app.get('/self_calling/a/b/c/method/a/b')
-        assert "('a', 'b', {})" in resp, resp
+        assert "('a', 'b', {})" in resp.body.decode('utf-8'), resp

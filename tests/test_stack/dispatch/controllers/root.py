@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import tg
 from tg.controllers import TGController
 from tg.decorators import expose, validate, https, variable_decode
-from formencode import validators
-
 from tg import expose, redirect, config
 from tg.controllers import TGController
 from tg import dispatched_controller
 from nose.tools import eq_
+from tests.test_validation import validators
+from tg._compat import unicode_text
 
 class NestedSubController(TGController):
     @expose()
@@ -129,7 +130,7 @@ class RootController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash(u"Привет, мир!")
+        tg.flash("Привет, мир!")
         tg.redirect("/flash_after_redirect")
 
     @expose()
@@ -155,7 +156,7 @@ class RootController(TGController):
     @validate(validators={"a":validators.Int()})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode)
+        assert isinstance(b, unicode_text)
         return dict(int=a,str=b)
 
     @expose()
@@ -169,12 +170,12 @@ class RootController(TGController):
 
     @expose(content_type='image/png')
     def custom_content_type(self):
-        return 'PNG'
+        return b'PNG'
 
     @expose()
     def custom_content_type2(self):
-        tg.response.headers['Content-Type'] = 'image/png'
-        return 'PNG2'
+        tg.response.content_type = 'image/png'
+        return b'PNG2'
 
     @expose(content_type='text/plain')
     def custom_content_text_plain_type(self):

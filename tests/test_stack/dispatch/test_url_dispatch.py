@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from nose.tools import raises
 import os
 from tests.test_stack import TestConfig, app_from_config
 from webtest import TestApp
-from nose.tools import eq_
 from tg.jsonify import JsonEncodeError
 from tg.util import no_warn
+
+from nose.tools import eq_
+from nose import SkipTest
+from tg._compat import PY3
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch',
                              values = {'use_sqlalchemy': False,
-                             'ignore_parameters': ["ignore", "ignore_me"]
-                             }
-                             )
+                                       'use_toscawidgets': False,
+                                       'use_toscawidgets2': False,
+                                       'ignore_parameters': ["ignore", "ignore_me"]
+                             })
     return app_from_config(base_config)
 
 
@@ -24,25 +30,25 @@ def setup():
 @no_warn #should be _default now
 def test_tg_style_default():
     resp = app.get('/sdfaswdfsdfa') #random string should be caught by the default route
-    assert 'Default' in resp.body
+    assert 'Default' in resp.body.decode('utf-8')
 
 def test_url_encoded_param_passing():
     resp = app.get('/feed?feed=http%3A%2F%2Fdeanlandolt.com%2Ffeed%2Fatom%2F')
-    assert "http://deanlandolt.com/feed/atom/" in resp.body
+    assert "http://deanlandolt.com/feed/atom/" in resp.body.decode('utf-8')
 
 def test_tg_style_index():
     resp = app.get('/index/')
-    assert 'hello' in resp.body, resp
+    assert 'hello' in resp.body.decode('utf-8'), resp
 
 def test_tg_style_subcontroller_index():
     resp = app.get('/sub/index')
-    assert "sub index" in resp.body
+    assert "sub index" in resp.body.decode('utf-8')
 
 def test_tg_style_subcontroller_default():
     resp=app.get('/sub/bob/tim/joe')
-    assert 'bob' in resp.body, resp
-    assert 'tim' in resp.body, resp
-    assert 'joe' in resp.body, resp
+    assert 'bob' in resp.body.decode('utf-8'), resp
+    assert 'tim' in resp.body.decode('utf-8'), resp
+    assert 'joe' in resp.body.decode('utf-8'), resp
 
 def test_redirect_absolute():
     resp = app.get('/redirect_me?target=/')
@@ -107,9 +113,9 @@ def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
     assert 'Wow, flash!' in resp, resp
 
-@raises(ValueError)
 def test_bigflash_redirect():
     resp = app.get('/bigflash_redirect', status=500)
+    assert 'Flash value is too long (cookie would be >4k)' in resp.body.decode('ascii')
 
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
@@ -118,7 +124,7 @@ def test_flash_no_redirect():
 def test_flash_unicode():
     resp = app.get('/flash_unicode').follow()
     content = resp.body.decode('utf8')
-    assert u'Привет, мир!' in content, content
+    assert 'Привет, мир!' in content, content
 
 def test_flash_status():
     resp = app.get('/flash_status')
@@ -127,18 +133,18 @@ def test_flash_status():
 def test_custom_content_type():
     resp = app.get('/custom_content_type')
     assert 'image/png' == dict(resp.headers)['Content-Type'], resp
-    assert resp.body == 'PNG', resp
+    assert resp.body.decode('utf-8') == 'PNG', resp
 
 def test_custom_text_plain_content_type():
     resp = app.get('/custom_content_text_plain_type')
     assert 'text/plain; charset=utf-8' == dict(resp.headers)['Content-Type'], resp
-    assert resp.body == """a<br/>bx""", resp
+    assert resp.body.decode('utf-8') == """a<br/>bx""", resp
 
 @no_warn
 def test_custom_content_type2():
     resp = app.get('/custom_content_type2')
     assert 'image/png' == dict(resp.headers)['Content-Type'], resp
-    assert resp.body == 'PNG2', resp
+    assert resp.body.decode('utf-8') == 'PNG2', resp
 
 @no_warn
 def test_basicurls():
@@ -148,10 +154,9 @@ def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
     assert "None Received"
 
-@raises(JsonEncodeError)
 def test_json_return_list():
-    resp = app.get("/json_return_list")
-    assert "None Received"
+    resp = app.get("/json_return_list", status=500)
+    assert 'You may not expose with JSON a list' in resp.body.decode('ascii')
 
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")
@@ -160,6 +165,8 @@ def test_https_redirect():
     resp = app.post("/test_https?foo=bar&baz=bat", status=405)
 
 def test_variable_decode():
+    if PY3: raise SkipTest()
+
     from formencode.variabledecode import variable_encode
     obj = dict(
         a=['1','2','3'],

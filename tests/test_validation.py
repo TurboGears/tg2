@@ -79,6 +79,18 @@ else:
                     raise TGValidationError('not email')
                 return value
 
+        class StringBool(FancyValidator):
+            def validate_python(self, value, state=None):
+                return value
+
+            def _to_python(self, value):
+                if not value:
+                    return value
+
+                if value == 'True':
+                    return True
+                raise TGValidationError('Not True')
+
     class tw2c(object):
         class IntValidator(validators.Int):
             pass

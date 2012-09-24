@@ -150,6 +150,8 @@ class CoreDispatcher(object):
             if isinstance(response, bytes):
                 py_response.body = py_response.body + response
             elif isinstance(response, unicode_text):
+                if not py_response.charset:
+                    py_response.charset = 'utf-8'
                 py_response.text = py_response.text + response
             elif hasattr(response, 'wsgi_response'):
                 for name, value in py_response.headers.items():

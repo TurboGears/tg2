@@ -297,9 +297,6 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         rendered = tg_render(template_vars=namespace, template_engine=engine_name,
                              template_name=template_name, **render_params)
 
-        if isinstance(result, unicode_text) and not resp.charset:
-            resp.charset = 'UTF-8'
-
         result['response'] = rendered
         return result
 

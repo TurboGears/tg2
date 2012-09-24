@@ -12,10 +12,14 @@ if PY3:
     string_type = str
     unicode_text = str
     from urllib.parse import urlencode as url_encode
+    from urllib.parse import quote as url_quote
+    from urllib.parse import unquote as url_unquote
 else:
     string_type = basestring
     unicode_text = unicode
     from urllib import urlencode as url_encode
+    from urllib import quote as url_quote
+    from urllib import unquote as url_unquote
 
 def im_func(f):
     if PY3:
