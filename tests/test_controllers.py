@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import tg
 from tg.controllers import *
@@ -33,7 +34,7 @@ def test_lowerapproots():
 @no_warn
 def test_multi_values():
     create_request('/')
-    r = url("/foo", params=dict(bar=(u"asdf",u"qwer")))
+    r = url("/foo", params=dict(bar=("asdf", "qwer")))
     assert r in \
             ["/foo?bar=qwer&bar=asdf", "/foo?bar=asdf&bar=qwer"], r
     r = url("/foo", params=dict(bar=[1,2]))
@@ -44,11 +45,11 @@ def test_multi_values():
 def test_unicode():
     """url() can handle unicode parameters"""
     create_request("/")
-    unicodestring = (u'\N{LATIN SMALL LETTER A WITH GRAVE}'
-        u'\N{LATIN SMALL LETTER E WITH GRAVE}'
-        u'\N{LATIN SMALL LETTER I WITH GRAVE}'
-        u'\N{LATIN SMALL LETTER O WITH GRAVE}'
-        u'\N{LATIN SMALL LETTER U WITH GRAVE}')
+    unicodestring = ('\N{LATIN SMALL LETTER A WITH GRAVE}'
+        '\N{LATIN SMALL LETTER E WITH GRAVE}'
+        '\N{LATIN SMALL LETTER I WITH GRAVE}'
+        '\N{LATIN SMALL LETTER O WITH GRAVE}'
+        '\N{LATIN SMALL LETTER U WITH GRAVE}')
     eq_(url('/', params=dict(x=unicodestring)),
         '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
         )
@@ -57,7 +58,7 @@ def test_unicode():
 def test_list():
     """url() can handle list parameters, with unicode too"""
     create_request("/")
-    value = url('/', params=dict(foo=['bar', u'\N{LATIN SMALL LETTER A WITH GRAVE}'])),
+    value = url('/', params=dict(foo=['bar', '\N{LATIN SMALL LETTER A WITH GRAVE}'])),
     assert '/?foo=bar&foo=%C3%A0' in value, value
 
 @no_warn
