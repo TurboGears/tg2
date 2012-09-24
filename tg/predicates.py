@@ -11,6 +11,7 @@ original "identity" framework of TurboGears 1, plus others.
 
 from __future__ import unicode_literals
 from tg import request
+from tg._compat import unicode_text
 
 __all__ = ['Predicate', 'CompoundPredicate', 'All', 'Any',
            'has_all_permissions', 'has_any_permission', 'has_permission',
@@ -28,7 +29,7 @@ except ImportError:
         # Ugly workaround for Python < 2.6:
         if not hasattr(Exception, '__unicode__'):
             def __unicode__(self):
-                return unicode(self.args and self.args[0] or '')
+                return unicode_text(self.args and self.args[0] or '')
 
     class Predicate(object):
         def __init__(self, msg=None):
@@ -57,7 +58,7 @@ except ImportError:
                 message = self.message
 
             # This enforces lazy strings resolution (lazy translation for example)
-            message = unicode(message)
+            message = unicode_text(message)
 
             # Include the predicate attributes in the placeholders:
             all_placeholders = self.__dict__.copy()
@@ -187,7 +188,7 @@ class Any(CompoundPredicate):
                 p.evaluate(environ, credentials)
                 return
             except NotAuthorizedError as exc:
-                errors.append(unicode(exc))
+                errors.append(unicode_text(exc))
         failed_predicates = ', '.join(errors)
         self.unmet(failed_predicates=failed_predicates)
 

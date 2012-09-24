@@ -11,11 +11,11 @@ this writing).
 
 from unittest import TestCase
 from shutil import rmtree
-from urllib import unquote
 import os
 
-from paste import httpexceptions
-from paste.registry import RegistryManager
+from tg._compat import url_unquote
+
+from tg.support.registry import RegistryManager
 from webob import Response, Request
 from webtest import TestApp
 
@@ -25,9 +25,8 @@ from tg.controllers.util import abort
 from tg.wsgiapp import ContextObj, TGApp
 from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 
-from baseutils import ControllerWrap, FakeRoutes, default_config
+from .baseutils import ControllerWrap, FakeRoutes, default_config
 
-from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 from tg.configuration.auth import setup_auth, TGAuthMetadata
 from tg.predicates import is_user, not_anonymous
 
@@ -58,6 +57,7 @@ def make_app(controller_klass, environ={}, with_errors=False):
     app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
 
     # Setting repoze.who up:
+    from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
     identifiers = [('cookie', cookie)]
 
@@ -65,7 +65,6 @@ def make_app(controller_klass, environ={}, with_errors=False):
                      identifiers=identifiers, skip_authentication=True,
                      authenticators=[], challengers=[])
 
-    app = httpexceptions.make_middleware(app)
     return TestApp(app)
 
 
@@ -210,7 +209,7 @@ class BaseIntegrationTests(TestCase):
 
         """
         assert 'webflash' in response.cookies_set, "Such no WebFlash cookie"
-        flash = unquote(response.cookies_set['webflash'])
+        flash = url_unquote(response.cookies_set['webflash'])
         for msg in expected_messages:
             msg = '"%s"' % msg
             assert msg in flash, 'Message %s not in flash: %s' % (msg, flash)
@@ -226,35 +225,35 @@ class TestRequire(BaseIntegrationTests):
     def test_authz_granted_in_root_controller(self):
         environ = {'REMOTE_USER': 'developer'}
         resp = self.app.get('/commit', extra_environ=environ, status=200)
-        self.assertEqual("you can commit", resp.body)
+        self.assertEqual("you can commit", resp.body.decode('utf-8'))
 
     def test_authz_denied_in_root_controller(self):
         # As an anonymous user:
         resp = self.app.get('/commit', status=401)
-        assert "you can commit" not in resp.body
+        assert "you can commit" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"developer\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/commit', extra_environ=environ, status=403)
-        assert "you can commit" not in resp.body
+        assert "you can commit" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"developer\"')
 
     def test_authz_granted_in_sub_controller(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body)
+        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
 
     def test_authz_denied_in_sub_controller(self):
         # As an anonymous user:
         resp = self.app.get('/cp/add_user/foo', status=401)
-        assert "was just registered" not in resp.body
+        assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
         # As an authenticated user:
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=403)
-        assert "was just registered" not in resp.body
+        assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"admin\"')
 
 
@@ -264,22 +263,22 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/cp/', extra_environ=environ, status=200)
-        self.assertEqual("you are in the panel", resp.body)
+        self.assertEqual("you are in the panel", resp.body.decode('utf-8'))
 
     def test_authz_denied_without_require(self):
         resp = self.app.get('/cp/', status=401)
-        assert "you are in the panel" not in resp.body
+        assert "you are in the panel" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
 
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body)
+        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
 
     def test_authz_denied_with_require(self):
         resp = self.app.get('/cp/add_user/foo', status=401)
-        assert "was just registered" not in resp.body
+        assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
 
 
@@ -295,11 +294,11 @@ class _TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("Welcome back, foobar!", resp.body)
+        self.assertEqual("Welcome back, foobar!", resp.body.decode('utf-8'))
 
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
-        assert "Welcome back" not in resp.body
+        assert "Welcome back" not in resp.body.decode('utf-8')
 
 
 class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
@@ -310,34 +309,34 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/', extra_environ=environ, status=200)
-        self.assertEqual("you can manage Human Resources", resp.body)
+        self.assertEqual("you can manage Human Resources", resp.body.decode('utf-8'))
 
     def test_authz_denied_without_require(self):
         # As an anonymous user:
         resp = self.app.get('/hr/', status=401)
-        assert "you can manage Human Resources" not in resp.body
+        assert "you can manage Human Resources" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/', extra_environ = environ, status=403)
-        assert "you can manage Human Resources" not in resp.body
+        assert "you can manage Human Resources" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ=environ,
                             status=200)
-        self.assertEqual("gustavo was just hired", resp.body)
+        self.assertEqual("gustavo was just hired", resp.body.decode('utf-8'))
 
     def test_authz_denied_with_require(self):
         # As an anonymous user:
         resp = self.app.get('/hr/hire/gustavo', status=401)
-        assert "was just hired" not in resp.body
+        assert "was just hired" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must have been authenticated')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ = environ, status=403)
-        assert "was just hired" not in resp.body
+        assert "was just hired" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
 
@@ -353,11 +352,11 @@ class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("Welcome back, foobar!", resp.body)
+        self.assertEqual("Welcome back, foobar!", resp.body.decode('utf-8'))
 
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
-        assert "Welcome back" not in resp.body
+        assert "Welcome back" not in resp.body.decode('utf-8')
 
 
 class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
@@ -368,22 +367,22 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("you are in the panel", resp.body)
+        self.assertEqual("you are in the panel", resp.body.decode('utf-8'))
 
     def test_authz_denied_without_require(self):
         resp = self.app.get('/', status=401)
-        assert "you are in the panel" not in resp.body
+        assert "you are in the panel" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
 
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body)
+        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
 
     def test_authz_denied_with_require(self):
         resp = self.app.get('/add_user/foo', status=401)
-        assert "was just registered" not in resp.body
+        assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
 
 
@@ -395,34 +394,34 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("you can manage Human Resources", resp.body)
+        self.assertEqual("you can manage Human Resources", resp.body.decode('utf-8'))
 
     def test_authz_denied_without_require(self):
         # As an anonymous user:
         resp = self.app.get('/', status=401)
-        assert "you can manage Human Resources" not in resp.body
+        assert "you can manage Human Resources" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ = environ, status=403)
-        assert "you can manage Human Resources" not in resp.body
+        assert "you can manage Human Resources" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
     def test_authz_granted_with_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hire/gustavo', extra_environ=environ,
                             status=200)
-        self.assertEqual("gustavo was just hired", resp.body)
+        self.assertEqual("gustavo was just hired", resp.body.decode('utf-8'))
 
     def test_authz_denied_with_require(self):
         # As an anonymous user:
         resp = self.app.get('/hire/gustavo', status=401)
-        assert "was just hired" not in resp.body
+        assert "was just hired" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/hire/gustavo', extra_environ = environ, status=403)
-        assert "was just hired" not in resp.body
+        assert "was just hired" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
 
@@ -433,17 +432,17 @@ class TestProtectedRESTContoller(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/rest/new', extra_environ=environ,
                             status=200)
-        self.assertEqual("new here", resp.body)
+        self.assertEqual("new here", resp.body.decode('utf-8'))
 
     def test_authz_denied(self):
         # As an anonymous user:
         resp = self.app.get('/rest/new', status=401)
-        assert "new here" not in resp.body
+        assert "new here" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"gustavo\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'non-gustavo'}
         resp = self.app.get('/rest/new', extra_environ=environ, status=403)
-        assert "new here" not in resp.body
+        assert "new here" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"gustavo\"')
 
 
@@ -454,18 +453,18 @@ class TestProtectedWSGIApplication(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
                             status=200)
-        self.assertEqual("Hello from /mounted_app/da-path", resp.body)
+        self.assertEqual("Hello from /mounted_app/da-path", resp.body.decode('utf-8'))
 
     def test_authz_denied(self):
         # As an anonymous user:
         resp = self.app.get('/mounted_app/da-path', status=401)
-        assert "Hello from /mounted_app/" not in resp.body
+        assert "Hello from /mounted_app/" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"gustavo\"')
         # As an authenticated user:
         environ = {'REMOTE_USER': 'non-gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
                             status=403)
-        assert "Hello from /mounted_app/" not in resp.body
+        assert "Hello from /mounted_app/" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"gustavo\"')
 
 class ErrorController(object):

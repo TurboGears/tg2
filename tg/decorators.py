@@ -20,7 +20,7 @@ from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 from tg.caching import beaker_cache, cached_property
 from tg.predicates import NotAuthorizedError
-from tg._compat import im_func
+from tg._compat import im_func, unicode_text
 from webob.acceptparse import Accept
 
 import logging
@@ -742,7 +742,7 @@ class require(_BaseProtectionDecorator):
         try:
             self.predicate.check_authorization(req.environ)
         except NotAuthorizedError as e:
-            reason = unicode(e)
+            reason = unicode_text(e)
             if req.environ.get('repoze.who.identity'):
                 # The user is authenticated.
                 code = 403

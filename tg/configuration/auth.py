@@ -6,7 +6,7 @@ and removes the dependency from repoze.what.
 """
 import sys, logging, re
 from paste.deploy.converters import asbool
-from zope.interface import implements
+from zope.interface import implementer
 from repoze.who.middleware import PluggableAuthenticationMiddleware
 from repoze.who.interfaces import IMetadataProvider, IIdentifier, IAuthenticator, IChallenger
 from repoze.who.classifiers import default_challenge_decider, default_request_classifier
@@ -31,13 +31,13 @@ class TGAuthMetadata(object):
     def get_permissions(self, identity, userid):
         return []
 
+@implementer(IMetadataProvider)
 class _AuthMetadataProvider(object):
     """
     repoze.who metadata provider to load groups and permissions data for
     the current user. This uses a :class:`TGAuthMetadata` to fetch
     the groups and permissions.
     """
-    implements(IMetadataProvider)
 
     def __init__(self, tgmdprovider):
         self.tgmdprovider = tgmdprovider
@@ -62,6 +62,7 @@ class _AuthMetadataProvider(object):
         environ['repoze.what.credentials'].update(identity)
         environ['repoze.what.credentials']['repoze.what.userid'] = userid
 
+@implementer(IIdentifier, IAuthenticator, IChallenger)
 class _AuthenticationForgerPlugin(object):
     """
     Took from repoze.who_testutil.
@@ -72,7 +73,6 @@ class _AuthenticationForgerPlugin(object):
     Has been made internal part of TG to make
     possible to switch to repoze.who v2
     """
-    implements(IIdentifier, IAuthenticator, IChallenger)
     _HTTP_STATUS_PATTERN = re.compile(r'^(?P<code>[0-9]{3}) (?P<reason>.*)$')
 
     def __init__(self, fake_user_key='REMOTE_USER',
