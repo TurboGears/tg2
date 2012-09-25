@@ -698,7 +698,7 @@ def with_trailing_slash(remainder, params):
 class _BaseProtectionDecorator(object):
     default_denial_handler = None
 
-    def __init__(self, predicate, denial_handler=None):
+    def __init__(self, predicate, denial_handler=None, smart_denial=False):
         """Verify that the predicate is met.
 
         :param predicate: An object with a check_authorization(environ) method which
@@ -713,6 +713,7 @@ class _BaseProtectionDecorator(object):
 
         self.predicate = predicate
         self.denial_handler = denial_handler or self.default_denial_handler
+        self.smart_denial = smart_denial
 
 
 class require(_BaseProtectionDecorator):
@@ -750,12 +751,12 @@ class require(_BaseProtectionDecorator):
 
     def default_denial_handler(self, reason):
         """Authorization denial handler for protectors."""
-        if response.status_int == 401:
-            status = 'warning'
+        status = 'warning' if response.status_int == 401 else 'error'
+        if not self.smart_denial:
+            flash(reason, status=status)
         else:
-            # Status is a 403
-            status = 'error'
-        flash(reason, status=status)
+            if response.content_type not in ['application/json', 'text/xml']:
+                flash(reason, status=status)
         abort(response.status_int, reason)
 
 
