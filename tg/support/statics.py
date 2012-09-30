@@ -2,8 +2,9 @@ from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
 import mimetypes
 from time import gmtime, time
-from os.path import normcase, normpath, join, exists, isdir, getmtime, getsize
+from os.path import normcase, normpath, join, isfile, getmtime, getsize
 from webob.exc import HTTPNotFound, HTTPForbidden, HTTPBadRequest
+from repoze.lru import LRUCache
 
 _BLOCK_SIZE = 4096 * 64 # 256K
 
@@ -124,14 +125,21 @@ class StaticsMiddleware(object):
         self.app = app
         self.cache_max_age = cache_max_age
         self.doc_root = self._adapt_path(root_dir)
+        self.paths_cache = LRUCache(1024)
 
     def __call__(self, environ, start_response):
-        path = environ['PATH_INFO'].split('/')
-        if INVALID_PATH_PARTS(path):
-            return HTTPNotFound('Out of bounds: %s' % environ['PATH_INFO'])(environ, start_response)
+        full_path = environ['PATH_INFO']
+        filepath = self.paths_cache.get(full_path)
 
-        filepath = self._adapt_path(join(self.doc_root, *path))
-        if isdir(filepath) or not exists(filepath):
-            return self.app(environ, start_response)
+        if filepath is None:
+            path = full_path.split('/')
+            if INVALID_PATH_PARTS(path):
+                return HTTPNotFound('Out of bounds: %s' % environ['PATH_INFO'])(environ, start_response)
+            filepath = self._adapt_path(join(self.doc_root, *path))
+            self.paths_cache.put(full_path, filepath)
 
-        return FileServeApp(filepath, self.cache_max_age)(environ, start_response)
+        if isfile(filepath):
+            return FileServeApp(filepath, self.cache_max_age)(environ, start_response)
+
+        return self.app(environ, start_response)
+
