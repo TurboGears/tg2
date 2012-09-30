@@ -11,15 +11,23 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     string_type = str
     unicode_text = str
+    byte_string = bytes
     from urllib.parse import urlencode as url_encode
     from urllib.parse import quote as url_quote
     from urllib.parse import unquote as url_unquote
+
+    def u_(s):
+        return str(s)
 else:
     string_type = basestring
     unicode_text = unicode
+    byte_string = str
     from urllib import urlencode as url_encode
     from urllib import quote as url_quote
     from urllib import unquote as url_unquote
+
+    def u_(s):
+        return unicode(s, 'utf-8')
 
 def im_func(f):
     if PY3:

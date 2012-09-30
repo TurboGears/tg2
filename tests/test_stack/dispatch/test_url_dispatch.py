@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from nose.tools import raises
 import os
 from tests.test_stack import TestConfig, app_from_config
@@ -10,7 +8,7 @@ from tg.util import no_warn
 
 from nose.tools import eq_
 from nose import SkipTest
-from tg._compat import PY3
+from tg._compat import PY3, u_
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch',
@@ -124,7 +122,7 @@ def test_flash_no_redirect():
 def test_flash_unicode():
     resp = app.get('/flash_unicode').follow()
     content = resp.body.decode('utf8')
-    assert 'Привет, мир!' in content, content
+    assert u_('Привет, мир!') in content, content
 
 def test_flash_status():
     resp = app.get('/flash_status')

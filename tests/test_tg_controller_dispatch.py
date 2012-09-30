@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 
 from tests.test_validation import validators
 
 from webob import Response, Request
-from webob.compat import unquote
-from tg._compat import unicode_text
+from tg._compat import unicode_text, u_
 
 try:
     from pylons.controllers.xmlrpc import XMLRPCController
@@ -124,7 +122,7 @@ class SubController(object):
 
     @expose()
     def _default(self, *args):
-        return "received the following args (from the url): %s" % list(args)
+        return "received the following args (from the url): %s" % ', '.join(args)
 
     @expose()
     def redirect_me(self, target, **kw):
@@ -391,7 +389,7 @@ class BasicTGController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash("Привет, мир!")
+        tg.flash(u_("Привет, мир!"))
         tg.redirect("/flash_after_redirect")
 
     @expose()
@@ -621,7 +619,7 @@ class TestTGController(TestWSGIController):
     @no_warn
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/%C3%A4%C3%B6')
-        assert "äö" in r, r
+        assert u_("äö") in r.body.decode('utf-8'), r
 
     def test_default_with_empty_second_arg(self):
         r =self.app.get('/sub4/default_with_args/a')
@@ -721,13 +719,12 @@ class TestTGController(TestWSGIController):
         assert "name=test, one=1, two=2, three=3" in  resp.body.decode('utf-8'), resp
 
     def test_ticket_2412_with_ordered_arg(self):
-        # this is failing
         resp = self.app.get('/ticket2412/Abip%C3%B3n')
-        assert """Abipón""" in resp.body.decode('utf-8'), resp
+        assert u_("""Abipón""") in resp.body.decode('utf-8'), resp
 
     def test_ticket_2412_with_named_arg(self):
         resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
-        assert """Abipón""" in resp.body.decode('utf-8'), resp
+        assert u_("""Abipón""") in resp.body.decode('utf-8'), resp
 
     def test_ticket_2351_bad_content_type(self):
         resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})

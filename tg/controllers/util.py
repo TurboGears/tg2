@@ -9,9 +9,8 @@ from webob.exc import status_map
 
 import tg
 
-from tg._compat import string_type, url_encode, unicode_text
+from tg._compat import string_type, url_encode, unicode_text, byte_string
 from tg.exceptions import HTTPFound
-
 
 def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     """
@@ -26,7 +25,7 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
         return s
     elif not isinstance(s, string_type):
         try:
-            return string_type(s)
+            return str(s).encode(encoding, errors)
         except UnicodeEncodeError:
             if isinstance(s, Exception):
                 # An Exception subclass containing non-ASCII data that doesn't

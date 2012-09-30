@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import tg
 from tg.controllers import *
 from tg.exceptions import HTTPFound
 from nose.tools import eq_
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from tg.util import no_warn
+from tg._compat import u_
 
 def setup():
     setup_session_dir()
@@ -45,20 +44,15 @@ def test_multi_values():
 def test_unicode():
     """url() can handle unicode parameters"""
     create_request("/")
-    unicodestring = ('\N{LATIN SMALL LETTER A WITH GRAVE}'
-        '\N{LATIN SMALL LETTER E WITH GRAVE}'
-        '\N{LATIN SMALL LETTER I WITH GRAVE}'
-        '\N{LATIN SMALL LETTER O WITH GRAVE}'
-        '\N{LATIN SMALL LETTER U WITH GRAVE}')
+    unicodestring =  u_('àèìòù')
     eq_(url('/', params=dict(x=unicodestring)),
         '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
         )
-
 @no_warn
 def test_list():
     """url() can handle list parameters, with unicode too"""
     create_request("/")
-    value = url('/', params=dict(foo=['bar', '\N{LATIN SMALL LETTER A WITH GRAVE}'])),
+    value = url('/', params=dict(foo=['bar', u_('à')])),
     assert '/?foo=bar&foo=%C3%A0' in value, value
 
 @no_warn

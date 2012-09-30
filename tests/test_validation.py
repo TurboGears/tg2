@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from nose.tools import raises
 from nose import SkipTest
 
@@ -13,7 +11,7 @@ from tg.decorators import expose, validate, before_render
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
-from tg._compat import PY3, unicode_text
+from tg._compat import PY3, unicode_text, u_
 from tg.validation import TGValidationError
 
 if not PY3:
@@ -357,7 +355,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/process_form', form_values,
             headers={'Accept-Language': 'ru,de,it'})
         values = loads(resp.body.decode('utf-8'))
-        assert "Введите числовое значение" in values['errors']['year'], \
+        assert u_("Введите числовое значение") in values['errors']['year'], \
             'No Russian error message: %r' % values['errors']
         # check with language set in session
         self.app.post('/set_lang/de')
