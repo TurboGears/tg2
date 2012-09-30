@@ -2,7 +2,7 @@ import logging, os
 from gettext import NullTranslations, translation
 import tg
 from tg.util import lazify
-from tg._compat import PY3
+from tg._compat import PY3, string_type
 
 log = logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ def setup_i18n(tgl=None):
             session_.__dict__['_sess'] = None
 
         if languages:
-            if isinstance(languages, basestring):
+            if isinstance(languages, string_type):
                 languages = [languages]
         else:
             languages = []
@@ -228,8 +228,6 @@ def set_temporary_lang(languages, tgl=None):
 
     try:
         translator = _get_translator(languages, tgl=tgl)
-        environ = tgl.request.environ
-        tgl.translator = translator
         try:
             tgl.translator = translator
         except KeyError:
@@ -239,7 +237,7 @@ def set_temporary_lang(languages, tgl=None):
 
     try:
         set_formencode_translation(languages, tgl=tgl)
-    except (ImportError, LanguageError):
+    except LanguageError:
         pass
 
 def set_lang(languages, **kwargs):
@@ -258,16 +256,23 @@ def set_lang(languages, **kwargs):
         tgl.session[tgl.config.get('lang_session_key', 'tg_lang')] = languages
         tgl.session.save()
 
-
+FormEncodeMissing = '_MISSING_FORMENCODE'
 formencode = None
 _localdir = None
 
 def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
     global formencode, _localdir
+    if formencode is FormEncodeMissing:
+        return
+
     if formencode is None:
-        import formencode
-        _localdir = formencode.api.get_localedir()
+        try:
+            import formencode
+            _localdir = formencode.api.get_localedir()
+        except ImportError:
+            formencode = FormEncodeMissing
+            return
 
     if not tgl:
         tgl = tg.request_local.context._current_obj()
