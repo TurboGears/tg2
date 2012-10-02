@@ -26,6 +26,8 @@ from tg.flash import flash
 
 from tg.predicates import NotAuthorizedError
 
+from pylons.decorators.cache import beaker_cache
+
 import logging
 log = logging.getLogger(__name__)
 
