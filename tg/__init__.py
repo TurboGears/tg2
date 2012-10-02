@@ -59,7 +59,7 @@ from tg.controllers import TGController, redirect, url, lurl, abort
 from tg.configuration import config
 from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
-                           require, allow_only, with_engine)
+                           require, allow_only, with_engine, beaker_cache)
 
 from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
