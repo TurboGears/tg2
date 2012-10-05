@@ -195,7 +195,7 @@ def abort(status_code=None, detail="", headers=None, comment=None):
     """
     exc = status_map[status_code](detail=detail, headers=headers,
                                   comment=comment)
-    raise exc.exception
+    raise exc
 
 def use_wsgi_app(wsgi_app):
     return wsgi_app(tg.request.environ, tg.request.start_response)
