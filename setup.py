@@ -10,30 +10,45 @@ py_version = sys.version_info[:2]
 if py_version < (2, 6):
     raise RuntimeError('TurboGears2 requires Python 2.6 or better')
 
+if py_version[0] == 3 and py_version < (3, 2):
+    raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.2')
+
 test_requirements = ['coverage',
                     'nose',
-                    'TurboKid >= 1.0.4',
                     'zope.sqlalchemy >= 0.4',
                     'jinja2',
-                    'Chameleon < 2.0a',
-                    'simplegeneric',
                     'repoze.who',
                     'repoze.who.plugins.sa >= 1.0.1',
                     "repoze.who-friendlyform >=1.0.4",
                     'repoze.tm2 >= 1.0a4',
                     'wsgiref',
-                    'tw.forms',
-                    'tw2.forms',
-                    'Kajiki>=0.2.2',
                     'Genshi >= 0.5.1',
-                    'TurboKid >= 1.0.4',
                     'Mako',
-                    'TurboJson >= 1.3',
-                    'Babel >=0.9.4',
-                    'tgext.admin>=0.3.9',
                     'WebTest',
-                    'routes'
+                    'routes',
+                    'backlash'
                     ]
+
+if py_version[0] == 2:
+    test_requirements.extend(['TurboKid >= 1.0.4',
+                              'Kajiki >= 0.2.2',
+                              'Chameleon < 2.0a',
+                              'simplegeneric',
+                              'Formencode',
+                              'tw.forms',
+                              'tw2.forms'])
+
+
+install_requires=[ 
+    'WebOb >= 1.1.1',
+    'crank >= 0.6.2', 
+    'Beaker',
+    'decorator',
+    'PasteDeploy', 
+    'markupsafe',
+    'repoze.lru'
+    ]
+
 
 install_requires=[
     'WebOb >= 1.1.1',
