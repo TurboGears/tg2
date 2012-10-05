@@ -621,7 +621,7 @@ def https(remainder, params):
     if request.scheme.lower() == 'https': return
     if request.method.upper() == 'GET':
         redirect('https' + request.url[len(request.scheme):])
-    raise HTTPMethodNotAllowed(headers=dict(Allow='GET')).exception
+    raise HTTPMethodNotAllowed(headers=dict(Allow='GET'))
 
 
 _variabledecode = None
