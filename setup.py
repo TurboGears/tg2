@@ -38,18 +38,6 @@ if py_version[0] == 2:
                               'tw.forms',
                               'tw2.forms'])
 
-
-install_requires=[ 
-    'WebOb >= 1.1.1',
-    'crank >= 0.6.2', 
-    'Beaker',
-    'decorator',
-    'PasteDeploy', 
-    'markupsafe',
-    'repoze.lru'
-    ]
-
-
 install_requires=[
     'WebOb >= 1.1.1',
     'crank >= 0.6.2',
