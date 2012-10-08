@@ -8,7 +8,7 @@ from copy import copy
 import mimetypes
 from UserDict import DictMixin
 
-from pylons.i18n import ugettext
+from pylons.i18n import ugettext, get_lang
 
 from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
@@ -854,6 +854,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         default_tw2_config = dict( default_engine=self.default_renderer,
                                    preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
+                                   get_lang=get_lang,
                                    auto_reload_templates=self.auto_reload_templates,
                                    controller_prefix='/tw2/controllers/',
                                    res_prefix='/tw2/resources/',
