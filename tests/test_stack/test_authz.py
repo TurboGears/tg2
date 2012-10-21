@@ -147,6 +147,10 @@ class RootController(TGController):
     def commit(self):
         return 'you can commit'
 
+    @expose()
+    @require(is_user('developer'), smart_denial=True)
+    def smartabort(self):
+        return {'key': 'value'}
 
 class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
     """Mock TG2 protected controller using the .allow_only attribute"""
@@ -255,6 +259,20 @@ class TestRequire(BaseIntegrationTests):
                             status=403)
         assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"admin\"')
+
+    def test_smart_auth_json(self):
+        nouser = {'accept': 'application/json'}
+        baduser = {'accept': 'application/json',
+                'REMOTE_USER': 'foobar'}
+        gooduser = {'accept': 'application/json',
+                'REMOTE_USER': 'developer'}
+
+        resp = self.app.get('/smartabort', extra_environ=nouser, status=401)
+        assert resp.status == '401 Unauthorized', 'Expected 401, got %s' % (resp.status)
+        resp = self.app.get('/smartabort', extra_environ=baduser, status=403)
+        assert resp.status == '403 Forbidden', 'Expected 403, got %s' % (resp.status)
+        resp = self.app.get('/smartabort.json', extra_environ=gooduser, status=200)
+        assert resp.status == '200 OK', 'Expected 200, got %s' % (resp.body)
 
 
 class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):

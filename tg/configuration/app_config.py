@@ -8,7 +8,7 @@ from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin
 
-from tg.i18n import ugettext
+from tg.i18n import ugettext, get_lang
 
 from tg.support.middlewares import SessionMiddleware, CacheMiddleware
 from tg.support.middlewares import StaticsMiddleware
@@ -445,35 +445,26 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         # a file system based template lookup mechanism.
         compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
 
-        if not compiled_dir:
-            # Try each given templates path (when are they > 1 ?) for writability..
-            for template_path in self.paths['templates']:
-                if os.access(template_path, os.W_OK):
-                    compiled_dir = template_path
-                    break # first match is as good as any
-
-            # Last recourse: project-dir/data/templates (tg' default directory)
-            if not compiled_dir:
+        if not compiled_dir or compiled_dir.lower() in ('none', 'false'):
+            # Cache compiled templates in-memory
+            compiled_dir = None
+        else:
+            bad_path = None
+            if os.path.exists(compiled_dir):
+                if not os.access(compiled_dir, os.W_OK):
+                    bad_path = compiled_dir
+                    compiled_dir = None
+            else:
                 try:
-                    root = os.path.dirname(os.path.abspath(self.package.__file__))
-                except AttributeError:
-                    # Thrown during unit tests when self.package.__file__ doesn't exist
-                    root = None
-
-                if root:
-                    tg_default_path = os.path.join(root, '../data/templates')
-                    if os.access(tg_default_path, os.W_OK):
-                        compiled_dir = tg_default_path
-
-                if not compiled_dir:
-                    if use_dotted_templatenames:
-                        # Gracefully digress to in-memory template caching
-                        pass
-                    else:
-                        raise IOError("None of your templates directory, %s, are "
-                            "writable for compiled templates. Please set the "
-                            "templating.mako.compiled_templates_dir variable in your "
-                            ".ini file" % str(self.paths['templates']))
+                    os.makedirs(compiled_dir)
+                except:
+                    bad_path = compiled_dir
+                    compiled_dir = None
+            if bad_path:
+                log.warn("Unable to write cached templates to %r; falling back "
+                         "to an in-memory cache. Please set the `templating.mak"
+                         "o.compiled_templates_dir` configuration option to a "
+                         "writable directory." % bad_path)
 
         if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
@@ -821,16 +812,29 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 from tgming import setup_ming_auth
                 app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
         else:
-            from tg.configuration.auth import setup_auth
-            if 'authenticators' not in auth_args:
+            try:
+                pos = auth_args['authenticators'].index(('default', None))
+            except KeyError:
+                pos = None
+            except ValueError:
+                pos = -1
+            if pos is None or pos >= 0:
                 if self.auth_backend == "sqlalchemy":
                     from tg.configuration.sqla.auth import create_default_authenticator
                     auth_args, sqlauth = create_default_authenticator(**auth_args)
-                    auth_args['authenticators'] = [('sqlauth', sqlauth)]
+                    authenticator = ('sqlauth', sqlauth)
                 elif self.auth_backend == "ming":
                     from tg.configuration.mongo.auth import create_default_authenticator
                     auth_args, mingauth = create_default_authenticator(**auth_args)
-                    auth_args['authenticators'] = [('mingauth', mingauth)]
+                    authenticator = ('mingauth', mingauth)
+                else:
+                    authenticator = None
+                if authenticator:
+                    if pos is None:
+                        auth_args['authenticators'] = [authenticator]
+                    else:
+                        auth_args['authenticators'][pos] = authenticator
+            from tg.configuration.auth import setup_auth
             app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
 
         return app
@@ -946,6 +950,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         default_tw2_config = dict( default_engine=self.default_renderer,
                                    preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
+                                   get_lang=get_lang,
                                    auto_reload_templates=self.auto_reload_templates,
                                    controller_prefix='/tw2/controllers/',
                                    res_prefix='/tw2/resources/',

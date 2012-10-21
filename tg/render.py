@@ -159,6 +159,11 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
             # engine list, warn developer
             raise MissingRendererError(template_engine)
 
+    if not render_function:
+        # getting the default renderer, if no engine was defined in @expose()
+        template_engine = config['default_renderer']
+        render_function = config['render_functions'][template_engine]
+
     if not template_vars:
         template_vars = {}
 
@@ -175,11 +180,6 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
-
-    if not render_function:
-        # getting the default renderer, if no engine was defined in @expose()
-        render_function = config[
-            'render_functions'][config['default_renderer']]
 
     kwargs['result'] = render_function(template_name, tg_vars, **kwargs)
 
