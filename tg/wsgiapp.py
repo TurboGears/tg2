@@ -116,11 +116,12 @@ class TGApp(object):
 
     def __call__(self, environ, start_response):
         testmode = self.setup_app_env(environ, start_response)
-        if testmode:
-            if environ['PATH_INFO'] == '/_test_vars':
-                registry.restorer.save_registry_state(environ)
-                start_response('200 OK', [('Content-type', 'text/plain')])
-                return [str(registry.restorer.get_request_id(environ)).encode('utf-8')]
+
+        #Expose a path that simply registers the globals without doing much else
+        if testmode and environ['PATH_INFO'] == '/_test_vars':
+            registry.restorer.save_registry_state(environ)
+            start_response('200 OK', [('Content-type', 'text/plain')])
+            return [str(registry.restorer.get_request_id(environ)).encode('utf-8')]
 
         controller = self.resolve(environ, start_response)
         response = self.wrapped_dispatch(controller, environ, start_response)
@@ -206,7 +207,7 @@ class TGApp(object):
             testenv['req'] = req
             testenv['response'] = response
             testenv['tmpl_context'] = tmpl_context
-            testenv['app_globals'] = testenv['g'] = self.globals
+            testenv['app_globals'] = self.globals
             testenv['config'] = conf
             testenv['session'] = locals.session
             testenv['cache'] = locals.cache
