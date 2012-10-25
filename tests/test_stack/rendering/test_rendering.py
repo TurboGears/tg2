@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from nose import SkipTest
+import shutil, os
 
 import tg
 #import tg.configuration
@@ -348,6 +349,29 @@ def test_mako_renderer():
     app = setup_noDB()
     resp = app.get('/mako_index')
     assert "<p>This is the mako index page</p>" in resp, resp
+
+def test_mako_renderer_compiled():
+    tg.config['templating.mako.compiled_templates_dir'] = '_tg_tests_mako_compiled/dest'
+    app = setup_noDB()
+    resp = app.get('/mako_index')
+    tg.config.pop('templating.mako.compiled_templates_dir')
+    assert "<p>This is the mako index page</p>" in resp, resp
+
+    assert os.path.exists('_tg_tests_mako_compiled')
+    shutil.rmtree('_tg_tests_mako_compiled', True)
+
+def test_mako_renderer_compiled_existing():
+    os.makedirs('_tg_tests_mako_compiled/dest')
+    test_mako_renderer_compiled()
+
+def test_mako_renderer_compiled_no_access():
+    os.makedirs('_tg_tests_mako_compiled')
+    os.makedirs('_tg_tests_mako_compiled/dest', mode=000)
+    test_mako_renderer_compiled()
+
+def test_mako_renderer_compiled_no_access_parent():
+    os.makedirs('_tg_tests_mako_compiled', mode=000)
+    test_mako_renderer_compiled()
 
 def test_mako_inheritance():
     app = setup_noDB()

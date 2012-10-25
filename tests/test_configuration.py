@@ -111,6 +111,12 @@ class TestAppConfig:
         #This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller')
 
+    def test_amf_initialization(self):
+        conf = AppConfig(minimal=True)
+        conf.renderers.append('amf')
+        app = conf.make_wsgi_app()
+        assert 'amf' not in conf.renderers
+
     def test_enable_routes(self):
         if PY3: raise SkipTest()
 

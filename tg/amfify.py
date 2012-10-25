@@ -1,10 +1,4 @@
-try:
-    from pyamf.remoting.gateway.wsgi import WSGIGateway
-
-except:
-    print 'You must easy_install pyamf for to use amf renderer'
-    raise
-
+from pyamf.remoting.gateway.wsgi import WSGIGateway
 from tg import request
 
 def render_amf(template_name, template_vars, **kwargs):

@@ -495,7 +495,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         self.render_functions.mako = render_mako
 
-    def setup_chameleon_genshi_renderer(self):
+    def setup_chameleon_genshi_renderer(self): #pragma: no cover
         """Setup a renderer and loader for the chameleon.genshi engine."""
         from tg.render import RenderChameleonGenshi
 
@@ -599,8 +599,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         self.render_functions.jinja = render_jinja
 
-    def setup_amf_renderer(self):
-        from tg.amfify import render_amf
+    def setup_amf_renderer(self): #pragma: no cover
+        try:
+            from tg.amfify import render_amf
+        except ImportError:
+            log.error('PyAMF not installed')
+            return False
+
         self.render_functions.amf = render_amf
 
     def setup_json_renderer(self):
