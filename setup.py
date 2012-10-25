@@ -26,7 +26,8 @@ test_requirements = ['coverage',
                     'Mako',
                     'WebTest',
                     'routes',
-                    'backlash'
+                    'backlash',
+                    'sqlalchemy'
                     ]
 
 if py_version[0] == 2:
@@ -36,6 +37,7 @@ if py_version[0] == 2:
                               'simplegeneric',
                               'Formencode',
                               'routes',
+                              'ming',
                               'tw.forms',
                               'tw2.forms'])
 

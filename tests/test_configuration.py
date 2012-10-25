@@ -21,6 +21,29 @@ def setup():
 def teardown():
     teardown_session_dir()
 
+class PackageWithModel:
+    __name__ = 'tests'
+    __file__ = __file__
+
+    def __init__(self):
+        self.model = self.ModelClass()
+        self.model.DBSession = self.model.FakeDBSession()
+
+    class ModelClass:
+        class FakeDBSession:
+            def remove(self):
+                self.DBSESSION_REMOVED=True
+
+        @classmethod
+        def init_model(package, engine):
+            pass
+
+    class lib:
+        class app_globals:
+            class Globals:
+                pass
+PackageWithModel.__name__ = 'tests'
+
 class AtExitTestException(Exception):
     pass
 
@@ -59,15 +82,7 @@ class TestPylonsConfigWrapper:
 
 class TestAppConfig:
     def __init__(self):
-        class FakeAppGlobals(object):
-            pass
-
-        self.fake_package = Bunch({'__name__':'tests',
-                                   '__file__':__file__,
-                                   'lib':Bunch({'app_globals':Bunch({
-                                                    'Globals':FakeAppGlobals})
-                                               })
-                                   })
+        self.fake_package = PackageWithModel
 
     def setup(self):
         self.config = AppConfig()
@@ -90,9 +105,13 @@ class TestAppConfig:
         config["render_functions"] = Bunch()
         config['beaker.session.secret'] = 'some_secret'
 
+    def teardown(self):
+        #This is here to avoid that other tests keep using the forced controller
+        config.pop('tg.root_controller', None)
+
     def test_get_root(self):
         current_root_module = self.config['paths']['root']
-        assert self.config.get_root_module() == 'tests.controllers.root'
+        assert self.config.get_root_module() == 'tests.controllers.root', self.config.get_root_module()
         self.config['paths']['root'] = None
         assert self.config.get_root_module() == None, self.config.get_root_module()
         self.config['paths']['root'] = current_root_module
@@ -193,14 +212,85 @@ class TestAppConfig:
         self.config.setup_mako_renderer(use_dotted_templatenames=True)
     
     def test_setup_sqlalchemy(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert package.model.DBSession.DBSESSION_REMOVED
+
+    def test_setup_sqla_persistance(self):
         config['sqlalchemy.url'] = 'sqlite://'
-        class Package:
-            class model:
-                @classmethod
-                def init_model(package, engine):
-                    pass
-        self.config.package = Package()
-        self.config.setup_sqlalchemy()
+        self.config.use_sqlalchemy = True
+
+        self.config.package = PackageWithModel()
+        self.config.setup_persistence()
+
+        self.config.use_sqlalchemy = False
+
+    def test_setup_sqla_balanced(self):
+        config['sqlalchemy.master.url'] = 'sqlite://'
+        config['sqlalchemy.slaves.slave1.url'] = 'sqlite://'
+        self.config.use_sqlalchemy = True
+
+        self.config.package = PackageWithModel()
+        self.config.setup_persistence()
+
+        self.config.use_sqlalchemy = False
+        config.pop('sqlalchemy.master.url')
+        config.pop('sqlalchemy.slaves.slave1.url')
+
+    @raises(TGConfigError)
+    def test_setup_sqla_balanced_prevent_slave_named_master(self):
+        config['sqlalchemy.master.url'] = 'sqlite://'
+        config['sqlalchemy.slaves.master.url'] = 'sqlite://'
+        self.config.use_sqlalchemy = True
+
+        self.config.package = PackageWithModel()
+        try:
+            self.config.setup_persistence()
+        except:
+            raise
+        finally:
+            self.config.use_sqlalchemy = False
+            config.pop('sqlalchemy.master.url')
+            config.pop('sqlalchemy.slaves.master.url')
+
+    @raises(TGConfigError)
+    def test_setup_sqla_balanced_no_slaves(self):
+        config['sqlalchemy.master.url'] = 'sqlite://'
+        self.config.use_sqlalchemy = True
+
+        self.config.package = PackageWithModel()
+        try:
+            self.config.setup_persistence()
+        except:
+            raise
+        finally:
+            self.config.use_sqlalchemy = False
+            config.pop('sqlalchemy.master.url')
+
+    def test_setup_ming_persistance(self):
+        if PY3: raise SkipTest()
+
+        config['ming.url'] = 'mim://'
+        config['ming.db'] = 'inmemdb'
+        self.config.use_ming = True
+
+        self.config.package = PackageWithModel()
+        self.config.setup_persistence()
+
+        self.config.use_ming = False
 
     def test_add_auth_middleware(self):
         class Dummy:pass
