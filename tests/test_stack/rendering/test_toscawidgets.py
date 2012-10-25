@@ -6,7 +6,7 @@ from nose import SkipTest
 from tg._compat import PY3
 
 
-def setup_noDB():
+def setup_noDB(prefer_tw2=False):
 
     base_config = TestConfig(folder = 'rendering',
                      values = {'use_sqlalchemy': False,
@@ -14,16 +14,14 @@ def setup_noDB():
                                'use_legacy_renderer': False,
                                # in this test we want dotted names support
                                'use_dotted_templatenames': False,
-                               'templating.genshi.method':'xhtml'
+                               'templating.genshi.method':'xhtml',
+                               'prefer_toscawidgets2':prefer_tw2
                                }
                              )
     return app_from_config(base_config)
 
 
-expected_field = """\
-<td class="fieldcol">
-                <input type="text" name="year" class="textfield" id="movie_form_year" value="1984" size="4" />
-            </td>"""
+expected_fields = ['name="year"', 'name="title"']
 
 def test_basic_form_rendering():
     if PY3: raise SkipTest()
@@ -31,6 +29,16 @@ def test_basic_form_rendering():
     app = setup_noDB()
     resp = app.get('/form')
     assert "form" in resp
-    assert expected_field in resp, resp
 
+    for expected_field in expected_fields:
+        assert expected_field in resp, resp
 
+def test_tw2_form_rendering():
+    if PY3: raise SkipTest()
+
+    app = setup_noDB(prefer_tw2=True)
+    resp = app.get('/tw2form')
+    assert "form" in resp
+
+    for expected_field in expected_fields:
+        assert expected_field in resp, resp

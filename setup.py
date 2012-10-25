@@ -35,6 +35,7 @@ if py_version[0] == 2:
                               'Chameleon < 2.0a',
                               'simplegeneric',
                               'Formencode',
+                              'routes',
                               'tw.forms',
                               'tw2.forms'])
 

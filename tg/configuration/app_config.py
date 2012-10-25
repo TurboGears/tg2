@@ -133,12 +133,11 @@ class AppConfig(Bunch):
 
     """
 
-    def __init__(self, minimal=False):
+    def __init__(self, minimal=False, root_controller=None):
         """Creates some configuration defaults"""
 
         # Create a few bunches we know we'll use
         self.paths = Bunch()
-        self.render_functions = Bunch()
 
         # Provide a default app_globals for single file applications
         self['tg.app_globals'] = Bunch({'dotted_filename_finder':DottedFileNameFinder()})
@@ -150,8 +149,11 @@ class AppConfig(Bunch):
         #Set individual defaults
         self.auto_reload_templates = True
         self.auth_backend = None
-        self.default_renderer = 'genshi'
         self.stand_alone = True
+
+        self.renderers = []
+        self.default_renderer = 'genshi'
+        self.render_functions = Bunch()
 
         self.enable_routes = False
 
@@ -182,6 +184,10 @@ class AppConfig(Bunch):
 
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
+
+        #This is for minimal mode to set root controller manually
+        if root_controller is not None:
+            self['tg.root_controller'] = root_controller
 
     def __setitem__(self, key, value):
         #some entries are required at application setup time

@@ -19,6 +19,16 @@ if not PY3:
 
     #then, we create an instance of this form
     base_movie_form = MovieForm("movie_form", action='create')
+
+
+    import tw2.forms as tw2f
+    import tw2.core as tw2c
+    class TW2MovieForm(tw2f.TableForm):
+        title = tw2f.TextField(validator=tw2c.Required)
+        year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
+
+    tw2_movie_form = TW2MovieForm()
+
 else:
     base_movie_form = None
 
@@ -134,6 +144,10 @@ class RootController(TGController):
     @expose('genshi:genshi_form.html')
     def form(self):
         return dict(form=base_movie_form)
+
+    @expose('genshi:genshi_form.html')
+    def tw2form(self):
+        return dict(form=tw2_movie_form)
 
     @expose('genshi:genshi_foreign.html')
     def foreign(self):

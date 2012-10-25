@@ -8,7 +8,7 @@ else: # pragma: no cover
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
 
-if PY3:
+if PY3: # pragma: no cover
     string_type = str
     unicode_text = str
     byte_string = bytes
@@ -18,7 +18,7 @@ if PY3:
 
     def u_(s):
         return str(s)
-else: # pragma: no cover
+else:
     string_type = basestring
     unicode_text = unicode
     byte_string = str
@@ -30,25 +30,25 @@ else: # pragma: no cover
         return unicode(s, 'utf-8')
 
 def im_func(f):
-    if PY3:
+    if PY3: # pragma: no cover
         return getattr(f, '__func__', None)
-    else: # pragma: no cover
+    else:
         return getattr(f, 'im_func', None)
 
 def im_self(f):
-    if PY3:
+    if PY3: # pragma: no cover
         return getattr(f, '__self__', None)
-    else: # pragma: no cover
+    else:
         return getattr(f, 'im_self', None)
 
 def im_class(f):
-    if PY3:
+    if PY3: # pragma: no cover
         self = im_self(f)
         if self is not None:
             return self.__class__
         else:
             return None
-    else: # pragma: no cover
+    else:
         return getattr(f, 'im_class', None)
 
 def with_metaclass(meta, base=object):

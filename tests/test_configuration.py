@@ -8,8 +8,11 @@ import atexit, sys
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
+from tg import TGController, expose
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from webtest import TestApp
 
+from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
 
@@ -50,6 +53,10 @@ class TestPylonsConfigWrapper:
     def test_delattr_bad(self):
         del self.config.i_dont_exist
 
+    def test_keys(self):
+        k = self.config.keys()
+        assert 'tg.app_globals' in k
+
 class TestAppConfig:
     def __init__(self):
         class FakeAppGlobals(object):
@@ -71,7 +78,7 @@ class TestAppConfig:
         # fixing.
         self.config.package = self.fake_package
         self.config['paths']['root'] = 'test'
-        self.config['paths']['controllers'] = 'test'
+        self.config['paths']['controllers'] = 'test.controllers'
         self.config.init_config({'cache_dir':'/tmp'}, {})
 
         config['paths']['static_files'] = "test"
@@ -83,6 +90,39 @@ class TestAppConfig:
         config["render_functions"] = Bunch()
         config['beaker.session.secret'] = 'some_secret'
 
+    def test_get_root(self):
+        current_root_module = self.config['paths']['root']
+        assert self.config.get_root_module() == 'tests.controllers.root'
+        self.config['paths']['root'] = None
+        assert self.config.get_root_module() == None, self.config.get_root_module()
+        self.config['paths']['root'] = current_root_module
+
+    def test_create_minimal_app(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
+
+        #This is here to avoid that other tests keep using the forced controller
+        config.pop('tg.root_controller')
+
+    def test_enable_routes(self):
+        if PY3: raise SkipTest()
+
+        conf = AppConfig(minimal=True)
+        conf.enable_routes = True
+        app = conf.make_wsgi_app()
+
+        a = TGApp()
+        assert a.enable_routes == True
+
+        config.pop('routes.map')
+        config.pop('enable_routes')
 
     def test_create(self):
         pass
