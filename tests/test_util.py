@@ -39,6 +39,9 @@ def test_compat_im_class():
         def method(self):
             pass
 
+    def func():
+        pass
+
     o = FakeClass()
     assert tg._compat.im_class(o.method) == FakeClass
-    assert tg._compat.im_class(FakeClass.method) == None
+    assert tg._compat.im_class(func) == None
