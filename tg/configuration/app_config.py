@@ -493,6 +493,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """Setup a renderer and loader for the chameleon.genshi engine."""
         from tg.render import RenderChameleonGenshi
 
+        try:
+            import chameleon.genshi.loader
+        except ImportError:
+            return False
+
         if config.get('use_dotted_templatenames', True):
             from tg.dottednames.chameleon_genshi_lookup \
                 import ChameleonGenshiTemplateLoader as TemplateLoader
@@ -707,12 +712,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def setup_renderers(self):
         if not 'json' in self.renderers: self.renderers.append('json')
 
-        for renderer in self.renderers:
+        for renderer in self.renderers[:]:
             setup = getattr(self, 'setup_%s_renderer'%renderer, None)
             if setup:
-                setup()
+                success = setup()
+                if success is False:
+                    log.error('Failed to initialize %s template engine, removing it...' % renderer)
+                    self.renderers.remove(renderer)
             else:
-                raise Exception('This configuration object does not support the %s renderer'%renderer)
+                raise Exception('This configuration object does not support the %s renderer' % renderer)
 
     def make_load_environment(self):
         """Return a load_environment function.
