@@ -3,6 +3,8 @@ from tg.util import *
 from nose.tools import eq_
 import os
 
+import tg._compat
+
 path = None
 def setup():
     global path
@@ -31,3 +33,12 @@ def test_get_project_meta():
 
 def test_get_model():
     eq_(get_model(), None)
+
+def test_compat_im_class():
+    class FakeClass(object):
+        def method(self):
+            pass
+
+    o = FakeClass()
+    assert tg._compat.im_class(o.method) == FakeClass
+    assert tg._compat.im_class(FakeClass.method) == None

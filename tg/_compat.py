@@ -18,7 +18,7 @@ if PY3:
 
     def u_(s):
         return str(s)
-else:
+else: # pragma: no cover
     string_type = basestring
     unicode_text = unicode
     byte_string = str
@@ -32,13 +32,13 @@ else:
 def im_func(f):
     if PY3:
         return getattr(f, '__func__', None)
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_func', None)
 
 def im_self(f):
     if PY3:
         return getattr(f, '__self__', None)
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_self', None)
 
 def im_class(f):
@@ -48,7 +48,7 @@ def im_class(f):
             return self.__class__
         else:
             return None
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_class', None)
 
 def with_metaclass(meta, base=object):

@@ -11,7 +11,7 @@ For more details.
 import tg
 from tg.controllers import TGController
 from tg.decorators import expose, beaker_cache
-from tg.caching import create_cache_key
+from tg.caching import create_cache_key, cached_property
 from tg.controllers.util import etag_cache
 from tg import cache
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
@@ -41,6 +41,27 @@ class MockTime:
 mocktime = MockTime()
 import beaker.container
 beaker.container.time = mocktime
+
+class TestCachedProperty(object):
+    def setup(self):
+        class FakeObject(object):
+            def __init__(self):
+                self.v = 0
+
+            @cached_property
+            def value(self):
+                self.v += 1
+                return self.v
+
+        self.FakeObjectClass = FakeObject
+
+    def test_cached_property(self):
+        o = self.FakeObjectClass()
+        for i in range(10):
+            assert o.value == 1
+
+    def test_cached_property_on_class(self):
+        assert isinstance(self.FakeObjectClass.value, cached_property)
 
 class SimpleCachingController(TGController):
     
@@ -206,6 +227,12 @@ class BeakerCacheController(TGController):
         return 'Counter=%s' % BeakerCacheController.CALL_COUNT
 
     @expose()
+    @beaker_cache(key=['arg1', 'arg2'])
+    def specified_cache_key_args(self, arg1, arg2):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
     @beaker_cache(query_args=True)
     def cache_with_args(self, arg):
         BeakerCacheController.CALL_COUNT += 1
@@ -218,6 +245,15 @@ class BeakerCacheController(TGController):
         BeakerCacheController.CALL_COUNT += 1
         return 'Counter=%s' % BeakerCacheController.CALL_COUNT
 
+    def invalidate_on_startup(self):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
+
+    @expose()
+    @beaker_cache(invalidate_on_startup=True)
+    def invalidate_on_startup(self):
+        BeakerCacheController.CALL_COUNT += 1
+        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
 
 class TestBeakerCacheTouch(TestWSGIController):
     def __init__(self, *args, **kargs):
@@ -231,6 +267,14 @@ class TestBeakerCacheTouch(TestWSGIController):
         assert 'Counter=1' in r
         r = self.app.get('/none_key')
         assert 'Counter=1' in r
+
+    def test_invalidate_on_startup(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/invalidate_on_startup')
+        assert 'Counter=1' in r
+        r = self.app.get('/invalidate_on_startup')
+        assert 'Counter=2' in r
 
     def test_no_options(self):
         BeakerCacheController.CALL_COUNT = 0
@@ -247,6 +291,16 @@ class TestBeakerCacheTouch(TestWSGIController):
         assert 'Counter=1' in r
         r = self.app.get('/specified_cache_key?arg=x')
         assert 'Counter=1' in r
+
+    def test_specified_cache_key_args(self):
+        BeakerCacheController.CALL_COUNT = 0
+
+        r = self.app.get('/specified_cache_key_args?arg1=x&arg2=y')
+        assert 'Counter=1' in r
+        r = self.app.get('/specified_cache_key_args?arg1=x&arg2=y')
+        assert 'Counter=1' in r
+        r = self.app.get('/specified_cache_key_args?arg1=x&arg2=z')
+        assert 'Counter=2' in r
 
     def test_cache_with_args(self):
         BeakerCacheController.CALL_COUNT = 0

@@ -99,7 +99,7 @@ def beaker_cache(key="cache_default", expire="never", type=None,
         cache_obj = getattr(tg_locals.app_globals, 'cache', None)
         if not cache_obj:
             cache_obj = getattr(tg_locals, 'cache', None)
-        if not cache_obj:
+        if not cache_obj: # pragma: no cover
             raise Exception('No CacheMiddleware or cache object on '
                             ' app_globals was found')
 
