@@ -392,6 +392,8 @@ class TestAppConfig:
         self.config.add_static_file_middleware(None)
 
     def test_setup_sqla_auth(self):
+        if PY3: raise SkipTest()
+
         class RootController(TGController):
             @expose()
             def test(self):
