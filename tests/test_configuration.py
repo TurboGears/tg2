@@ -389,6 +389,8 @@ class TestAppConfig:
         self.config.add_auth_middleware(None, False)
 
     def test_sqla_auth_middleware(self):
+        if PY3: raise SkipTest()
+
         self.config.auth_backend = 'sqlalchemy'
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
                                   'dbsession': None,
@@ -405,6 +407,8 @@ class TestAppConfig:
         self.config.auth_backend = None
 
     def test_sqla_auth_middleware_default_after(self):
+        if PY3: raise SkipTest()
+
         self.config.auth_backend = 'sqlalchemy'
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
                                   'dbsession': None,
@@ -422,6 +426,8 @@ class TestAppConfig:
         self.config.auth_backend = None
 
     def test_sqla_auth_middleware_no_authenticators(self):
+        if PY3: raise SkipTest()
+
         self.config.auth_backend = 'sqlalchemy'
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
                                   'dbsession': None,
