@@ -37,7 +37,6 @@ if py_version[0] == 2:
                               'simplegeneric',
                               'Formencode',
                               'routes',
-                              'ming',
                               'tgming',
                               'tw.forms',
                               'tw2.forms'])
