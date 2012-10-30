@@ -638,12 +638,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_ming(self):
         """Setup MongoDB database engine using Ming"""
-        try:
+        try: #pragma: no cover
             from ming import create_datastore
             from urlparse import urljoin
             def create_ming_datastore(url, database):
                 return create_datastore(urljoin(url, database))
-        except ImportError: #pragma: no cover
+        except ImportError:
             from ming.datastore import DataStore
             def create_ming_datastore(url, database):
                 return DataStore(url, database=database)
@@ -739,7 +739,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     log.error('Failed to initialize %s template engine, removing it...' % renderer)
                     self.renderers.remove(renderer)
             else:
-                raise Exception('This configuration object does not support the %s renderer' % renderer)
+                raise TGConfigError('This configuration object does not support the %s renderer' % renderer)
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -830,7 +830,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 "sa_auth.cookie_secret in development.ini"
                 raise TGConfigError(msg)
 
-        if 'authmetadata' not in auth_args:
+        if 'authmetadata' not in auth_args: #pragma: no cover
             #authmetadata not provided, fallback to old authentication setup
             if self.auth_backend == "sqlalchemy":
                 from repoze.what.plugins.quickstart import setup_sql_auth
@@ -861,6 +861,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                         auth_args['authenticators'] = [authenticator]
                     else:
                         auth_args['authenticators'][pos] = authenticator
+
             from tg.configuration.auth import setup_auth
             app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
 

@@ -44,6 +44,18 @@ class PackageWithModel:
                 pass
 PackageWithModel.__name__ = 'tests'
 
+from tg.configuration.auth import TGAuthMetadata
+class ApplicationAuthMetadata(TGAuthMetadata):
+    def __init__(self, sa_auth):
+        self.sa_auth = sa_auth
+    def get_user(self, identity, userid):
+        return None
+    def get_groups(self, identity, userid):
+        return []
+    def get_permissions(self, identity, userid):
+        return []
+
+
 class AtExitTestException(Exception):
     pass
 
@@ -307,6 +319,22 @@ class TestAppConfig:
     def test_add_static_file_middleware(self):
         self.config.add_static_file_middleware(None)
 
+    def test_setup_sqla_auth(self):
+        self.config.auth_backend = 'sqlalchemy'
+
+        self.config.setup_auth()
+        assert 'sa_auth' in config
+
+        self.config.auth_backend = None
+
+    def test_setup_ming_auth(self):
+        self.config.auth_backend = 'ming'
+
+        self.config.setup_auth()
+        assert 'sa_auth' in config
+
+        self.config.auth_backend = None
+
     def test_register_hooks(self):
         def dummy(*args):
             pass
@@ -328,3 +356,133 @@ class TestAppConfig:
     def test_missing_secret(self):
         del config['beaker.session.secret']
         self.config.setup_sa_auth_backend()
+
+    def test_controler_wrapper_setup(self):
+        orig_caller = self.config.controller_caller
+        self.config.controller_wrappers = []
+        self.config.setup_controller_wrappers()
+        assert config['controller_caller'] == orig_caller
+
+        def controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                return caller(*args, **kw)
+            return call
+
+        orig_caller = self.config.controller_caller
+        self.config.controller_wrappers = [controller_wrapper]
+        self.config.setup_controller_wrappers()
+        assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
+
+    def test_unsupported_renderer(self):
+        renderers = self.config.renderers
+        self.config.renderers = ['unknwon']
+        try:
+            self.config.setup_renderers()
+        except TGConfigError:
+            self.config.renderers = renderers
+        else:
+            assert False
+
+    @raises(TGConfigError)
+    def test_cookie_secret_required(self):
+        self.config['sa_auth'] = {}
+        self.config.add_auth_middleware(None, False)
+
+    def test_sqla_auth_middleware(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('default', None)]}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert 'cookie' in authenticators
+        assert 'sqlauth' in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_sqla_auth_middleware_default_after(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('superfirst', None), ('default', None)]}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert authenticators[1] == 'superfirst'
+        assert 'cookie' in authenticators
+        assert 'sqlauth' in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_sqla_auth_middleware_no_authenticators(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345'}
+
+        #In this case we can just test it doesn't crash
+        #as the sa_auth dict doesn't have an authenticators key to check for
+        self.config.add_auth_middleware(None, True)
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_sqla_auth_middleware_only_mine(self):
+        past_config_sa_auth = config.sa_auth
+        config.sa_auth = {}
+
+        self.config.auth_backend = None
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('superfirst', None)]}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert authenticators[1] == 'superfirst'
+        assert 'sqlauth' not in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+        config.sa_auth = past_config_sa_auth
+
+    def test_ming_auth_middleware(self):
+        if PY3: raise SkipTest()
+
+        self.config.auth_backend = 'ming'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('default', None)]}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert 'cookie' in authenticators
+        assert 'mingauth' in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    @raises(KeyError)
+    def test_sqla_auth_middleware_no_backend(self):
+        #This is expected to raise error as no authenticators are specified for a custom backend
+        past_config_sa_auth = config.sa_auth
+        config.sa_auth = {}
+
+        self.config.auth_backend = None
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+                                  'cookie_secret':'12345'}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert 'cookie' in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+        config.sa_auth = past_config_sa_auth

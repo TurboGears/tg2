@@ -38,6 +38,7 @@ if py_version[0] == 2:
                               'Formencode',
                               'routes',
                               'ming',
+                              'turbogears-ming',
                               'tw.forms',
                               'tw2.forms'])
 
