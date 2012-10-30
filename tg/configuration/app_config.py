@@ -160,6 +160,7 @@ class AppConfig(Bunch):
         self.use_ming = False
         self.use_sqlalchemy = False
         self.use_transaction_manager = True
+        self.commit_veto = None
         self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
@@ -927,7 +928,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         from tw.api import make_middleware as tw_middleware
 
-
         twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
                     'toscawidgets.framework.translator': ugettext,
                     'toscawidgets.middleware.inject_resources': True,
@@ -997,19 +997,6 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         app = StaticsMiddleware(app, config['paths']['static_files'])
         return app
 
-    def commit_veto(self, environ, status, headers):
-        """Veto a commit.
-
-        This hook is called by repoze.tm in case we want to veto a commit
-        for some reason. Return True to force a rollback.
-
-        By default we veto if the response's status code is an error code.
-        Override this method, or monkey patch the instancemethod, to fine
-        tune this behaviour.
-
-        """
-        return not 200 <= int(status.split(None, 1)[0]) < 400
-
     def add_tm_middleware(self, app):
         """Set up the transaction managment middleware.
 
@@ -1022,8 +1009,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         behavior can be overridden by overriding base_config.commit_veto.
 
         """
-        from repoze.tm import make_tm
-        return make_tm(app, self.commit_veto)
+        from repoze.tm import TM
+        return TM(app, self.commit_veto)
 
     def add_ming_middleware(self, app):
         """Set up the ming middleware for the unit of work"""

@@ -8,7 +8,8 @@ import atexit, sys
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
-from tg import TGController, expose
+import tg.i18n
+from tg import TGController, expose, response
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from webtest import TestApp
 
@@ -43,6 +44,16 @@ class PackageWithModel:
             class Globals:
                 pass
 PackageWithModel.__name__ = 'tests'
+
+class FakeTransaction:
+    def get(self):
+        return self
+
+    def abort(self):
+        self.aborted = True
+
+    def commit(self):
+        self.aborted = False
 
 from tg.configuration.auth import TGAuthMetadata
 class ApplicationAuthMetadata(TGAuthMetadata):
@@ -240,6 +251,65 @@ class TestAppConfig:
 
         assert 'HI!' in app.get('/test')
         assert package.model.DBSession.DBSESSION_REMOVED
+
+    def test_sqlalchemy_commit_veto(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+            @expose()
+            def crash(self):
+                raise Exception('crash')
+
+            @expose()
+            def forbidden(self):
+                response.status = 403
+                return 'FORBIDDEN'
+
+            @expose()
+            def notfound(self):
+                response.status = 404
+                return 'NOTFOUND'
+
+        def custom_commit_veto(environ, status, headers):
+            if status.startswith('404'):
+                return True
+            return False
+
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_get = transaction.get
+        transaction.get = fake_transaction.get
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.use_transaction_manager = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        conf.commit_veto = custom_commit_veto
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        app.get('/test')
+        assert fake_transaction.aborted == False
+
+        try:
+            app.get('/crash')
+        except:
+            pass
+        assert fake_transaction.aborted == True
+
+        app.get('/forbidden', status=403)
+        assert fake_transaction.aborted == False
+
+        app.get('/notfound', status=404)
+        assert fake_transaction.aborted == True
+
+        transaction.get = prev_transaction_get
 
     def test_setup_sqla_persistance(self):
         config['sqlalchemy.url'] = 'sqlite://'
