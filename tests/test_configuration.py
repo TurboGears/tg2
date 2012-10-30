@@ -3,13 +3,13 @@ Testing for TG2 Configuration
 """
 from nose import SkipTest
 from nose.tools import eq_, raises
-import atexit, sys
+import atexit, sys, os
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
 import tg.i18n
-from tg import TGController, expose, response
+from tg import TGController, expose, response, request
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from webtest import TestApp
 
@@ -365,14 +365,16 @@ class TestAppConfig:
     def test_setup_ming_persistance(self):
         if PY3: raise SkipTest()
 
-        config['ming.url'] = 'mim://'
-        config['ming.db'] = 'inmemdb'
-        self.config.use_ming = True
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mim://'
+        conf['ming.db'] = 'inmemdb'
 
-        self.config.package = PackageWithModel()
-        self.config.setup_persistence()
-
-        self.config.use_ming = False
+        app = conf.make_wsgi_app()
+        assert app is not None
 
     def test_add_auth_middleware(self):
         class Dummy:pass
@@ -390,12 +392,26 @@ class TestAppConfig:
         self.config.add_static_file_middleware(None)
 
     def test_setup_sqla_auth(self):
-        self.config.auth_backend = 'sqlalchemy'
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
 
-        self.config.setup_auth()
-        assert 'sa_auth' in config
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.auth_backend = 'sqlalchemy'
+        conf.use_sqlalchemy = True
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata({}),
+                           'dbsession': None,
+                           'user_class':None,
+                           'cookie_secret':'12345'}
+        conf['sqlalchemy.url'] = 'sqlite://'
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
 
-        self.config.auth_backend = None
+        assert 'repoze.who.plugins' in app.get('/test')
 
     def test_setup_ming_auth(self):
         self.config.auth_backend = 'ming'
@@ -442,6 +458,28 @@ class TestAppConfig:
         self.config.controller_wrappers = [controller_wrapper]
         self.config.setup_controller_wrappers()
         assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
+
+    def test_wrap_app(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        middleware_has_been_visited = []
+        class AppWrapper(object):
+            def __init__(self, app):
+                self.app = app
+            def __call__(self, environ, start_response):
+                middleware_has_been_visited.append(True)
+                return self.app(environ, start_response)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app(wrap_app=AppWrapper)
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert middleware_has_been_visited[0] == True
 
     def test_unsupported_renderer(self):
         renderers = self.config.renderers
@@ -585,3 +623,58 @@ class TestAppConfig:
         assert resultingconfig['toscawidgets.framework.translator'] == tg.i18n.ugettext
         assert resultingconfig['toscawidgets.middleware.inject_resources'] == True
         assert tw.api.resources.registry.ACTIVE_VARIANT == 'min'
+
+    def test_config_hooks(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        visited_hooks = []
+        def before_config_hook(app):
+            visited_hooks.append('before_config')
+            return app
+        def after_config_hook(app):
+            visited_hooks.append('after_config')
+            return app
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_hook('before_config', before_config_hook)
+        conf.register_hook('after_config', after_config_hook)
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert 'before_config' in visited_hooks
+        assert 'after_config' in visited_hooks
+
+    def test_error_middleware_disabled_with_optimize(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+
+        os.environ['PYTHONOPTIMIZE'] = '2'
+        app = conf.make_wsgi_app()
+        os.environ.pop('PYTHONOPTIMIZE')
+
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
+
+    def test_serve_statics(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+        conf.serve_static = True
+        app = conf.make_wsgi_app()
+        assert app.__class__.__name__.startswith('Statics')
+
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
