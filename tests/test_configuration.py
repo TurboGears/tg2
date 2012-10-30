@@ -562,3 +562,26 @@ class TestAppConfig:
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
         config.sa_auth = past_config_sa_auth
+
+    def test_toscawidgets_recource_variant(self):
+        if PY3: raise SkipTest()
+
+        resultingconfig = {}
+
+        def fake_make_middleware(app, twconfig):
+            resultingconfig.update(twconfig)
+            return app
+
+        import tw.api
+        prev_tw_make_middleware = tw.api.make_middleware
+
+        tw.api.make_middleware = fake_make_middleware
+        config['toscawidgets.framework.resource_variant'] = 'min'
+        self.config.add_tosca_middleware(None)
+        config.pop('toscawidgets.framework.resource_variant', None)
+        tw.api.make_middleware = prev_tw_make_middleware
+
+        assert resultingconfig['toscawidgets.framework.default_view'] == self.config.default_renderer
+        assert resultingconfig['toscawidgets.framework.translator'] == tg.i18n.ugettext
+        assert resultingconfig['toscawidgets.middleware.inject_resources'] == True
+        assert tw.api.resources.registry.ACTIVE_VARIANT == 'min'
