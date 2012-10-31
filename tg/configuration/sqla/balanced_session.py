@@ -36,7 +36,7 @@ class BalancedSession(Session):
             log.debug('Choose engine: master')
             return engines['master']
         else:
-            choosen_slave = random.choice(engines['slaves'].keys())
+            choosen_slave = random.choice(list(engines['slaves'].keys()))
             log.debug('Choose engine: %s', choosen_slave)
             return engines['slaves'][choosen_slave]
 
