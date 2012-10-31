@@ -85,10 +85,10 @@ class _AuthenticationForgerPlugin(object):
             identity = {'fake-userid': environ[self.fake_user_key]}
             return identity
 
-    def remember(self, environ, identity):
+    def remember(self, environ, identity): #pragma: no cover
         pass
 
-    def forget(self, environ, identity):
+    def forget(self, environ, identity): #pragma: no cover
         pass
 
     def authenticate(self, environ, identity):
@@ -101,15 +101,12 @@ class _AuthenticationForgerPlugin(object):
         headers = app_headers + forget_headers
         #remove content-length header
         headers = filter(lambda h:h[0].lower() != 'content-length', headers)
+
         # The HTTP status code and reason may not be the default ones:
         status_parts = self._HTTP_STATUS_PATTERN.search(status)
-        if status_parts:
-            reason = status_parts.group('reason')
-            code = int(status_parts.group('code'))
-        else:
-            reason = 'HTTP Unauthorized'
-            code = 401
-            # Building the response:
+        reason = status_parts.group('reason')
+        code = int(status_parts.group('code'))
+
         response = HTTPUnauthorized(headers=headers)
         response.title = reason
         response.code = code

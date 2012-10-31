@@ -8,6 +8,7 @@ import atexit, sys, os
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
+from tg.configuration.auth import _AuthenticationForgerPlugin
 import tg.i18n
 from tg import TGController, expose, response, request
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
@@ -57,15 +58,8 @@ class FakeTransaction:
 
 from tg.configuration.auth import TGAuthMetadata
 class ApplicationAuthMetadata(TGAuthMetadata):
-    def __init__(self, sa_auth):
-        self.sa_auth = sa_auth
     def get_user(self, identity, userid):
-        return None
-    def get_groups(self, identity, userid):
-        return []
-    def get_permissions(self, identity, userid):
-        return []
-
+        return {'name':'None'}
 
 class AtExitTestException(Exception):
     pass
@@ -405,7 +399,7 @@ class TestAppConfig:
         conf.model = package.model
         conf.auth_backend = 'sqlalchemy'
         conf.use_sqlalchemy = True
-        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata({}),
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                            'dbsession': None,
                            'user_class':None,
                            'cookie_secret':'12345'}
@@ -502,7 +496,7 @@ class TestAppConfig:
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345',
@@ -520,7 +514,7 @@ class TestAppConfig:
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345',
@@ -539,7 +533,7 @@ class TestAppConfig:
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345'}
@@ -554,15 +548,78 @@ class TestAppConfig:
         past_config_sa_auth = config.sa_auth
         config.sa_auth = {}
 
-        self.config.auth_backend = None
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
-                                  'cookie_secret':'12345',
-                                  'authenticators':[('superfirst', None)]}
-        self.config.add_auth_middleware(None, True)
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
 
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
-        assert authenticators[1] == 'superfirst'
+            @expose()
+            def forbidden(self):
+                response.status = "401"
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.auth_backend = 'sqlalchemy'
+        conf.use_sqlalchemy = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        alwaysadmin = _AuthenticationForgerPlugin(fake_user_key='FAKE_USER')
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
+                           'cookie_secret':'12345',
+                           'form_plugin':alwaysadmin,
+                           'authenticators':[('alwaysadmin', alwaysadmin)],
+                           'identifiers':[('alwaysadmin', alwaysadmin)],
+                           'challengers':[]}
+
+        app = conf.make_wsgi_app()
+
+        authenticators = [x[0] for x in conf['sa_auth']['authenticators']]
+        assert authenticators[0] == 'alwaysadmin'
         assert 'sqlauth' not in authenticators
+
+        challengers = [x[1] for x in conf['sa_auth']['challengers']]
+        assert alwaysadmin in challengers
+
+        app = TestApp(app)
+        assert 'repoze.who.identity' in app.get('/test', extra_environ={'FAKE_USER':'admin'})
+        assert app.get('/forbidden', status=401)
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+        config.sa_auth = past_config_sa_auth
+
+    def test_sqla_auth_logging_stderr(self):
+        past_config_sa_auth = config.sa_auth
+        config.sa_auth = {}
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.auth_backend = 'sqlalchemy'
+        conf.use_sqlalchemy = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        alwaysadmin = _AuthenticationForgerPlugin(fake_user_key='FAKE_USER')
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
+                           'cookie_secret':'12345',
+                           'form_plugin':alwaysadmin,
+                           'log_level':'DEBUG',
+                           'authenticators':[('alwaysadmin', alwaysadmin)],
+                           'identifiers':[('alwaysadmin', alwaysadmin)],
+                           'challengers':[]}
+
+        conf['sa_auth']['log_file'] = 'stderr'
+        app = conf.make_wsgi_app()
+        conf['sa_auth']['log_file'] = 'stdout'
+        app = conf.make_wsgi_app()
+
+        import tempfile
+        f = tempfile.NamedTemporaryFile()
+        conf['sa_auth']['log_file'] = f.name
+        app = conf.make_wsgi_app()
 
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
@@ -572,7 +629,7 @@ class TestAppConfig:
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'ming'
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':[('default', None)]}
@@ -592,7 +649,7 @@ class TestAppConfig:
         config.sa_auth = {}
 
         self.config.auth_backend = None
-        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(self.config.sa_auth),
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'cookie_secret':'12345'}
         self.config.add_auth_middleware(None, True)
 
