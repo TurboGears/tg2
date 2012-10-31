@@ -3,7 +3,7 @@ import random, logging
 
 try:
     from sqlalchemy.orm import Session
-except ImportError:
+except ImportError: #pragma: no cover
     class Session(object):
         """SQLAlchemy Session"""
 
@@ -13,20 +13,17 @@ class BalancedSession(Session):
     _force_engine = None
 
     def get_bind(self, mapper=None, clause=None):
-        tg_context = tg.request_local.context._current_obj()
-        config = tg_context.config
-        request = tg_context.request
-        app_globals = tg_context.app_globals
+        config = tg.config._current_obj()
 
         engines = config.get('balanced_engines')
         if not engines:
             log.debug('Balancing disabled, using master')
-            return app_globals.sa_engine
+            return config['tg.app_globals'].sa_engine
 
         forced_engine = self._force_engine
         if not forced_engine:
             try:
-                forced_engine = request._tg_force_sqla_engine
+                forced_engine = tg.request._tg_force_sqla_engine
             except TypeError:
                 forced_engine = 'master'
             except AttributeError:
