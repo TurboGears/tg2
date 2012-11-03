@@ -156,9 +156,8 @@ class TGApp(object):
         req_options = self.req_options
         req = Request(environ,
                       charset=req_options['charset'])
-        req_props = req.__dict__
-        req_props['_language'] = req_options['language']
-        req_props['_response_type'] = None
+        req._fast_setattr('_language', req_options['language'])
+        req._fast_setattr('_response_type', None)
 
         resp_options = self.resp_options
         response = Response(

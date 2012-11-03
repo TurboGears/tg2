@@ -122,7 +122,10 @@ class Request(WebObRequest):
         if old_webob:
             return self.params.mixed()
         else:
-            return dict([(str(n), v) for n,v in self.params.mixed().items()])
+            return dict(((str(n), v) for n,v in self.params.mixed().items()))
+
+    def _fast_setattr(self, name, value):
+        object.__setattr__(self, name, value)
 
 class Response(WebObResponse):
     """WebOb Response subclass

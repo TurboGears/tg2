@@ -156,6 +156,7 @@ class AppConfig(Bunch):
         self.render_functions = Bunch()
 
         self.enable_routes = False
+        self.enable_routing_args = False
 
         self.use_ming = False
         self.use_sqlalchemy = False

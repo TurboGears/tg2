@@ -168,11 +168,6 @@ class Decoration(object):
         request = tgl.request
         response = tgl.response
 
-        if request._response_type and request._response_type in self.engines:
-            accept_types = request._response_type
-        else:
-            accept_types = request.headers.get('accept', '*/*')
-
         try:
             render_custom_format = request._render_custom_format[self.controller]
         except:
@@ -185,6 +180,10 @@ class Decoration(object):
             if self.default_engine:
                 content_type = self.default_engine
             elif self.engines:
+                if request._response_type and request._response_type in self.engines:
+                    accept_types = request._response_type
+                else:
+                    accept_types = request.headers.get('accept', '*/*')
                 content_type = Accept(accept_types).best_match(self.engines_keys, self.engines_keys[0])
             else:
                 content_type = 'text/html'

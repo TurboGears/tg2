@@ -64,7 +64,7 @@ class CoreDispatcher(object):
                     extension_spot = last_remainder.rfind('.')
                     #extension = last_remainder[extension_spot:]
                     url_path[-1] = last_remainder[:extension_spot]
-                    req._response_type = mime_type
+                    req._fast_setattr('_response_type', mime_type)
                     #req.response_ext = extension
 
         params = req.args_params
@@ -72,16 +72,15 @@ class CoreDispatcher(object):
         state = DispatchState(req, self, params, url_path, conf.get('ignore_parameters', []))
         state =  state.controller._dispatch(state, url_path)
 
-        thread_locals.tmpl_context.controller_url = '/'.join(
-            url_path[:-len(state.remainder)])
+        thread_locals.tmpl_context.controller_url = '/'.join(url_path[:-len(state.remainder)])
 
-        state.routing_args.update(params)
-        if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
-            state.dispatcher._setup_wsgiorg_routing_args(
-                url_path, state.remainder, state.routing_args)
+        if conf.get('enable_routing_args', False):
+            state.routing_args.update(params)
+            if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
+                state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
 
         #save the controller state for possible use within the controller methods
-        req._controller_state = state
+        req._fast_setattr('_controller_state', state)
 
         return state.method, state.controller, state.remainder, params
 
@@ -136,7 +135,7 @@ class CoreDispatcher(object):
             if header[0] == 'Set-Cookie' or
                header[0].startswith('X-'))
             return start_response(status, headers, exc_info)
-        py_request.start_response = repl_start_response
+        py_request._fast_setattr('start_response', repl_start_response)
 
         try:
             response = self._perform_call(thread_locals)
@@ -146,24 +145,20 @@ class CoreDispatcher(object):
         #If we reached a plain WSGI application do not build the response
         #but simply pass the response as is.
         if not start_response_called:
-            py_request.start_response = start_response
+            py_request._fast_setattr('start_response', start_response)
             if isinstance(response, bytes):
-                py_response.body = py_response.body + response
+                py_response.body = response
             elif isinstance(response, unicode_text):
                 if not py_response.charset:
                     py_response.charset = 'utf-8'
-                py_response.text = py_response.text + response
+                py_response.text = response
             elif hasattr(response, 'wsgi_response'):
                 for name, value in py_response.headers.items():
                     if name.lower() == 'set-cookie':
                         response.headers.add(name, value)
                     else:
                         response.headers.setdefault(name, value)
-                try:
-                    thread_locals.response = response
-                except KeyError:
-                    # Ignore the case when someone removes the registry
-                    pass
+                thread_locals.response = response
                 py_response = response
             elif response is None:
                 pass
