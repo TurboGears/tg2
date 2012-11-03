@@ -115,7 +115,15 @@ class ColonValidator(validators.FancyValidator):
     def validate_python(self, value, state):
         raise validators.Invalid('ERROR: Description', value, state)
 
+class ColonLessGenericValidator(object):
+    def validate(self, value, state=None):
+        raise validators.Invalid('Unknown Error', value, state)
+
 class BasicTGController(TGController):
+    @expose()
+    @validate(ColonLessGenericValidator())
+    def validator_without_columns(self, **kw):
+        return tg.tmpl_context.form_errors['_the_form']
 
     @expose('json:')
     @validate(validators={"some_int": validators.Int()})
@@ -227,6 +235,16 @@ class BasicTGController(TGController):
     def with_hooked_error_handler(self, *args, **kw):
         return dict(GOT_ERROR='NO ERROR')
 
+    @expose()
+    def error_handler(self, *args, **kw):
+        return 'ERROR HANDLER!'
+
+    @expose('json:')
+    @validate(validators={"some_int": validators.Int()},
+              error_handler=error_handler)
+    def validate_other_error_handler(self, some_int):
+        return dict(response=some_int)
+
 class TestTGController(TestWSGIController):
 
     def setUp(self):
@@ -241,6 +259,16 @@ class TestTGController(TestWSGIController):
         form_values = {"some_int": 22}
         resp = self.app.post('/validated_int', form_values)
         assert '{"response": 22}'in resp, resp
+
+    def test_validation_other_error_handler(self):
+        form_values = {"some_int": 'TEXT'}
+        resp = self.app.post('/validate_other_error_handler', form_values)
+        assert 'ERROR HANDLER!'in resp, resp
+
+    def test_validator_without_columns(self):
+        form_values = {"some_int": 22}
+        resp = self.app.post('/validator_without_columns', form_values)
+        assert 'Unknown Error' in resp, resp
 
     def test_for_other_params_after_validation(self):
         """Ensure that both validated and unvalidated data make it through"""

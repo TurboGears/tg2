@@ -15,6 +15,7 @@ if PY3: # pragma: no cover
     from urllib.parse import urlencode as url_encode
     from urllib.parse import quote as url_quote
     from urllib.parse import unquote as url_unquote
+    from urllib.request import url2pathname
 
     def u_(s):
         return str(s)
@@ -25,6 +26,7 @@ else:
     from urllib import urlencode as url_encode
     from urllib import quote as url_quote
     from urllib import unquote as url_unquote
+    from urllib import url2pathname
 
     def u_(s):
         return unicode(s, 'utf-8')

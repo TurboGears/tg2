@@ -5,19 +5,7 @@ call the methods can be expressed using expose, validate, and other
 decorators to effect a rendered page.
 """
 
-try:
-    from urllib import url2pathname
-except ImportError:
-    from urllib.request import url2pathname
 import inspect, operator
-
-try:
-    strip_string = operator.methodcaller('strip')
-except AttributeError:
-    def strip_string(s):
-        """Strip string compatibility method for Python2.5"""
-        return s.strip()
-
 import tg
 from tg.controllers.util import abort
 from tg.predicates import NotAuthorizedError, not_anonymous
@@ -34,10 +22,9 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
-from tg._compat import unicode_text, with_metaclass, im_self
+from tg._compat import unicode_text, with_metaclass, im_self, url2pathname
 
-# Load tw (ToscaWidets) only on demand
-tw = None
+strip_string = operator.methodcaller('strip')
 
 class _DecoratedControllerMeta(type):
     def __init__(cls, name, bases, attrs):
@@ -65,7 +52,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
     def _call(self, controller, params, remainder=None, tgl=None):
         """Run the controller with the given parameters.
 
-        _call is called by _perform_call in Pylons' WSGIController.
+        _call is called by _perform_call in CoreDispatcher.
 
         Any of the before_validate hook, the validation, the before_call hook,
         and the controller method can return a FormEncode Invalid exception,
@@ -85,8 +72,10 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         rendering.
 
         """
-        if tgl is None:
+        if tgl is None: #pragma: no cover
+            #compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
+
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
@@ -269,17 +258,6 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         # If there is an identity, push it to the Pylons template context
         tmpl_context.identity = req.environ.get('repoze.who.identity')
 
-        # Set up the ToscaWidgets renderer
-        if engine_name in ('genshi','mako') and tgl.config['use_toscawidgets']:
-            global tw
-            if not tw:
-                try:
-                    import tw
-                except ImportError:
-                    pass
-            if tw:
-                tw.framework.default_view = engine_name
-
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.
         namespace = response
@@ -353,10 +331,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if error_handler is None:
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
-        elif im_self(error_handler) != controller:
-            output = error_handler(im_self(error_handler), *remainder, **dict(params))
         else:
-            output = error_handler(im_self(controller), *remainder, **dict(params))
+            output = error_handler(im_self(error_handler), *remainder, **dict(params))
 
         return error_handler, output
 
@@ -387,18 +363,5 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             tg.response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
-
-def _configured_engines():
-    """Get the configured engines.
-
-    Returns a set containing the names of the currently configured template
-    engines from the active application's globals.
-
-    """
-    g = tg.app_globals._current_obj()
-    if not hasattr(g, 'tg_configured_engines'):
-        g.tg_configured_engines = set()
-    return g.tg_configured_engines
-
 
 __all__ = ['DecoratedController']

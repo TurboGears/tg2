@@ -931,6 +931,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         """
 
+        import tw
         from tw.api import make_middleware as tw_middleware
 
         twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
@@ -948,6 +949,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             del twconfig['toscawidgets.framework.resource_variant']
 
         app = tw_middleware(app, twconfig)
+
+        if self.default_renderer in ('genshi','mako'):
+            tw.framework.default_view = self.default_renderer
+
         return app
 
     def add_tosca2_middleware(self, app):

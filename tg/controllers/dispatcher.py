@@ -37,7 +37,7 @@ class CoreDispatcher(object):
     _use_lax_params = True
     _use_index_fallback = False
 
-    def _call(self, tgl, controller, params, remainder=None):
+    def _call(self, controller, params, remainder=None, tgl=None):
         """
         Override this function to define how your controller method should be called.
         """
