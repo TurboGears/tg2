@@ -157,14 +157,18 @@ class AppConfig(Bunch):
 
         self.enable_routes = False
         self.enable_routing_args = False
+        self.disable_request_extensions = minimal
 
         self.use_ming = False
         self.use_sqlalchemy = False
-        self.use_transaction_manager = True
+        self.use_transaction_manager = not minimal
         self.commit_veto = None
         self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
+
+        self.i18n_enabled = not minimal
+        self.serve_static = not minimal
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -1145,8 +1149,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             # web server is serving static files)
 
             #if the user has set the value in app_config, don't pull it from the ini
-            if not hasattr(self, 'serve_static'):
-                self.serve_static = asbool(config.get('serve_static', 'true'))
+            forced_serve_static = config.get('serve_static')
+            if forced_serve_static is not None:
+                self.serve_static = asbool(forced_serve_static)
+
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
 
