@@ -117,7 +117,7 @@ class ColonValidator(validators.FancyValidator):
 
 class ColonLessGenericValidator(object):
     def validate(self, value, state=None):
-        raise validators.Invalid('Unknown Error', value, state)
+        raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
 
 class BasicTGController(TGController):
     @expose()

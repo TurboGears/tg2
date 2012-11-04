@@ -737,3 +737,19 @@ class TestAppConfig:
 
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
+
+    def test_mount_point_with_minimal(self):
+        class SubController(TGController):
+            @expose()
+            def test(self):
+                return self.mount_point
+
+        class RootController(TGController):
+            sub = SubController()
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+
+        app = TestApp(app)
+        assert '/sub' in app.get('/sub/test')

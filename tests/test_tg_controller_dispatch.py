@@ -316,9 +316,7 @@ class SelfCallingLookupController(TGController):
     def index(self, *args, **kw):
         return str((args, kw))
 
-
 class BasicTGController(TGController):
-
     mounted_app = WSGIAppController(wsgi_app)
     xml_rpc = WSGIAppController(XMLRpcTestController())
 
@@ -336,6 +334,11 @@ class BasicTGController(TGController):
     @expose()
     def index(self, **kwargs):
         return 'hello world'
+
+    @expose(content_type='application/rss+xml')
+    def index_unicode(self):
+        tg.response.charset = None
+        return u_('Hello World')
 
     @expose()
     def _default(self, *remainder):
@@ -475,6 +478,9 @@ class BasicTGController(TGController):
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
 
+    @expose()
+    def with_routing_args(self, **kw):
+        return str(tg.request._controller_state.routing_args)
 
 class TestNotFoundController(TestWSGIController):
 
@@ -527,10 +533,22 @@ class TestWSGIAppController(TestWSGIController):
 
 
 class TestTGController(TestWSGIController):
-
     def setUp(self, *args, **kargs):
         TestWSGIController.setUp(self, *args, **kargs)
         self.app = make_app(BasicTGController)
+
+    def test_enable_routing_args(self):
+        config.enable_routing_args = True
+        r =self.app.get('/with_routing_args?a=1&b=2&c=3')
+        assert 'a' in str(r)
+        assert 'b' in str(r)
+        assert 'c' in str(r)
+        config.enable_routing_args = False
+
+    def test_response_without_charset(self):
+        r = self.app.get('/index_unicode')
+        assert 'Hello World' in r, r
+        assert 'charset=utf-8' in str(r), r
 
     def test_lookup(self):
         r = self.app.get('/lookup/EYE')

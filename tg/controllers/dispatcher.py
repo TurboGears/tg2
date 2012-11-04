@@ -30,19 +30,11 @@ def dispatched_controller():
     for location, cont in reversed(state.controller_path):
         if cont.mount_point:
             return cont
-    return None
 
 class CoreDispatcher(object):
     """Extend this class to define your own mechanism for dispatch."""
     _use_lax_params = True
     _use_index_fallback = False
-
-    def _call(self, controller, params, remainder=None, tgl=None):
-        """
-        Override this function to define how your controller method should be called.
-        """
-        response = controller(*remainder, **dict(params))
-        return response
 
     def _get_dispatchable(self, thread_locals, url_path):
         """
@@ -112,7 +104,7 @@ class CoreDispatcher(object):
 
         return r
 
-    def routes_placeholder(self, url='/', start_response=None, **kwargs):
+    def routes_placeholder(self, url='/', start_response=None, **kwargs): #pragma: no cover
         """Routes placeholder.
 
         This function does not do anything.  It is a placeholder that allows
@@ -183,8 +175,11 @@ class CoreDispatcher(object):
     @cached_property
     def mount_steps(self):
         def find_url(root, item, parents):
-            for i in root.__dict__:
-                controller = root.__dict__[i]
+            for i in dir(root):
+                if i.startswith('_') or i in ('mount_steps', 'mount_point'):
+                    continue
+
+                controller = getattr(root, i)
                 if controller is item:
                     return parents + [(i, item)]
                 if hasattr(controller, '_dispatch'):
