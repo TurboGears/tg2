@@ -327,6 +327,10 @@ class BasicTGController(TGController):
     lookup_with_sub = LookupControllerWithSubcontroller()
     self_calling = SelfCallingLookupController()
 
+    @expose()
+    def use_wsgi_app(self):
+        return tg.use_wsgi_app(wsgi_app)
+
     @expose(content_type='application/rss+xml')
     def ticket2351(self, **kw):
         return 'test'
@@ -604,6 +608,10 @@ class TestTGController(TestWSGIController):
     def test_posting_to_mounted_app(self):
         r = self.app.post('/mounted_app/', params={'data':'Foooo'})
         assert 'Foooo' in r, r
+
+    def test_use_wsgi_app(self):
+        r = self.app.get('/use_wsgi_app')
+        assert '/use_wsgi_app' in r, r
 
     def test_custom_content_type_replace_header(self):
         s = '''<?xml version="1.0"?>

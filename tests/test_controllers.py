@@ -5,7 +5,7 @@ from tg.exceptions import HTTPFound
 from nose.tools import eq_
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from tg.util import no_warn
-from tg._compat import u_
+from tg._compat import u_, string_type
 
 def setup():
     setup_session_dir()
@@ -75,3 +75,43 @@ def test_url_strip_None():
 def test_lurl():
     params = {'spamm':'eggs', 'hamm':None }
     assert url('/foo', params=params) == str(lurl('/foo', params=params))
+
+@no_warn
+def test_url_qualified():
+    """url() can handle list parameters, with unicode too"""
+    create_request("/")
+    value = url('/', qualified=True)
+    assert value.startswith('http')
+
+@no_warn
+def test_lurl():
+    """url() can handle list parameters, with unicode too"""
+    create_request("/")
+    value = lurl('/lurl')
+    assert not isinstance(value, string_type)
+    assert value.startswith('/lurl')
+    assert str(value) == repr(value) == value.id == value.encode('utf-8').decode('utf-8') == value.__html__()
+
+@no_warn
+def test_lurl_format():
+    """url() can handle list parameters, with unicode too"""
+    create_request("/")
+    value = lurl('/lurl/{0}')
+    value = value.format('suburl')
+    assert value == '/lurl/suburl', value
+
+@no_warn
+def test_lurl_add():
+    """url() can handle list parameters, with unicode too"""
+    create_request("/")
+    value = lurl('/lurl')
+    value = value + '/suburl'
+    assert value == '/lurl/suburl', value
+
+@no_warn
+def test_lurl_radd():
+    """url() can handle list parameters, with unicode too"""
+    create_request("/")
+    value = lurl('/lurl')
+    value = '/suburl' + value
+    assert value == '/suburl/lurl', value

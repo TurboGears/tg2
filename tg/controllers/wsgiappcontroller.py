@@ -36,9 +36,11 @@ class WSGIAppController(TGController):
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
         for i in range(to_pop):
             new_req.path_info_pop()
-        if not new_req.path_info:
-            # Append trailing slash and redirect
+
+        if not new_req.path_info: #pragma: no cover
+            # This should not happen
             redirect(request.path_info + '/')
+
         new_req.body_file.seek(0)
         return self.delegate(new_req.environ, request.start_response)
 
