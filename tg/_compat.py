@@ -19,6 +19,9 @@ if PY3: # pragma: no cover
 
     def u_(s):
         return str(s)
+
+    def bytes_(s):
+        return str(s).encode('ascii', 'strict')
 else:
     string_type = basestring
     unicode_text = unicode
@@ -30,6 +33,9 @@ else:
 
     def u_(s):
         return unicode(s, 'utf-8')
+
+    def bytes_(s):
+        return str(s)
 
 def im_func(f):
     if PY3: # pragma: no cover

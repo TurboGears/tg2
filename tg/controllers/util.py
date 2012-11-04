@@ -9,10 +9,10 @@ from webob.exc import status_map
 
 import tg
 
-from tg._compat import string_type, url_encode, unicode_text, byte_string
+from tg._compat import string_type, url_encode, unicode_text, bytes_
 from tg.exceptions import HTTPFound
 
-def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
+def _smart_str(s):
     """
     Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
@@ -21,46 +21,40 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     This function was borrowed from Django.
 
     """
-    if strings_only and (s is None or isinstance(s, int)):
-        return s
-    elif not isinstance(s, string_type):
+    if not isinstance(s, string_type):
         try:
-            return str(s).encode(encoding, errors)
+            return bytes_(s)
         except UnicodeEncodeError:
             if isinstance(s, Exception):
                 # An Exception subclass containing non-ASCII data that doesn't
                 # know how to print itself properly. We shouldn't raise a
                 # further exception.
-                return ' '.join([smart_str(arg, encoding, strings_only,
-                        errors) for arg in s])
-            return unicode_text(s).encode(encoding, errors)
+                return ' '.join([_smart_str(arg).decode('utf-8') for arg in s.args]).encode('utf-8', 'strict')
+            return unicode_text(s).encode('utf-8', 'strict')
     elif isinstance(s, unicode_text):
-        r = s.encode(encoding, errors)
-        return r
-    elif s and encoding != 'utf-8':
-        return s.decode('utf-8', errors).encode(encoding, errors)
+        return s.encode('utf-8', 'strict')
     else:
         return s
 
 
-def generate_smart_str(params):
+def _generate_smart_str(params):
     for key, value in params.items():
         if value is None:
             continue
         if isinstance(value, (list, tuple)):
             for item in value:
-                yield smart_str(key), smart_str(item)
+                yield _smart_str(key), _smart_str(item)
         else:
-            yield smart_str(key), smart_str(value)
+            yield _smart_str(key), _smart_str(value)
 
 
-def urlencode(params):
+def _urlencode(params):
     """
     A version of Python's urllib.urlencode() function that can operate on
     unicode strings. The parameters are first case to UTF-8 encoded strings and
     then encoded as per normal.
     """
-    return url_encode([i for i in generate_smart_str(params)])
+    return url_encode([i for i in _generate_smart_str(params)])
 
 
 def url(base_url='/', params={}, qualified=False):
@@ -81,7 +75,7 @@ def url(base_url='/', params={}, qualified=False):
             base_url = req.host_url + base_url
 
     if params:
-        return '?'.join((base_url, urlencode(params)))
+        return '?'.join((base_url, _urlencode(params)))
 
     return base_url
 
