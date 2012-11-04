@@ -218,7 +218,8 @@ def pylons_formencode_gettext(value):
         if not fetrans:
             fetrans = NullTranslations()
 
-        trans = fetrans.ugettext(value)
+        translator_gettext = getattr(fetrans, 'ugettext', fetrans.gettext)
+        trans = translator_gettext(value)
 
     return trans
 
