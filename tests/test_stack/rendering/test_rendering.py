@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from jinja2 import TemplateAssertionError
 
 import tg
 from tests.test_stack import TestConfig, app_from_config
@@ -275,6 +276,21 @@ def test_chameleon_genshi_inheritance():
     else:
         assert "Inheritance template" in resp
         assert "Master template" in resp
+
+def test_jinja_autoload():
+    app = setup_noDB()
+    try:
+        resp = app.get('/jinja_autoload')
+
+        # Normally the template should not load, if it does
+        # check if the filter namespace has been polluted.
+        assert not ("POLLUTED" in resp), resp
+    except TemplateAssertionError:
+        # If autoloading is working ok a template
+        # getting a function not in __all__ should raise
+        # a template exception, thus this is the normal behaviour.
+        pass
+
 
 def _test_jinja_inherits():
     app = setup_noDB()

@@ -488,7 +488,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         try:
             filter_package = self.package.__name__ + ".lib.templatetools"
             autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
-            autoload_filters = autoload_lib.jinja_filters.__dict__
+            try:
+                autoload_filters = dict(
+                    map(lambda x: (x,autoload_lib.jinja_filters.__dict__[x]), autoload_lib.jinja_filters.__all__)
+                )
+            except AttributeError:
+                autoload_filters = dict(
+                    filter(lambda x: callable(x[1]),
+                        autoload_lib.jinja_filters.__dict__.iteritems())
+                )
         except (ImportError, AttributeError):
             autoload_filters = {}
 
