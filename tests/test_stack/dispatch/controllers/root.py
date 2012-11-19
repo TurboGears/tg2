@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import tg
 from tg.controllers import TGController
-from tg.decorators import expose, validate, https, variable_decode
+from tg.decorators import expose, validate, https, variable_decode, with_trailing_slash, without_trailing_slash
 from tg import expose, redirect, config
 from tg.controllers import TGController
 from tg import dispatched_controller
@@ -207,3 +207,17 @@ class RootController(TGController):
     @variable_decode
     def test_vardec(self, **kw):
         return kw
+
+    @expose('mako:echo.mak')
+    def echo(self):
+        return dict()
+
+    @expose()
+    @with_trailing_slash
+    def with_tslash(self):
+        return 'HI'
+
+    @expose()
+    @without_trailing_slash
+    def without_tslash(self):
+        return 'HI'

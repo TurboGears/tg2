@@ -162,17 +162,6 @@ def test_https_redirect():
     assert resp.location.endswith("/test_https?foo=bar&baz=bat")
     resp = app.post("/test_https?foo=bar&baz=bat", status=405)
 
-def test_variable_decode():
-    if PY3: raise SkipTest()
-
-    from formencode.variabledecode import variable_encode
-    obj = dict(
-        a=['1','2','3'],
-        b=dict(c=[dict(d='1')]))
-    params = variable_encode(dict(obj=obj), add_repetitions=False)
-    resp = app.get('/test_vardec', params=params)
-    assert resp.json['obj'] == obj, (resp.json['obj'], obj)
-
 class TestVisits(object):
     def test_visit_path_sub1(self):
         resp = app.get("/sub/hitme")

@@ -160,8 +160,13 @@ class RootController(TGController):
         kwargs['errors'] = tg.tmpl_context.form_errors
         return dict(kwargs)
 
-    @expose('genshi:genshi_paginated.html')
+    @expose()
     @paginate('testdata')
+    def paginated_text(self):
+        return '''Some Text'''
+
+    @expose('genshi:genshi_paginated.html')
+    @paginate('testdata', max_items_per_page=20)
     def paginated(self, n):
         return dict(testdata=range(int(n)))
 

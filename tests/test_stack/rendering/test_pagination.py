@@ -36,6 +36,28 @@ class TestPagination:
         assert '<li>0</li>' not in page
         assert '<li>10</li>' in page
 
+    def test_pagination_negative(self):
+        url = '/paginated/42?page=-1'
+        page = self.app.get(url)
+        assert '<li>0</li>' in page
+
+    def test_pagination_items_per_page(self):
+        url = '/paginated/42?items_per_page=20'
+        page = self.app.get(url)
+        assert '<li>0</li>' in page
+        assert '<li>19</li>' in page
+
+    def test_pagination_items_per_page_negative(self):
+        url = '/paginated/42?items_per_page=-1'
+        page = self.app.get(url)
+        assert '<li>0</li>' in page
+        assert '<li>10</li>' not in page
+
+    def test_pagination_non_paginable(self):
+        url = '/paginated_text'
+        page = self.app.get(url)
+        assert 'Some Text' in page
+
     def test_pagination_with_validation(self):
         url = '/paginated_validated/42'
         page = self.app.get(url)

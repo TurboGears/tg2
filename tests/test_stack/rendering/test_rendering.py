@@ -474,6 +474,11 @@ def test_template_custom_format_html():
     assert 'html' in resp
     assert resp.content_type == 'text/html'
 
+def test_template_custom_format_nonexisting():
+    app = setup_noDB()
+    resp = app.get('/custom_format?format=csv', status=500)
+    assert 'not a valid custom_format' in resp
+
 def test_template_override_multiple_content_type():
     app = setup_noDB()
     resp = app.get('/template_override_multiple_content_type')
@@ -483,6 +488,9 @@ def test_template_override_multiple_content_type():
         '/template_override_multiple_content_type',
         params=dict(override=True))
     assert 'This is the mako index page' in resp
+
+def test_override_template_on_noncontroller():
+    tg.override_template(None, 'this.is.not.a.template')
 
 def test_jinja2_manual_rendering():
     app = setup_noDB()
