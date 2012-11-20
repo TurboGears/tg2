@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 
 import tg
 from tg.controllers import TGController
-from tg.decorators import expose, validate, https, variable_decode, with_trailing_slash, without_trailing_slash
+from tg.decorators import expose, validate, https, variable_decode, with_trailing_slash, \
+    without_trailing_slash, with_engine
 from tg import expose, redirect, config
 from tg.controllers import TGController
 from tg import dispatched_controller
@@ -221,3 +222,13 @@ class RootController(TGController):
     @without_trailing_slash
     def without_tslash(self):
         return 'HI'
+
+    @expose()
+    @with_engine('mainslave', master_params=['first'])
+    def onmaster_withlist(self, **kw):
+        return '%s-%s' % (tg.request._tg_force_sqla_engine, kw)
+
+    @expose()
+    @with_engine('mainslave', master_params={'first':True, 'second':False})
+    def onmaster(self, **kw):
+        return '%s-%s' % (tg.request._tg_force_sqla_engine, kw)

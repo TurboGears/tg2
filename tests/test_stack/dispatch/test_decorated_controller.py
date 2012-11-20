@@ -102,3 +102,22 @@ class TestDecorators(object):
     def test_with_trailing_slash(self):
         resp = self.app.get('/with_tslash', status=302)
         assert resp.headers['Location'].endswith('/with_tslash/')
+
+    def test_with_engine(self):
+        resp = self.app.get('/onmaster')
+        assert 'mainslave' in resp
+
+    def test_with_engine_nopop(self):
+        resp = self.app.get('/onmaster?second=1')
+        assert 'master' in resp
+        assert 'second' in resp
+
+    def test_with_engine_pop(self):
+        resp = self.app.get('/onmaster?first=1')
+        assert 'master' in resp
+        assert 'first' not in resp
+
+    def test_with_engine_using_list(self):
+        resp = self.app.get('/onmaster_withlist?first=1')
+        assert 'master' in resp
+        assert 'first' not in resp
