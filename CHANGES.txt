@@ -2,6 +2,7 @@
 
 == 2.X ==
 
+ * Removed tg.decorators.postpone_commits, wasn't documented and it's trivial to replicate for specific projects
  * Remove tg.decorators.allow_only it actually didn't work and test for it was disabled.
 
 == 2.1b2: (**March 27, 2009**) ==

@@ -594,24 +594,6 @@ class paginate(object):
             tmpl_context.paginators = Bunch()
         tmpl_context.paginators[self.name] = output[self.name] = page
 
-
-@decorator
-def postpone_commits(func, *args, **kwargs):
-    """Turns SQLAlchemy commits into flushes in the decorated method.
-
-    This has the end-result of postponing the commit to the normal TG2
-    transaction boundary. """
-
-    #TODO: Test and document this.
-    s = config.get('DBSession', None)
-    assert hasattr(s, 'commit')
-    old_commit = s.commit
-    s.commit = s.flush
-    retval = func(*args, **kwargs)
-    s.commit = old_commit
-    return retval
-
-
 @before_validate
 def https(remainder, params):
     """Ensure that the decorated method is always called with https."""
