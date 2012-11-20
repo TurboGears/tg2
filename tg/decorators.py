@@ -747,10 +747,8 @@ class require(_BaseProtectionDecorator):
             else:
                 # The user is not authenticated.
                 code = 401
-            if self.denial_handler:
-                response.status = code
-                return self.denial_handler(reason)
-            abort(code, comment=reason)
+            response.status = code
+            return self.denial_handler(reason)
         return action_(*args, **kwargs)
 
     def default_denial_handler(self, reason):
@@ -762,30 +760,6 @@ class require(_BaseProtectionDecorator):
             if response.content_type not in ['application/json', 'text/xml']:
                 flash(reason, status=status)
         abort(response.status_int, reason)
-
-class allow_only(_BaseProtectionDecorator):
-    """TurboGears controller wide protector.
-
-    The default authorization denial handler of this protector will flash
-    the message of the unmet predicate with ``warning`` or ``error`` as the
-    flash status if the HTTP status code is 401 or 403, respectively, since
-    by default the ``__before__`` method of the controller is decorated with
-    :class:`require`.
-
-    If the controller class has the ``_failed_authorization`` *class method*,
-    it will replace the default denial handler.
-
-    """
-    protector = require
-
-    def __call__(self, cls, *args, **kwargs):
-        if hasattr(self.protector, 'predicate'):
-            cls.allow_only = self.protector.predicate
-        if hasattr(cls, '_failed_authorization'):
-            self.denial_handler = cls._failed_authorization
-        sup = super(allow_only, self)
-        if hasattr(sup, '__call__'):
-            return super(allow_only, self).__call__(cls, *args, **kwargs)
 
 class with_engine(object):
     """

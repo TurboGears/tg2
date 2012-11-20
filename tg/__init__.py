@@ -58,7 +58,7 @@ from tg.wsgiapp import TGApp
 from tg.controllers import TGController, redirect, url, lurl, abort
 from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
-                           require, allow_only, with_engine, beaker_cache)
+                           require, with_engine, beaker_cache)
 
 from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
@@ -69,7 +69,7 @@ from tg.render import render as render_template
 __version__ = version
 
 __all__ = ['__version__',
-    'allow_only', 'app_globals', 'expose', 'override_template', 'request',
+    'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
     'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'url', 'lurl',
     'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template']

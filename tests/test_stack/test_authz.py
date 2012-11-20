@@ -19,7 +19,7 @@ from tg.support.registry import RegistryManager
 from webob import Response, Request
 from webtest import TestApp
 
-from tg import request, response, expose, require, allow_only
+from tg import request, response, expose, require
 from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort
 from tg.wsgiapp import ContextObj, TGApp
@@ -167,26 +167,6 @@ class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
         abort(402)
 
 
-class ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler(TGController):
-    """
-    Mock TG2 protected controller using the @allow_only decorator, but also
-    using ._failed_authorization()
-
-    """
-
-    @expose()
-    def index(self):
-        return 'Welcome back, foobar!'
-
-    @classmethod
-    def _failed_authorization(self, reason):
-        # Pay first!
-        abort(402)
-
-ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler = allow_only(
-    is_user('foobar'))(ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler)
-
-
 #{ The tests themselves
 
 
@@ -299,26 +279,6 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
         assert "was just registered" not in resp.body.decode('utf-8')
         self._check_flash(resp, NOT_AUTHENTICATED)
 
-
-class _TestAllowOnlyDecoratorAndDefaultAuthzDenialHandler(BaseIntegrationTests):
-    """
-    Test case for the @allow_only decorator in a controller using
-    _failed_authorization() as its denial handler.
-
-    """
-
-    controller = ControllerWithAllowOnlyDecoratorAndAuthzDenialHandler
-
-    def test_authz_granted(self):
-        environ = {'REMOTE_USER': 'foobar'}
-        resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("Welcome back, foobar!", resp.body.decode('utf-8'))
-
-    def test_authz_denied(self):
-        resp = self.app.get('/', status=402)
-        assert "Welcome back" not in resp.body.decode('utf-8')
-
-
 class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
     """Test case for the .allow_only attribute in a sub-controller"""
 
@@ -357,7 +317,6 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         assert "was just hired" not in resp.body.decode('utf-8')
         self._check_flash(resp, r'The current user must be \"hiring-manager\"')
 
-
 class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     """
     Test case for the .allow_only attribute in a controller using
@@ -375,7 +334,6 @@ class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
         assert "Welcome back" not in resp.body.decode('utf-8')
-
 
 class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     """Test case for application-wide authz with the @allow_only decorator"""

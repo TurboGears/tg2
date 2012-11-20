@@ -1,5 +1,9 @@
 = Change Log =
 
+== 2.X ==
+
+ * Remove tg.decorators.allow_only it actually didn't work and test for it was disabled.
+
 == 2.1b2: (**March 27, 2009**) ==
 
  * Various fixes to dispatch involving _lookup
