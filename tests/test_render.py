@@ -5,11 +5,11 @@ from nose.tools import raises
 from nose import SkipTest
 
 import tg
-from tg.render import MissingRendererError, render_jinja
+from tg.render import MissingRendererError, render_jinja, render_mako
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
 from tg.configuration import AppConfig
-from tg._compat import PY3
+from mako.exceptions import TemplateLookupException
 
 def setup():
     setup_session_dir()
@@ -35,7 +35,7 @@ def test_render_missing_renderer():
 def test_jinja_lookup_nonexisting_template():
     conf = AppConfig(minimal=True)
     conf.renderers.append('jinja')
-    conf.package = FakePackage
+    conf.package = FakePackage()
     app = conf.make_wsgi_app()
 
     from jinja2 import TemplateNotFound
@@ -44,4 +44,100 @@ def test_jinja_lookup_nonexisting_template():
         assert False
     except TemplateNotFound:
         pass
+
+class TestMakoLookup(object):
+    def setup(self):
+        conf = AppConfig(minimal=True)
+        conf.renderers.append('mako')
+        conf.package = FakePackage()
+        self.app = conf.make_wsgi_app()
+
+    def test_adjust_uri(self):
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+
+        assert mlookup.adjust_uri('this_template_should_pass_unaltered', None) == 'this_template_should_pass_unaltered'
+
+        dotted_test = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
+        assert dotted_test.endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
+
+        dotted_test = mlookup.adjust_uri('local:test_stack.rendering.templates.mako_inherits_local', None)
+        assert dotted_test.endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
+
+    def test_local_lookup(self):
+        res = render_mako('tests.test_stack.rendering.templates.mako_inherits_local',
+                          {'app_globals':tg.config['tg.app_globals']})
+        assert 'inherited mako page' in res
+
+    def test_passthrough_text_literal__check(self):
+        from mako.template import Template
+        t = Template('Hi')
+
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+        mlookup.template_cache['hi_template'] = t
+        assert mlookup.get_template('hi_template') is t
+
+    @raises(TemplateLookupException)
+    def test__check_not_existing_anymore(self):
+        from mako.template import Template
+        t = Template('Hi', filename='deleted_template.mak')
+
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+        mlookup.template_cache['deleted_template'] = t
+        mlookup.get_template('deleted_template')
+
+    @raises(IOError)
+    def test_never_existed(self):
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+
+        mlookup.get_template('deleted_template')
+
+    def test__check_should_reload_on_cache_expire(self):
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+
+        template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
+        t = mlookup.get_template(template_path) #cache the template
+        t.output_encoding = 'FAKE_ENCODING'
+
+        t = mlookup.get_template(template_path)
+        assert t.output_encoding == 'FAKE_ENCODING'
+
+        import os, stat
+        def fake_os_stat(o):
+            return {stat.ST_MTIME:t.module._modified_time+1}
+
+        old_stat = os.stat
+        os.stat = fake_os_stat
+        try:
+            t = mlookup.get_template(template_path)
+            #if the template got reloaded should not have our fake encoding anymore
+            assert t.output_encoding != 'FAKE_ENCODING'
+        finally:
+            os.stat = old_stat
+
+    def test__check_should_not_reload_when_disabled(self):
+        mlookup = tg.config['tg.app_globals'].mako_lookup
+        mlookup.auto_reload = False
+
+        template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
+        t = mlookup.get_template(template_path) #cache the template
+        t.output_encoding = 'FAKE_ENCODING'
+
+        t = mlookup.get_template(template_path)
+        assert t.output_encoding == 'FAKE_ENCODING'
+
+        import os, stat
+        def fake_os_stat(o):
+            return {stat.ST_MTIME:t.module._modified_time+1}
+
+        old_stat = os.stat
+        os.stat = fake_os_stat
+        try:
+            t = mlookup.get_template(template_path)
+            assert t.output_encoding == 'FAKE_ENCODING'
+        finally:
+            os.stat = old_stat
+
+
+
+
 

@@ -5,15 +5,15 @@ import stat
 
 try:
     import threading
-except ImportError:
+except ImportError: #pragma: no cover
     import dummy_threading as threading
 
 
 from mako.template import Template
+from mako import exceptions
 from paste.deploy.converters import asbool
 
 import tg
-
 
 class DottedTemplateLookup(object):
     """Mako template lookup emulation that supports
