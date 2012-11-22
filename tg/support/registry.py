@@ -52,7 +52,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         except AttributeError:
             objects = None
         if objects:
-            return objects[-1]
+            return objects[-1][0]
         else:
             obj = self.__dict__.get('____default_object__', NoDefault)
             if obj is not NoDefault:
@@ -79,10 +79,10 @@ class StackedObjectProxy(TurboGearsObjectProxy):
 
         """
         try:
-            self.____local__.objects.append(obj)
+            self.____local__.objects.append((obj, False))
         except AttributeError:
             self.____local__.objects = []
-            self.____local__.objects.append(obj)
+            self.____local__.objects.append((obj, False))
 
     def _pop_object(self, obj=None):
         """Remove a thread-local object.
@@ -93,10 +93,11 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         """
         try:
             popped = self.____local__.objects.pop()
-            if obj and popped is not obj:
+            popped_obj = popped[0]
+            if obj and popped_obj is not obj:
                 raise AssertionError(
                     'The object popped (%s) is not the same as the object '
-                    'expected (%s)' % (popped, obj))
+                    'expected (%s)' % (popped_obj, obj))
         except AttributeError:
             raise AssertionError('No object has been registered for this thread')
 
@@ -114,6 +115,26 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         except AssertionError:
             return []
 
+    def _preserve_object(self):
+        try:
+            object, preserved = self.____local__.objects[-1]
+        except AttributeError:
+            return
+
+        self.____local__.objects[-1] = (object, True)
+
+    @property
+    def _is_preserved(self):
+        try:
+            objects = self.____local__.objects
+        except AttributeError:
+            return False
+
+        if not objects:
+            return False
+
+        object, preserved = objects[-1]
+        return preserved
 
 class Registry(object):
     """Track objects and stacked object proxies for removal
@@ -130,7 +151,7 @@ class Registry(object):
     tracked.
 
     """
-    def __init__(self):
+    def __init__(self, enable_preservation=False):
         """Create a new Registry object
 
         ``prepare`` must still be called before this Registry object can be
@@ -138,6 +159,11 @@ class Registry(object):
 
         """
         self.reglist = []
+
+        #preservation makes possible to keep around the objects
+        #this is especially useful when debugging to avoid
+        #discarding the objects after request completion.
+        self.enable_preservation = enable_preservation
 
     def prepare(self):
         """Used to create a new registry context
@@ -156,38 +182,29 @@ class Registry(object):
         if stacked_id in myreglist:
             stacked._pop_object(myreglist[stacked_id][1])
             del myreglist[stacked_id]
+
+        #Avoid leaking memory on successive request when preserving objects
+        if self.enable_preservation and getattr(stacked, '_is_preserved', False):
+            stacked._pop_object()
+
         stacked._push_object(obj)
         myreglist[stacked_id] = (stacked, obj)
-
-    def multiregister(self, stacklist):
-        """Register a list of tuples
-
-        Similar call semantics as register, except this registers
-        multiple objects at once.
-
-        Example::
-
-            registry.multiregister([(sop, obj), (anothersop, anotherobj)])
-
-        """
-        myreglist = self.reglist[-1]
-        for stacked, obj in stacklist:
-            stacked_id = id(stacked)
-            if stacked_id in myreglist:
-                stacked._pop_object(myreglist[stacked_id][1])
-                del myreglist[stacked_id]
-            stacked._push_object(obj)
-            myreglist[stacked_id] = (stacked, obj)
-
-    # Replace now does the same thing as register
-    replace = register
 
     def cleanup(self):
         """Remove all objects from all StackedObjectProxy instances that
         were tracked at this Registry context"""
         for stacked, obj in self.reglist[-1].values():
-            stacked._pop_object(obj)
+            if not getattr(stacked, '_is_preserved', False):
+                stacked._pop_object(obj)
         self.reglist.pop()
+
+    def preserve(self):
+        if not self.enable_preservation:
+            return
+
+        for stacked, obj in self.reglist[-1].values():
+            if hasattr(stacked, '_preserve_object'):
+                stacked._preserve_object()
 
 class RegistryManager(object):
     """Creates and maintains a Registry context
@@ -204,13 +221,14 @@ class RegistryManager(object):
     object which is a Registry instance.
 
     """
-    def __init__(self, application, streaming=False):
+    def __init__(self, application, streaming=False, preserve_exceptions=False):
         self.application = application
         self.streaming = streaming
+        self.preserve_exceptions = preserve_exceptions
 
     def __call__(self, environ, start_response):
         app_iter = None
-        reg = environ.setdefault('paste.registry', Registry())
+        reg = environ.setdefault('paste.registry', Registry(self.preserve_exceptions))
         reg.prepare()
         if self.streaming:
             return self.streaming_iter(reg, environ, start_response)
@@ -218,6 +236,7 @@ class RegistryManager(object):
         try:
             app_iter = self.application(environ, start_response)
         except:
+            reg.preserve()
             reg.cleanup()
             raise
         else:
@@ -230,6 +249,7 @@ class RegistryManager(object):
             for item in self.application(environ, start_response):
                 yield item
         except:
+            reg.preserve()
             reg.cleanup()
             raise
         else:

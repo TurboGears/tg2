@@ -795,22 +795,24 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         return load_environment
 
-
     def add_error_middleware(self, global_conf, app):
         """Add middleware which handles errors and exceptions."""
         from tg.support.middlewares import StatusCodeRedirect
-        from tg.error import ErrorHandler
+        from tg.error import ErrorReporter
 
-        app = ErrorHandler(app, global_conf, **config['tg.errorware'])
+        app = ErrorReporter(app, global_conf, **config['tg.errorware'])
 
         # Display error documents for self.handle_status_codes status codes (and
         # 500 when debug is disabled)
-
         if asbool(config['debug']):
             app = StatusCodeRedirect(app, self.handle_status_codes)
         else:
             app = StatusCodeRedirect(app, self.handle_status_codes + [500])
         return app
+
+    def add_debugger_middleware(self, global_conf, app):
+        from tg.error import ErrorHandler
+        return ErrorHandler(app, global_conf)
 
     def add_auth_middleware(self, app, skip_authentication):
         """
@@ -1151,7 +1153,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
-            app = RegistryManager(app)
+            app = RegistryManager(app, preserve_exceptions=asbool(global_conf.get('debug')))
+
+            # Place the debuggers after the registry so that we
+            # can preserve context in case of exceptions
+            app = self.add_debugger_middleware(global_conf, app)
 
             # Static files (if running in production, and Apache or another
             # web server is serving static files)
