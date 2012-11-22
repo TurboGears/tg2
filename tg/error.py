@@ -16,14 +16,16 @@ def ErrorHandler(app, global_conf, **errorware):
     listed in the .ini file, under ``email_to``.
     
     """
-
-    if not asbool(global_conf.get('debug')):
+    try:
+        import backlash
+    except ImportError: #pragma: no cover
+        log.warn('backlash not installed, debug mode and email tracebacks won\'t be available')
         return app
 
-    try:
-        from backlash import DebuggedApplication
-        app = DebuggedApplication(app)
-    except ImportError:
-        log.warn('backlash not installed while debug mode enabled, skipping debug mode')
+    if asbool(global_conf.get('debug')):
+        app = backlash.DebuggedApplication(app)
+    else:
+        from backlash.trace_errors import EmailReporter
+        app = backlash.TraceErrorsMiddleware(app, [EmailReporter(**errorware)])
 
     return app
