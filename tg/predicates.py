@@ -18,7 +18,7 @@ __all__ = ['Predicate', 'CompoundPredicate', 'All', 'Any',
            'in_all_groups', 'in_any_group', 'in_group', 'is_user',
            'is_anonymous', 'not_anonymous', 'NotAuthorizedError']
 
-try:
+try: #pragma: no cover
     # If repoze.what is available use repoze.what Predicate and
     # NotAuthorizedError adding booleanization support to the
     # predicates
@@ -26,10 +26,7 @@ try:
     Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
 except ImportError:
     class NotAuthorizedError(Exception):
-        # Ugly workaround for Python < 2.6:
-        if not hasattr(Exception, '__unicode__'):
-            def __unicode__(self):
-                return unicode_text(self.args and self.args[0] or '')
+        pass
 
     class Predicate(object):
         def __init__(self, msg=None):
@@ -96,6 +93,7 @@ except ImportError:
 
         def __nonzero__(self):
             return self.is_met(request.environ)
+        __bool__ = __nonzero__
 
 class CompoundPredicate(Predicate):
     """A predicate composed of other predicates."""
