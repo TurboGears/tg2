@@ -12,6 +12,8 @@ from nose.tools import eq_
 from tests.test_validation import validators
 from tg._compat import unicode_text
 
+from paste.deploy.converters import asbool
+
 class NestedSubController(TGController):
     @expose()
     def index(self):
@@ -123,6 +125,13 @@ class RootController(TGController):
     def flash_redirect(self):
         tg.flash("Wow, flash!")
         tg.redirect("/flash_after_redirect")
+
+    @expose()
+    def flash_render(self, using_js=False, with_message=True):
+        if asbool(with_message):
+            tg.flash('JS Flash')
+
+        return tg.flash.render('flash', asbool(using_js))
 
     @expose()
     def bigflash_redirect(self):

@@ -128,6 +128,18 @@ def test_flash_status():
     resp = app.get('/flash_status')
     assert 'ok' in resp, resp
 
+def test_flash_javascript():
+    resp = app.get('/flash_render?using_js=True')
+    assert 'webflash({"id": "flash", "name": "webflash"}).render()' in resp
+
+def test_flash_render_plain():
+    resp = app.get('/flash_render')
+    assert 'JS Flash' in resp
+
+def test_flash_render_no_message():
+    resp = app.get('/flash_render?with_message=False')
+    assert 'flash' not in resp
+
 def test_custom_content_type():
     resp = app.get('/custom_content_type')
     assert 'image/png' == dict(resp.headers)['Content-Type'], resp
