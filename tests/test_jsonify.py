@@ -2,7 +2,7 @@ from tg import jsonify
 from datetime import datetime
 from decimal import Decimal
 from nose.tools import raises
-from bson import ObjectId
+from nose import SkipTest
 from webob.multidict import MultiDict
 
 class Foo(object):
@@ -78,6 +78,11 @@ def test_decimal():
     assert encoded == '{"dec": %s}' % float(d), encoded
 
 def test_objectid():
+    try:
+        from bson import ObjectId
+    except:
+        raise SkipTest()
+
     d = ObjectId('507f1f77bcf86cd799439011')
     encoded = jsonify.encode({'oid':d})
     assert encoded == '{"oid": "%s"}' % d, encoded
