@@ -1,5 +1,9 @@
 from tg import jsonify
+from datetime import datetime
+from decimal import Decimal
 from nose.tools import raises
+from bson import ObjectId
+from webob.multidict import MultiDict
 
 class Foo(object):
     def __init__(self, bar):
@@ -62,3 +66,24 @@ def test_exlicitjson_in_dict():
     d = {"b": b}
     encoded = jsonify.encode(d)
     assert encoded == '{"b": "bar-bq"}'
+
+def test_datetime():
+    d = datetime.utcnow()
+    encoded = jsonify.encode({'date':d})
+    assert encoded == '{"date": "%s"}' % d
+
+def test_decimal():
+    d = Decimal(3.14)
+    encoded = jsonify.encode({'dec':d})
+    assert encoded == '{"dec": %s}' % float(d), encoded
+
+def test_objectid():
+    d = ObjectId('507f1f77bcf86cd799439011')
+    encoded = jsonify.encode({'oid':d})
+    assert encoded == '{"oid": "%s"}' % d, encoded
+
+def test_multidict():
+    d = MultiDict({'v':1})
+    encoded = jsonify.encode({'md':d})
+    assert encoded == '{"md": {"v": 1}}', encoded
+

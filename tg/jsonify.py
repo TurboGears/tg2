@@ -14,13 +14,13 @@ class NotExistingImport:
 try:
     import sqlalchemy
     from sqlalchemy.engine.base import ResultProxy, RowProxy
-except ImportError:
+except ImportError: #pragma: no cover
     ResultProxy=NotExistingImport
     RowProxy=NotExistingImport
 
 try:
     from bson import ObjectId
-except ImportError:
+except ImportError: #pragma: no cover
     ObjectId=NotExistingImport
 
 def is_saobject(obj):
@@ -57,7 +57,7 @@ class GenericJSON(JSONEncoder):
         else:
             return JSONEncoder.default(self, obj)
 
-try:
+try: #pragma: no cover
     from simplegeneric import generic
 
     _default = GenericJSON()
@@ -75,7 +75,7 @@ try:
     _instance = GenericFunctionJSON()
 except ImportError:
 
-    def jsonify(obj):
+    def jsonify(obj): #pragma: no cover
         raise ImportError('simplegeneric is not installed')
 
     _instance = GenericJSON()

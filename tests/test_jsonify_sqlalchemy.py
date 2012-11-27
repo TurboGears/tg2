@@ -67,32 +67,23 @@ else:
         encoded = jsonify.encode(t)
         assert encoded == '{"id": 1, "val": "bob"}'
 
-    @raises(jsonify.JsonEncodeError)
     def test_salist():
         s = create_session()
         t = s.query(Test1).get(1)
-        encoded = jsonify.encode(t.test2s)
-        assert encoded == '{rows: [{"test1id": 1, "id": 1, "val": "fred"},' \
-            ' {"test1id": 1, "id": 2, "val": "alice"}]', encoded
+        encoded = jsonify.encode(dict(results=t.test2s))
+        assert encoded == '''{"results": [{"test1id": 1, "id": 1, "val": "fred"}, {"test1id": 1, "id": 2, "val": "alice"}]}''', encoded
         
-    @raises(jsonify.JsonEncodeError)
     def test_select_row():
         s = create_session()
         t = test1.select().execute()
-        encoded = jsonify.encode(t)
-# this may be added back later on
-#        assert encoded == """{"count": -1, "rows": [{"count": 1, "rows": {"id": 1, "val": "bob"}}]}""", encoded
+        encoded = jsonify.encode(dict(results=t))
+        assert encoded == """{"results": {"count": -1, "rows": [{"count": 1, "rows": {"id": 1, "val": "bob"}}]}}""", encoded
 
-    @raises(jsonify.JsonEncodeError)
     def test_select_rows():
         s = create_session()
         t = test2.select().execute()
-        encoded = jsonify.encode(t)
-
-# this may be added back later
-#
-        assert encoded == '{"count": -1, "rows": [{"count": 1, "rows": {"test1id": 1, "id": 1, "val": "fred"}},\
- {"count": 1, "rows": {"test1id": 1, "id": 2, "val": "alice"}}]}', encoded
+        encoded = jsonify.encode(dict(results=t))
+        assert encoded == """{"results": {"count": -1, "rows": [{"count": 1, "rows": {"test1id": 1, "id": 1, "val": "fred"}}, {"count": 1, "rows": {"test1id": 1, "id": 2, "val": "alice"}}]}}""", encoded
 
     def test_explicit_saobj():
         s = create_session()
