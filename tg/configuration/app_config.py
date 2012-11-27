@@ -104,7 +104,7 @@ defaults = {
               'static_files': None},
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
-    'tg.pylons_compatible': True
+    'tg.pylons_compatible': True,
 }
 
 # Push an empty config so all accesses to config at import time have something
@@ -167,6 +167,7 @@ class AppConfig(Bunch):
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
 
+        self.lang = None
         self.i18n_enabled = not minimal
         self.serve_static = not minimal
 

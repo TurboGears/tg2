@@ -53,7 +53,7 @@ def _parse_locale(identifier, sep='_'):
 
     if parts:
         if len(parts[0]) == 4 and parts[0][0].isdigit() or\
-           +           len(parts[0]) >= 5 and parts[0][0].isalpha():
+           len(parts[0]) >= 5 and parts[0][0].isalpha():
             variant = parts.pop()
 
     if parts:
@@ -78,7 +78,7 @@ def ugettext(value):
         _('This should be in lots of languages')
 
     """
-    if PY3:
+    if PY3: #pragma: no cover
         return tg.translator.gettext(value)
     else:
         return tg.translator.ugettext(value)
@@ -99,7 +99,7 @@ def ungettext(singular, plural, n):
                   n) % {'num': n}
 
     """
-    if PY3:
+    if PY3: #pragma: no cover
         return tg.translator.ngettext(singular, plural, n)
     else:
         return tg.translator.ungettext(singular, plural, n)
@@ -109,20 +109,22 @@ lazy_ungettext = lazify(ungettext)
 def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     """Utility method to get a valid translator object from a language
     name"""
-    if not lang:
-        return NullTranslations()
-
     if tg_config:
         conf = tg_config
     else:
         if tgl:
             conf = tgl.config
-        else:
+        else: #pragma: no cover
+            #backward compatibility with explicit calls without
+            #specifying local context or config.
             conf = tg.config.current_conf()
+
+    if not lang:
+        return NullTranslations()
 
     try:
         localedir = conf['localedir']
-    except KeyError:
+    except KeyError: #pragma: no cover
         localedir = os.path.join(conf['paths']['root'], 'i18n')
 
     if not isinstance(lang, list):
@@ -154,7 +156,8 @@ def add_fallback(lang, **kwargs):
     This function can be called multiple times to add multiple
     fallbacks.
     """
-    return tg.translator.add_fallback(_get_translator(lang, **kwargs))
+    tgl = tg.request_local.context._current_obj()
+    return tg.translator.add_fallback(_get_translator(lang, tgl=tgl, **kwargs))
 
 sanitized_language_cache = {}
 def sanitize_language_code(lang):
@@ -191,7 +194,7 @@ def setup_i18n(tgl=None):
     Should only be manually called if you override controllers function.
 
     """
-    if not tgl:
+    if not tgl: #pragma: no cover
         tgl = tg.request_local.context._current_obj()
 
     session_ = tgl.session
@@ -207,7 +210,7 @@ def setup_i18n(tgl=None):
                 languages = [languages]
         else:
             languages = []
-    else:
+    else: #pragma: no cover
         languages = []
     languages.extend(map(sanitize_language_code, tgl.request.plain_languages))
     set_temporary_lang(languages, tgl=tgl)
@@ -227,11 +230,7 @@ def set_temporary_lang(languages, tgl=None):
         tgl = tg.request_local.context._current_obj()
 
     try:
-        translator = _get_translator(languages, tgl=tgl)
-        try:
-            tgl.translator = translator
-        except KeyError:
-            pass
+        tgl.translator = _get_translator(languages, tgl=tgl)
     except LanguageError:
         pass
 
@@ -263,18 +262,18 @@ _localdir = None
 def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
     global formencode, _localdir
-    if formencode is FormEncodeMissing:
+    if formencode is FormEncodeMissing: #pragma: no cover
         return
 
     if formencode is None:
         try:
             import formencode
             _localdir = formencode.api.get_localedir()
-        except ImportError:
+        except ImportError: #pragma: no cover
             formencode = FormEncodeMissing
             return
 
-    if not tgl:
+    if not tgl: #pragma: no cover
         tgl = tg.request_local.context._current_obj()
 
     try:

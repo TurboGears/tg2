@@ -17,3 +17,6 @@ msgstr ""
 #: tests/controllers/root.py:13
 msgid "Your application is now running"
 msgstr "Ihre Anwendung läuft jetzt einwandfrei"
+
+msgid "This is a fallback"
+msgstr "Dies ist ein zurückfallen"

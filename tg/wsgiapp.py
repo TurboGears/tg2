@@ -64,6 +64,8 @@ class TGApp(object):
 
         self.controller_classes = {}
         self.controller_instances = {}
+
+        #This is here just as a safety net as AppConfig already sets it
         self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
