@@ -10,8 +10,9 @@ import tg
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
 from tg._compat import PY3
+from tg.render import RenderGenshi
 
-def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
+def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, extra={}):
     base_config = TestConfig(folder='rendering', values={
         'use_sqlalchemy': False,
        'use_legacy_renderer': False,
@@ -33,6 +34,7 @@ def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None):
     if genshi_encoding:
         deployment_config['templating.genshi.encoding'] = genshi_encoding
 
+    deployment_config.update(extra)
     return app_from_config(base_config, deployment_config)
 
 def test_default_genshi_renderer():
@@ -529,3 +531,53 @@ def test_genshi_manual_render_html_doctype():
     assert "<hr>" in resp
     assert "<p>Rendered with Genshi.</p>" in resp
 
+def test_genshi_manual_render_svg_doctype():
+    app = setup_noDB()
+    resp = app.get('/genshi_manual_rendering_with_doctype?doctype=svg')
+    assert '<!DOCTYPE svg' in resp
+
+def test_genshi_methods_for_doctype():
+    assert RenderGenshi.method_for_doctype('application/xml') == 'xhtml'
+
+def test_variable_provider():
+    app = setup_noDB(extra={'variable_provider': lambda: {'inject_this_var':5}})
+    resp = app.get('/get_tg_vars')
+    assert 'inject_this_var' in resp
+
+def test_render_hooks():
+    calls = []
+    def render_call_hook(*args, **kw):
+        calls.append(1)
+
+    base_config = TestConfig(folder='rendering', values={
+        'use_sqlalchemy': False,
+        'use_legacy_renderer': False,
+        # this is specific to mako  to make sure inheritance works
+        'use_dotted_templatenames': False,
+        'use_toscawidgets': False,
+        'use_toscawidgets2': False
+    })
+    base_config.register_hook('before_render_call', render_call_hook)
+    base_config.register_hook('after_render_call', render_call_hook)
+    app = app_from_config(base_config)
+    app.get('/')
+
+    assert len(calls) == 2
+
+def test_template_caching():
+    base_config = TestConfig(folder='rendering', values={
+        'use_sqlalchemy': False,
+        'use_legacy_renderer': False,
+        # this is specific to mako  to make sure inheritance works
+        'use_dotted_templatenames': False,
+        'use_toscawidgets': False,
+        'use_toscawidgets2': False,
+        'cache_dir': '.'
+    })
+    app = app_from_config(base_config)
+
+    resp = app.get('/template_caching')
+    current_date = resp.body.split('NOW:')[1].split('\n')[0].strip()
+
+    resp = app.get('/template_caching')
+    assert current_date in resp, (current_date, resp.body)

@@ -1,6 +1,6 @@
 try:
     from urllib import quote_plus
-except ImportError:
+except ImportError: #pragma: no cover
     from urllib.parse import quote_plus
 
 from paste.deploy.converters import asbool
@@ -18,23 +18,6 @@ class MissingRendererError(Exception):
             "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
             template_engine=template_engine))
         self.template_engine = template_engine
-
-
-class DeprecatedFlashVariable(object):
-    def __init__(self, callable, msg):
-        self.callable = callable
-        self.msg = msg
-
-    def __unicode__(self):
-        import warnings
-        warnings.warn(self.msg, DeprecationWarning, 2)
-        return unicode(self.callable())
-
-    def __nonzero__(self):
-        import warnings
-        warnings.warn(self.msg, DeprecationWarning, 2)
-        return bool(self.callable())
-
 
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
@@ -89,16 +72,6 @@ def _get_tg_vars():
     tg_vars = Bunch(
         config=tg.config,
         flash_obj=tg.flash,
-        flash=DeprecatedFlashVariable(
-            lambda: tg.flash.message,
-            "flash is deprecated, please use flash_obj.message instead "
-            "or use the new flash_obj.render() method"
-            ),
-        flash_status=DeprecatedFlashVariable(
-            lambda: 'status_' + tg.flash.status,
-            "flash_status is deprecated, please use flash_obj.status instead "
-            "or use the new flash_obj.render() method"
-            ),
         quote_plus=quote_plus,
         url=tg.url,
         # this will be None if no identity
@@ -138,7 +111,7 @@ def _get_tg_vars():
 
 #Monkey patch pylons_globals for cases when pylons.templating is used
 #instead of tg.render to programmatically render templates.
-try:
+try: #pragma: no cover
     import pylons
     import pylons.templating
     pylons.templating.pylons_globals = _get_tg_vars
@@ -232,9 +205,9 @@ def cached_template(template_name, render_func, ns_options=(),
     # If one of them is not None then the user did set something
     if (cache_key is not None
             or cache_expire is not None or cache_type is not None):
-        if not cache_type:
+        if not cache_type: #pragma: no cover
             cache_type = 'dbm'
-        if not cache_key:
+        if not cache_key: #pragma: no cover
             cache_key = 'default'
         if cache_expire == 'never':
             cache_expire = None
@@ -249,7 +222,7 @@ def cached_template(template_name, render_func, ns_options=(),
         return render_func()
 
 
-class RenderChameleonGenshi(object):
+class RenderChameleonGenshi(object): #pragma: no cover
     """Singleton that can be called as the Chameleon-Genshi render function."""
 
     format_for_content_type = {

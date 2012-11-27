@@ -1,10 +1,11 @@
 """Main Controller"""
 
-from tg import expose, redirect, config, validate, override_template, response, render_template
+from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tg.validation import TGValidationError
 from tg._compat import PY3
+from tg.render import _get_tg_vars
 
 if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
@@ -367,3 +368,15 @@ class RootController(TGController):
         deco = Decoration.get_decoration(self.multiple_engines)
         used_engine = deco.engines.get('text/html')[0]
         return dict(format=used_engine, status='ok')
+
+    @expose('json')
+    def get_tg_vars(self):
+        return dict(tg_vars=list(_get_tg_vars().keys()))
+
+    @expose('genshi:index.html')
+    def template_caching(self):
+        from datetime import datetime
+        tmpl_context.now = datetime.utcnow
+        return dict(tg_cache={'key':'TEMPLATE_CACHE_TEST',
+                              'type':'memory',
+                              'expire':'never'})
