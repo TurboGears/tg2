@@ -1,7 +1,7 @@
 from tg.request_local import Request, Response
 from tg.support.registry import StackedObjectProxy
 
-def call_wsgi_application(application, environ, catch_exc_info=False):
+def _call_wsgi_application(application, environ):
     """
     Call the given WSGI application, returning ``(status_string,
     headerlist, app_iter)``
@@ -18,7 +18,7 @@ def call_wsgi_application(application, environ, catch_exc_info=False):
     captured = []
     output = []
     def start_response(status, headers, exc_info=None):
-        if exc_info is not None and not catch_exc_info:
+        if exc_info is not None and not catch_exc_info: #pragma: no cover
             raise (exc_info[0], exc_info[1], exc_info[2])
         captured[:] = [status, headers, exc_info]
         return output.append
@@ -30,10 +30,7 @@ def call_wsgi_application(application, environ, catch_exc_info=False):
             if hasattr(app_iter, 'close'):
                 app_iter.close()
         app_iter = output
-    if catch_exc_info:
-        return (captured[0], captured[1], app_iter, captured[2])
-    else:
-        return (captured[0], captured[1], app_iter)
+    return (captured[0], captured[1], app_iter, captured[2])
 
 class StatusCodeRedirect(object):
     """Internally redirects a request based on status code
@@ -69,7 +66,7 @@ class StatusCodeRedirect(object):
         self.errors = tuple([str(x) for x in errors])
 
     def __call__(self, environ, start_response):
-        status, headers, app_iter, exc_info = call_wsgi_application(self.app, environ, catch_exc_info=True)
+        status, headers, app_iter, exc_info = _call_wsgi_application(self.app, environ)
         if status[:3] in self.errors and \
             'tg.status_code_redirect' not in environ and self.error_path:
             # Create a response object
@@ -83,8 +80,7 @@ class StatusCodeRedirect(object):
             new_environ = environ.copy()
             new_environ['PATH_INFO'] = self.error_path
 
-            newstatus, headers, app_iter, exc_info = call_wsgi_application(
-                    self.app, new_environ, catch_exc_info=True)
+            newstatus, headers, app_iter, exc_info = _call_wsgi_application(self.app, new_environ)
         start_response(status, headers, exc_info)
         return app_iter
 
