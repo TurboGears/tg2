@@ -42,7 +42,7 @@ if py_version[0] == 2:
                               'tw2.forms'])
 
 install_requires=[
-    'WebOb >= 1.1.1',
+    'WebOb >= 1.2',
     'crank >= 0.6.2',
     'Beaker',
     'decorator',

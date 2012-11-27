@@ -70,7 +70,7 @@ def test_exlicitjson_in_dict():
 def test_datetime():
     d = datetime.utcnow()
     encoded = jsonify.encode({'date':d})
-    assert str(d) in encoded
+    assert str(d) in encoded, (str(d), encoded)
 
 def test_decimal():
     d = Decimal('3.14')

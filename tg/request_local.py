@@ -5,23 +5,16 @@ from tg.caching import cached_property
 
 try:
     import cPickle as pickle
-except ImportError:
+except ImportError: #pragma: no cover
     import pickle
 
 try:
     from hashlib import sha1
-except ImportError:
+except ImportError: #pragma: no cover
     import sha as sha1
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
-
-try:
-    from webob.acceptparse import Accept
-    Accept.best_matches
-    old_webob = True
-except:
-    old_webob = False
 
 class Request(WebObRequest):
     """WebOb Request subclass
@@ -31,30 +24,21 @@ class Request(WebObRequest):
     compatibility with paste.wsgiwrappers.WSGIRequest.
 
     """
-
-    def determine_browser_charset(self):
-        """Legacy method to return the
-        :attr:`webob.Request.accept_charset`"""
-        return self.accept_charset
-
     def languages_best_match(self, fallback=None):
         al = self.accept_language
-        if old_webob: # webob<1.2
-            items = al.best_matches(fallback)
-        else:
-            try:
-                items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
-            except AttributeError:
-                #NilAccept has no _parsed, here for test units
-                items = []
+        try:
+            items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
+        except AttributeError:
+            #NilAccept has no _parsed, here for test units
+            items = []
 
-            if fallback:
-                for index, item in enumerate(items):
-                    if al._match(item, fallback):
-                        items[index:] = [fallback]
-                        break
-                else:
-                    items.append(fallback)
+        if fallback:
+            for index, item in enumerate(items):
+                if al._match(item, fallback):
+                    items[index:] = [fallback]
+                    break
+            else:
+                items.append(fallback)
 
         return items
 
@@ -113,17 +97,11 @@ class Request(WebObRequest):
 
     @property
     def str_cookies(self):
-        if old_webob:
-            return super(Request, self).str_cookies
-        
         return self.cookies
 
     @cached_property
     def args_params(self):
-        if old_webob:
-            return self.params.mixed()
-        else:
-            return dict(((str(n), v) for n,v in self.params.mixed().items()))
+        return dict(((str(n), v) for n,v in self.params.mixed().items()))
 
     def _fast_setattr(self, name, value):
         object.__setattr__(self, name, value)
