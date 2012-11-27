@@ -40,6 +40,7 @@ def ErrorReporter(app, global_conf, **errorware):
 
     from backlash.trace_errors import EmailReporter
     if not asbool(global_conf.get('debug')):
-        app = backlash.TraceErrorsMiddleware(app, [EmailReporter(**errorware)])
+        app = backlash.TraceErrorsMiddleware(app, [EmailReporter(**errorware)],
+                                             context_injectors=[_turbogears_backlash_context])
 
     return app
