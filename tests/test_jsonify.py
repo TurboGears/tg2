@@ -73,7 +73,7 @@ def test_datetime():
     assert encoded == '{"date": "%s"}' % d
 
 def test_decimal():
-    d = Decimal(3.14)
+    d = Decimal('3.14')
     encoded = jsonify.encode({'dec':d})
     assert encoded == '{"dec": %s}' % float(d), encoded
 
