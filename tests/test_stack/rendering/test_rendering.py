@@ -577,7 +577,7 @@ def test_template_caching():
     app = app_from_config(base_config)
 
     resp = app.get('/template_caching')
-    current_date = resp.body.split('NOW:')[1].split('\n')[0].strip()
+    current_date = resp.text.split('NOW:')[1].split('\n')[0].strip()
 
     resp = app.get('/template_caching')
     assert current_date in resp, (current_date, resp.body)

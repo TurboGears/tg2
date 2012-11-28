@@ -84,8 +84,9 @@ class Request(WebObRequest):
         if not cookie:
             return
 
+        secret = secret.encode('ascii')
         try:
-            sig, pickled = cookie[:40], base64.decodestring(cookie[40:])
+            sig, pickled = cookie[:40], base64.decodestring(cookie[40:].encode('ascii'))
         except binascii.Error: #pragma: no cover
             # Badly formed data can make base64 die
             return
@@ -116,9 +117,12 @@ class Response(WebObResponse):
         cookie value.
 
         """
+        secret = secret.encode('ascii')
+
         pickled = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
-        sig = hmac.new(secret, pickled, sha1).hexdigest()
-        self.set_cookie(name, sig + base64.encodestring(pickled), **kwargs)
+        sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
+        cookie_value = sig + base64.encodestring(pickled)
+        self.set_cookie(name, cookie_value, **kwargs)
 
 config = DispatchingConfig()
 context = StackedObjectProxy(name="context")

@@ -46,4 +46,3 @@ class TestResponse(object):
         r = Response()
         status, headers, body = r.wsgi_response()
         assert '200 OK' == status
-        assert '' == body
