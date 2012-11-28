@@ -86,7 +86,7 @@ class CoreDispatcher(object):
         if py_config.get('i18n_enabled', True):
             setup_i18n(thread_locals)
 
-        url_path = py_request.fast_path.split('/')[1:]
+        url_path = py_request.path.split('/')[1:]
         if url_path[-1] == '':
             url_path.pop()
 

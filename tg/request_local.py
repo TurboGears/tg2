@@ -42,13 +42,9 @@ class Request(WebObRequest):
 
         return items
 
-    @property
+    @cached_property
     def controller_state(self):
         return self._controller_state
-
-    @property
-    def fast_path(self):
-        return self.path
 
     @cached_property
     def plain_languages(self):
@@ -71,7 +67,7 @@ class Request(WebObRequest):
         return self._response_type
 
     def match_accept(self, mimetypes):
-        return self.accept.first_match(mimetypes)
+        return self.accept.best_match(mimetypes)
 
     def signed_cookie(self, name, secret):
         """Extract a signed cookie of ``name`` from the request
@@ -84,20 +80,18 @@ class Request(WebObRequest):
         being returned.
 
         """
-        cookie = self.str_cookies.get(name)
+        cookie = self.cookies.get(name)
         if not cookie:
             return
+
         try:
             sig, pickled = cookie[:40], base64.decodestring(cookie[40:])
-        except binascii.Error:
+        except binascii.Error: #pragma: no cover
             # Badly formed data can make base64 die
             return
+
         if hmac.new(secret, pickled, sha1).hexdigest() == sig:
             return pickle.loads(pickled)
-
-    @property
-    def str_cookies(self):
-        return self.cookies
 
     @cached_property
     def args_params(self):
@@ -107,31 +101,13 @@ class Request(WebObRequest):
         object.__setattr__(self, name, value)
 
 class Response(WebObResponse):
-    """WebOb Response subclass
-
-    The WebOb Response has no default content type, or error defaults.
-    This subclass adds defaults, along with several methods for
-    backwards compatibility with paste.wsgiwrappers.WSGIResponse.
-
-    """
+    """WebOb Response subclass"""
     content = WebObResponse.body
-
-    def determine_charset(self):
-        return self.charset
-
-    def has_header(self, header):
-        return header in self.headers
-
-    def get_content(self):
-        return self.body
-
-    def write(self, content):
-        self.body_file.write(content)
 
     def wsgi_response(self):
         return self.status, self.headers, self.body
 
-    def signed_cookie(self, name, data, secret=None, **kwargs):
+    def signed_cookie(self, name, data, secret, **kwargs):
         """Save a signed cookie with ``secret`` signature
 
         Saves a signed cookie of the pickled data. All other keyword

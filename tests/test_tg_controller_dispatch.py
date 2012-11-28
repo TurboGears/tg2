@@ -136,6 +136,9 @@ class SubController(object):
     def hello(self, name):
         return "Why hello, %s!" % name
 
+    @expose()
+    def get_controller_state(self):
+        return '/'.join([p[0] for p in tg.request.controller_state.controller_path])
 
 class SubController3(object):
     @expose()
@@ -486,6 +489,12 @@ class BasicTGController(TGController):
     def with_routing_args(self, **kw):
         return str(tg.request._controller_state.routing_args)
 
+    @expose('json')
+    @expose('genshi')
+    @expose()
+    def get_response_type(self):
+        return dict(ctype=tg.request.response_type)
+
 class TestNotFoundController(TestWSGIController):
 
     def __init__(self, *args, **kargs):
@@ -783,3 +792,15 @@ class TestTGController(TestWSGIController):
     def test_self_calling_lookup_multiple_calls_method(self):
         resp = self.app.get('/self_calling/a/b/c/method/a/b')
         assert "('a', 'b', {})" in resp.body.decode('utf-8'), resp
+
+    def test_controller_state(self):
+        resp = self.app.get('/sub/get_controller_state')
+        assert '/sub' in resp
+
+    def test_response_type(self):
+        resp = self.app.get('/get_response_type.json')
+        assert 'json' in resp
+
+    def test_response_type_html(self):
+        resp = self.app.get('/get_response_type.html')
+        assert 'html' in resp

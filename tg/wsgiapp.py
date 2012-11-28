@@ -73,10 +73,6 @@ class TGApp(object):
         self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
         self.enable_routes = self.config.get('enable_routes', False)
 
-        self.req_options = config.get('tg.request_options',
-                                      dict(charset='utf-8',
-                                           language='en-us'))
-
         self.resp_options = config.get('tg.response_options',
                                        dict(content_type='text/html',
                                             charset='utf-8',
@@ -154,12 +150,11 @@ class TGApp(object):
         in the environment.
 
         """
+        conf = self.config
 
         # Setup the basic global objects
-        req_options = self.req_options
-        req = Request(environ,
-                      charset=req_options['charset'])
-        req._fast_setattr('_language', req_options['language'])
+        req = Request(environ)
+        req._fast_setattr('_language', conf['lang'])
         req._fast_setattr('_response_type', None)
 
         resp_options = self.resp_options
@@ -167,8 +162,6 @@ class TGApp(object):
             content_type=resp_options['content_type'],
             charset=resp_options['charset'],
             headers=resp_options['headers'])
-
-        conf = self.config
 
         # Setup the translator object
         lang = conf['lang']

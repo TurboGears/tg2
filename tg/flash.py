@@ -101,7 +101,7 @@ return{payload:h,render:d}}})();webflash.lj=function(s){var r;eval("r="+s);retur
         req = request._current_obj()
         payload = req.environ.get('webflash.payload', {})
         if not payload:
-            payload = req.str_cookies.get(self.cookie_name, {})
+            payload = req.cookies.get(self.cookie_name, {})
 
         if payload:
             payload = json.loads(url_unquote(payload))
