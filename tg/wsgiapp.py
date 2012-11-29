@@ -3,16 +3,12 @@ from webob.exc import HTTPFound, HTTPNotFound
 
 log = logging.getLogger(__name__)
 
-import warnings
-if sys.version_info[:2] == (2,4):
-    warnings.warn('Python 2.4 support is deprecated, and will be removed in TurboGears 2.2', DeprecationWarning)
-
 import tg
 from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
 
-try:
+try: #pragma: no cover
     import pylons
     has_pylons = True
 except:
@@ -88,7 +84,7 @@ class TGApp(object):
         if 'tg.root_controller' in self.config:
             self.controller_instances['root'] = self.config['tg.root_controller']
 
-    def setup_pylons_compatibility(self, environ, controller):
+    def setup_pylons_compatibility(self, environ, controller): #pragma: no cover
         """Updates environ to be backward compatible with Pylons"""
         try:
             environ['pylons.controller'] = controller
@@ -125,7 +121,9 @@ class TGApp(object):
         controller = self.resolve(environ, start_response)
         response = self.wrapped_dispatch(controller, environ, start_response)
 
-        if testmode and hasattr(response, 'wsgi_response'):
+        #This is probably not necessary and can be removed as
+        #CoreDispatcher.__call__ does the same
+        if testmode and hasattr(response, 'wsgi_response'): #pragma: no cover
             environ['paste.testing_variables']['response'] = response
 
         try:
@@ -134,12 +132,12 @@ class TGApp(object):
 
             raise Exception("No content returned by controller (Did you "
                             "remember to 'return' it?) in: %r" %
-                            controller.__name__)
+                            controller)
         finally:
             # Help Python collect ram a bit faster by removing the reference
             # cycle that the thread local objects cause
             del environ['tg.locals']
-            if has_pylons and 'pylons.pylons' in environ:
+            if has_pylons and 'pylons.pylons' in environ: #pragma: no cover
                 del environ['pylons.pylons']
 
     def setup_app_env(self, environ, start_response):
@@ -186,7 +184,7 @@ class TGApp(object):
         locals.session = session
         locals.cache = cache
 
-        if self.enable_routes:
+        if self.enable_routes: #pragma: no cover
             url = environ.get('routes.url')
             locals.url = url
 
@@ -220,7 +218,7 @@ class TGApp(object):
         returned.
 
         """
-        if self.enable_routes:
+        if self.enable_routes: #pragma: no cover
             match = environ['wsgiorg.routing_args'][1]
             environ['tg.routes_dict'] = match
             controller = match.get('controller')
@@ -295,7 +293,7 @@ class TGApp(object):
             return HTTPNotFound()(environ, start_response)
 
         #Setup pylons compatibility before calling controller
-        if has_pylons and self.pylons_compatible:
+        if has_pylons and self.pylons_compatible: #pragma: no cover
             self.setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to handle a WSGI call

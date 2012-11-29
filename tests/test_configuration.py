@@ -17,7 +17,6 @@ from webtest import TestApp
 from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
-
 def setup():
     setup_session_dir()
 def teardown():
@@ -455,6 +454,29 @@ class TestAppConfig:
         self.config.setup_controller_wrappers()
         assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
 
+    def test_application_wrapper_setup(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        wrapper_has_been_visited = []
+        class AppWrapper(object):
+            def __init__(self, dispatcher):
+                self.dispatcher = dispatcher
+            def __call__(self, *args, **kw):
+                wrapper_has_been_visited.append(True)
+                return self.dispatcher(*args, **kw)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.application_wrappers.append(AppWrapper)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert wrapper_has_been_visited[0] == True
+
     def test_wrap_app(self):
         class RootController(TGController):
             @expose()
@@ -753,3 +775,56 @@ class TestAppConfig:
 
         app = TestApp(app)
         assert '/sub' in app.get('/sub/test')
+
+    def test_application_test_vars(self):
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app(global_conf={'debug':True})
+        app = TestApp(app)
+
+        assert 'DONE' in app.get('/_test_vars')
+        assert request.path == '/_test_vars'
+
+    def test_application_empty_controller(self):
+        class RootController(object):
+            def __call__(self, environ, start_response):
+                return None
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app(global_conf={'debug':True})
+        app = TestApp(app)
+
+        r = app.get('/something', status=500)
+        assert 'No content returned by controller' in r
+
+    def test_application_test_mode_detection(self):
+        class FakeRegistry(object):
+            def register(self, *args, **kw):
+                pass
+
+        a = TGApp()
+        assert False == a.setup_app_env({'paste.registry':FakeRegistry()}, None)
+        assert True == a.setup_app_env({'paste.registry':FakeRegistry(),
+                                        'paste.testing_variables':{}}, None)
+
+    def test_application_no_controller_hijacking(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        class AppWrapper(object):
+            def __init__(self, dispatcher):
+                self.dispatcher = dispatcher
+            def __call__(self, controller, environ, start_response):
+                return self.dispatcher(None, environ, start_response)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.application_wrappers.append(AppWrapper)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        app.get('/test', status=404)
+

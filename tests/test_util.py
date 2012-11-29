@@ -5,6 +5,7 @@ from tg.util import *
 from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *
+from tg.wsgiapp import ContextObj
 
 import tg._compat
 from tg._compat import u_
@@ -109,3 +110,8 @@ class TestLazyString(object):
         l = LazyString(lambda: '{0}')
         lf = l.format('HI')
         assert lf == 'HI', lf
+
+def test_tmpl_context_long_entry():
+    c = ContextObj()
+    c.something = '3'*300
+    assert len(str(c)) < 300
