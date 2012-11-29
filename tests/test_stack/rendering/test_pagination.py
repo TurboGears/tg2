@@ -1,5 +1,5 @@
 from tests.test_stack import TestConfig, app_from_config
-
+from tg.support.paginate import Page
 
 def setup_noDB():
     base_config = TestConfig(folder='rendering',
@@ -22,7 +22,6 @@ _data = '<ul id="data">%s</ul>' % ''.join(
 
 
 class TestPagination:
-
     def setup(self):
         self.app = setup_noDB()
 
@@ -118,3 +117,45 @@ class TestPagination:
         assert '<li>9</li>' in page
         assert '<li>151</li>' not in page
         assert '<li>161</li>' in page
+
+class TestPage(object):
+    def test_not_a_number_page(self):
+        p = Page(range(100), items_per_page=10, page='A')
+        sec = list(p)
+        assert sec[-1] == 9, sec
+
+    def test_empty_list(self):
+        p = Page([], items_per_page=10, page=1)
+        assert list(p) == []
+
+    def test_page_out_of_bound(self):
+        p = Page(range(100), items_per_page=10, page=10000)
+        sec = list(p)
+        assert sec[-1] == 99, sec
+
+    def test_page_out_of_lower_bound(self):
+        p = Page(range(100), items_per_page=10, page=-5)
+        sec = list(p)
+        assert sec[-1] == 9, sec
+
+    def test_navigator_one_page(self):
+        p = Page(range(10), items_per_page=10, page=10)
+        assert p.pager() == ''
+
+    def test_navigator_middle_page(self):
+        p = Page(range(100), items_per_page=10, page=5)
+        pager = p.pager()
+
+        assert '?page=1' in pager
+        assert '?page=4' in pager
+        assert '?page=6' in pager
+        assert '?page=10' in pager
+
+    def test_navigator_ajax(self):
+        p = Page(range(100), items_per_page=10, page=5)
+        pager = p.pager(onclick='goto($page)')
+
+        assert 'goto(1)' in pager
+        assert 'goto(4)' in pager
+        assert 'goto(6)' in pager
+        assert 'goto(10)' in pager

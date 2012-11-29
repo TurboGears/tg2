@@ -80,7 +80,7 @@ class Page(object):
                 first = self.first_item - 1
                 last = self.last_item
                 self.items = list(self.collection[first:last])
-            except TypeError:
+            except TypeError: #pragma: no cover
                 raise
 
             # Links to previous and next page
