@@ -2,7 +2,7 @@
 
 import tg
 from tg.util import *
-from nose.tools import eq_
+from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *
 
@@ -22,21 +22,6 @@ def teardown():
 def test_get_partial_dict():
     eq_(get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3}),
         {'xyz':1,'zyx':2})
-
-# These tests aren't reliable if the package in question has
-# entry points.
-
-def test_get_package_name():
-    eq_(get_package_name(), 'tg')
-
-def test_get_project_name():
-    eq_(get_project_name(), 'TurboGears2')
-
-def test_get_project_meta():
-    eq_(get_project_meta('requires.txt'), os.path.join('TurboGears2.egg-info', 'requires.txt'))
-
-def test_get_model():
-    eq_(get_model(), None)
 
 def test_compat_im_class():
     class FakeClass(object):
@@ -85,3 +70,42 @@ def test_url_object_exception():
 
     res = url('.', {'p1':SubException('a', 'b', 'c')})
     assert res == '.?p1=a+b+c', res
+
+class TestBunch(object):
+    def test_add_entry(self):
+        d = Bunch()
+        d['test.value'] = 5
+        assert d.test.value == 5
+
+    def test_del_entry(self):
+        d = Bunch()
+        d['test_value'] = 5
+        del d.test_value
+        assert not list(d.keys())
+
+    @raises(AttributeError)
+    def test_del_entry_fail(self):
+        d = Bunch()
+        del d.not_existing
+
+class TestDottedNameFinder(object):
+    @raises(DottedFileLocatorError)
+    def test_non_python_package(self):
+        DottedFileNameFinder().get_dotted_filename('this.is.not.a.python.package')
+
+    def test_local_file(self):
+        assert DottedFileNameFinder().get_dotted_filename('this_should_be_my_template') == 'this_should_be_my_template'
+
+class TestLazyString(object):
+    def test_lazy_string_to_str(self):
+        l = LazyString(lambda: 'HI')
+        assert str(l) == 'HI'
+
+    def test_lazy_string_to_mod(self):
+        l = LazyString(lambda: '%s')
+        assert (l % 'HI') == 'HI'
+
+    def test_lazy_string_format(self):
+        l = LazyString(lambda: '{0}')
+        lf = l.format('HI')
+        assert lf == 'HI', lf

@@ -8,50 +8,6 @@ from tg.request_local import config
 
 class DottedFileLocatorError(Exception):pass
 
-def get_project_meta(name):
-    for dirname in os.listdir("./"):
-        if dirname.lower().endswith("egg-info"):
-            fname = os.path.join(dirname, name)
-            return fname
-
-def get_project_name():
-    """get project name if exist"""
-    pkg_info = get_project_meta('PKG-INFO')
-    if pkg_info:
-        name = list(open(pkg_info))[1][6:-1]
-        return name.strip()
-
-def get_package_name():
-    """Try to find out the package name of the current directory."""
-    package = config.get("modules")
-    if package:
-        return package
-
-    if "--egg" in sys.argv:
-        projectname = sys.argv[sys.argv.index("--egg")+1]
-        egg = pkg_resources.get_distribution(projectname)
-        top_level = egg._get_metadata("top_level.txt")
-    else:
-        fname = get_project_meta('top_level.txt')
-        top_level = fname and open(fname) or []
-
-    for package in top_level:
-        package = package.rstrip()
-        if package and package != 'locales':
-            return package
-
-def get_model():
-    """return model"""
-    package_name = get_package_name()
-
-    if not package_name:
-        return None
-
-    package = __import__(package_name, {}, {}, ["model"])
-
-    if hasattr(package, "model"):
-        return package.model
-
 def get_partial_dict(prefix, dictionary):
     """Given a dictionary and a prefix, return a Bunch, with just items
     that start with prefix
@@ -146,11 +102,8 @@ class DottedFileNameFinder(object):
         be '.html'
         @type template_extension: string
         """
-        if template_name.startswith('app:'):
-            template_name = '.'.join((get_package_name(), template_name[4:]))
         try:
             return self.__cache[template_name]
-
         except KeyError:
             # the template name was not found in our cache
             divider = template_name.rfind('.')

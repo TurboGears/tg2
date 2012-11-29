@@ -2,6 +2,7 @@
 
 == 2.X ==
 
+ * Removed support for "app:" prefix in template lookup, it actually didn't work much
  * Removed tg.decorators.postpone_commits, wasn't documented and it's trivial to replicate for specific projects
  * Remove tg.decorators.allow_only it actually didn't work and test for it was disabled.
 
