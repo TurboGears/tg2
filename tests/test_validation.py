@@ -412,3 +412,7 @@ class TestTGController(TestWSGIController):
     def test_hook_after_validation_error(self):
         resp = self.app.post('/with_hooked_error_handler?v=a')
         assert 'HOOKED' in resp, resp
+
+    def test_validation_error_has_message(self):
+        e = TGValidationError('This is a validation error')
+        assert str(e) == 'This is a validation error'

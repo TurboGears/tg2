@@ -1,6 +1,6 @@
 try:
     from tw2.core import ValidationError as _Tw2ValidationError
-except ImportError:
+except ImportError: #pragma: no cover
     class _Tw2ValidationError(Exception):
         """ToscaWidgets2 Validation Error"""
 
@@ -8,7 +8,7 @@ try:
     from formencode.api import Invalid as _FormEncodeValidationError
     from formencode.api import Validator as _FormEncodeValidator
     from formencode import Schema as _FormEncodeSchema
-except ImportError:
+except ImportError: #pragma: no cover
     class _FormEncodeValidationError(Exception):
         """FormEncode Invalid"""
     class _FormEncodeValidator(object):
