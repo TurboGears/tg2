@@ -113,7 +113,7 @@ class DottedFileNameFinder(object):
                 try:
                     result = resource_filename(package, basename)
                 except ImportError as e:
-                    raise DottedFileLocatorError(e.message +". Perhaps you have forgotten an __init__.py in that folder.")
+                    raise DottedFileLocatorError(str(e) +". Perhaps you have forgotten an __init__.py in that folder.")
             else:
                 result = template_name
 
