@@ -98,7 +98,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
                 raise AssertionError(
                     'The object popped (%s) is not the same as the object '
                     'expected (%s)' % (popped_obj, obj))
-        except AttributeError:
+        except (AttributeError, IndexError):
             raise AssertionError('No object has been registered for this thread')
 
     def _object_stack(self):
@@ -112,13 +112,13 @@ class StackedObjectProxy(TurboGearsObjectProxy):
             except AttributeError:
                 return []
             return objs[:]
-        except AssertionError:
+        except AssertionError: #pragma: no cover
             return []
 
     def _preserve_object(self):
         try:
             object, preserved = self.____local__.objects[-1]
-        except AttributeError:
+        except (AttributeError, IndexError):
             return
 
         self.____local__.objects[-1] = (object, True)

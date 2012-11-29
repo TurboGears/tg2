@@ -4,7 +4,7 @@
 from nose.tools import raises
 
 from webtest import TestApp
-from tg.support.registry import RegistryManager, StackedObjectProxy
+from tg.support.registry import RegistryManager, StackedObjectProxy, DispatchingConfig
 from tg.util import Bunch
 
 regobj = StackedObjectProxy()
@@ -141,6 +141,48 @@ def test_stacked_object_common_actions():
     finally:
         regobj._pop_object()
 
+@raises(AssertionError)
+def test_stacked_object_pop_something_else():
+    o = Bunch({'hi':'people'})
+    regobj._push_object(o)
+    regobj._pop_object({'another':'object'})
+
+@raises(AssertionError)
+def test_stacked_object_pop_never_registered():
+    regobj._pop_object()
+
+def test_stacked_object_stack():
+    so = StackedObjectProxy()
+
+    assert(len(so._object_stack()) == 0)
+    so._push_object({'hi':'people'})
+    assert(len(so._object_stack()) == 1)
+    so._pop_object()
+    assert(len(so._object_stack()) == 0)
+
+def test_stacked_object_preserve_empty():
+    so = StackedObjectProxy()
+    so._preserve_object()
+
+    so._push_object({'hi':'people'})
+    so._pop_object()
+    so._preserve_object()
+
+def test_stacked_object_preserved():
+    so = StackedObjectProxy()
+    assert not so._is_preserved
+
+    so._push_object({'hi':'people'})
+    assert not so._is_preserved
+
+    so._pop_object()
+    assert not so._is_preserved
+
+    so._push_object({'hi':'people'})
+    so._preserve_object()
+    assert so._is_preserved
+    so._pop_object()
+
 def test_simple():
     app = TestApp(simpleapp)
     response = app.get('/')
@@ -219,3 +261,61 @@ def test_iterating_response():
     assert "{'hi': 'people'}" in res
     assert "InsertValue at depth 0 is {'bye': 'friends'}" in res
     assert "AppendValue at depth 0 is {'bye': 'friends'}" in res
+
+def test_registry_streaming():
+    def app(environ, start_response):
+        environ['paste.registry'].register(regobj, {'hi':'people'})
+        for i in range(10):
+            yield str(i)
+    rm = RegistryManager(app, streaming=True)
+
+    environ = {}
+
+    res = []
+    for x in rm(environ, None):
+        res.append(int(x))
+        assert len(regobj._object_stack())
+
+    assert len(res) == 10
+    assert not(regobj._object_stack())
+
+@raises(SystemError)
+def test_registry_streaming_exception():
+    def app(environ, start_response):
+        environ['paste.registry'].register(regobj, {'hi':'people'})
+        for i in range(10):
+            if i == 5:
+                raise SystemError('Woah!')
+            else:
+                yield str(i)
+    rm = RegistryManager(app, streaming=True, preserve_exceptions=True)
+    environ = {}
+    try:
+        for x in rm(environ, None):
+            assert len(regobj._object_stack())
+    except:
+        #check the object got preserved due to exception
+        assert regobj._object_stack()
+        regobj._pop_object()
+        raise
+
+def test_dispatch_config():
+    conf = DispatchingConfig()
+    conf.push_process_config({'key':'default'})
+    conf.push_thread_config({'key':'value'})
+    assert conf.current()['key'] == 'value'
+    conf.pop_thread_config()
+    assert conf.current()['key'] == 'default'
+
+    try:
+        conf.pop_process_config({'another':'one'})
+        pop_failed = False
+    except AssertionError:
+        pop_failed = True
+    assert pop_failed, 'It should have failed due to different config popped'
+
+    try:
+        conf.current()
+        assert False, 'It should fail due to empty objects stack'
+    except AttributeError:
+        pass
