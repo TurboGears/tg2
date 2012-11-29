@@ -35,15 +35,20 @@ class FileServeApp(object):
     """
     def __init__(self, path, cache_max_age):
         self.path = path
-        self.last_modified = getmtime(path)
 
-        content_type, content_encoding = mimetypes.guess_type(path, strict=False)
-        if content_type is None:
-            content_type = 'application/octet-stream'
+        try:
+            self.last_modified = getmtime(path)
+            self.content_length = getsize(path)
+        except (IOError, OSError):
+            self.path = None
 
-        self.content_type = content_type
-        self.content_encoding = content_encoding
-        self.content_length = getsize(path)
+        if self.path is not None:
+            content_type, content_encoding = mimetypes.guess_type(path, strict=False)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+
+            self.content_type = content_type
+            self.content_encoding = content_encoding
 
         if cache_max_age is not None:
             self.cache_expires = cache_max_age
@@ -57,7 +62,8 @@ class FileServeApp(object):
         except (TypeError, OverflowError):
             raise HTTPBadRequest(("Received an ill-formed timestamp for %s: %s\r\n") % (self.path, value))
 
-    def make_date(self, d):
+    @classmethod
+    def make_date(cls, d):
         if isinstance(d, datetime):
             d = d.utctimetuple()
         else:
@@ -92,8 +98,8 @@ class FileServeApp(object):
     def __call__(self, environ, start_response):
         try:
             file = open(self.path, 'rb')
-        except (IOError, OSError) as e:
-            return HTTPForbidden('You are not permitted to view this file (%s)' % e)(start_response, environ)
+        except (IOError, OSError, TypeError) as e:
+            return HTTPForbidden('You are not permitted to view this file (%s)' % e)(environ, start_response)
 
         headers = []
         timeout = self.cache_expires
