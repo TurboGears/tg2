@@ -47,7 +47,7 @@ install_requires=[
     'Beaker',
     'decorator',
     'PasteDeploy',
-    'markupsafe',
+    'MarkupSafe',
     'repoze.lru'
     ]
 
