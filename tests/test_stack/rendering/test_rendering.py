@@ -418,7 +418,7 @@ def test_template_override_wts():
                                        }
                              )
     app = app_from_config(base_config)
-    r = app.get('/template_override_wts', status=302) # ensure with_trailing_slash
+    r = app.get('/template_override_wts', status=301) # ensure with_trailing_slash
     r =app.get('/template_override_wts/')
     assert "Not overridden" in r, r
     r = app.get('/template_override_wts/', params=dict(override=True))

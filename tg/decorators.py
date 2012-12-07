@@ -10,10 +10,10 @@ needed to support these decorators.
 """
 from decorator import decorator
 
-from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed
+from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
 from tg.support.paginate import Page
 from tg.configuration import config
-from tg.controllers.util import abort
+from tg.controllers.util import abort, redirect
 from tg import tmpl_context, request, response
 from tg.util import partial, Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
@@ -597,7 +597,6 @@ class paginate(object):
 @before_validate
 def https(remainder, params):
     """Ensure that the decorated method is always called with https."""
-    from tg.controllers import redirect
     if request.scheme.lower() == 'https': return
     if request.method.upper() == 'GET':
         redirect('https' + request.url[len(request.scheme):])
@@ -648,9 +647,9 @@ def without_trailing_slash(remainder, params):
     In addition, the URL http://localhost:8080/sample/1/ redirects to http://localhost:8080/sample/1
 
     """
-    if request.method == 'GET' and request.path.endswith('/') and not(request._response_type) and len(request.params)==0:
-        from tg.controllers import redirect
-        redirect(request.url[:-1])
+    req = request._current_obj()
+    if req.method == 'GET' and req.path.endswith('/') and not(req._response_type) and len(req.params)==0:
+        redirect(request.url[:-1], redirect_with=HTTPMovedPermanently)
 
 
 @before_validate
@@ -674,12 +673,9 @@ def with_trailing_slash(remainder, params):
     In addition, the URL http://localhost:8080/sample/1 redirects to http://localhost:8080/sample/1/
 
     """
-    if (request.method == 'GET'
-        and not(request.path.endswith('/'))
-        and not(request._response_type)
-        and len(request.params)==0):
-        from tg.controllers import redirect
-        redirect(request.url+'/')
+    req = request._current_obj()
+    if (req.method == 'GET' and not(req.path.endswith('/')) and not(req._response_type) and len(req.params)==0):
+        redirect(request.url+'/', redirect_with=HTTPMovedPermanently)
 
 
 #{ Authorization decorators

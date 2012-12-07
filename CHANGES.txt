@@ -2,6 +2,7 @@
 
 == 2.X ==
 
+ * @with_trailing_slash and @without_trailing_slash have been moved to a 301 permanent redirect for SEO reasons
  * FriendlyFormPlugin has been replaced by the builtin FastFormPlugin with Py3 support, to keep using FriendlyFormPlugin just build it and use the form_plugin option of sa_auth
  * Removed support for "app:" prefix in template lookup, it actually didn't work much
  * Removed tg.decorators.postpone_commits, wasn't documented and it's trivial to replicate for specific projects

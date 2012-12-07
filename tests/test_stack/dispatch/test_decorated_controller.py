@@ -96,11 +96,11 @@ class TestDecorators(object):
         assert resp.json['obj'] == obj, (resp.json['obj'], obj)
 
     def test_without_trailing_slash(self):
-        resp = self.app.get('/without_tslash/', status=302)
+        resp = self.app.get('/without_tslash/', status=301)
         assert resp.headers['Location'].endswith('/without_tslash')
 
     def test_with_trailing_slash(self):
-        resp = self.app.get('/with_tslash', status=302)
+        resp = self.app.get('/with_tslash', status=301)
         assert resp.headers['Location'].endswith('/with_tslash/')
 
     def test_with_engine(self):

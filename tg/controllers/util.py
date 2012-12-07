@@ -145,7 +145,7 @@ def lurl(base_url=None, params=None):
     return LazyUrl(base_url, params)
 
 
-def redirect(base_url='/', params={}, **kwargs):
+def redirect(base_url='/', params={}, redirect_with=HTTPFound, **kwargs):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -162,7 +162,7 @@ def redirect(base_url='/', params={}, **kwargs):
         params.update(kwargs)
 
     new_url = url(base_url, params=params)
-    raise HTTPFound(location=new_url)
+    raise redirect_with(location=new_url)
 
 IF_NONE_MATCH = re.compile('(?:W/)?(?:"([^"]*)",?\s*)')
 def etag_cache(key=None):
