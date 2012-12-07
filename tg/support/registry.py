@@ -14,6 +14,12 @@ import threading as threadinglocal
 
 __all__ = ['StackedObjectProxy', 'RegistryManager']
 
+def _getboolattr(obj, attrname):
+    try:
+        return object.__getattribute__(obj, attrname)
+    except AttributeError:
+        return None
+
 class NoDefault(object): pass
 
 class StackedObjectProxy(TurboGearsObjectProxy):
@@ -184,7 +190,7 @@ class Registry(object):
             del myreglist[stacked_id]
 
         #Avoid leaking memory on successive request when preserving objects
-        if self.enable_preservation and getattr(stacked, '_is_preserved', False):
+        if self.enable_preservation and _getboolattr(stacked, '_is_preserved'):
             stacked._pop_object()
 
         stacked._push_object(obj)
@@ -194,7 +200,7 @@ class Registry(object):
         """Remove all objects from all StackedObjectProxy instances that
         were tracked at this Registry context"""
         for stacked, obj in self.reglist[-1].values():
-            if not getattr(stacked, '_is_preserved', False):
+            if not _getboolattr(stacked, '_is_preserved'):
                 stacked._pop_object(obj)
         self.reglist.pop()
 
