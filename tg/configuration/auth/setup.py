@@ -8,59 +8,14 @@ import sys, logging, re
 from paste.deploy.converters import asbool
 from zope.interface import implementer
 from repoze.who.middleware import PluggableAuthenticationMiddleware
-from repoze.who.interfaces import IMetadataProvider, IIdentifier, IAuthenticator, IChallenger
+from repoze.who.interfaces import IIdentifier, IAuthenticator, IChallenger
 from repoze.who.classifiers import default_challenge_decider, default_request_classifier
 from repoze.who.config import _LEVELS
 from webob.exc import HTTPUnauthorized
 
-class TGAuthMetadata(object):
-    """
-    Provides a way to lookup for user, groups and permissions
-    given the current identity. This has to be specialized
-    for each storage backend.
+from tg.configuration.auth.metadata import _AuthMetadataProvider
 
-    By default it returns empty lists for groups and permissions
-    and None for the user.
-    """
-    def get_user(self, identity, userid):
-        return None
-
-    def get_groups(self, identity, userid):
-        return []
-
-    def get_permissions(self, identity, userid):
-        return []
-
-@implementer(IMetadataProvider)
-class _AuthMetadataProvider(object):
-    """
-    repoze.who metadata provider to load groups and permissions data for
-    the current user. This uses a :class:`TGAuthMetadata` to fetch
-    the groups and permissions.
-    """
-
-    def __init__(self, tgmdprovider):
-        self.tgmdprovider = tgmdprovider
-
-    # IMetadataProvider
-    def add_metadata(self, environ, identity):
-        # Get the userid retrieved by repoze.who Authenticator
-        userid = identity['repoze.who.userid']
-
-        # Finding the user, groups and permissions:
-        identity['user'] = self.tgmdprovider.get_user(identity, userid)
-        if identity['user']:
-            identity['groups'] = self.tgmdprovider.get_groups(identity, userid)
-            identity['permissions'] = self.tgmdprovider.get_permissions(identity, userid)
-        else:
-            identity['groups'] = identity['permissions'] = []
-
-        # Adding the groups and permissions to the repoze.what
-        # credentials for repoze.what compatibility:
-        if 'repoze.what.credentials' not in environ:
-            environ['repoze.what.credentials'] = {}
-        environ['repoze.what.credentials'].update(identity)
-        environ['repoze.what.credentials']['repoze.what.userid'] = userid
+log = logging.getLogger(__name__)
 
 @implementer(IIdentifier, IAuthenticator, IChallenger)
 class _AuthenticationForgerPlugin(object):
@@ -144,16 +99,18 @@ def setup_auth(app, authmetadata,
               post_login_url=None, logout_handler='/logout_handler',
               post_logout_url=None, login_counter_name=None,
               cookie_timeout=None, cookie_reissue_time=None,
-              charset="utf-8",
               **who_args):
     """
     Sets :mod:`repoze.who` up with the provided authenticators and
-    options to create FriendlyFormPlugin.
+    options to create FriendlyFormPlugin/FastFormPlugin.
 
     It returns a middleware that provides identification,
     authentication and authorization in a way that is compatible
     with repoze.who and repoze.what.
     """
+    if 'charset' in who_args: #pragma: no cover
+        log.warn('charset argument in authentication setup is ignored')
+        who_args.pop('charset')
 
     # If no identifiers are provided in repoze setup arguments
     # then create a default one using AuthTktCookiePlugin.
@@ -168,12 +125,11 @@ def setup_auth(app, authmetadata,
     # If no form plugin is provided then create a default
     # one using the provided options.
     if form_plugin is None:
-        from repoze.who.plugins.friendlyform import FriendlyFormPlugin
-        form = FriendlyFormPlugin(login_url, login_handler, post_login_url,
-                                  logout_handler, post_logout_url,
-                                  login_counter_name=login_counter_name,
-                                  rememberer_name='cookie',
-                                  charset=charset)
+        from tg.configuration.auth.fastform import FastFormPlugin
+        form = FastFormPlugin(login_url, login_handler, post_login_url,
+                              logout_handler, post_logout_url,
+                              rememberer_name='cookie',
+                              login_counter_name=login_counter_name)
     else:
         form = form_plugin
 

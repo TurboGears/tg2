@@ -56,8 +56,16 @@ def _urlencode(params):
     """
     return url_encode([i for i in _generate_smart_str(params)])
 
+def _build_url(environ, base_url='/', params=None):
+    if base_url.startswith('/'):
+        base_url = environ['SCRIPT_NAME'] + base_url
 
-def url(base_url='/', params={}, qualified=False):
+    if params:
+        return '?'.join((base_url, _urlencode(params)))
+
+    return base_url
+
+def url(base_url='/', params=None, qualified=False):
     """Generate an absolute URL that's specific to this application.
 
     The URL function takes a string (base_url) and, appends the
@@ -68,14 +76,10 @@ def url(base_url='/', params={}, qualified=False):
     if not isinstance(base_url, string_type) and hasattr(base_url, '__iter__'):
         base_url = '/'.join(base_url)
 
-    if base_url.startswith('/'):
-        req = tg.request._current_obj()
-        base_url = req.environ['SCRIPT_NAME'] + base_url
-        if qualified:
-            base_url = req.host_url + base_url
-
-    if params:
-        return '?'.join((base_url, _urlencode(params)))
+    req = tg.request._current_obj()
+    base_url = _build_url(req.environ, base_url, params)
+    if qualified:
+        base_url = req.host_url + base_url
 
     return base_url
 
