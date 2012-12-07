@@ -159,3 +159,70 @@ class TestPage(object):
         assert 'goto(4)' in pager
         assert 'goto(6)' in pager
         assert 'goto(10)' in pager
+
+
+try:
+    import sqlite3
+except:
+    import pysqlite2
+from sqlalchemy import (MetaData, Table, Column, ForeignKey, Integer, String)
+from sqlalchemy.orm import create_session, mapper, relation
+
+metadata = MetaData('sqlite:///:memory:')
+
+test1 = Table('test1', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('val', String(8)))
+
+test2 = Table('test2', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('test1id', Integer, ForeignKey('test1.id')),
+    Column('val', String(8)))
+
+test3 = Table('test3', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('val', String(8)))
+
+test4 = Table('test4', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('val', String(8)))
+
+metadata.create_all()
+
+class Test2(object):
+    pass
+mapper(Test2, test2)
+
+class Test1(object):
+    pass
+mapper(Test1, test1, properties={'test2s': relation(Test2)})
+
+class Test3(object):
+    pass
+mapper(Test3, test3)
+
+class Test4(object):
+    pass
+mapper(Test4, test4)
+
+test1.insert().execute({'id': 1, 'val': 'bob'})
+test2.insert().execute({'id': 1, 'test1id': 1, 'val': 'fred'})
+test2.insert().execute({'id': 2, 'test1id': 1, 'val': 'alice'})
+test3.insert().execute({'id': 1, 'val': 'bob'})
+test4.insert().execute({'id': 1, 'val': 'alberto'})
+
+class TestPageSQLA(object):
+    def setup(self):
+        self.s = create_session()
+
+    def test_relationship(self):
+        t = self.s.query(Test1).get(1)
+        p = Page(t.test2s, items_per_page=1, page=1)
+        assert len(list(p)) == 1
+        assert list(p)[0].val == 'fred', list(p)
+
+    def test_query(self):
+        q = self.s.query(Test2)
+        p = Page(q, items_per_page=1, page=1)
+        assert len(list(p)) == 1
+        assert list(p)[0].val == 'fred', list(p)

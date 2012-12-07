@@ -5,6 +5,14 @@ from tg.controllers.util import url
 from markupsafe import Markup
 from markupsafe import escape_silent as escape
 
+try:
+    import sqlalchemy
+    import sqlalchemy.orm
+    from sqlalchemy.orm.query import Query as SQLAQuery
+except ImportError: #pragma: no cover
+    class SQLAQuery(object):
+        pass
+
 def _format_attrs(**attrs):
     strings = [' %s="%s"' % (attr, escape(value)) for attr, value in attrs.items() if value is not None]
     return Markup("".join(strings))
@@ -14,6 +22,21 @@ def _make_link(text, href, **attrs):
 
 def _make_span(text, **attrs):
     return Markup('<span%s>%s</span>' % (_format_attrs(**attrs), escape(text)))
+
+class _SQLAlchemyQueryWrapper(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __getitem__(self, range):
+        return self.obj[range]
+
+    def __len__(self):
+        return self.obj.count()
+
+def _wrap_collection(col):
+    if isinstance(col, SQLAQuery):
+        return _SQLAlchemyQueryWrapper(col)
+    return col
 
 class Page(object):
     """
@@ -38,7 +61,7 @@ class Page(object):
             Default: 20.
         """
         self.kwargs = {}
-        self.collection = collection
+        self.collection = _wrap_collection(collection)
 
         # The self.page is the number of the current page.
         try:
