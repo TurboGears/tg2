@@ -13,7 +13,7 @@ class NotExistingImport:
 
 try:
     import sqlalchemy
-    from sqlalchemy.engine.base import ResultProxy, RowProxy
+    from sqlalchemy.engine import ResultProxy, RowProxy
 except ImportError: #pragma: no cover
     ResultProxy=NotExistingImport
     RowProxy=NotExistingImport
