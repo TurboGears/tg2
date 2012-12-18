@@ -430,3 +430,6 @@ class Page(object):
 
     def __iter__(self):
         return iter(self.items)
+
+    def __len__(self):
+        return len(self.items)
