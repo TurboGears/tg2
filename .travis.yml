@@ -5,8 +5,6 @@ python:
   - "3.2"
 
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then pip install 'git+git://github.com/repoze/repoze.who.git'; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then pip install 'git+git://github.com/amol-/repoze.who.friendlyforms.git'; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then pip install 'svn+http://svn.edgewall.org/repos/genshi/trunk'; fi
 
   - "pip install git+git://github.com/TurboGears/backlash.git"
