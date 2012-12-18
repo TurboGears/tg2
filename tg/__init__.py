@@ -53,9 +53,9 @@ assumptions about how things will work.
 """
 
 from tg.request_local import app_globals, request, response, tmpl_context, session, cache, translator
-from tg.configuration import config
+from tg.configuration import config, AppConfig
 from tg.wsgiapp import TGApp
-from tg.controllers import TGController, redirect, url, lurl, abort
+from tg.controllers import TGController, RestController, redirect, url, lurl, abort
 from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
                            require, with_engine, beaker_cache)
