@@ -1,5 +1,4 @@
 from tg.request_local import Request, Response
-from tg.support.registry import StackedObjectProxy
 
 def _call_wsgi_application(application, environ):
     """
@@ -88,10 +87,10 @@ from beaker.middleware import CacheMiddleware as BeakerCacheMiddleware
 from beaker.middleware import SessionMiddleware as BeakerSessionMiddleware
 
 class SessionMiddleware(BeakerSessionMiddleware):
-    session = StackedObjectProxy(name="Beaker Session")
+    session = None
 
 class CacheMiddleware(BeakerCacheMiddleware):
-    cache = StackedObjectProxy(name="Cache Manager")
+    cache = None
 
 from .statics import StaticsMiddleware
 

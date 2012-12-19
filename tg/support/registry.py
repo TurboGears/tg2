@@ -183,6 +183,12 @@ class Registry(object):
 
     def register(self, stacked, obj):
         """Register an object with a StackedObjectProxy"""
+
+        if stacked is None:
+            #makes possible to disable registering for some
+            #stacked objects by setting them to None.
+            return
+
         myreglist = self.reglist[-1]
         stacked_id = id(stacked)
         if stacked_id in myreglist:
