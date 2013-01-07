@@ -463,6 +463,9 @@ class BasicTGController(TGController):
     def multi_value_kws(sekf, *args, **kw):
         assert kw['foo'] == ['1', '2'], kw
 
+    @expose()
+    def hello_ext(self, *args):
+        return str(tg.request.response_ext)
 
 class TestNotFoundController(TestWSGIController):
 
@@ -751,3 +754,21 @@ class TestTGController(TestWSGIController):
     def test_self_calling_lookup_multiple_calls_method(self):
         resp = self.app.get('/self_calling/a/b/c/method/a/b')
         assert "('a', 'b', {})" in resp, resp
+
+    def test_extensions_single(self):
+        resp = self.app.get('/hello_ext.html')
+        assert resp.body == '.html', resp.body
+
+    def test_extensions_missing(self):
+        resp = self.app.get('/hello_ext')
+        assert resp.body == 'None', resp.body
+
+    def test_extensions_two(self):
+        resp = self.app.get('/hello_ext.json.html')
+        assert 'Main default page' in resp, resp
+        assert 'hello_ext.json' in resp, resp
+
+    def test_extensions_three(self):
+        resp = self.app.get('/hello_ext.jpg.json.html')
+        assert 'Main default page' in resp, resp
+        assert 'hello_ext.jpg.json' in resp, resp
