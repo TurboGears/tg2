@@ -161,8 +161,8 @@ class Decoration(object):
 
         """
 
-        if hasattr(request, 'response_type'
-                ) and request.response_type in self.engines:
+        response_type = getattr(request, 'response_type', None)
+        if response_type is not None and response_type in self.engines:
             accept_types = request.response_type
         else:
             accept_types = request.headers.get('accept', '*/*')

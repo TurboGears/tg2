@@ -65,6 +65,7 @@ class CoreDispatcher(WSGIController):
         state = DispatchState(pylons.request,
             self, params, url_path, pylons.config.get('ignore_parameters', []))
 
+        pylons.request.response_type = None
         if not pylons.config.get('disable_request_extensions', False):
             ext = state.extension
             if ext is not None:
