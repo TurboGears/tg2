@@ -551,9 +551,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         """Setup MongoDB database engine using Ming"""
         try:
             from ming import create_datastore
-            from urlparse import urljoin
             def create_ming_datastore(url, database, **kw):
-                return create_datastore(urljoin(url, database), **kw)
+                if database and url[-1] != '/':
+                    url += '/'
+                ming_url = url + database
+                return create_datastore(ming_url, **kw)
         except ImportError:
             from ming.datastore import DataStore
             def create_ming_datastore(url, database, **kw):
@@ -575,7 +577,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         datastore_options.pop('host', None)
         datastore_options.pop('port', None)
 
-        datastore = create_ming_datastore(config['ming.url'], config['ming.db'])
+        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''))
         config['pylons.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
