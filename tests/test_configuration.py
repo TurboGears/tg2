@@ -376,6 +376,33 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
+    def test_setup_ming_persistance_with_url_alone(self):
+        if PY3: raise SkipTest()
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mim://inmemdb'
+
+        app = conf.make_wsgi_app()
+        assert app is not None
+
+    def test_setup_ming_persistance_advanced_options(self):
+        if PY3: raise SkipTest()
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mim://inmemdb'
+        conf['ming.connection.read_preference'] = 'PRIMARY'
+
+        app = conf.make_wsgi_app()
+        assert app is not None
+
     def test_add_auth_middleware(self):
         class Dummy:pass
 

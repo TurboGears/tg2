@@ -600,7 +600,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 autoload_filters = dict(
                     map(lambda x: (x,autoload_lib.jinja_filters.__dict__[x]), autoload_lib.jinja_filters.__all__)
                 )
-            except AttributeError:
+            except AttributeError: #pragma: no cover
                 autoload_filters = dict(
                     filter(lambda x: callable(x[1]),
                         autoload_lib.jinja_filters.__dict__.iteritems())
@@ -685,7 +685,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         datastore_options.pop('host', None)
         datastore_options.pop('port', None)
 
-        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''))
+        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''), **datastore_options)
         config['pylons.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
