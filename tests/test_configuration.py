@@ -9,6 +9,9 @@ from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
 from tg.configuration.auth import _AuthenticationForgerPlugin
+from tg.configuration.utils import coerce_config
+from paste.deploy.converters import asint
+
 import tg.i18n
 from tg import TGController, expose, response, request
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
@@ -95,6 +98,10 @@ class TestPylonsConfigWrapper:
     def test_keys(self):
         k = self.config.keys()
         assert 'tg.app_globals' in k
+
+def test_coerce_config():
+    conf = coerce_config({'ming.connection.max_pool_size':'5'}, 'ming.connection.', {'max_pool_size':asint})
+    assert conf['max_pool_size'] == 5
 
 class TestAppConfig:
     def __init__(self):
