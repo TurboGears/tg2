@@ -495,6 +495,10 @@ class BasicTGController(TGController):
     def get_response_type(self):
         return dict(ctype=tg.request.response_type)
 
+    @expose()
+    def hello_ext(self, *args):
+        return str(tg.request.response_ext)
+
 class TestNotFoundController(TestWSGIController):
 
     def __init__(self, *args, **kargs):
@@ -804,3 +808,21 @@ class TestTGController(TestWSGIController):
     def test_response_type_html(self):
         resp = self.app.get('/get_response_type.html')
         assert 'html' in resp
+
+    def test_extensions_single(self):
+        resp = self.app.get('/hello_ext.html')
+        assert resp.body == '.html', resp.body
+
+    def test_extensions_missing(self):
+        resp = self.app.get('/hello_ext')
+        assert resp.body == 'None', resp.body
+
+    def test_extensions_two(self):
+        resp = self.app.get('/hello_ext.json.html')
+        assert 'Main default page' in resp, resp
+        assert 'hello_ext.json' in resp, resp
+
+    def test_extensions_three(self):
+        resp = self.app.get('/hello_ext.jpg.json.html')
+        assert 'Main default page' in resp, resp
+        assert 'hello_ext.jpg.json' in resp, resp

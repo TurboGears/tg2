@@ -17,6 +17,7 @@ from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
 
 import tg
+from tg.configuration.utils import coerce_config
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
 
 from webob import Request
@@ -595,7 +596,15 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         try:
             filter_package = self.package_name + ".lib.templatetools"
             autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
-            autoload_filters = autoload_lib.jinja_filters.__dict__
+            try:
+                autoload_filters = dict(
+                    map(lambda x: (x,autoload_lib.jinja_filters.__dict__[x]), autoload_lib.jinja_filters.__all__)
+                )
+            except AttributeError:
+                autoload_filters = dict(
+                    filter(lambda x: callable(x[1]),
+                        autoload_lib.jinja_filters.__dict__.iteritems())
+                )
         except (ImportError, AttributeError):
             autoload_filters = {}
 
@@ -648,18 +657,36 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_ming(self):
         """Setup MongoDB database engine using Ming"""
-        try: #pragma: no cover
+        try:
             from ming import create_datastore
-            from urlparse import urljoin
-            def create_ming_datastore(url, database):
-                return create_datastore(urljoin(url, database))
-        except ImportError:
+            def create_ming_datastore(url, database, **kw):
+                if database and url[-1] != '/':
+                    url += '/'
+                ming_url = url + database
+                return create_datastore(ming_url, **kw)
+        except ImportError: #pragma: no cover
             from ming.datastore import DataStore
-            def create_ming_datastore(url, database):
-                return DataStore(url, database=database)
+            def create_ming_datastore(url, database, **kw):
+                return DataStore(url, database=database, **kw)
 
-        datastore = create_ming_datastore(config['ming.url'], config['ming.db'])
-        config['tg.app_globals'].ming_datastore = datastore
+        def mongo_read_pref(value):
+            from pymongo.read_preferences import ReadPreference
+            return getattr(ReadPreference, value)
+
+        datastore_options = coerce_config(config, 'ming.connection.', {'max_pool_size':asint,
+                                                                       'network_timeout':asint,
+                                                                       'tz_aware':asbool,
+                                                                       'safe':asbool,
+                                                                       'journal':asbool,
+                                                                       'wtimeout':asint,
+                                                                       'fsync':asbool,
+                                                                       'ssl':asbool,
+                                                                       'read_preference':mongo_read_pref})
+        datastore_options.pop('host', None)
+        datastore_options.pop('port', None)
+
+        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''))
+        config['pylons.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
     def setup_sqlalchemy(self):

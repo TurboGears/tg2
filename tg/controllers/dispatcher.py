@@ -47,23 +47,18 @@ class CoreDispatcher(object):
         req = thread_locals.request
         conf = thread_locals.config
 
-        if not conf.get('disable_request_extensions', False):
-            #req.response_ext = None
-            if url_path and '.' in url_path[-1]:
-                last_remainder = url_path[-1]
-                mime_type, encoding = mimetypes.guess_type(last_remainder)
-                if mime_type:
-                    extension_spot = last_remainder.rfind('.')
-                    #extension = last_remainder[extension_spot:]
-                    url_path[-1] = last_remainder[:extension_spot]
-                    req._fast_setattr('_response_type', mime_type)
-                    #req.response_ext = extension
-
         params = req.args_params
-
         state = DispatchState(req, self, params, url_path, conf.get('ignore_parameters', []))
-        state =  state.controller._dispatch(state, url_path)
 
+        if not conf.get('disable_request_extensions', False):
+            ext = state.extension
+            if ext is not None:
+                ext = '.' + ext
+                mime_type, encoding = mimetypes.guess_type('file'+ext)
+                req._fast_setattr('_response_type', mime_type)
+            req._fast_setattr('_response_ext', ext)
+
+        state =  state.controller._dispatch(state, url_path)
         thread_locals.tmpl_context.controller_url = '/'.join(url_path[:-len(state.remainder)])
 
         if conf.get('enable_routing_args', False):

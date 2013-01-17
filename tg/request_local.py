@@ -66,6 +66,10 @@ class Request(WebObRequest):
     def response_type(self):
         return self._response_type
 
+    @property
+    def response_ext(self):
+        return self._response_ext
+
     def match_accept(self, mimetypes):
         return self.accept.best_match(mimetypes)
 

@@ -212,6 +212,10 @@ class RootController(TGController):
     def jinja_index(self):
         return {}
 
+    @expose('jinja:jinja_autoload.jinja')
+    def jinja_autoload(self):
+        return {}
+
     @expose('jinja:jinja_inherits.jinja')
     def jinja_inherits(self):
         return {}

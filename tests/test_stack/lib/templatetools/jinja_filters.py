@@ -10,3 +10,5 @@ def codify(value):
     string_hash = sha1(value.encode('ascii'))
     return string_hash.hexdigest()
 
+def polluting_function(value):
+    return "Template filter namespace has been POLLUTED"

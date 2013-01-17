@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from nose import SkipTest
 import shutil, os
+from jinja2 import TemplateAssertionError
 
 import tg
 #import tg.configuration
@@ -286,6 +287,10 @@ def test_chameleon_genshi_inheritance():
     else:
         assert "Inheritance template" in resp
         assert "Master template" in resp
+
+def test_jinja_autoload():
+    app = setup_noDB()
+    resp = app.get('/jinja_autoload', status=500)
 
 def _test_jinja_inherits():
     app = setup_noDB()
