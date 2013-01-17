@@ -811,11 +811,11 @@ class TestTGController(TestWSGIController):
 
     def test_extensions_single(self):
         resp = self.app.get('/hello_ext.html')
-        assert resp.body == '.html', resp.body
+        assert resp.body.decode('ascii') == '.html', resp.body
 
     def test_extensions_missing(self):
         resp = self.app.get('/hello_ext')
-        assert resp.body == 'None', resp.body
+        assert resp.body.decode('ascii') == 'None', resp.body
 
     def test_extensions_two(self):
         resp = self.app.get('/hello_ext.json.html')
