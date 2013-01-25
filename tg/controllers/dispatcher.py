@@ -70,7 +70,7 @@ class CoreDispatcher(WSGIController):
             ext = state.extension
             if ext is not None:
                 ext = '.' + ext
-                mime_type, encoding = mimetypes.guess_type(ext)
+                mime_type, encoding = mimetypes.guess_type('file'+ext)
                 pylons.request.response_type = mime_type
             pylons.request.response_ext = ext
 
