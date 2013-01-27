@@ -332,7 +332,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             error_handler = controller
             output = error_handler(*remainder, **dict(params))
         else:
-            output = error_handler(im_self(error_handler), *remainder, **dict(params))
+            output = error_handler(im_self(controller), *remainder, **dict(params))
 
         return error_handler, output
 
