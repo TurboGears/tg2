@@ -24,8 +24,8 @@ The latest development version is available in the
     https://sourceforge.net/p/turbogears2/tg2/
 """
 url="http://www.turbogears.org/"
-author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, and the TurboGears community"
-email = "mark.ramm@gmail.com, alberto@toscat.net, m.pedersen@icelus.org"
+author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen, Alessandro Molina, and the TurboGears community"
+email = "mark.ramm@gmail.com, alberto@toscat.net, m.pedersen@icelus.org, amol@turbogears.org"
 copyright = """Copyright 2005-2011 Kevin Dangoor,
 Alberto Valverde, Mark Ramm, Christopher Perkins and contributors"""
 license = "MIT"
