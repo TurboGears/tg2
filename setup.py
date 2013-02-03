@@ -48,7 +48,7 @@ install_requires=[
     'PasteDeploy',
     'MarkupSafe',
     'repoze.lru'
-    ]
+]
 
 setup(
     name='TurboGears2',
@@ -77,6 +77,6 @@ setup(
     entry_points='''
     ''',
     dependency_links=[
-        "http://tg.gy/220"
+        "http://tg.gy/230"
         ]
 )
