@@ -18,10 +18,10 @@ develeopment, back database development and everything in between:
  * powerful Object Relational Mappers (SQLAlchemy)
 
 The latest development version is available in the
-`TurboGears Git repository`_.
+`TurboGears Git repositories`_.
 
-.. _TurboGears Git repository:
-    https://sourceforge.net/p/turbogears2/tg2/
+.. _TurboGears Git repositories:
+    https://github.com/TurboGears
 """
 url="http://www.turbogears.org/"
 author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen, Alessandro Molina, and the TurboGears community"
