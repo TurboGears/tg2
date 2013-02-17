@@ -9,6 +9,7 @@ from tg.util import Bunch
 from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
 from tg.configuration.auth import _AuthenticationForgerPlugin
+from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
 from tg.configuration.utils import coerce_config
 from paste.deploy.converters import asint
 
@@ -60,6 +61,12 @@ class FakeTransaction:
 
 from tg.configuration.auth import TGAuthMetadata
 class ApplicationAuthMetadata(TGAuthMetadata):
+    def get_user(self, identity, userid):
+        return {'name':'None'}
+
+class ApplicationAuthMetadataWithAuthentication(TGAuthMetadata):
+    def authenticate(self, environ, identity):
+        return 1
     def get_user(self, identity, userid):
         return {'name':'None'}
 
@@ -715,6 +722,30 @@ class TestAppConfig:
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
         config.sa_auth = past_config_sa_auth
+
+    def test_tgauthmetadata_auth_middleware(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('default', None)]}
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert 'cookie' in authenticators
+        assert 'tgappauth' in authenticators
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_tgauthmetadata_loginpwd(self):
+        who_authenticator = _AuthMetadataAuthenticator(ApplicationAuthMetadataWithAuthentication(), using_password=True)
+        assert who_authenticator.authenticate({}, {}) == None
+
+    def test_tgauthmetadata_nologinpwd(self):
+        who_authenticator = _AuthMetadataAuthenticator(ApplicationAuthMetadataWithAuthentication(), using_password=False)
+        assert who_authenticator.authenticate({}, {}) == 1
 
     def test_toscawidgets_recource_variant(self):
         if PY3: raise SkipTest()

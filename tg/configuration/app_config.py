@@ -884,8 +884,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 pos = None
             except ValueError:
                 pos = -1
+
             if pos is None or pos >= 0:
-                if self.auth_backend == "sqlalchemy":
+                if getattr(auth_args['authmetadata'], 'authenticate', None) is not None:
+                    from tg.configuration.auth import create_default_authenticator
+                    auth_args, tgauth = create_default_authenticator(**auth_args)
+                    authenticator = ('tgappauth', tgauth)
+                elif self.auth_backend == "sqlalchemy":
                     from tg.configuration.sqla.auth import create_default_authenticator
                     auth_args, sqlauth = create_default_authenticator(**auth_args)
                     authenticator = ('sqlauth', sqlauth)
@@ -895,6 +900,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                     authenticator = ('mingauth', mingauth)
                 else:
                     authenticator = None
+
                 if authenticator:
                     if pos is None:
                         auth_args['authenticators'] = [authenticator]
