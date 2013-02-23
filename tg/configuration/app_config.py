@@ -8,7 +8,7 @@ from copy import copy
 import mimetypes
 from UserDict import DictMixin
 
-from pylons.i18n import ugettext, get_lang
+from pylons.i18n import ugettext, ungettext, get_lang
 
 from pylons.configuration import config as pylons_config
 from beaker.middleware import SessionMiddleware, CacheMiddleware
@@ -484,6 +484,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         config['pylons.app_globals'].jinja2_env = Environment(loader=loader, autoescape=True,
                  auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
+
+        # Register i18n callables
+        config['pylons.app_globals'].jinja2_env.install_gettext_callables(ugettext, ungettext)
 
         # Try to load custom filters module under app_package.lib.templatetools
         try:
