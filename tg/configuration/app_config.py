@@ -167,6 +167,7 @@ class AppConfig(Bunch):
         self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
+        self.use_dotted_templatenames = not minimal
 
         self.lang = None
         self.i18n_enabled = not minimal

@@ -34,6 +34,7 @@ def test_render_missing_renderer():
 
 def test_jinja_lookup_nonexisting_template():
     conf = AppConfig(minimal=True)
+    conf.use_dotted_templatenames = True
     conf.renderers.append('jinja')
     conf.package = FakePackage()
     app = conf.make_wsgi_app()
@@ -48,6 +49,7 @@ def test_jinja_lookup_nonexisting_template():
 class TestMakoLookup(object):
     def setup(self):
         conf = AppConfig(minimal=True)
+        conf.use_dotted_templatenames = True
         conf.renderers.append('mako')
         conf.package = FakePackage()
         self.app = conf.make_wsgi_app()

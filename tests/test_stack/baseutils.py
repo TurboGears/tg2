@@ -13,6 +13,7 @@ default_config = {
                          'static_files': None},
         'db_engines': {},
         'tg.strict_tmpl_context':False,
+        'use_dotted_templatenames':True,
         'buffet.template_engines': [],
         'buffet.template_options': {},
         'default_renderer':'json',
