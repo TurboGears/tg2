@@ -595,6 +595,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # Try to load custom filters module under app_package.lib.templatetools
         try:
+            if not self.package_name:
+                raise AttributeError()
+
             filter_package = self.package_name + ".lib.templatetools"
             autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
             try:

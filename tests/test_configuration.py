@@ -240,7 +240,17 @@ class TestAppConfig:
     def test_setup_mako_renderer(self):
         self.config.paths.templates = ['template_path']
         self.config.setup_mako_renderer(use_dotted_templatenames=True)
-    
+
+    def test_setup_jinja_without_package(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.renderers = ['jinja']
+        app = conf.make_wsgi_app()
+
     def test_setup_sqlalchemy(self):
         class RootController(TGController):
             @expose()
