@@ -769,6 +769,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def setup_renderers(self):
         if not 'json' in self.renderers: self.renderers.append('json')
 
+        if self.default_renderer not in self.renderers:
+            first_renderer = self.renderers[0]
+            log.warn('Default renderer not in renders, automatically switching to %s' % first_renderer)
+            self.default_renderer = first_renderer
+
         for renderer in self.renderers[:]:
             setup = getattr(self, 'setup_%s_renderer'%renderer, None)
             if setup:
