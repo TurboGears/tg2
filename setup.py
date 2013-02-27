@@ -23,7 +23,7 @@ test_requirements = ['coverage',
                     'wsgiref',
                     'Genshi >= 0.5.1',
                     'Mako',
-                    'WebTest',
+                    'WebTest < 2.0',
                     'routes',
                     'backlash',
                     'sqlalchemy'
