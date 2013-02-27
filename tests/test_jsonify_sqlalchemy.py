@@ -1,5 +1,6 @@
 from nose.tools import raises
 from tg import jsonify
+import json
 
 try:
     try:
@@ -65,29 +66,34 @@ else:
         s = create_session()
         t = s.query(Test1).get(1)
         encoded = jsonify.encode(t)
-        assert encoded == '{"id": 1, "val": "bob"}'
+        expected = json.dumps(json.loads('{"id": 1, "val": "bob"}'))
+        assert encoded == expected, encoded
 
     def test_salist():
         s = create_session()
         t = s.query(Test1).get(1)
         encoded = jsonify.encode(dict(results=t.test2s))
-        assert encoded == '''{"results": [{"test1id": 1, "id": 1, "val": "fred"}, {"test1id": 1, "id": 2, "val": "alice"}]}''', encoded
+        expected = json.dumps(json.loads('''{"results": [{"test1id": 1, "id": 1, "val": "fred"}, {"test1id": 1, "id": 2, "val": "alice"}]}'''))
+        assert encoded == expected, encoded
         
     def test_select_row():
         s = create_session()
         t = test1.select().execute()
         encoded = jsonify.encode(dict(results=t))
-        assert encoded == """{"results": {"count": -1, "rows": [{"count": 1, "rows": {"id": 1, "val": "bob"}}]}}""", encoded
+        expected = json.dumps(json.loads("""{"results": {"count": -1, "rows": [{"count": 1, "rows": {"id": 1, "val": "bob"}}]}}"""))
+        assert encoded == expected, encoded
 
     def test_select_rows():
         s = create_session()
         t = test2.select().execute()
         encoded = jsonify.encode(dict(results=t))
-        assert encoded == """{"results": {"count": -1, "rows": [{"count": 1, "rows": {"test1id": 1, "id": 1, "val": "fred"}}, {"count": 1, "rows": {"test1id": 1, "id": 2, "val": "alice"}}]}}""", encoded
+        expected = json.dumps(json.loads("""{"results": {"count": -1, "rows": [{"count": 1, "rows": {"test1id": 1, "id": 1, "val": "fred"}}, {"count": 1, "rows": {"test1id": 1, "id": 2, "val": "alice"}}]}}"""))
+        assert encoded == expected, encoded
 
     def test_explicit_saobj():
         s = create_session()
         t = s.query(Test3).get(1)
         encoded = jsonify.encode(t)
-        assert encoded == '{"id": 1, "val": "bob", "customized": true}'
+        expected = json.dumps(json.loads('{"id": 1, "val": "bob", "customized": true}'))
+        assert encoded == expected, encoded
 

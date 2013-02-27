@@ -4,6 +4,7 @@ from decimal import Decimal
 from nose.tools import raises
 from nose import SkipTest
 from webob.multidict import MultiDict
+import json
 
 class Foo(object):
     def __init__(self, bar):
@@ -38,7 +39,8 @@ def test_list_iter():
 def test_dictionary():
     d = {'a': 1, 'b': 2}
     encoded = jsonify.encode(d)
-    assert encoded == '{"a": 1, "b": 2}'
+    expected = json.dumps(json.loads('{"a": 1, "b": 2}'))
+    assert encoded == expected
 
 @raises(jsonify.JsonEncodeError)
 def test_nospecificjson():
