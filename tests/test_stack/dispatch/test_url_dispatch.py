@@ -9,6 +9,7 @@ from tg.util import no_warn
 from nose.tools import eq_
 from nose import SkipTest
 from tg._compat import PY3, u_
+import json
 
 def setup_noDB():
     base_config = TestConfig(folder = 'dispatch',
@@ -130,7 +131,9 @@ def test_flash_status():
 
 def test_flash_javascript():
     resp = app.get('/flash_render?using_js=True')
-    assert 'webflash({"id": "flash", "name": "webflash"}).render()' in resp
+    webflash_js_parameters = json.dumps({"id": "flash", "name": "webflash"})
+    expected = 'webflash(%s).render()' % webflash_js_parameters
+    assert expected in resp
 
 def test_flash_render_plain():
     resp = app.get('/flash_render')
