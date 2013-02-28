@@ -373,11 +373,11 @@ def test_mako_renderer_compiled_existing():
 
 def test_mako_renderer_compiled_no_access():
     os.makedirs('_tg_tests_mako_compiled')
-    os.makedirs('_tg_tests_mako_compiled/dest', mode=000)
+    os.makedirs('_tg_tests_mako_compiled/dest', mode=0o400)
     test_mako_renderer_compiled()
 
 def test_mako_renderer_compiled_no_access_parent():
-    os.makedirs('_tg_tests_mako_compiled', mode=000)
+    os.makedirs('_tg_tests_mako_compiled', mode=0o400)
     test_mako_renderer_compiled()
 
 def test_mako_inheritance():
