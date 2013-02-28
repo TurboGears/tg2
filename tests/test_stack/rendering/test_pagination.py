@@ -1,5 +1,6 @@
 from tests.test_stack import TestConfig, app_from_config
 from tg.support.paginate import Page
+from tg.controllers.util import _urlencode
 
 def setup_noDB():
     base_config = TestConfig(folder='rendering',
@@ -91,15 +92,18 @@ class TestPagination:
 
     def test_multiple_paginators(self):
         url = '/multiple_paginators/42'
-        page = self.app.get(url)
+        goto_page2_params = _urlencode({'testdata2_page':2,
+                                        'testdata_page':2})
+        goto_page2_link = url + '?' + goto_page2_params
 
+        page = self.app.get(url)
         assert '/multiple_paginators/42?testdata2_page=2' in page, str(page)
         assert '/multiple_paginators/42?testdata_page=2' in page, str(page)
 
         url = '/multiple_paginators/42?testdata_page=2'
         page = self.app.get(url)
 
-        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page, str(page)
+        assert goto_page2_link in page, str(page)
         assert '/multiple_paginators/42?testdata_page=4' in page, str(page)
 
         assert '<li>0</li>' not in page
@@ -110,7 +114,7 @@ class TestPagination:
         url = '/multiple_paginators/42?testdata2_page=2'
         page = self.app.get(url)
 
-        assert '/multiple_paginators/42?testdata2_page=2&testdata_page=2' in page, str(page)
+        assert goto_page2_link in page, str(page)
         assert '/multiple_paginators/42?testdata2_page=4' in page, str(page)
 
         assert '<li>0</li>' in page
