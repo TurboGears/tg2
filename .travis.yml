@@ -3,9 +3,11 @@ python:
   - "2.6"
   - "2.7"
   - "3.2"
+  - "3.3"
 
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then pip install 'svn+http://svn.edgewall.org/repos/genshi/trunk'; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]]; then pip install 'svn+http://svn.edgewall.org/repos/genshi/trunk'; fi
 
   - "pip install git+git://github.com/TurboGears/backlash.git"
   - "pip install repoze.who"
