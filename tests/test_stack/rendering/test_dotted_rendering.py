@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
@@ -48,6 +50,20 @@ def test_jinja_inherits_mixed():
     app = setup_noDB()
     resp = app.get('/jinja_inherits_mixed')
     assert "Welcome on my awsome homepage" in resp, resp
+
+def test_jinja_i18n():
+    app = setup_noDB()
+    resp = app.get('/jinja_i18n', status=200)
+
+def test_jinja_i18n_en():
+    app = setup_noDB()
+    resp = app.get('/jinja_i18n_en')
+    assert "Your application is now running" in resp
+
+def test_jinja_i18n_de():
+    app = setup_noDB()
+    resp = app.get('/jinja_i18n_de')
+    assert u"Ihre Anwendung läuft jetzt einwandfrei" in resp
 
 def test_default_genshi_renderer():
     app = setup_noDB()
