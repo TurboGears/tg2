@@ -903,3 +903,11 @@ class TestAppConfig:
 
         app.get('/test', status=404)
 
+    def test_package_no_app_globals(self):
+        class RootController(TGController):
+            pass
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = sys.modules[__name__]
+
+        app = conf.make_wsgi_app()
