@@ -4,7 +4,7 @@ from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
 from webtest import TestApp
-from tg._compat import PY3
+from tg._compat import PY3, u_
 
 def setup_noDB():
     base_config = TestConfig(folder = 'rendering',
@@ -63,7 +63,7 @@ def test_jinja_i18n_en():
 def test_jinja_i18n_de():
     app = setup_noDB()
     resp = app.get('/jinja_i18n_de')
-    assert u"Ihre Anwendung läuft jetzt einwandfrei" in resp
+    assert u_("Ihre Anwendung läuft jetzt einwandfrei") in resp
 
 def test_default_genshi_renderer():
     app = setup_noDB()
