@@ -414,7 +414,12 @@ class AppConfig(Bunch):
 
         """
 
-        g = self.package.lib.app_globals.Globals()
+        try:
+            g = self.package.lib.app_globals.Globals()
+        except AttributeError:
+            log.warn('Application has a package but no lib.app_globals.Globals class is available.')
+            return
+
         g.dotted_filename_finder = DottedFileNameFinder()
         config['tg.app_globals'] = g
 
