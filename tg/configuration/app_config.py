@@ -8,7 +8,7 @@ from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin
 
-from tg.i18n import ugettext, get_lang
+from tg.i18n import ugettext, ungettext, get_lang
 
 from tg.support.middlewares import SessionMiddleware, CacheMiddleware
 from tg.support.middlewares import StaticsMiddleware
@@ -271,7 +271,7 @@ class AppConfig(Bunch):
             self.package_name = self.package.__name__
         except AttributeError:
             self.package_name = None
-        
+
         log.debug("Initializing configuration, package: '%s'", self.package_name)
         conf = global_conf.copy()
         conf.update(app_conf)
@@ -589,6 +589,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         if not 'jinja_extensions' in self :
             self.jinja_extensions = []
 
+        # Add i18n extension by default
+        if not "jinja2.ext.i18n" in self.jinja_extensions:
+            self.jinja_extensions.append("jinja2.ext.i18n")
+
         if not 'jinja_filters' in self:
             self.jinja_filters = {}
 
@@ -624,6 +628,9 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
         # Jinja's unable to request c's attributes without strict_c
         config['tg.strict_tmpl_context'] = True
+
+        # Add gettext functions to the jinja environment
+        config['tg.app_globals'].jinja2_env.install_gettext_callables(ugettext, ungettext)
 
         self.render_functions.jinja = render_jinja
 
@@ -1137,7 +1144,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
             if global_conf is None:
                 global_conf = {}
-            
+
             # Configure the Application environment
             if load_environment:
                 load_environment(global_conf, app_conf)

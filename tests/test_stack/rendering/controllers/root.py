@@ -1,6 +1,6 @@
 """Main Controller"""
 
-from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
+from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context, i18n
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tg.validation import TGValidationError
@@ -245,6 +245,20 @@ class RootController(TGController):
 
     @expose('jinja:jinja_buildins.jinja')
     def jinja_buildins(self):
+        return {}
+
+    @expose('jinja:jinja_i18n.jinja')
+    def jinja_i18n(self):
+        return {}
+
+    @expose('jinja:jinja_i18n.jinja')
+    def jinja_i18n_en(self):
+        i18n.set_temporary_lang("en")
+        return {}
+
+    @expose('jinja:jinja_i18n.jinja')
+    def jinja_i18n_de(self):
+        i18n.set_temporary_lang("de")
         return {}
 
     @expose('chameleon_genshi:index.html')
