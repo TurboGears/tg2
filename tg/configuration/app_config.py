@@ -155,7 +155,7 @@ class AppConfig(Bunch):
         self.renderers = []
         self.default_renderer = 'genshi'
         self.render_functions = Bunch()
-
+ 
         self.enable_routes = False
         self.enable_routing_args = False
         self.disable_request_extensions = minimal
@@ -168,6 +168,8 @@ class AppConfig(Bunch):
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
         self.use_dotted_templatenames = not minimal
+
+        self.use_beaker = not minimal
 
         self.lang = None
         self.i18n_enabled = not minimal
@@ -956,8 +958,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             from routes.middleware import RoutesMiddleware
             app = RoutesMiddleware(app, config['routes.map'])
 
-        app = SessionMiddleware(app, config)
-        app = CacheMiddleware(app, config)
+        if self.use_beaker:
+            app = SessionMiddleware(app, config)
+            app = CacheMiddleware(app, config)
+
         return app
 
     def add_tosca_middleware(self, app):
