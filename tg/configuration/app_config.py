@@ -169,7 +169,7 @@ class AppConfig(Bunch):
         self.prefer_toscawidgets2 = False
         self.use_dotted_templatenames = not minimal
 
-        self.use_beaker = not minimal
+        self.use_sessions = not minimal
 
         self.lang = None
         self.i18n_enabled = not minimal
@@ -958,9 +958,10 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             from routes.middleware import RoutesMiddleware
             app = RoutesMiddleware(app, config['routes.map'])
 
-        if self.use_beaker:
+        if self.use_sessions:
             app = SessionMiddleware(app, config)
-            app = CacheMiddleware(app, config)
+        
+        app = CacheMiddleware(app, config)
 
         return app
 
