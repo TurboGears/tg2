@@ -1213,7 +1213,8 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
-            app = RegistryManager(app, preserve_exceptions=asbool(global_conf.get('debug')))
+            app = RegistryManager(app, streaming=True,
+                                  preserve_exceptions=asbool(global_conf.get('debug')))
 
             # Place the debuggers after the registry so that we
             # can preserve context in case of exceptions
