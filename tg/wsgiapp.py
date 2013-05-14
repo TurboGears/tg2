@@ -79,7 +79,11 @@ class TGApp(object):
 
         self.wrapped_dispatch = self.dispatch
         for wrapper in self.config.get('application_wrappers', []):
-            self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
+            try:
+                self.wrapped_dispatch = wrapper(self.wrapped_dispatch, self.config)
+            except TypeError:
+                #backward compatibility with wrappers that didn't receive the config
+                self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
 
         if 'tg.root_controller' in self.config:
             self.controller_instances['root'] = self.config['tg.root_controller']

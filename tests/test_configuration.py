@@ -14,7 +14,7 @@ from tg.configuration.utils import coerce_config
 from paste.deploy.converters import asint
 
 import tg.i18n
-from tg import TGController, expose, response, request
+from tg import TGController, expose, response, request, abort
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from webtest import TestApp
 
@@ -53,11 +53,25 @@ class FakeTransaction:
     def get(self):
         return self
 
+    def begin(self):
+        self.aborted = False
+        self.doomed = False
+
     def abort(self):
         self.aborted = True
 
     def commit(self):
         self.aborted = False
+
+    def _retryable(self, *args):
+        return True
+    note = _retryable
+
+    def isDoomed(self):
+        return self.doomed
+
+    def doom(self):
+        self.doomed = True
 
 from tg.configuration.auth import TGAuthMetadata
 class ApplicationAuthMetadata(TGAuthMetadata):
@@ -269,6 +283,30 @@ class TestAppConfig:
         assert 'HI!' in app.get('/test')
         assert package.model.DBSession.DBSESSION_REMOVED
 
+    def test_custom_transaction_manager(self):
+        class CustomAppConfig(AppConfig):
+            def add_tm_middleware(self, app):
+                self.did_perform_custom_tm = True
+                return app
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        package = PackageWithModel()
+        conf = CustomAppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.use_transaction_manager = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        app = conf.make_wsgi_app()
+
+        assert conf.did_perform_custom_tm == True
+        assert conf.application_wrappers == []
+
     def test_sqlalchemy_commit_veto(self):
         class RootController(TGController):
             @expose()
@@ -296,8 +334,8 @@ class TestAppConfig:
 
         fake_transaction = FakeTransaction()
         import transaction
-        prev_transaction_get = transaction.get
-        transaction.get = fake_transaction.get
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
 
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=RootController())
@@ -326,7 +364,70 @@ class TestAppConfig:
         app.get('/notfound', status=404)
         assert fake_transaction.aborted == True
 
-        transaction.get = prev_transaction_get
+        transaction.manager = prev_transaction_manager
+
+    def test_sqlalchemy_doom(self):
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                fake_transaction.doom()
+                return 'HI!'
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.use_transaction_manager = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        app.get('/test')
+        assert fake_transaction.aborted == True
+
+        transaction.manager = prev_transaction_manager
+
+    def test_sqlalchemy_retry(self):
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
+
+        from transaction.interfaces import TransientError
+
+        class RootController(TGController):
+            attempts = []
+
+            @expose()
+            def test(self):
+                self.attempts.append(True)
+                if len(self.attempts) == 3:
+                    return 'HI!'
+                raise TransientError()
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.use_transaction_manager = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        conf['tm.attempts'] = 3
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'HI' in resp
+
+        transaction.manager = prev_transaction_manager
 
     def test_setup_sqla_persistance(self):
         config['sqlalchemy.url'] = 'sqlite://'
@@ -520,13 +621,34 @@ class TestAppConfig:
                 return self.dispatcher(*args, **kw)
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.application_wrappers.append(AppWrapper)
+        conf.register_wrapper(AppWrapper)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
         assert 'HI!' in app.get('/test')
         assert wrapper_has_been_visited[0] == True
+
+    def test_application_wrapper_ordering_after(self):
+        class AppWrapper1:
+            pass
+        class AppWrapper2:
+            pass
+        class AppWrapper3:
+            pass
+        class AppWrapper4:
+            pass
+
+        conf = AppConfig(minimal=True)
+        conf.register_wrapper(AppWrapper2)
+        conf.register_wrapper(AppWrapper3)
+        conf.register_wrapper(AppWrapper1, after=False)
+        conf.register_wrapper(AppWrapper4, after=AppWrapper3)
+
+        assert conf.application_wrappers[0] == AppWrapper1
+        assert conf.application_wrappers[1] == AppWrapper2
+        assert conf.application_wrappers[2] == AppWrapper3
+        assert conf.application_wrappers[3] == AppWrapper4
 
     def test_wrap_app(self):
         class RootController(TGController):
@@ -911,3 +1033,47 @@ class TestAppConfig:
         conf.package = sys.modules[__name__]
 
         app = conf.make_wsgi_app()
+
+    def test_custom_error_document(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(403)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.handle_error_page = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_custom_error_document_with_streamed_response(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                response.status_code = 403
+                def _output():
+                    yield 'Hi'
+                    yield 'World'
+                return _output()
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.handle_error_page = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' in resp, resp

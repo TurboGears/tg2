@@ -1,27 +1,23 @@
 from tg.request_local import Request, Response
 
+import logging
+log = logging.getLogger(__name__)
+
+
 def _call_wsgi_application(application, environ):
     """
     Call the given WSGI application, returning ``(status_string,
     headerlist, app_iter)``
 
     Be sure to call ``app_iter.close()`` if it's there.
-
-    If catch_exc_info is true, then returns ``(status_string,
-    headerlist, app_iter, exc_info)``, where the fourth item may
-    be None, but won't be if there was an exception.  If you don't
-    do this and there was an exception, the exception will be
-    raised directly.
-
     """
     captured = []
     output = []
-    def start_response(status, headers, exc_info=None):
-        if exc_info is not None and not catch_exc_info: #pragma: no cover
-            raise (exc_info[0], exc_info[1], exc_info[2])
+    def _start_response(status, headers, exc_info=None):
         captured[:] = [status, headers, exc_info]
         return output.append
-    app_iter = application(environ, start_response)
+
+    app_iter = application(environ, _start_response)
     if not captured or output:
         try:
             output.extend(app_iter)
@@ -30,6 +26,7 @@ def _call_wsgi_application(application, environ):
                 app_iter.close()
         app_iter = output
     return (captured[0], captured[1], app_iter, captured[2])
+
 
 class StatusCodeRedirect(object):
     """Internally redirects a request based on status code
@@ -86,12 +83,52 @@ class StatusCodeRedirect(object):
 from beaker.middleware import CacheMiddleware as BeakerCacheMiddleware
 from beaker.middleware import SessionMiddleware as BeakerSessionMiddleware
 
+
 class SessionMiddleware(BeakerSessionMiddleware):
     session = None
+
 
 class CacheMiddleware(BeakerCacheMiddleware):
     cache = None
 
+
+class SeekableRequestBodyMiddleware(object):
+    def __init__(self, app):
+        self.app = app
+
+    def _stream_response(self, data):
+        for chunk in data:
+            yield chunk
+
+    def __call__(self, environ, start_response):
+        log.debug("Making request body seekable")
+        Request(environ).make_body_seekable()
+        return self._stream_response(self.app(environ, start_response))
+
+
+class DBSessionRemoverMiddleware(object):
+    def __init__(self, DBSession, app):
+        self.app = app
+        self.DBSession = DBSession
+
+    def _stream_response(self, data):
+        try:
+            for chunk in data:
+                yield chunk
+        finally:
+            log.debug("Removing DBSession from current thread")
+            self.DBSession.remove()
+
+    def __call__(self, environ, start_response):
+        try:
+            return self._stream_response(self.app(environ, start_response))
+        except:
+            log.debug("Removing DBSession from current thread")
+            self.DBSession.remove()
+            raise
+
+
 from .statics import StaticsMiddleware
 
-__all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware']
+__all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware',
+           'SeekableRequestBodyMiddleware', 'DBSessionRemoverMiddleware']

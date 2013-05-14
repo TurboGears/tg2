@@ -145,8 +145,7 @@ class CoreDispatcher(object):
                         response.headers.add(name, value)
                     else:
                         response.headers.setdefault(name, value)
-                thread_locals.response = response
-                py_response = response
+                py_response = thread_locals.response = response
             elif response is None:
                 pass
             else:

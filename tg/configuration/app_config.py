@@ -11,7 +11,7 @@ from collections import MutableMapping as DictMixin
 from tg.i18n import ugettext, ungettext, get_lang
 
 from tg.support.middlewares import SessionMiddleware, CacheMiddleware
-from tg.support.middlewares import StaticsMiddleware
+from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
 from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
@@ -19,8 +19,6 @@ from tg.request_local import config as reqlocal_config
 import tg
 from tg.configuration.utils import coerce_config
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
-
-from webob import Request
 
 log = logging.getLogger(__name__)
 
@@ -168,6 +166,7 @@ class AppConfig(Bunch):
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
         self.use_dotted_templatenames = not minimal
+        self.handle_error_page = not minimal
 
         self.use_sessions = not minimal
 
@@ -230,6 +229,22 @@ class AppConfig(Bunch):
             self.controller_wrappers.append(func)
         else:
             self.hooks.setdefault(hook_name, []).append(func)
+
+    def register_wrapper(self, wrapper, after=None):
+        wrappers = self.application_wrappers
+
+        if after is False:
+            append_index = 0
+        else:
+            append_index = len(wrappers)
+
+        if after:
+            for idx, current_wrapper in enumerate(wrappers):
+                if current_wrapper == after:
+                    append_index = idx + 1
+                    break
+
+        wrappers.insert(append_index, wrapper)
 
     def setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -848,17 +863,19 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def add_error_middleware(self, global_conf, app):
         """Add middleware which handles errors and exceptions."""
-        from tg.support.middlewares import StatusCodeRedirect
         from tg.error import ErrorReporter
-
         app = ErrorReporter(app, global_conf, **config['tg.errorware'])
 
-        # Display error documents for self.handle_status_codes status codes (and
-        # 500 when debug is disabled)
-        if asbool(config['debug']):
-            app = StatusCodeRedirect(app, self.handle_status_codes)
-        else:
-            app = StatusCodeRedirect(app, self.handle_status_codes + [500])
+        if self.handle_error_page:
+            from tg.support.middlewares import StatusCodeRedirect
+
+            # Display error documents for self.handle_status_codes status codes (and
+            # 500 when debug is disabled)
+            if asbool(config['debug']):
+                app = StatusCodeRedirect(app, self.handle_status_codes)
+            else:
+                app = StatusCodeRedirect(app, self.handle_status_codes + [500])
+
         return app
 
     def add_debugger_middleware(self, global_conf, app):
@@ -1073,7 +1090,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         return app
 
     def add_tm_middleware(self, app):
-        """Set up the transaction managment middleware.
+        """Set up the transaction managment application wrapper.
 
         To abort a transaction inside a TG2 app::
 
@@ -1084,8 +1101,13 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         behavior can be overridden by overriding base_config.commit_veto.
 
         """
-        from repoze.tm import TM
-        return TM(app, self.commit_veto)
+        from tg.support.transaction_manager import TGTransactionManager
+
+        #TODO: remove self.commit_veto option in future release
+        #backward compatibility with "commit_veto" option
+        config['tm.commit_veto'] = self.commit_veto
+
+        return TGTransactionManager(app, config)
 
     def add_ming_middleware(self, app):
         """Set up the ming middleware for the unit of work"""
@@ -1099,13 +1121,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         request.  Only override this method if you know what you are doing!
 
         """
-        def remover(environ, start_response):
-            try:
-                return app(environ, start_response)
-            finally:
-                log.debug("Removing DBSession from current thread")
-                self.DBSession.remove()
-        return remover
+        return DBSessionRemoverMiddleware(self.DBSession, app)
 
     def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
@@ -1195,7 +1211,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 app = self.add_ming_middleware(app)
 
             if config.get('make_body_seekable'):
-                app = maybe_make_body_seekable(app)
+                app = SeekableRequestBodyMiddleware(app)
 
             if 'PYTHONOPTIMIZE' in os.environ:
                 warnings.warn("Forcing full_stack=False due to PYTHONOPTIMIZE enabled. "+\
@@ -1241,10 +1257,3 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
     def make_wsgi_app(self, **app_conf):
         loadenv = self.make_load_environment()
         return self.setup_tg_wsgi_app(loadenv)(**app_conf)
-
-def maybe_make_body_seekable(app):
-    def wrapper(environ, start_response):
-        log.debug("Making request body seekable")
-        Request(environ).make_body_seekable()
-        return app(environ, start_response)
-    return wrapper
