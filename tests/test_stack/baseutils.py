@@ -32,11 +32,11 @@ class FakeRoutes(object):
         environ['routes.url'] = None
         return self.app(environ, start_response)
 
+
 class ControllerWrap(object):
     def __init__(self, controller):
         self.controller = controller
 
     def __call__(self, environ, start_response):
         app = self.controller()
-        app.start_response = None
         return app(environ, start_response)

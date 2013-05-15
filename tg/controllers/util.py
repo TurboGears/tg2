@@ -196,7 +196,7 @@ def abort(status_code=None, detail="", headers=None, comment=None):
     raise exc
 
 def use_wsgi_app(wsgi_app):
-    return wsgi_app(tg.request.environ, tg.request.start_response)
+    return tg.request.get_response(wsgi_app)
 
 
 NullTranslations = tg_gettext = None

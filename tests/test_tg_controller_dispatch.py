@@ -548,6 +548,24 @@ class TestWSGIAppController(TestWSGIController):
             raise AssertionError(str(e))
         assert 'some_url' in r
 
+class TestWSGIAppControllerNotHTML(TestWSGIController):
+
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        class TestedWSGIAppController(WSGIAppController):
+            def __init__(self):
+                def test_app(environ, start_response):
+                    start_response('200 OK', [('Content-type','text/plain'),
+                                              ('Content-Length', '5')])
+                    return [b'HELLO']
+                super(TestedWSGIAppController, self).__init__(test_app)
+        self.app = make_app(TestedWSGIAppController)
+
+    def test_right_wsgi_headers(self):
+        r = self.app.get('/some_url')
+        assert 'HELLO' in r
+        assert r.content_length == 5
+        assert r.content_type == 'text/plain'
 
 class TestTGController(TestWSGIController):
     def setUp(self, *args, **kargs):

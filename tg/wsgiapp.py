@@ -125,14 +125,12 @@ class TGApp(object):
         controller = self.resolve(environ, start_response)
         response = self.wrapped_dispatch(controller, environ, start_response)
 
-        #This is probably not necessary and can be removed as
-        #CoreDispatcher.__call__ does the same
-        if testmode and hasattr(response, 'wsgi_response'): #pragma: no cover
+        if testmode:
             environ['paste.testing_variables']['response'] = response
 
         try:
             if response is not None:
-                return response
+                return response(environ, start_response)
 
             raise Exception("No content returned by controller (Did you "
                             "remember to 'return' it?) in: %r" %
@@ -294,7 +292,7 @@ class TGApp(object):
 
         """
         if not controller:
-            return HTTPNotFound()(environ, start_response)
+            return HTTPNotFound()
 
         #Setup pylons compatibility before calling controller
         if has_pylons and self.pylons_compatible: #pragma: no cover

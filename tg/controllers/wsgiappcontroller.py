@@ -42,15 +42,15 @@ class WSGIAppController(TGController):
             redirect(request.path_info + '/')
 
         new_req.body_file.seek(0)
-        return self.delegate(new_req.environ, request.start_response)
+        return self.delegate(new_req)
 
-    def delegate(self, environ, start_response):
+    def delegate(self, request):
         """Delegate the request to the WSGI app.
 
         Override me if you need to update the environ, mangle response, etc...
 
         """
-        return self.app(environ, start_response)
+        return request.get_response(self.app)
 
 
 __all__ = ['WSGIAppController']

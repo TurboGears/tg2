@@ -15,15 +15,14 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-from warnings import warn
 import tg, sys
 import mimetypes
 from webob.exc import HTTPException
 from tg._compat import unicode_text
-from tg.exceptions import HTTPNotFound
 from tg.i18n import setup_i18n
 from tg.decorators import cached_property
 from crank.dispatchstate import DispatchState
+from tg.request_local import WebObResponse
 
 def dispatched_controller():
     state = tg.request._controller_state
@@ -110,55 +109,33 @@ class CoreDispatcher(object):
     def __call__(self, environ, start_response):
         thread_locals = environ['tg.locals']
         py_response = thread_locals.response
-        py_request = thread_locals.request
-
-        #Replace start_response and track if it is called
-        #this is to track if the controller is passing control to a plain
-        #WSGI application instead of a TG controller.
-        start_response_called = []
-        def repl_start_response(status, headers, exc_info=None):
-            start_response_called.append(None)
-            headers.extend(header for header in environ['tg.locals'].response.headerlist
-            if header[0] == 'Set-Cookie' or
-               header[0].startswith('X-'))
-            return start_response(status, headers, exc_info)
-        py_request._fast_setattr('start_response', repl_start_response)
 
         try:
             response = self._perform_call(thread_locals)
         except HTTPException as httpe:
             response = httpe
 
-        #If we reached a plain WSGI application do not build the response
-        #but simply pass the response as is.
-        if not start_response_called:
-            py_request._fast_setattr('start_response', start_response)
-            if isinstance(response, bytes):
-                py_response.body = response
-            elif isinstance(response, unicode_text):
-                if not py_response.charset:
-                    py_response.charset = 'utf-8'
-                py_response.text = response
-            elif hasattr(response, 'wsgi_response'):
-                for name, value in py_response.headers.items():
-                    if name.lower() == 'set-cookie':
-                        response.headers.add(name, value)
-                    else:
-                        response.headers.setdefault(name, value)
-                py_response = thread_locals.response = response
-            elif response is None:
-                pass
-            else:
-                py_response.app_iter = response
-            response = py_response
+        if isinstance(response, bytes):
+            py_response.body = response
+        elif isinstance(response, unicode_text):
+            if not py_response.charset:
+                py_response.charset = 'utf-8'
+            py_response.text = response
+        elif isinstance(response, WebObResponse):
+            py_response.content_length = response.content_length
+            for name, value in py_response.headers.items():
+                header_name = name.lower()
+                if header_name == 'set-cookie':
+                    response.headers.add(name, value)
+                else:
+                    response.headers.setdefault(name, value)
+            py_response = thread_locals.response = response
+        elif response is None:
+            pass
+        else:
+            py_response.app_iter = response
 
-        if hasattr(response, 'wsgi_response'):
-            if 'paste.testing_variables' in environ:
-                # Copy the response object into the testing vars if we're testing
-                environ['paste.testing_variables']['response'] = response
-            return response(environ, start_response)
-
-        return response
+        return py_response
 
     @cached_property
     def mount_point(self):
