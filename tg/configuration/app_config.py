@@ -1090,7 +1090,7 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         return app
 
     def add_tm_middleware(self, app):
-        """Set up the transaction managment application wrapper.
+        """Set up the transaction management middleware.
 
         To abort a transaction inside a TG2 app::
 
