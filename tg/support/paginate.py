@@ -433,3 +433,9 @@ class Page(object):
 
     def __len__(self):
         return len(self.items)
+
+    def __json__(self):
+        return {'total':self.item_count, 
+                'page':self.page, 
+                'items_per_page':self.items_per_page, 
+                'entries':self.items}
