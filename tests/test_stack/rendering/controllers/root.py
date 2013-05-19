@@ -167,6 +167,7 @@ class RootController(TGController):
         return '''Some Text'''
 
     @expose('genshi:genshi_paginated.html')
+    @expose('json')
     @paginate('testdata', max_items_per_page=20)
     def paginated(self, n):
         return dict(testdata=range(int(n)))

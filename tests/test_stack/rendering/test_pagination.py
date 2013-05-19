@@ -1,6 +1,8 @@
+import json
 from tests.test_stack import TestConfig, app_from_config
 from tg.support.paginate import Page
 from tg.controllers.util import _urlencode
+from tg import json_encode
 
 def setup_noDB():
     base_config = TestConfig(folder='rendering',
@@ -122,6 +124,16 @@ class TestPagination:
         assert '<li>151</li>' not in page
         assert '<li>161</li>' in page
 
+    def test_json_pagination(self):
+        url = '/paginated/42.json'
+        page = self.app.get(url)
+        assert '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]' in page
+
+        url = '/paginated/42.json?page=2'
+        page = self.app.get(url)
+        assert '[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]' in page
+
+
 class TestPage(object):
     def test_not_a_number_page(self):
         p = Page(range(100), items_per_page=10, page='A')
@@ -230,3 +242,11 @@ class TestPageSQLA(object):
         p = Page(q, items_per_page=1, page=1)
         assert len(list(p)) == 1
         assert list(p)[0].val == 'fred', list(p)
+
+    def test_json_query(self):
+        q = self.s.query(Test2)
+        p = Page(q, items_per_page=1, page=1)
+        res = json.loads(json_encode(p))
+        assert len(res['entries']) == 1
+        assert res['total'] == 2
+        assert res['entries'][0]['val'] == 'fred'
