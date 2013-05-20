@@ -16,7 +16,6 @@ if py_version[0] == 3 and py_version < (3, 2):
 test_requirements = ['coverage',
                     'nose',
                     'zope.sqlalchemy >= 0.4',
-                    'jinja2',
                     'repoze.who',
                     'repoze.who.plugins.sa >= 1.0.1',
                     'Genshi >= 0.5.1',
@@ -26,6 +25,13 @@ test_requirements = ['coverage',
                     'backlash',
                     'sqlalchemy'
                     ]
+
+if py_version == (3, 2):
+    #jinja2 2.7 is incompatible with Python 3.2
+    test_requirements.append('jinja2 < 2.7')
+else:
+    test_requirements.append('jinja2')
+
 
 if py_version[0] == 2:
     test_requirements.extend(['TurboKid >= 1.0.4',
@@ -44,9 +50,14 @@ install_requires=[
     'Beaker',
     'decorator',
     'PasteDeploy',
-    'MarkupSafe',
     'repoze.lru'
 ]
+
+if py_version == (3, 2):
+    #markupsafe 0.16 is incompatible with Python 3.2
+    install_requires.append('MarkupSafe < 0.16')
+else:
+    install_requires.append('MarkupSafe')
 
 setup(
     name='TurboGears2',
