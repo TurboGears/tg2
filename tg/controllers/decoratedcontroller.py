@@ -304,7 +304,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
 
-            errors = [(child.id, child.error_msg) for child in widget_children]
+            errors = [(child.key, child.error_msg) for child in widget_children]
             tmpl_context.form_errors.update(errors)
             tmpl_context.form_values = widget.child.value
         elif isinstance(exception, TGValidationError):
