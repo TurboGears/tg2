@@ -1,5 +1,5 @@
-import os, sys, logging, paste
-from webob.exc import HTTPFound, HTTPNotFound
+import os, sys, logging
+from webob.exc import HTTPNotFound
 
 log = logging.getLogger(__name__)
 
@@ -60,9 +60,6 @@ class TGApp(object):
 
         self.controller_classes = {}
         self.controller_instances = {}
-
-        #This is here just as a safety net as AppConfig already sets it
-        self.config.setdefault('lang', None)
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']

@@ -170,7 +170,6 @@ class AppConfig(Bunch):
         self.handle_error_page = not minimal
 
         self.use_sessions = not minimal
-
         self.i18n_enabled = not minimal
         self.serve_static = not minimal
 

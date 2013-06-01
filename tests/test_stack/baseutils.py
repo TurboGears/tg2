@@ -20,7 +20,8 @@ default_config = {
         'renderers': ['json'],
         'render_functions':{'json':tg.render.render_json},
         'use_legacy_renderers':False,
-        'use_sqlalchemy': False
+        'use_sqlalchemy': False,
+        'lang': None
 }
 
 class FakeRoutes(object):

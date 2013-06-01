@@ -160,6 +160,11 @@ class TestAppConfig:
         assert self.config.get_root_module() == None, self.config.get_root_module()
         self.config['paths']['root'] = current_root_module
 
+    def test_lang_can_be_changed_by_ini(self):
+        conf = AppConfig(minimal=True)
+        conf.init_config({'lang':'ru'}, {})
+        assert config['lang'] == 'ru'
+
     def test_create_minimal_app(self):
         class RootController(TGController):
             @expose()
