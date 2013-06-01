@@ -104,6 +104,7 @@ defaults = {
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
     'tg.pylons_compatible': True,
+    'lang': None
 }
 
 # Push an empty config so all accesses to config at import time have something
@@ -170,7 +171,6 @@ class AppConfig(Bunch):
 
         self.use_sessions = not minimal
 
-        self.lang = None
         self.i18n_enabled = not minimal
         self.serve_static = not minimal
 
