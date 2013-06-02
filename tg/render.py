@@ -203,18 +203,21 @@ def cached_template(template_name, render_func, ns_options=(),
 
     """
     # If one of them is not None then the user did set something
-    if (cache_key is not None
-            or cache_expire is not None or cache_type is not None):
-        if not cache_type: #pragma: no cover
-            cache_type = 'dbm'
-        if not cache_key: #pragma: no cover
+    if cache_key is not None or cache_type is not None or cache_expire is not None:
+        get_cache_kw = {}
+        if cache_type is not None:
+            get_cache_kw['type'] = cache_type
+
+        if not cache_key:
             cache_key = 'default'
         if cache_expire == 'never':
             cache_expire = None
+
         namespace = template_name
         for name in ns_options:
             namespace += str(kwargs.get(name))
-        cache = tg.cache.get_cache(namespace, type=cache_type)
+
+        cache = tg.cache.get_cache(namespace, **get_cache_kw)
         content = cache.get_value(cache_key, createfunc=render_func,
             expiretime=cache_expire)
         return content

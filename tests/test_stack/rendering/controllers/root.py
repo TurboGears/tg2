@@ -1,11 +1,12 @@
 """Main Controller"""
-
-from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context, i18n
+import tg
+from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
+from tg import cache, i18n
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tg.validation import TGValidationError
 from tg._compat import PY3
-from tg.render import _get_tg_vars
+from tg.render import _get_tg_vars, cached_template
 
 if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
@@ -158,7 +159,7 @@ class RootController(TGController):
     @validate(form=base_movie_form)
     def process_form_errors(self, **kwargs):
         #add error messages to the kwargs dictionary and return it
-        kwargs['errors'] = tg.tmpl_context.form_errors
+        kwargs['errors'] = tmpl_context.form_errors
         return dict(kwargs)
 
     @expose()
@@ -399,3 +400,37 @@ class RootController(TGController):
         return dict(tg_cache={'key':'TEMPLATE_CACHE_TEST',
                               'type':'memory',
                               'expire':'never'})
+
+    @expose('genshi:index.html')
+    def template_caching_default_type(self):
+        from datetime import datetime
+        tmpl_context.now = datetime.utcnow
+        return dict(tg_cache={'key':'TEMPLATE_CACHE_TEST2',
+                              'expire':'never'})
+
+    @expose('json')
+    def template_caching_options(self, **kwargs):
+        _cache_options = {}
+        class FakeCache(object):
+            def get_cache(self, *args, **kwargs):
+                _cache_options['args'] = args
+                _cache_options['kwargs'] = kwargs
+                try:
+                    c = cache.get_cache(*args, **kwargs)
+                    _cache_options['cls'] = c.namespace.__class__.__name__
+                except TypeError:
+                    _cache_options['cls'] = 'NoImplementation'
+                    c = cache.get_cache(*args, type='memory', **kwargs)
+                return c
+
+        tg.cache.kwargs['type'] = 'NoImplementation'
+        old_cache = tg.cache
+        tg.cache = FakeCache()
+
+        try:
+            def render_func(*args, **kw):
+                return 'OK'
+            cached_template('index.html', render_func, **kwargs)
+            return _cache_options
+        finally:
+            tg.cache = old_cache

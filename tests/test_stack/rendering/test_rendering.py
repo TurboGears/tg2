@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from nose import SkipTest
 import shutil, os
-from jinja2 import TemplateAssertionError
-
+import json
 import tg
 #import tg.configuration
 
@@ -569,20 +568,42 @@ def test_render_hooks():
 
     assert len(calls) == 2
 
-def test_template_caching():
-    base_config = TestConfig(folder='rendering', values={
-        'use_sqlalchemy': False,
-        'use_legacy_renderer': False,
-        # this is specific to mako  to make sure inheritance works
-        'use_dotted_templatenames': False,
-        'use_toscawidgets': False,
-        'use_toscawidgets2': False,
-        'cache_dir': '.'
-    })
-    app = app_from_config(base_config)
+class TestTemplateCaching(object):
+    def setUp(self):
+        base_config = TestConfig(folder='rendering', values={
+            'use_sqlalchemy': False,
+            'use_legacy_renderer': False,
+            # this is specific to mako  to make sure inheritance works
+            'use_dotted_templatenames': False,
+            'use_toscawidgets': False,
+            'use_toscawidgets2': False,
+            'cache_dir': '.'
+        })
+        self.app = app_from_config(base_config)
 
-    resp = app.get('/template_caching')
-    current_date = resp.text.split('NOW:')[1].split('\n')[0].strip()
+    def test_basic(self):
+        resp = self.app.get('/template_caching')
+        current_date = resp.text.split('NOW:')[1].split('\n')[0].strip()
 
-    resp = app.get('/template_caching')
-    assert current_date in resp, (current_date, resp.body)
+        resp = self.app.get('/template_caching')
+        assert current_date in resp, (current_date, resp.body)
+
+    def test_default_type(self):
+        resp = self.app.get('/template_caching_default_type')
+        current_date = resp.text.split('NOW:')[1].split('\n')[0].strip()
+
+        resp = self.app.get('/template_caching_default_type')
+        assert current_date in resp, (current_date, resp.body)
+
+    def test_template_caching_options(self):
+        resp = self.app.get('/template_caching_options', params={'cache_type':'memory'})
+        resp = json.loads(resp.text)
+        assert resp['cls'] == 'MemoryNamespaceManager', resp
+
+        resp = self.app.get('/template_caching_options', params={'cache_expire':1})
+        resp = json.loads(resp.text)
+        assert resp['cls'] == 'NoImplementation', resp
+
+        resp = self.app.get('/template_caching_options', params={'cache_key':'TEST'})
+        resp = json.loads(resp.text)
+        assert resp['cls'] == 'NoImplementation', resp

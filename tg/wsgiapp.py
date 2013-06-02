@@ -94,7 +94,7 @@ class TGApp(object):
             self.config['pylons.app_globals'] = self.globals
 
             pylons.request = request_local.request
-            pylons.cache = request_local.request
+            pylons.cache = request_local.cache
             pylons.config = request_local.config
             pylons.app_globals = request_local.app_globals
             pylons.session = request_local.session
