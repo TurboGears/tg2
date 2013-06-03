@@ -1006,9 +1006,12 @@ class TestAppConfig:
                 pass
 
         a = TGApp()
-        assert False == a.setup_app_env({'paste.registry':FakeRegistry()}, None)
-        assert True == a.setup_app_env({'paste.registry':FakeRegistry(),
-                                        'paste.testing_variables':{}}, None)
+        testmode, __ = a.setup_app_env({'paste.registry':FakeRegistry()})
+        assert testmode is False
+
+        testmode, __ = a.setup_app_env({'paste.registry':FakeRegistry(),
+                                        'paste.testing_variables':{}})
+        assert testmode is True
 
     def test_application_no_controller_hijacking(self):
         class RootController(TGController):

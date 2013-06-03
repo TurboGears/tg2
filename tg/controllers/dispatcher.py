@@ -106,12 +106,11 @@ class CoreDispatcher(object):
         """
         pass
 
-    def __call__(self, environ, start_response):
-        thread_locals = environ['tg.locals']
-        py_response = thread_locals.response
+    def __call__(self, environ, context):
+        py_response = context.response
 
         try:
-            response = self._perform_call(thread_locals)
+            response = self._perform_call(context)
         except HTTPException as httpe:
             response = httpe
 
@@ -129,7 +128,7 @@ class CoreDispatcher(object):
                     response.headers.add(name, value)
                 else:
                     response.headers.setdefault(name, value)
-            py_response = thread_locals.response = response
+            py_response = context.response = response
         elif response is None:
             pass
         else:

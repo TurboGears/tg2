@@ -49,10 +49,12 @@ class TGApp(object):
     def __init__(self, config=None, **kwargs):
         """Initialize a base WSGI application
 
-        The base WSGI application requires several keywords, the
-        package name, and the globals object. If no helpers object is
-        provided then h will be None.
+        Given an application configuration creates the WSGI
+        application for it, if no configuration is provided
+        then tg.config is used.
 
+        TGApp constructor is also in charge of actually
+        initializing application wrappers.
         """
         self.config = config = config or tg.config._current_obj()
         self.globals = config.get('tg.app_globals')
@@ -109,20 +111,20 @@ class TGApp(object):
             pass
 
     def __call__(self, environ, start_response):
-        testmode = self.setup_app_env(environ, start_response)
+        testmode, context = self.setup_app_env(environ)
 
         #Expose a path that simply registers the globals and preserves them
         # without doing much else
-        if testmode and environ['PATH_INFO'] == '/_test_vars':
+        if testmode is True and environ['PATH_INFO'] == '/_test_vars':
             registry = environ['paste.registry']
             registry.preserve()
             start_response('200 OK', [('Content-type', 'text/plain')])
             return ['DONE'.encode('utf-8')]
 
-        controller = self.resolve(environ, start_response)
-        response = self.wrapped_dispatch(controller, environ, start_response)
+        controller = self.resolve(environ, context)
+        response = self.wrapped_dispatch(controller, environ, context)
 
-        if testmode:
+        if testmode is True:
             environ['paste.testing_variables']['response'] = response
 
         try:
@@ -139,13 +141,12 @@ class TGApp(object):
             if has_pylons and 'pylons.pylons' in environ: #pragma: no cover
                 del environ['pylons.pylons']
 
-    def setup_app_env(self, environ, start_response):
-        """Setup and register all the Pylons objects with the registry
+    def setup_app_env(self, environ):
+        """Setup Request, Response and TurboGears context objects.
 
-        After creating all the global objects for use in the request,
-        :meth:`~PylonsApp.register_globals` is called to register them
-        in the environment.
-
+        Is also in charge of pushing TurboGears context into the
+        paste registry and detect test mode. Returns whenever
+        the testmode is enabled or not and the TurboGears context.
         """
         conf = self.config
 
@@ -203,11 +204,11 @@ class TGApp(object):
             testenv['config'] = conf
             testenv['session'] = locals.session
             testenv['cache'] = locals.cache
-            return True
+            return True, locals
 
-        return False
+        return False, locals
 
-    def resolve(self, environ, start_response):
+    def resolve(self, environ, context):
         """Uses dispatching information found in
         ``environ['wsgiorg.routing_args']`` to retrieve a controller
         name and return the controller instance from the appropriate
@@ -268,25 +269,23 @@ class TGApp(object):
 
     def get_controller_instance(self, controller):
         # Check to see if we've cached the instance for this name
-        if controller in self.controller_instances:
+        try:
             return self.controller_instances[controller]
+        except KeyError:
+            mycontroller = self.find_controller(controller)
 
-        mycontroller = self.find_controller(controller)
+            # If it's a class, instantiate it
+            if hasattr(mycontroller, '__bases__'):
+                mycontroller = mycontroller()
 
-        # If it's a class, instantiate it
-        if hasattr(mycontroller, '__bases__'):
-            mycontroller = mycontroller()
+            self.controller_instances[controller] = mycontroller
+            return mycontroller
 
-        self.controller_instances[controller] = mycontroller
-        return mycontroller
+    def dispatch(self, controller, environ, context):
+        """Dispatches to a controller, the controller itself is expected
+        to implement the routing system.
 
-
-    def dispatch(self, controller, environ, start_response):
-        """Dispatches to a controller, will instantiate the controller
-        if necessary.
-
-        Override this to change how the controller dispatch is handled.
-
+        Override this to change how requests are dispatched to controllers.
         """
         if not controller:
             return HTTPNotFound()
@@ -296,4 +295,4 @@ class TGApp(object):
             self.setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to handle a WSGI call
-        return controller(environ, start_response)
+        return controller(environ, context)
