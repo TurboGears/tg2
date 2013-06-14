@@ -938,6 +938,24 @@ class TestAppConfig:
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
 
+    def test_auth_middleware_doesnt_touch_authenticators(self):
+        # Checks that the auth middleware process doesn't touch original authenticators
+        # list, to prevent regressions on this.
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'authenticators':[('default', None)]}
+        self.config.setup_auth()
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert len(authenticators) == 1
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
     def test_tgauthmetadata_loginpwd(self):
         who_authenticator = _AuthMetadataAuthenticator(ApplicationAuthMetadataWithAuthentication(), using_password=True)
         assert who_authenticator.authenticate({}, {}) == None
