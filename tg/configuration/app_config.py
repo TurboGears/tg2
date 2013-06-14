@@ -885,9 +885,9 @@ class AppConfig(Bunch):
         :type skip_authentication: bool
 
         """
-        #Start with the current configured authentication options.
-        #Depending on the auth backend a new auth_args dictionary
-        #can replace this one later on.
+        # Start with the current configured authentication options.
+        # Depending on the auth backend a new auth_args dictionary
+        # can replace this one later on.
         auth_args = copy(self.sa_auth)
 
         # Configuring auth logging:
@@ -903,7 +903,7 @@ class AppConfig(Bunch):
                                 "sa_auth.cookie_secret in development.ini")
 
         if 'authmetadata' not in auth_args: #pragma: no cover
-            #authmetadata not provided, fallback to old authentication setup
+            # authmetadata not provided, fallback to old authentication setup
             if self.auth_backend == "sqlalchemy":
                 from repoze.what.plugins.quickstart import setup_sql_auth
                 app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
@@ -914,11 +914,11 @@ class AppConfig(Bunch):
             try:
                 pos = auth_args['authenticators'].index(('default', None))
             except KeyError:
-                #Didn't specify authenticators, setup default one
+                # Didn't specify authenticators, setup default one
                 pos = None
             except ValueError:
-                #Specified authenticators and default is not in there
-                #so we want to skip default TG auth configuration.
+                # Specified authenticators and default is not in there
+                # so we want to skip default TG auth configuration.
                 pos = -1
 
             if pos is None or pos >= 0:
@@ -941,7 +941,7 @@ class AppConfig(Bunch):
                     if pos is None:
                         auth_args['authenticators'] = [authenticator]
                     else:
-                        #We make a copy so that we don't modify the original one.
+                        # We make a copy so that we don't modify the original one.
                         auth_args['authenticators'] = copy(auth_args['authenticators'])
                         auth_args['authenticators'][pos] = authenticator
 
