@@ -49,6 +49,15 @@ class PackageWithModel:
                 pass
 PackageWithModel.__name__ = 'tests'
 
+class UncopiableList(list):
+    """
+    This is to test configuration methods that make a copy
+    of a list to modify it, using this we can check how it has
+    been modified
+    """
+    def __copy__(self):
+        return self
+
 class FakeTransaction:
     def get(self):
         return self
@@ -234,7 +243,16 @@ class TestAppConfig:
         self.config.setup_helpers_and_globals()
 
     def test_setup_sa_auth_backend(self):
-        self.config.setup_sa_auth_backend()
+        class ConfigWithSetupAuthBackend(self.config.__class__):
+            called = []
+
+            def setup_sa_auth_backend(self):
+                self.called.append(True)
+
+        conf = ConfigWithSetupAuthBackend()
+        conf.setup_auth()
+
+        assert len(ConfigWithSetupAuthBackend.called) >= 1
 
     def test_setup_chameleon_genshi_renderer(self):
         if PY3: raise SkipTest()
@@ -536,6 +554,7 @@ class TestAppConfig:
         self.config.sa_auth.cookie_secret = 'dummy'
         self.config.sa_auth.password_encryption_method = 'sha'
 
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, None)
 
     def test_add_static_file_middleware(self):
@@ -557,13 +576,15 @@ class TestAppConfig:
         conf.use_sqlalchemy = True
         conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                            'dbsession': None,
-                           'user_class':None,
+                           'user_class': None,
                            'cookie_secret':'12345'}
         conf['sqlalchemy.url'] = 'sqlite://'
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
         assert 'repoze.who.plugins' in app.get('/test')
+
+        self.config.auth_backend = None
 
     def test_setup_ming_auth(self):
         self.config.auth_backend = 'ming'
@@ -592,8 +613,9 @@ class TestAppConfig:
 
     @raises(TGConfigError)
     def test_missing_secret(self):
-        del config['beaker.session.secret']
-        self.config.setup_sa_auth_backend()
+        self.config.auth_backend = 'sqlalchemy'
+        config.pop('beaker.session.secret', None)
+        self.config.setup_auth()
 
     def test_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
@@ -689,7 +711,8 @@ class TestAppConfig:
 
     @raises(TGConfigError)
     def test_cookie_secret_required(self):
-        self.config['sa_auth'] = {}
+        self.config.sa_auth = {}
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, False)
 
     def test_sqla_auth_middleware(self):
@@ -700,7 +723,8 @@ class TestAppConfig:
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345',
-                                  'authenticators':[('default', None)]}
+                                  'authenticators':UncopiableList([('default', None)])}
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -710,15 +734,47 @@ class TestAppConfig:
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
 
-    def test_sqla_auth_middleware_default_after(self):
+    def test_sqla_auth_middleware_using_translations(self):
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'sqlalchemy'
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
                                   'user_class':None,
+                                  'translations': {'user_name':'SomethingElse'},
                                   'cookie_secret':'12345',
-                                  'authenticators':[('superfirst', None), ('default', None)]}
+                                  'authenticators':UncopiableList([('default', None)])}
+        self.config.setup_auth()
+        self.config.add_auth_middleware(None, True)
+
+        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        assert 'cookie' in authenticators
+        assert 'sqlauth' in authenticators
+
+        auth = None
+        for authname, authobj in self.config['sa_auth']['authenticators']:
+            if authname == 'sqlauth':
+                auth = authobj
+                break
+
+        assert auth is not None, self.config['sa_auth']['authenticators']
+        assert auth.translations['user_name'] == 'SomethingElse', auth.translations
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_sqla_auth_middleware_default_after(self):
+        if PY3: raise SkipTest()
+
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
+                                  'cookie_secret':'12345',
+                                  'dbsession': None,
+                                  'user_class': None,
+                                  'authenticators':UncopiableList([('superfirst', None),
+                                                                   ('default', None)])}
+
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -735,12 +791,14 @@ class TestAppConfig:
         self.config.auth_backend = 'sqlalchemy'
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
-                                  'user_class':None,
+                                  'user_class': None,
                                   'cookie_secret':'12345'}
 
         #In this case we can just test it doesn't crash
         #as the sa_auth dict doesn't have an authenticators key to check for
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
+
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
 
@@ -769,7 +827,7 @@ class TestAppConfig:
         conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                            'cookie_secret':'12345',
                            'form_plugin':alwaysadmin,
-                           'authenticators':[('alwaysadmin', alwaysadmin)],
+                           'authenticators':UncopiableList([('alwaysadmin', alwaysadmin)]),
                            'identifiers':[('alwaysadmin', alwaysadmin)],
                            'challengers':[]}
 
@@ -807,7 +865,7 @@ class TestAppConfig:
                            'cookie_secret':'12345',
                            'form_plugin':alwaysadmin,
                            'log_level':'DEBUG',
-                           'authenticators':[('alwaysadmin', alwaysadmin)],
+                           'authenticators':UncopiableList([('alwaysadmin', alwaysadmin)]),
                            'identifiers':[('alwaysadmin', alwaysadmin)],
                            'challengers':[]}
 
@@ -832,7 +890,8 @@ class TestAppConfig:
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'user_class':None,
                                   'cookie_secret':'12345',
-                                  'authenticators':[('default', None)]}
+                                  'authenticators':UncopiableList([('default', None)])}
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -851,10 +910,12 @@ class TestAppConfig:
         self.config.auth_backend = None
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'cookie_secret':'12345'}
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
+        assert len(authenticators) == 1
 
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
@@ -866,7 +927,8 @@ class TestAppConfig:
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345',
-                                  'authenticators':[('default', None)]}
+                                  'authenticators':UncopiableList([('default', None)])}
+        self.config.setup_auth()
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]

@@ -144,7 +144,6 @@ class AppConfig(Bunch):
 
         # And also very often...
         self.sa_auth = Bunch()
-        self.sa_auth.translations = Bunch()
 
         #Set individual defaults
         self.auto_reload_templates = True
@@ -441,24 +440,6 @@ class AppConfig(Bunch):
 
         if config.get('tg.pylons_compatible', True):
             config['pylons.app_globals'] = g
-
-    def setup_sa_auth_backend(self):
-        """This method adds sa_auth information to the config."""
-
-        if 'beaker.session.secret' not in config:
-            raise TGConfigError("You must provide a value for 'beaker.session.secret'  If this is a project quickstarted with TG 2.0.2 or earlier \
-double check that you have base_config['beaker.session.secret'] = 'mysecretsecret' in your app_cfg.py file.")
-
-        defaults = {
-                    'form_plugin': None,
-                    'cookie_secret': config['beaker.session.secret']
-                   }
-
-        # The developer must have defined a 'sa_auth' section, because
-        # values such as the User, Group or Permission classes must be
-        # explicitly defined.
-        config['sa_auth'] = defaults
-        config['sa_auth'].update(self.sa_auth)
 
     def setup_mako_renderer(self, use_dotted_templatenames=None):
         """Setup a renderer and loader for mako templates.
@@ -784,12 +765,25 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
 
     def setup_auth(self):
         """
-           Override this method to define how you would like the auth to be set up for your app.
-
-           For the standard TurboGears App, this will set up the auth with SQLAlchemy.
+        Override this method to define how you would like the authentication options
+        to be setup for your application.
         """
-        if self.auth_backend in ("ming", "sqlalchemy"):
+        if hasattr(self, 'setup_sa_auth_backend'):
+            warnings.warn("setup_sa_auth_backend is deprecated, please override"
+                          "AppConfig.setup_auth instead", DeprecationWarning)
             self.setup_sa_auth_backend()
+        elif self.auth_backend in ("ming", "sqlalchemy"):
+            if 'beaker.session.secret' not in config:
+                raise TGConfigError("You must provide a value for 'beaker.session.secret' "
+                                    "If this is a project quickstarted with TG 2.0.2 or earlier "
+                                    "double check that you have base_config['beaker.session.secret'] "
+                                    "= 'mysecretsecret' in your app_cfg.py file.")
+
+            # The developer must have defined a 'sa_auth' section, because
+            # values such as the User, Group or Permission classes must be
+            # explicitly defined.
+            self.sa_auth.setdefault('form_plugin', None)
+            self.sa_auth.setdefault('cookie_secret', config['beaker.session.secret'])
 
     def setup_controller_wrappers(self):
         controller_caller = config.get('controller_caller')
@@ -891,22 +885,22 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
         :type skip_authentication: bool
 
         """
+        #Start with the current configured authentication options.
+        #Depending on the auth backend a new auth_args dictionary
+        #can replace this one later on.
+        auth_args = copy(self.sa_auth)
+
         # Configuring auth logging:
         if 'log_stream' not in self.sa_auth:
-            self.sa_auth['log_stream'] = logging.getLogger('auth')
+            auth_args['log_stream'] = logging.getLogger('auth')
 
         # Removing keywords not used by repoze.who:
-        auth_args = copy(self.sa_auth)
-        if 'sa_auth' in config:
-            auth_args.update(config.sa_auth)
-        if 'password_encryption_method' in auth_args:
-            del auth_args['password_encryption_method']
-        if not skip_authentication:
-            if not 'cookie_secret' in auth_args.keys():
-                msg = "base_config.sa_auth.cookie_secret is required "\
-                "you must define it in app_cfg.py or set "\
-                "sa_auth.cookie_secret in development.ini"
-                raise TGConfigError(msg)
+        auth_args.pop('password_encryption_method', None)
+
+        if not skip_authentication and 'cookie_secret' not in auth_args:
+            raise TGConfigError("base_config.sa_auth.cookie_secret is required "
+                                "you must define it in app_cfg.py or set "
+                                "sa_auth.cookie_secret in development.ini")
 
         if 'authmetadata' not in auth_args: #pragma: no cover
             #authmetadata not provided, fallback to old authentication setup
@@ -920,8 +914,11 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
             try:
                 pos = auth_args['authenticators'].index(('default', None))
             except KeyError:
+                #Didn't specify authenticators, setup default one
                 pos = None
             except ValueError:
+                #Specified authenticators and default is not in there
+                #so we want to skip default TG auth configuration.
                 pos = -1
 
             if pos is None or pos >= 0:
@@ -940,10 +937,12 @@ double check that you have base_config['beaker.session.secret'] = 'mysecretsecre
                 else:
                     authenticator = None
 
-                if authenticator:
+                if authenticator is not None:
                     if pos is None:
                         auth_args['authenticators'] = [authenticator]
                     else:
+                        #We make a copy so that we don't modify the original one.
+                        auth_args['authenticators'] = copy(auth_args['authenticators'])
                         auth_args['authenticators'][pos] = authenticator
 
             from tg.configuration.auth import setup_auth
