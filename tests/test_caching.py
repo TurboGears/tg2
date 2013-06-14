@@ -326,7 +326,6 @@ class TestBeakerCacheTouch(TestWSGIController):
         o = Something()
         namespace, key = create_cache_key(o.method)
 
-        print(namespace)
         assert namespace == 'tests.test_caching.Something'
         assert key == 'method'
 
