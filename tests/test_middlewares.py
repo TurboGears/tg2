@@ -1,5 +1,6 @@
 from webtest import TestApp
 from tg.support.middlewares import StatusCodeRedirect
+from tg.support.middlewares import DBSessionRemoverMiddleware
 
 
 def FakeApp(environ, start_response):
@@ -26,3 +27,51 @@ class TestStatusCodeRedirectMiddleware(object):
     def test_success_passthrough(self):
         r = self.app.get('/success_test')
         assert 'HI' in r, r
+
+
+class FakeDBSession(object):
+    removed = False
+
+    def remove(self):
+        self.removed = True
+
+
+class FakeAppWithClose(object):
+    closed = False
+    step = 0
+
+    def __call__(self, environ, start_response):
+        start_response('200 Success', [])
+        return self
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        self.step += 1
+
+        if self.step > 3:
+            raise StopIteration()
+
+        return str(self.step)
+
+    def close(self):
+        self.closed = True
+
+    def __repr__(self):
+        return '%s - %s' % (self.step, self.closed)
+
+
+class TestDBSessionRemoverMiddleware(object):
+    def setup(self):
+        self.app_with_close = FakeAppWithClose()
+        self.session = FakeDBSession()
+        self.app = TestApp(DBSessionRemoverMiddleware(self.session, self.app_with_close))
+
+    def test_close_is_called(self):
+        r = self.app.get('/nonerror')
+        assert self.app_with_close.closed == True, self.app_with_close
+
+    def test_session_is_removed(self):
+        r = self.app.get('/nonerror')
+        assert self.session.removed == True, self.app_with_close

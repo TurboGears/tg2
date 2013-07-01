@@ -97,8 +97,12 @@ class SeekableRequestBodyMiddleware(object):
         self.app = app
 
     def _stream_response(self, data):
-        for chunk in data:
-            yield chunk
+        try:
+            for chunk in data:
+                yield chunk
+        finally:
+            if hasattr(data, 'close'):
+                data.close()
 
     def __call__(self, environ, start_response):
         log.debug("Making request body seekable")
@@ -117,6 +121,8 @@ class DBSessionRemoverMiddleware(object):
                 yield chunk
         finally:
             log.debug("Removing DBSession from current thread")
+            if hasattr(data, 'close'):
+                data.close()
             self.DBSession.remove()
 
     def __call__(self, environ, start_response):
