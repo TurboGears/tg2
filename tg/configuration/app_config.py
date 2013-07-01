@@ -250,15 +250,15 @@ class AppConfig(Bunch):
                 try:
                     cmd()
                 except Exception as error:
-                    log.debug("Error registering %s at startup: %s" % (cmd, error ))
+                    log.exception("Error registering %s at startup: %s" % (cmd, error ))
             else:
-                log.debug("Unable to register %s for startup" % cmd )
+                log.warn("Unable to register %s for startup" % cmd )
 
         for cmd in self.call_on_shutdown:
             if callable(cmd):
                 atexit.register(cmd)
             else:
-                log.debug("Unable to register %s for shutdown" % cmd )
+                log.warn("Unable to register %s for shutdown" % cmd )
 
     def setup_package_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
