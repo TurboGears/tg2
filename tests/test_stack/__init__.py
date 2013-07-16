@@ -4,6 +4,7 @@ import tg
 import tests
 from tg.util import DottedFileNameFinder
 from tg.configuration import AppConfig
+from tg.configuration import milestones
 from tg._compat import PY3
 
 
@@ -52,6 +53,11 @@ def app_from_config(base_config, deployment_config=None):
         deployment_config = {'debug': 'true',
                              'error_email_from': 'paste@localhost',
                              'smtp_server': 'localhost'}
+
+    # Reset milestones so that they can be reached again
+    # on next configuration initialization
+    milestones.renderers_ready._reset()
+    milestones.config_ready._reset()
 
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)

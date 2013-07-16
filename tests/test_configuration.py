@@ -147,7 +147,7 @@ class TestAppConfig:
         self.config.package = self.fake_package
         self.config['paths']['root'] = 'test'
         self.config['paths']['controllers'] = 'test.controllers'
-        self.config.init_config({'cache_dir':'/tmp'}, {})
+        self.config._init_config({'cache_dir':'/tmp'}, {})
 
         config['paths']['static_files'] = "test"
         config["tg.app_globals"] = Bunch()
@@ -171,7 +171,7 @@ class TestAppConfig:
 
     def test_lang_can_be_changed_by_ini(self):
         conf = AppConfig(minimal=True)
-        conf.init_config({'lang':'ru'}, {})
+        conf._init_config({'lang':'ru'}, {})
         assert config['lang'] == 'ru'
 
     def test_create_minimal_app(self):
@@ -214,21 +214,21 @@ class TestAppConfig:
         def func():
             a = 7
         self.config.call_on_startup = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_callable_startup_with_exception(self):
         def func():
             raise Exception
         self.config.call_on_startup = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_startup_not_callable(self):
         self.config.call_on_startup = ['not callable']
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_shutdown_not_callable(self):
         self.config.call_on_shutdown = ['not callable']
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     @raises(AtExitTestException)
     def test_setup_startup_and_shutdown_shutdown_callable(self):
@@ -236,7 +236,7 @@ class TestAppConfig:
             raise AtExitTestException()
 
         self.config.call_on_shutdown = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
         atexit._run_exitfuncs()
 
     def test_setup_helpers_and_globals(self):
@@ -620,7 +620,7 @@ class TestAppConfig:
     def test_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = []
-        self.config.setup_controller_wrappers()
+        self.config._setup_controller_wrappers()
         assert config['controller_caller'] == orig_caller
 
         def controller_wrapper(app_config, caller):
@@ -630,7 +630,7 @@ class TestAppConfig:
 
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = [controller_wrapper]
-        self.config.setup_controller_wrappers()
+        self.config._setup_controller_wrappers()
         assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
 
     def test_application_wrapper_setup(self):
@@ -703,7 +703,7 @@ class TestAppConfig:
         renderers = self.config.renderers
         self.config.renderers = ['unknwon']
         try:
-            self.config.setup_renderers()
+            self.config._setup_renderers()
         except TGConfigError:
             self.config.renderers = renderers
         else:

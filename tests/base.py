@@ -17,6 +17,7 @@ from webtest import TestApp
 
 import tg
 from tg import tmpl_context, request_local
+from tg.configuration import milestones
 
 from tg.wsgiapp import ContextObj, TGApp, RequestLocals
 from tg.controllers import TGController
@@ -41,6 +42,7 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TGController
 
     tg.config['renderers'] = default_config['renderers']
+
     app = TGApp(config=default_config)
     app.controller_classes['root'] = ControllerWrap(controller_klass)
 
@@ -92,6 +94,11 @@ class TestWSGIController(TestCase):
         self._tgl.tmpl_context = ContextObj()
         request_local.context._push_object(self._tgl)
 
+        # Mark configuration milestones as passed as
+        # test sets up a fake configuration
+        milestones.config_ready.reach()
+        milestones.renderers_ready.reach()
+
         warnings.simplefilter("ignore")
         tg.config.push_process_config(default_config)
         warnings.resetwarnings()
@@ -101,6 +108,10 @@ class TestWSGIController(TestCase):
         request_local.context._pop_object(self._tgl)
         tg.config.pop_process_config()
         teardown_session_dir()
+
+        # Reset milestones
+        milestones.config_ready._reset()
+        milestones.renderers_ready._reset()
 
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')

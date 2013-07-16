@@ -19,10 +19,13 @@ from tg.request_local import config as reqlocal_config
 import tg
 from tg.configuration.utils import coerce_config
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
+from tg.configuration import milestones
 
 log = logging.getLogger(__name__)
 
+
 class TGConfigError(Exception):pass
+
 
 class DispatchingConfigWrapper(DictMixin):
     """Wrapper for the Dispatching configuration.
@@ -244,7 +247,7 @@ class AppConfig(Bunch):
 
         wrappers.insert(append_index, wrapper)
 
-    def setup_startup_and_shutdown(self):
+    def _setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
             if callable(cmd):
                 try:
@@ -260,7 +263,7 @@ class AppConfig(Bunch):
             else:
                 log.warn("Unable to register %s for shutdown" % cmd )
 
-    def setup_package_paths(self):
+    def _setup_package_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
         paths = Bunch(root=root,
@@ -272,7 +275,7 @@ class AppConfig(Bunch):
         paths.update(self.paths)
         self.paths = paths
 
-    def init_config(self, global_conf, app_conf):
+    def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
         Besides basic initialization, this method copies all the values
@@ -351,6 +354,8 @@ class AppConfig(Bunch):
         if not conf['paths']['static_files']:
             self.serve_static = False
 
+        self._configure_renderers()
+
         config.update(self)
 
         #see http://trac.turbogears.org/ticket/2247
@@ -360,6 +365,17 @@ class AppConfig(Bunch):
             config['tg.strict_tmpl_context'] = False
 
         self.after_init_config()
+        milestones.config_ready.reach()
+
+    def _configure_renderers(self):
+        """Provides default configurations for renderers"""
+        if not 'json' in self.renderers:
+            self.renderers.append('json')
+
+        if self.default_renderer not in self.renderers:
+            first_renderer = self.renderers[0]
+            log.warn('Default renderer not in renders, automatically switching to %s' % first_renderer)
+            self.default_renderer = first_renderer
 
     def after_init_config(self):
         """
@@ -411,6 +427,9 @@ class AppConfig(Bunch):
             base_config = MyAppConfig()
 
         """
+        if not self.enable_routes:
+            return None
+
         from routes import Mapper
 
         map = Mapper(directory=config['paths']['controllers'],
@@ -420,6 +439,7 @@ class AppConfig(Bunch):
         map.connect('*url', controller='root', action='routes_placeholder')
 
         config['routes.map'] = map
+        return map
 
     def setup_helpers_and_globals(self):
         """Add helpers and globals objects to the config.
@@ -785,20 +805,13 @@ class AppConfig(Bunch):
             self.sa_auth.setdefault('form_plugin', None)
             self.sa_auth.setdefault('cookie_secret', config['beaker.session.secret'])
 
-    def setup_controller_wrappers(self):
+    def _setup_controller_wrappers(self):
         controller_caller = config.get('controller_caller')
         for wrapper in self.get('controller_wrappers', []):
             controller_caller = wrapper(self, controller_caller)
         config['controller_caller'] = controller_caller
 
-    def setup_renderers(self):
-        if not 'json' in self.renderers: self.renderers.append('json')
-
-        if self.default_renderer not in self.renderers:
-            first_renderer = self.renderers[0]
-            log.warn('Default renderer not in renders, automatically switching to %s' % first_renderer)
-            self.default_renderer = first_renderer
-
+    def _setup_renderers(self):
         for renderer in self.renderers[:]:
             setup = getattr(self, 'setup_%s_renderer'%renderer, None)
             if setup:
@@ -808,6 +821,8 @@ class AppConfig(Bunch):
                     self.renderers.remove(renderer)
             else:
                 raise TGConfigError('This configuration object does not support the %s renderer' % renderer)
+
+        milestones.renderers_ready.reach()
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -833,23 +848,22 @@ class AppConfig(Bunch):
                 app_package = None
 
             if app_package:
-                self.setup_package_paths()
+                self._setup_package_paths()
 
-            self.init_config(global_conf, app_conf)
+            self._init_config(global_conf, app_conf)
 
             #Registers functions to be called at startup and shutdown
             #from self.call_on_startup and shutdown respectively.
-            self.setup_startup_and_shutdown()
+            self._setup_startup_and_shutdown()
 
-            if self.enable_routes:
-                self.setup_routes()
+            self.setup_routes()
 
             if app_package:
                 self.setup_helpers_and_globals()
 
             self.setup_mimetypes()
             self.setup_auth()
-            self.setup_renderers()
+            self._setup_renderers()
             self.setup_persistence()
 
         return load_environment
@@ -1176,7 +1190,7 @@ class AppConfig(Bunch):
                 app = hook(app)
 
             #Apply controller wrappers to controller caller
-            self.setup_controller_wrappers()
+            self._setup_controller_wrappers()
 
             avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
             config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
