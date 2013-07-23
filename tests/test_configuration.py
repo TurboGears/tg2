@@ -11,6 +11,7 @@ from tg.configuration.app_config import TGConfigError
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
 from tg.configuration.utils import coerce_config
+from tg.configuration import milestones
 from paste.deploy.converters import asint
 
 import tg.i18n
@@ -22,8 +23,10 @@ from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
 def setup():
+    milestones._reset_all()
     setup_session_dir()
 def teardown():
+    milestones._reset_all()
     teardown_session_dir()
 
 class PackageWithModel:
@@ -138,6 +141,8 @@ class TestAppConfig:
         self.fake_package = PackageWithModel
 
     def setup(self):
+        milestones._reset_all()
+
         self.config = AppConfig()
         # set up some required paths and config settings
         # FIXME: these seem to be needed so that
@@ -161,6 +166,7 @@ class TestAppConfig:
     def teardown(self):
         #This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller', None)
+        milestones._reset_all()
 
     def test_get_root(self):
         current_root_module = self.config['paths']['root']
@@ -665,17 +671,34 @@ class TestAppConfig:
             pass
         class AppWrapper4:
             pass
+        class AppWrapper5:
+            pass
 
         conf = AppConfig(minimal=True)
         conf.register_wrapper(AppWrapper2)
+        conf.register_wrapper(AppWrapper4, after=AppWrapper3)
         conf.register_wrapper(AppWrapper3)
         conf.register_wrapper(AppWrapper1, after=False)
-        conf.register_wrapper(AppWrapper4, after=AppWrapper3)
+        conf.register_wrapper(AppWrapper5, after=AppWrapper3)
+        milestones.environment_loaded.reach()
 
         assert conf.application_wrappers[0] == AppWrapper1
         assert conf.application_wrappers[1] == AppWrapper2
         assert conf.application_wrappers[2] == AppWrapper3
         assert conf.application_wrappers[3] == AppWrapper4
+        assert conf.application_wrappers[4] == AppWrapper5
+
+    @raises(TGConfigError)
+    def test_application_wrapper_blocked_after_milestone(self):
+        class AppWrapper1:
+            pass
+        class AppWrapper2:
+            pass
+
+        conf = AppConfig(minimal=True)
+        conf.register_wrapper(AppWrapper1)
+        milestones.environment_loaded.reach()
+        conf.register_wrapper(AppWrapper2)
 
     def test_wrap_app(self):
         class RootController(TGController):

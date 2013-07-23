@@ -6,7 +6,7 @@ import logging
 import warnings
 from copy import copy, deepcopy
 import mimetypes
-from collections import MutableMapping as DictMixin
+from collections import MutableMapping as DictMixin, deque
 
 from tg.i18n import ugettext, ungettext, get_lang
 
@@ -181,6 +181,8 @@ class AppConfig(Bunch):
         self.controller_caller = call_controller
         self.controller_wrappers = []
         self.application_wrappers = []
+        self.application_wrappers_dependencies = {False: [],
+                                                  None: []}
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -232,20 +234,26 @@ class AppConfig(Bunch):
             self.hooks.setdefault(hook_name, []).append(func)
 
     def register_wrapper(self, wrapper, after=None):
-        wrappers = self.application_wrappers
+        if milestones.environment_loaded.reached:
+            # We must block registering wrappers if milestone passed, this is because
+            # wrappers are consumed by TGApp constructor, and all the hooks available
+            # after the milestone and that could register new wrappers are actually
+            # called after TGApp constructors and so the wrappers wouldn't be applied.
+            raise TGConfigError('Cannot register application wrappers after application '
+                                'environment has already been loaded')
 
-        if after is False:
-            append_index = 0
-        else:
-            append_index = len(wrappers)
+        self.application_wrappers_dependencies.setdefault(after, []).append(wrapper)
+        milestones.environment_loaded.register(self._order_wrappers)
 
-        if after:
-            for idx, current_wrapper in enumerate(wrappers):
-                if current_wrapper == after:
-                    append_index = idx + 1
-                    break
+    def _order_wrappers(self):
+        visit_queue = deque([False, None])
+        while visit_queue:
+            current = visit_queue.popleft()
+            if current not in (False, None):
+                self.application_wrappers.append(current)
 
-        wrappers.insert(append_index, wrapper)
+            dependant_wrappers = self.application_wrappers_dependencies.pop(current, [])
+            visit_queue.extendleft(reversed(dependant_wrappers))
 
     def _setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -866,6 +874,8 @@ class AppConfig(Bunch):
             self._setup_renderers()
             self.setup_persistence()
 
+            milestones.environment_loaded.reach()
+
         return load_environment
 
     def add_error_middleware(self, global_conf, app):
@@ -984,6 +994,8 @@ class AppConfig(Bunch):
             base_config = MyAppConfig()
         """
         if self.enable_routes:
+            warnings.warn("Internal routes support will be deprecated soon, please "
+                          "consider using tgext.routes instead", DeprecationWarning)
             from routes.middleware import RoutesMiddleware
             app = RoutesMiddleware(app, config['routes.map'])
 

@@ -96,8 +96,7 @@ class TestWSGIController(TestCase):
 
         # Mark configuration milestones as passed as
         # test sets up a fake configuration
-        milestones.config_ready.reach()
-        milestones.renderers_ready.reach()
+        milestones._reach_all()
 
         warnings.simplefilter("ignore")
         tg.config.push_process_config(default_config)
@@ -110,8 +109,7 @@ class TestWSGIController(TestCase):
         teardown_session_dir()
 
         # Reset milestones
-        milestones.config_ready._reset()
-        milestones.renderers_ready._reset()
+        milestones._reset_all()
 
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')

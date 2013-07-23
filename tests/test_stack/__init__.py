@@ -56,8 +56,7 @@ def app_from_config(base_config, deployment_config=None):
 
     # Reset milestones so that they can be reached again
     # on next configuration initialization
-    milestones.renderers_ready._reset()
-    milestones.config_ready._reset()
+    milestones._reset_all()
 
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)

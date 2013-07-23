@@ -19,8 +19,12 @@ class _ConfigMilestoneTracker(object):
     """
     def __init__(self, name):
         self.name = name
-        self._actions = set()
+        self._actions = dict()
         self._reached = False
+
+    @property
+    def reached(self):
+        return self._reached
 
     def register(self, action):
         """Registers an action to be called on milestone completion.
@@ -33,7 +37,7 @@ class _ConfigMilestoneTracker(object):
             action()
         else:
             log.debug('Register %s to be called when %s reached', action, self.name)
-            self._actions.add(action)
+            self._actions[id(action)] = action
 
     def reach(self):
         """Marks the milestone as reached.
@@ -47,7 +51,7 @@ class _ConfigMilestoneTracker(object):
         log.debug('%s milestone reached', self.name)
         while True:
             try:
-                action = self._actions.pop()
+                __, action = self._actions.popitem()
                 action()
             except KeyError:
                 break
@@ -55,9 +59,23 @@ class _ConfigMilestoneTracker(object):
     def _reset(self):
         """This is just for testing purposes"""
         self._reached = False
-        self._actions = set()
+        self._actions = dict()
 
 
 config_ready = _ConfigMilestoneTracker('config_ready')
 renderers_ready = _ConfigMilestoneTracker('renderers_ready')
+environment_loaded = _ConfigMilestoneTracker('environment_loaded')
 
+
+def _reset_all():
+    """Utility method for the test suite to reset milestones"""
+    config_ready._reset()
+    renderers_ready._reset()
+    environment_loaded._reset()
+
+
+def _reach_all():
+    """Utility method for the test suite to reach all milestones"""
+    config_ready.reach()
+    renderers_ready.reach()
+    environment_loaded.reach()
