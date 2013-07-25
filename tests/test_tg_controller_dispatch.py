@@ -673,6 +673,16 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/sub/newbefore/with_args/1/2?x=5')
         assert '__my_before__5' in r, r
 
+    def test_before_controller_mounted_in_subpath(self):
+        r = self.app.get('/subpath/sub/before', extra_environ={'SCRIPT_NAME':'/subpath'})
+        assert '__my_before__' in r, r
+
+    def test_before_controller_without_script_name(self):
+        req = self.app.RequestClass.blank('/sub/before', {})
+        req.environ.pop('SCRIPT_NAME')
+        r = self.app.do_request(req, status=None, expect_errors=False)
+        assert '__my_before__' in r, r
+
     @no_warn
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/%C3%A4%C3%B6')

@@ -80,7 +80,16 @@ class CoreDispatcher(object):
         if py_config.get('i18n_enabled', True):
             setup_i18n(thread_locals)
 
-        url_path = py_request.path.split('/')[1:]
+        url_path = py_request.path
+
+        try:
+            script_name = py_request.environ['SCRIPT_NAME']
+            if script_name and url_path.startswith(script_name):
+                url_path = url_path[len(script_name):]
+        except KeyError:
+            pass
+
+        url_path = url_path.split('/')[1:]
         if url_path[-1] == '':
             url_path.pop()
 
