@@ -83,5 +83,5 @@ class TestStatics(object):
         app = FileServeApp('./tests/test.html', 3600)
         app_iter = Request(environ).send(app).app_iter
         assert isinstance(app_iter, DummyWrapper)
-        assert 'Welcome to TurboGears 2.0' in app_iter.file.read()
+        assert b'Welcome to TurboGears 2.0' in app_iter.file.read()
         app_iter.file.close()
