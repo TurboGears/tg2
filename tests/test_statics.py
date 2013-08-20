@@ -1,5 +1,6 @@
 from webtest import TestApp
 from nose.tools import raises
+from webob import Request
 from tg.support.statics import StaticsMiddleware, FileServeApp
 from webob.exc import HTTPBadRequest, HTTPForbidden
 from datetime import datetime
@@ -61,3 +62,26 @@ class TestStatics(object):
         fa = TestApp(FileServeApp('this_does_not_exists.unknown', 0))
         r = fa.get('/', status=403)
         assert '403' in r
+
+    def test_wsgi_file_wrapper(self):
+        class DummyWrapper(object):
+            def __init__(self, file, block_size):
+                self.file = file
+                self.block_size = block_size
+
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'wsgi.version':(1,0),
+            'wsgi.file_wrapper': DummyWrapper,
+            'SERVER_NAME': 'somedomain.com',
+            'SERVER_PORT': '8080',
+            'PATH_INFO': '/index.html',
+            'SCRIPT_NAME': '',
+            'REQUEST_METHOD': 'GET',
+            }
+
+        app = FileServeApp('./tests/test.html', 3600)
+        app_iter = Request(environ).send(app).app_iter
+        assert isinstance(app_iter, DummyWrapper)
+        assert b'Welcome to TurboGears 2.0' in app_iter.file.read()
+        app_iter.file.close()
