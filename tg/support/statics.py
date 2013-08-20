@@ -119,7 +119,7 @@ class FileServeApp(object):
             ('Last-Modified', self.make_date(self.last_modified))
             ))
         start_response('200 OK', headers)
-        return _FileIter(file, _BLOCK_SIZE)
+        return environ.get('wsgi.file_wrapper', _FileIter)(file, _BLOCK_SIZE)
 
 INVALID_PATH_PARTS = set(['..', '.']).intersection
 
