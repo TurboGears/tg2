@@ -219,6 +219,33 @@ class AppConfig(Bunch):
         return root_controller_module
 
     def register_hook(self, hook_name, func):
+        """Registers a TurboGears hook or controller wrapper.
+
+        Given an hook name and a function it registers the provided
+        function for that role. For a complete list of hooks
+        provided by default have a look at :ref:`hooks_and_events`.
+
+        If the provided hook name is ``controller_wrapper`` the
+        function is registered as a controller wrapper.
+        Controller Wrappers are much like a **decorator** applied to
+        every controller.
+        They receive :class:`tg.configuration.AppConfig` instance
+        as an argument and the next handler in chain and are expected
+        to return a new handler that performs whatever it requires
+        and then calls the next handler.
+
+        A simple example for a controller wrapper is a simple logging wrapper::
+
+            def controller_wrapper(app_config, caller):
+                def call(*args, **kw):
+                    try:
+                        print 'Before handler!'
+                        return caller(*args, **kw)
+                    finally:
+                        print 'After Handler!'
+                return call
+
+        """
         if hook_name == 'startup':
             self.call_on_startup.append(func)
         elif hook_name == 'shutdown':
@@ -229,6 +256,29 @@ class AppConfig(Bunch):
             self.hooks.setdefault(hook_name, []).append(func)
 
     def register_wrapper(self, wrapper, after=None):
+        """Registers a TurboGears application wrapper.
+
+        Application wrappers are like WSGI middlewares but
+        are executed in the context of TurboGears and work
+        with abstractions like Request and Respone objects.
+
+        Application wrappers are callables built by passing
+        the next handler in chain and the current TurboGears
+        configuration.
+
+        Every wrapper, when called, is expected to accept
+        the WSGI environment and a TurboGears context as parameters
+        and are expected to return a :class:`tg.request_local.Response`
+        instance::
+
+            class AppWrapper(object):
+                def __init__(self, handler, config):
+                    self.handler = handler
+
+                def __call__(self, environ, context):
+                    print 'Going to run %s' % context.request.path
+                    return self.handler(*args, **kw)
+        """
         wrappers = self.application_wrappers
 
         if after is False:

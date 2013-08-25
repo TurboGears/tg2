@@ -677,6 +677,13 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/subpath/sub/before', extra_environ={'SCRIPT_NAME':'/subpath'})
         assert '__my_before__' in r, r
 
+    def test_empty_path_after_script_name_removal(self):
+        r = self.app.get('/')
+        check_again_response = r.text
+
+        r = self.app.get('/subpath', extra_environ={'SCRIPT_NAME':'/subpath'})
+        assert r.text == check_again_response, r
+
     def test_before_controller_without_script_name(self):
         req = self.app.RequestClass.blank('/sub/before', {})
         req.environ.pop('SCRIPT_NAME')

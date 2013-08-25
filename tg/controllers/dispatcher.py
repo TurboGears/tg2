@@ -90,7 +90,7 @@ class CoreDispatcher(object):
             pass
 
         url_path = url_path.split('/')[1:]
-        if url_path[-1] == '':
+        if url_path and url_path[-1] == '':
             url_path.pop()
 
         func, controller, remainder, params = self._get_dispatchable(thread_locals, url_path)
