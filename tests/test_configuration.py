@@ -11,6 +11,7 @@ from tg.configuration.app_config import TGConfigError
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
 from tg.configuration.utils import coerce_config
+from tg.configuration import milestones
 from paste.deploy.converters import asint
 
 import tg.i18n
@@ -22,8 +23,10 @@ from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
 def setup():
+    milestones._reset_all()
     setup_session_dir()
 def teardown():
+    milestones._reset_all()
     teardown_session_dir()
 
 class PackageWithModel:
@@ -138,6 +141,8 @@ class TestAppConfig:
         self.fake_package = PackageWithModel
 
     def setup(self):
+        milestones._reset_all()
+
         self.config = AppConfig()
         # set up some required paths and config settings
         # FIXME: these seem to be needed so that
@@ -147,7 +152,7 @@ class TestAppConfig:
         self.config.package = self.fake_package
         self.config['paths']['root'] = 'test'
         self.config['paths']['controllers'] = 'test.controllers'
-        self.config.init_config({'cache_dir':'/tmp'}, {})
+        self.config._init_config({'cache_dir':'/tmp'}, {})
 
         config['paths']['static_files'] = "test"
         config["tg.app_globals"] = Bunch()
@@ -161,6 +166,7 @@ class TestAppConfig:
     def teardown(self):
         #This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller', None)
+        milestones._reset_all()
 
     def test_get_root(self):
         current_root_module = self.config['paths']['root']
@@ -171,7 +177,7 @@ class TestAppConfig:
 
     def test_lang_can_be_changed_by_ini(self):
         conf = AppConfig(minimal=True)
-        conf.init_config({'lang':'ru'}, {})
+        conf._init_config({'lang':'ru'}, {})
         assert config['lang'] == 'ru'
 
     def test_create_minimal_app(self):
@@ -214,21 +220,21 @@ class TestAppConfig:
         def func():
             a = 7
         self.config.call_on_startup = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_callable_startup_with_exception(self):
         def func():
             raise Exception
         self.config.call_on_startup = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_startup_not_callable(self):
         self.config.call_on_startup = ['not callable']
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     def test_setup_startup_and_shutdown_shutdown_not_callable(self):
         self.config.call_on_shutdown = ['not callable']
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
 
     @raises(AtExitTestException)
     def test_setup_startup_and_shutdown_shutdown_callable(self):
@@ -236,7 +242,7 @@ class TestAppConfig:
             raise AtExitTestException()
 
         self.config.call_on_shutdown = [func]
-        self.config.setup_startup_and_shutdown()
+        self.config._setup_startup_and_shutdown()
         atexit._run_exitfuncs()
 
     def test_setup_helpers_and_globals(self):
@@ -620,7 +626,7 @@ class TestAppConfig:
     def test_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = []
-        self.config.setup_controller_wrappers()
+        self.config._setup_controller_wrappers()
         assert config['controller_caller'] == orig_caller
 
         def controller_wrapper(app_config, caller):
@@ -630,7 +636,7 @@ class TestAppConfig:
 
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = [controller_wrapper]
-        self.config.setup_controller_wrappers()
+        self.config._setup_controller_wrappers()
         assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
 
     def test_application_wrapper_setup(self):
@@ -665,17 +671,34 @@ class TestAppConfig:
             pass
         class AppWrapper4:
             pass
+        class AppWrapper5:
+            pass
 
         conf = AppConfig(minimal=True)
         conf.register_wrapper(AppWrapper2)
+        conf.register_wrapper(AppWrapper4, after=AppWrapper3)
         conf.register_wrapper(AppWrapper3)
         conf.register_wrapper(AppWrapper1, after=False)
-        conf.register_wrapper(AppWrapper4, after=AppWrapper3)
+        conf.register_wrapper(AppWrapper5, after=AppWrapper3)
+        milestones.environment_loaded.reach()
 
         assert conf.application_wrappers[0] == AppWrapper1
         assert conf.application_wrappers[1] == AppWrapper2
         assert conf.application_wrappers[2] == AppWrapper3
         assert conf.application_wrappers[3] == AppWrapper4
+        assert conf.application_wrappers[4] == AppWrapper5
+
+    @raises(TGConfigError)
+    def test_application_wrapper_blocked_after_milestone(self):
+        class AppWrapper1:
+            pass
+        class AppWrapper2:
+            pass
+
+        conf = AppConfig(minimal=True)
+        conf.register_wrapper(AppWrapper1)
+        milestones.environment_loaded.reach()
+        conf.register_wrapper(AppWrapper2)
 
     def test_wrap_app(self):
         class RootController(TGController):
@@ -703,7 +726,7 @@ class TestAppConfig:
         renderers = self.config.renderers
         self.config.renderers = ['unknwon']
         try:
-            self.config.setup_renderers()
+            self.config._setup_renderers()
         except TGConfigError:
             self.config.renderers = renderers
         else:
