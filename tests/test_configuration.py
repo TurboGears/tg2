@@ -159,7 +159,6 @@ class TestAppConfig:
         config["use_sqlalchemy"] = False
         config["global_conf"] = Bunch()
         config["package"] = "test"
-        config["call_on_shutdown"] = "foo"
         config["render_functions"] = Bunch()
         config['beaker.session.secret'] = 'some_secret'
 
@@ -604,11 +603,13 @@ class TestAppConfig:
         def dummy(*args):
             pass
 
+        milestones.config_ready._reset()
         self.config.register_hook('startup', dummy)
         self.config.register_hook('shutdown', dummy)
         self.config.register_hook('controller_wrapper', dummy)
         for hook_name in self.config.hooks.keys():
             self.config.register_hook(hook_name, dummy)
+        milestones.config_ready.reach()
 
         for hooks in self.config.hooks.values():
             assert hooks
@@ -638,6 +639,87 @@ class TestAppConfig:
         self.config.controller_wrappers = [controller_wrapper]
         self.config._setup_controller_wrappers()
         assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
+
+    def test_global_controller_wrapper(self):
+        milestones._reset_all()
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        wrapper_has_been_visited = []
+        def controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                wrapper_has_been_visited.append(True)
+                return caller(*args, **kw)
+            return call
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_hook('controller_wrapper', controller_wrapper)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert wrapper_has_been_visited[0] is True
+
+    def test_dedicated_controller_wrapper(self):
+        milestones._reset_all()
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        wrapper_has_been_visited = []
+        def controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                wrapper_has_been_visited.append(True)
+                return caller(*args, **kw)
+            return call
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        tg.hooks.wrap_controller(controller_wrapper, controller=RootController.test)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert wrapper_has_been_visited[0] is True
+
+    def test_mixed_controller_wrapper(self):
+        milestones._reset_all()
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        app_wrapper_has_been_visited = []
+        def app_controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                app_wrapper_has_been_visited.append(True)
+                return caller(*args, **kw)
+            return call
+
+        wrapper_has_been_visited = []
+        def controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                wrapper_has_been_visited.append(True)
+                return caller(*args, **kw)
+            return call
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        tg.hooks.wrap_controller(app_controller_wrapper)
+        tg.hooks.wrap_controller(controller_wrapper, controller=RootController.test)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert wrapper_has_been_visited[0] is True
+        assert app_wrapper_has_been_visited[0] is True
 
     def test_application_wrapper_setup(self):
         class RootController(TGController):
@@ -1011,6 +1093,9 @@ class TestAppConfig:
         assert tw.api.resources.registry.ACTIVE_VARIANT == 'min'
 
     def test_config_hooks(self):
+        # Reset milestone so that registered hooks
+        milestones._reset_all()
+
         class RootController(TGController):
             @expose()
             def test(self):
@@ -1033,6 +1118,61 @@ class TestAppConfig:
         assert 'HI!' in app.get('/test')
         assert 'before_config' in visited_hooks
         assert 'after_config' in visited_hooks
+
+    def test_controller_hooks_with_value(self):
+        # Reset milestone so that registered hooks
+        milestones._reset_all()
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return tg.hooks.notify_with_value('test_hook', 'BO',
+                                                  controller=RootController.test)
+
+        def value_hook(value):
+            return value*2
+
+        tg.hooks.register('test_hook', value_hook, controller=RootController.test)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'BOBO' in resp, resp
+
+    @raises(TGConfigError)
+    def test_config_hooks_startup_on_controller(self):
+        def f():
+            pass
+
+        tg.hooks.register('startup', None, controller=f)
+
+    @raises(TGConfigError)
+    def test_config_hooks_shutdown_on_controller(self):
+        def f():
+            pass
+
+        tg.hooks.register('shutdown', None, controller=f)
+
+    @raises(TGConfigError)
+    def test_controller_wrapper_using_register(self):
+        milestones.config_ready.reach()
+        tg.hooks.register('controller_wrapper', None)
+
+    @raises(TGConfigError)
+    def test_global_controller_wrapper_after_config_ready(self):
+        milestones.config_ready.reach()
+        tg.hooks.wrap_controller(None)
+
+    @raises(TGConfigError)
+    def test_dedicated_controller_wrapper_after_config_ready(self):
+        milestones.config_ready.reach()
+
+        def f():
+            pass
+
+        tg.hooks.wrap_controller(None, controller=f)
 
     def test_error_middleware_disabled_with_optimize(self):
         class RootController(TGController):

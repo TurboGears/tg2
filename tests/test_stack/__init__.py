@@ -48,7 +48,7 @@ class TestConfig(AppConfig):
         g = tg.config['tg.app_globals']
         g.dotted_filename_finder = DottedFileNameFinder()
 
-def app_from_config(base_config, deployment_config=None):
+def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:
         deployment_config = {'debug': 'true',
                              'error_email_from': 'paste@localhost',
@@ -56,7 +56,8 @@ def app_from_config(base_config, deployment_config=None):
 
     # Reset milestones so that they can be reached again
     # on next configuration initialization
-    milestones._reset_all()
+    if reset_milestones:
+        milestones._reset_all()
 
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)

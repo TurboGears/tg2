@@ -9,6 +9,7 @@ needed to support these decorators.
 
 """
 import copy
+import warnings
 from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
@@ -24,6 +25,7 @@ from tg.predicates import NotAuthorizedError
 from tg._compat import im_func, unicode_text
 from webob.acceptparse import Accept
 from tg.configuration import milestones
+import tg
 
 import logging
 log = logging.getLogger(__name__)
@@ -103,17 +105,10 @@ class Decoration(object):
             self.validation = deco.validation
 
     def run_hooks(self, tgl, hook, *l, **kw):
-        #run system wide hooks
-        try:
-            syswide_hooks = tgl.config['hooks'][hook]
-            for func in syswide_hooks:
-                func(*l, **kw)
-        except KeyError:
-            pass
-
-        #run controller hooks
-        for func in self.hooks[hook]:
-            func(*l, **kw)
+        warnings.warn("Decoration.run_hooks is deprecated, "
+                      "please use tg.hooks.notify and instead", DeprecationWarning)
+        tg.hooks.notify(hook, args=l, kwargs=kw,
+                        controller=self.controller, context_config=tgl.config)
 
     def register_template_engine(self,
             content_type, engine, template, exclude_names, render_params):
@@ -245,8 +240,11 @@ class Decoration(object):
 
         return content_type, engine, template, exclude_names, render_params
 
-    def register_hook(self, hook_name, func):
+    def _register_hook(self, hook_name, func):
         """Registers the specified function as a hook.
+
+        This is internal API which is used by tg.hooks, instead of
+        calling this tg.hooks.register should be used.
 
         We now have four core hooks that can be applied by adding
         decorators: before_validate, before_call, before_render, and
@@ -254,7 +252,7 @@ class Decoration(object):
         which get's called at the appropriate time in the request life
         cycle.)
         """
-        self.hooks[hook_name].append(func)
+        self.hooks.setdefault(hook_name, []).append(func)
 
 
 class _hook_decorator(object):
@@ -275,7 +273,7 @@ class _hook_decorator(object):
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-        deco.register_hook(self.hook_name, self.hook_func)
+        deco._register_hook(self.hook_name, self.hook_func)
         return func
 
 
@@ -607,8 +605,8 @@ class paginate(object):
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration.register_hook('before_validate', self.before_validate)
-        decoration.register_hook('before_render', self.before_render)
+        decoration._register_hook('before_validate', self.before_validate)
+        decoration._register_hook('before_render', self.before_render)
         return func
 
     def before_validate(self, remainder, params):
@@ -846,6 +844,6 @@ class with_engine(object):
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration.register_hook('before_validate', self.before_validate)
+        decoration._register_hook('before_validate', self.before_validate)
         return func
 #}

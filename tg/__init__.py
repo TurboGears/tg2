@@ -65,6 +65,7 @@ from tg.jsonify import encode as json_encode
 from tg.controllers.util import use_wsgi_app
 from tg.controllers.dispatcher import dispatched_controller
 from tg.render import render as render_template
+from tg.configuration.hooks import hooks
 
 __version__ = version
 

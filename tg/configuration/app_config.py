@@ -20,11 +20,9 @@ import tg
 from tg.configuration.utils import coerce_config
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
 from tg.configuration import milestones
+from tg.configuration.utils import TGConfigError
 
 log = logging.getLogger(__name__)
-
-
-class TGConfigError(Exception):pass
 
 
 class DispatchingConfigWrapper(DictMixin):
@@ -180,6 +178,7 @@ class AppConfig(Bunch):
         self.call_on_shutdown = []
         self.controller_caller = call_controller
         self.controller_wrappers = []
+        self.dedicated_controller_wrappers = {}
         self.application_wrappers = []
         self.application_wrappers_dependencies = {False: [],
                                                   None: []}
@@ -191,6 +190,7 @@ class AppConfig(Bunch):
                           after_render_call=[],
                           before_config=[],
                           after_config=[])
+
         # The codes TG should display an error page for. All other HTTP errors are
         # sent to the client or left for some middleware above us to handle
         self.handle_status_codes = [403, 404]
@@ -224,41 +224,14 @@ class AppConfig(Bunch):
         return root_controller_module
 
     def register_hook(self, hook_name, func):
-        """Registers a TurboGears hook or controller wrapper.
+        warnings.warn("AppConfig.register_hook is deprecated, "
+                      "please use tg.hooks.register and "
+                      "tg.hooks.wrap_controller instead", DeprecationWarning)
 
-        Given an hook name and a function it registers the provided
-        function for that role. For a complete list of hooks
-        provided by default have a look at :ref:`hooks_and_events`.
-
-        If the provided hook name is ``controller_wrapper`` the
-        function is registered as a controller wrapper.
-        Controller Wrappers are much like a **decorator** applied to
-        every controller.
-        They receive :class:`tg.configuration.AppConfig` instance
-        as an argument and the next handler in chain and are expected
-        to return a new handler that performs whatever it requires
-        and then calls the next handler.
-
-        A simple example for a controller wrapper is a simple logging wrapper::
-
-            def controller_wrapper(app_config, caller):
-                def call(*args, **kw):
-                    try:
-                        print 'Before handler!'
-                        return caller(*args, **kw)
-                    finally:
-                        print 'After Handler!'
-                return call
-
-        """
-        if hook_name == 'startup':
-            self.call_on_startup.append(func)
-        elif hook_name == 'shutdown':
-            self.call_on_shutdown.append(func)
-        elif hook_name == 'controller_wrapper':
-            self.controller_wrappers.append(func)
+        if hook_name == 'controller_wrapper':
+            tg.hooks.wrap_controller(func)
         else:
-            self.hooks.setdefault(hook_name, []).append(func)
+            tg.hooks.register(hook_name, func)
 
     def register_wrapper(self, wrapper, after=None):
         """Registers a TurboGears application wrapper.
@@ -864,10 +837,24 @@ class AppConfig(Bunch):
             self.sa_auth.setdefault('cookie_secret', config['beaker.session.secret'])
 
     def _setup_controller_wrappers(self):
-        controller_caller = config.get('controller_caller')
+        base_controller_caller = config.get('controller_caller')
+
+        controller_caller = base_controller_caller
         for wrapper in self.get('controller_wrappers', []):
             controller_caller = wrapper(self, controller_caller)
         config['controller_caller'] = controller_caller
+
+        dedicated_wrappers = config.get('dedicated_controller_wrappers', {})
+        for wrapped_controller in dedicated_wrappers:
+            controller_caller = base_controller_caller
+            wrappers = dedicated_wrappers[wrapped_controller]
+            # Apply custom wrappers for controller
+            for wrapper in wrappers:
+                controller_caller = wrapper(self, controller_caller)
+            # Apply generic wrappers for application
+            for wrapper in self.get('controller_wrappers', []):
+                controller_caller = wrapper(self, controller_caller)
+            dedicated_wrappers[wrapped_controller] = controller_caller
 
     def _setup_renderers(self):
         for renderer in self.renderers[:]:
@@ -1248,8 +1235,7 @@ class AppConfig(Bunch):
             if wrap_app:
                 app = wrap_app(app)
 
-            for hook in self.hooks['before_config']:
-                app = hook(app)
+            app = tg.hooks.notify_with_value('before_config', app, context_config=config)
 
             #Apply controller wrappers to controller caller
             self._setup_controller_wrappers()
@@ -1321,8 +1307,7 @@ class AppConfig(Bunch):
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
 
-            for hook in self.hooks['after_config']:
-                app = hook(app)
+            app = tg.hooks.notify_with_value('after_config', app, context_config=config)
 
             return app
 
