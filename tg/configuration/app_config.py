@@ -255,7 +255,7 @@ class AppConfig(Bunch):
 
                 def __call__(self, environ, context):
                     print 'Going to run %s' % context.request.path
-                    return self.handler(*args, **kw)
+                    return self.handler(environ, context)
         """
         if milestones.environment_loaded.reached:
             # We must block registering wrappers if milestone passed, this is because
