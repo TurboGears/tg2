@@ -1,10 +1,6 @@
 """Utilities"""
-import os, sys
-import pkg_resources
 from pkg_resources import resource_filename
 import warnings
-
-from tg.request_local import config
 
 class DottedFileLocatorError(Exception):pass
 

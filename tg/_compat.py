@@ -43,6 +43,12 @@ def im_func(f):
     else:
         return getattr(f, 'im_func', None)
 
+def default_im_func(f):
+    if PY3: # pragma: no cover
+        return getattr(f, '__func__', f)
+    else:
+        return getattr(f, 'im_func', f)
+
 def im_self(f):
     if PY3: # pragma: no cover
         return getattr(f, '__self__', None)

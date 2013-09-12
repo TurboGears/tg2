@@ -1,7 +1,9 @@
 from tests.test_stack import TestConfig, app_from_config
-from tg.util import Bunch
 from tg.util import no_warn
 from tg.configuration import config
+from tg.configuration import milestones
+from tg.decorators import Decoration
+import tg
 import json
 
 def make_app():
@@ -17,15 +19,10 @@ def make_app():
                              )
     return app_from_config(base_config)
 
-app = None
-def setup():
-    global app
-    app = make_app()
-
 class TestTGController(object):
 
     def setup(self):
-        self.app = app
+        self.app = make_app()
 
     def test_simple_jsonification(self):
         resp = self.app.get('/j/json')
@@ -57,7 +54,7 @@ class TestTGController(object):
 
 class TestExposeInheritance(object):
     def setup(self):
-        self.app = app
+        self.app = make_app()
 
     def test_inherited_expose_template(self):
         resp1 = self.app.get('/sub1/index')
@@ -74,3 +71,23 @@ class TestExposeInheritance(object):
         assert ('"v"' in resp1 and '"parent_value"' in resp1)
         resp2 = self.app.get('/sub2/data')
         assert ('"v"' in resp2 and '"parent_value"' in resp2 and '"child_value"' in resp2)
+
+class TestExposeLazyInheritance(object):
+    def test_lazy_inheritance(self):
+        milestones.renderers_ready._reset()
+
+        class BaseController(tg.TGController):
+            @tg.expose('template.html')
+            def func(self):
+                pass
+
+        class SubController(BaseController):
+            @tg.expose(inherit=True)
+            def func(self):
+                pass
+
+        milestones.renderers_ready.reach()
+
+        deco = Decoration.get_decoration(SubController.func)
+        assert len(deco.engines) == 1, deco.engines
+        assert deco.engines['text/html'][1] == 'template.html'

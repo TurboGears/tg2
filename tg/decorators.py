@@ -8,6 +8,8 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
+import copy
+import warnings
 from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
@@ -22,6 +24,8 @@ from tg.caching import beaker_cache, cached_property
 from tg.predicates import NotAuthorizedError
 from tg._compat import im_func, unicode_text
 from webob.acceptparse import Accept
+from tg.configuration import milestones
+import tg
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,6 +35,7 @@ class Decoration(object):
     """
     def __init__(self, controller):
         self.controller = controller
+        self._expositions = []
         self.engines = {}
         self.engines_keys = []
         self.default_engine = None
@@ -43,25 +48,56 @@ class Decoration(object):
                           before_render=[],
                           after_render=[])
 
+    def __repr__(self): # pragma: no cover
+        return '<Decoration %s for %r>' % (id(self), self.controller)
+
+    @classmethod
     def get_decoration(cls, func):
         try:
             dec = func.decoration
         except:
             dec = func.decoration = cls(func)
         return dec
-    get_decoration = classmethod(get_decoration)
+
+    def _register_exposition(self, exposition, inherit=False):
+        """Register an exposition for later application"""
+
+        # We need to store a reference to the exposition
+        # so that we can merge them when inheritance is performed
+        self._expositions.append(exposition)
+
+        if inherit:
+            # if at least one exposition is in inherit mode
+            # all of them must inherit
+            self.inherit = True
+
+        milestones.renderers_ready.register(self._resolve_expositions)
+
+    def _resolve_expositions(self):
+        """Applies all the registered expositions"""
+        while True:
+            try:
+                exposition = self._expositions.pop(0)
+                exposition._apply()
+            except IndexError:
+                break
 
     @property
     def exposed(self):
         return bool(self.engines) or bool(self.custom_engines)
 
     def merge(self, deco):
+        # This merges already registered template engines
         self.engines = dict(tuple(deco.engines.items()) + tuple(self.engines.items()))
         self.engines_keys = sorted(self.engines, reverse=True)
-        self.custom_engines = dict(tuple(deco.custom_engines.items()) + tuple(self.engines.items()))
+        self.custom_engines = dict(tuple(deco.custom_engines.items()) + tuple(self.custom_engines.items()))
 
-        #inherit all the parent hooks
-        #parent hooks before current hooks so that they get called before
+        # This merges yet to register template engines
+        for exposition in deco._expositions:
+            self._register_exposition(exposition._clone(self.controller))
+
+        # inherit all the parent hooks
+        # parent hooks before current hooks so that they get called before
         for hook_name, hooks in deco.hooks.items():
             self.hooks[hook_name] = hooks + self.hooks[hook_name]
 
@@ -69,17 +105,10 @@ class Decoration(object):
             self.validation = deco.validation
 
     def run_hooks(self, tgl, hook, *l, **kw):
-        #run system wide hooks
-        try:
-            syswide_hooks = tgl.config['hooks'][hook]
-            for func in syswide_hooks:
-                func(*l, **kw)
-        except KeyError:
-            pass
-
-        #run controller hooks
-        for func in self.hooks[hook]:
-            func(*l, **kw)
+        warnings.warn("Decoration.run_hooks is deprecated, "
+                      "please use tg.hooks.notify and instead", DeprecationWarning)
+        tg.hooks.notify(hook, args=l, kwargs=kw,
+                        controller=self.controller, context_config=tgl.config)
 
     def register_template_engine(self,
             content_type, engine, template, exclude_names, render_params):
@@ -211,8 +240,11 @@ class Decoration(object):
 
         return content_type, engine, template, exclude_names, render_params
 
-    def register_hook(self, hook_name, func):
+    def _register_hook(self, hook_name, func):
         """Registers the specified function as a hook.
+
+        This is internal API which is used by tg.hooks, instead of
+        calling this tg.hooks.register should be used.
 
         We now have four core hooks that can be applied by adding
         decorators: before_validate, before_call, before_render, and
@@ -220,7 +252,7 @@ class Decoration(object):
         which get's called at the appropriate time in the request life
         cycle.)
         """
-        self.hooks[hook_name].append(func)
+        self.hooks.setdefault(hook_name, []).append(func)
 
 
 class _hook_decorator(object):
@@ -241,7 +273,7 @@ class _hook_decorator(object):
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-        deco.register_hook(self.hook_name, self.hook_func)
+        deco._register_hook(self.hook_name, self.hook_func)
         return func
 
 
@@ -351,19 +383,46 @@ class expose(object):
 
     def __init__(self, template='', content_type=None, exclude_names=None,
                  custom_format=None, render_params=None, inherit=False):
+
+        self.engine = None
+        self.template = template
+        self.content_type = content_type
+        self.exclude_names = exclude_names
+        self.custom_format = custom_format
+        self.render_params = render_params
+
+        self.inherit = inherit
+        self._func = None
+
+    def __call__(self, func):
+        self._func = func
+        deco = Decoration.get_decoration(func)
+        deco._register_exposition(self, self.inherit)
+        return func
+
+    def _resolve_options(self):
+        """This resolves exposition options that depend on
+        configuration steps that might not have already happened.
+        It's automatically called by _apply when required
+
+        """
+        if self.engine is not None:
+            return
+
+        exclude_names = self.exclude_names
+        template = self.template
+        content_type = self.content_type
+
         if exclude_names is None:
             exclude_names = []
 
         if template in config.get('renderers', []):
             engine, template = template, ''
-
         elif ':' in template:
             engine, template = template.split(':', 1)
-
         elif template:
             # Use the default templating engine from the config
             engine = config.get('default_renderer')
-
         else:
             engine, template = None, None
 
@@ -380,16 +439,25 @@ class expose(object):
         self.template = template
         self.content_type = content_type
         self.exclude_names = exclude_names
-        self.custom_format = custom_format
-        self.render_params = render_params
-        self.inherit = inherit
 
-    def __call__(self, func):
-        deco = Decoration.get_decoration(func)
-        if self.inherit:
-            deco.inherit = True
-            if not self.template and not self.engine:
-                return func
+    def _clone(self, func):
+        clone = copy.copy(self)
+        clone._func = func
+        return clone
+
+    def _apply(self):
+        """Applies an exposition for real"""
+        if self._func is None:
+            log.error('Applying an exposition with no decorated function!')
+            return
+
+        self._resolve_options()
+
+        deco = Decoration.get_decoration(self._func)
+        if deco.inherit and not self.template and not self.engine:
+            # If we are just inheriting without adding additional
+            # engines or templates we can just skip this part.
+            return
 
         if self.custom_format:
             deco.register_custom_template_engine(
@@ -399,7 +467,6 @@ class expose(object):
             deco.register_template_engine(
                 self.content_type, self.engine,
                 self.template, self.exclude_names, self.render_params)
-        return func
 
 
 def use_custom_format(controller, custom_format):
@@ -538,8 +605,8 @@ class paginate(object):
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration.register_hook('before_validate', self.before_validate)
-        decoration.register_hook('before_render', self.before_render)
+        decoration._register_hook('before_validate', self.before_validate)
+        decoration._register_hook('before_render', self.before_render)
         return func
 
     def before_validate(self, remainder, params):
@@ -777,6 +844,6 @@ class with_engine(object):
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration.register_hook('before_validate', self.before_validate)
+        decoration._register_hook('before_validate', self.before_validate)
         return func
 #}

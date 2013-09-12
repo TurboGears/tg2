@@ -22,7 +22,8 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
-from tg._compat import unicode_text, with_metaclass, im_self, url2pathname
+from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
+from tg.configuration.hooks import hooks
 
 strip_string = operator.methodcaller('strip')
 
@@ -76,6 +77,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             #compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
 
+        context_config = tg.config
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
@@ -90,9 +92,9 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         else:
             remainder = tuple()
 
-        tg_decoration = controller.decoration
         try:
-            tg_decoration.run_hooks(tgl, 'before_validate', remainder, params)
+            hooks.notify('before_validate', args=(remainder, params),
+                         controller=controller, context_config=context_config)
 
             validate_params = get_params_with_argspec(controller, params, remainder)
 
@@ -101,13 +103,17 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
             tgl.tmpl_context.form_values = params
 
-            tg_decoration.run_hooks(tgl, 'before_call', remainder, params)
+            hooks.notify('before_call', args=(remainder, params),
+                         controller=controller, context_config=context_config)
 
             params, remainder = remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
             try:
-                controller_caller = tgl.config['controller_caller']
+                default_controller_caller = context_config['controller_caller']
+                dedicated_controller_wrappers = context_config['dedicated_controller_wrappers']
+                controller_caller = dedicated_controller_wrappers.get(default_im_func(controller),
+                                                                      default_controller_caller)
             except KeyError:
                 controller_caller = call_controller
 
@@ -117,16 +123,15 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         except validation_errors as inv:
             controller, output = self._handle_validation_errors(controller, remainder, params, inv)
 
-        #Be sure that we run hooks if the controller changed due to validation errors
-        tg_decoration = controller.decoration
-
         # Render template
-        tg_decoration.run_hooks(tgl, 'before_render', remainder, params, output)
+        hooks.notify('before_render', args=(remainder, params, output),
+                     controller=controller, context_config=context_config)
 
         response = self._render_response(tgl, controller, output)
-        
-        tg_decoration.run_hooks(tgl, 'after_render', response)
-        
+
+        hooks.notify('after_render', args=(response,),
+                     controller=controller, context_config=context_config)
+
         return response['response']
 
     def _perform_validate(self, controller, params):

@@ -3,8 +3,7 @@ from nose import SkipTest
 import shutil, os
 import json
 import tg
-#import tg.configuration
-
+from tg.configuration import milestones
 #tg.configuration.reqlocal_config.push_process_config({})
 
 from tests.test_stack import TestConfig, app_from_config
@@ -561,9 +560,11 @@ def test_render_hooks():
         'use_toscawidgets': False,
         'use_toscawidgets2': False
     })
+
+    milestones._reset_all()
     base_config.register_hook('before_render_call', render_call_hook)
     base_config.register_hook('after_render_call', render_call_hook)
-    app = app_from_config(base_config)
+    app = app_from_config(base_config, reset_milestones=False)
     app.get('/')
 
     assert len(calls) == 2
