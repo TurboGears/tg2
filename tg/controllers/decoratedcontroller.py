@@ -301,7 +301,6 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         """
         req = tg.request._current_obj()
 
-        #TODO: Those should be deprecated because they should not belong to the template context
         validation_status = req.validation
         validation_status['exception'] = exception
 
