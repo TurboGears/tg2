@@ -1,7 +1,7 @@
 """Main Controller"""
 import tg
 from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
-from tg import cache, i18n
+from tg import cache, i18n, request
 from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
 from tg.controllers import TGController
 from tg.validation import TGValidationError
@@ -159,7 +159,7 @@ class RootController(TGController):
     @validate(form=base_movie_form)
     def process_form_errors(self, **kwargs):
         #add error messages to the kwargs dictionary and return it
-        kwargs['errors'] = tmpl_context.form_errors
+        kwargs['errors'] = request.validation['errors']
         return dict(kwargs)
 
     @expose()

@@ -123,7 +123,7 @@ class BasicTGController(TGController):
     @expose()
     @validate(ColonLessGenericValidator())
     def validator_without_columns(self, **kw):
-        return tg.tmpl_context.form_errors['_the_form']
+        return tg.request.validation['errors']['_the_form']
 
     @expose('json:')
     @validate(validators={"some_int": validators.Int()})
@@ -146,8 +146,8 @@ class BasicTGController(TGController):
     @expose('json:')
     @validate(validators={"a": validators.Int(), "someemail": validators.Email()})
     def two_validators(self, a=None, someemail=None, *args):
-        errors = tg.tmpl_context.form_errors
-        values =  tg.tmpl_context.form_values
+        errors = tg.request.validation['errors']
+        values = tg.request.validation['values']
         return dict(a=a, someemail=someemail,
                 errors=str(errors), values=str(values))
 
@@ -163,7 +163,7 @@ class BasicTGController(TGController):
     @expose('json:')
     @validate(validators={"e": ColonValidator()})
     def error_with_colon(self, e):
-        errors = tg.tmpl_context.form_errors
+        errors = tg.request.validation['errors']
         return dict(errors=str(errors))
 
     @expose('json:')
@@ -187,18 +187,18 @@ class BasicTGController(TGController):
     @expose('json:')
     @validate(form=myform)
     def process_form(self, **kwargs):
-        kwargs['errors'] = tg.tmpl_context.form_errors
+        kwargs['errors'] = tg.request.validation['errors']
         return dict(kwargs)
 
     @expose('json:')
     @validate(form=myform, error_handler=process_form)
     def send_to_error_handler(self, **kwargs):
-        kwargs['errors'] = tg.tmpl_context.form_errors
+        kwargs['errors'] = tg.request.validation['errors']
         return dict(kwargs)
 
     @expose()
     def tw2form_error_handler(self, **kwargs):
-        return dumps(dict(errors=tg.tmpl_context.form_errors))
+        return dumps(dict(errors=tg.request.validation['errors']))
 
     @expose('json:')
     @validate(form=movie_form, error_handler=tw2form_error_handler)
@@ -208,7 +208,7 @@ class BasicTGController(TGController):
     @expose()
     @validate({'param':tw2c.IntValidator()})
     def tw2_dict_validation(self, **kwargs):
-        return str(tg.tmpl_context.form_errors)
+        return str(tg.request.validation['errors'])
 
     @expose()
     def set_lang(self, lang=None):
@@ -220,7 +220,7 @@ class BasicTGController(TGController):
         @expose()
         @validate(validators=Pwd())
         def password(self, pwd1, pwd2):
-            if tg.tmpl_context.form_errors:
+            if tg.request.validation['errors']:
                 return "There was an error"
             else:
                 return "Password ok!"
@@ -234,6 +234,12 @@ class BasicTGController(TGController):
     @validate({'v':validators.Int()}, error_handler=hooked_error_handler)
     def with_hooked_error_handler(self, *args, **kw):
         return dict(GOT_ERROR='NO ERROR')
+
+    @expose('json')
+    @validate({'v': validators.Int()})
+    def check_tmpl_context_compatibility(self, *args, **kw):
+        return dict(tmpl_errors=str(tg.tmpl_context.form_errors),
+                    errors=str(tg.request.validation['errors']))
 
     @expose()
     def error_handler(self, *args, **kw):
@@ -412,6 +418,11 @@ class TestTGController(TestWSGIController):
     def test_hook_after_validation_error(self):
         resp = self.app.post('/with_hooked_error_handler?v=a')
         assert 'HOOKED' in resp, resp
+
+    def test_check_tmpl_context_compatibility(self):
+        resp = self.app.post('/check_tmpl_context_compatibility?v=a')
+        resp = resp.json
+        assert resp['errors'] == resp['tmpl_errors'], resp
 
     def test_validation_error_has_message(self):
         e = TGValidationError('This is a validation error')

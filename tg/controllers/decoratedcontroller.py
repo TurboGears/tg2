@@ -101,7 +101,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 
-            tgl.tmpl_context.form_values = params
+            tgl.request.validation['values'] = params
 
             hooks.notify('before_call', args=(remainder, params),
                          controller=controller, context_config=context_config)
@@ -290,8 +290,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             controller, remainder, params, exception):
         """Handle validation errors.
 
-        Sets up tg.tmpl_context.form_values
-        and tg.tmpl_context.form_errors
+        Sets up validation status and error tracking
         to assist generating a form with given values
         and the validation failure messages.
 
@@ -300,21 +299,23 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         as the error handler instead.
 
         """
-        tmpl_context = tg.tmpl_context
-        tmpl_context.validation_exception = exception
-        tmpl_context.form_errors = {}
+        req = tg.request._current_obj()
+
+        #TODO: Those should be deprecated because they should not belong to the template context
+        validation_status = req.validation
+        validation_status['exception'] = exception
 
         if isinstance(exception, _Tw2ValidationError):
             #Fetch all the children and grandchildren of a widget
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
 
-            errors = [(child.key, child.error_msg) for child in widget_children]
-            tmpl_context.form_errors.update(errors)
-            tmpl_context.form_values = widget.child.value
+            errors = dict((child.key, child.error_msg) for child in widget_children)
+            validation_status['errors'] = errors
+            validation_status['values'] = widget.child.value
         elif isinstance(exception, TGValidationError):
-            tmpl_context.form_errors = exception.error_dict
-            tmpl_context.form_values = exception.value
+            validation_status['errors'] = exception.error_dict
+            validation_status['values'] = exception.value
         else:
             # Most Invalid objects come back with a list of errors in the format:
             #"fieldname1: error\nfieldname2: error"
@@ -325,16 +326,16 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                 #if the error has no field associated with it,
                 #return the error as a global form error
                 if len(field_value) == 1:
-                    tmpl_context.form_errors['_the_form'] = field_value[0]
+                    validation_status['errors']['_the_form'] = field_value[0]
                     continue
 
-                tmpl_context.form_errors[field_value[0]] = field_value[1]
+                validation_status['errors'][field_value[0]] = field_value[1]
 
-            tmpl_context.form_values = getattr(exception, 'value', {})
+            validation_status['values'] = getattr(exception, 'value', {})
 
-        error_handler = controller.decoration.validation.error_handler
+        validation_status['error_handler'] = error_handler = controller.decoration.validation.error_handler
         if error_handler is None:
-            error_handler = controller
+            validation_status['error_handler'] = error_handler = controller
             output = error_handler(*remainder, **dict(params))
         else:
             output = error_handler(im_self(controller), *remainder, **dict(params))
@@ -342,8 +343,10 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return error_handler, output
 
     def _initialize_validation_context(self, tgl):
-        tgl.tmpl_context.form_errors = {}
-        tgl.tmpl_context.form_values = {}
+        tgl.request.validation = {'errors': {},
+                                  'values': {},
+                                  'exception': None,
+                                  'error_handler': None}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
