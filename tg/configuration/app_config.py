@@ -1231,25 +1231,21 @@ class AppConfig(Bunch):
             if load_environment:
                 load_environment(global_conf, app_conf)
 
+            # Apply controller wrappers to controller caller
+            self._setup_controller_wrappers()
+
+            # TODO: This should be moved in configuration phase.
+            # It is here as it requires both the .ini file and AppConfig to be ready
+            avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
+            config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
+
             app = TGApp()
             if wrap_app:
                 app = wrap_app(app)
 
             app = tg.hooks.notify_with_value('before_config', app, context_config=config)
 
-            #Apply controller wrappers to controller caller
-            self._setup_controller_wrappers()
-
-            avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
-            config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
-
             app = self.add_core_middleware(app)
-
-            if self.use_toscawidgets:
-                app = self.add_tosca_middleware(app)
-
-            if self.use_toscawidgets2:
-                app = self.add_tosca2_middleware(app)
 
             if self.auth_backend:
                 # Skipping authentication if explicitly requested. Used by
@@ -1259,6 +1255,21 @@ class AppConfig(Bunch):
 
             if self.use_transaction_manager:
                 app = self.add_tm_middleware(app)
+
+            # TODO: Middlewares before this point should be converted to App Wrappers.
+            # They provide some basic TG features like AUTH, Caching and transactions
+            # which should be app wrappers to make possible to add wrappers in the
+            # stack before or after them.
+
+            if self.use_toscawidgets:
+                app = self.add_tosca_middleware(app)
+
+            if self.use_toscawidgets2:
+                app = self.add_tosca2_middleware(app)
+
+            # from here on the response is a generator
+            # so any middleware that relies on the response to be
+            # a string needs to be applied before this point.
 
             if self.use_sqlalchemy:
                 if not hasattr(self, 'DBSession'):
