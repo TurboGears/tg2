@@ -106,9 +106,14 @@ class Decoration(object):
 
     def run_hooks(self, tgl, hook, *l, **kw):
         warnings.warn("Decoration.run_hooks is deprecated, "
-                      "please use tg.hooks.notify and instead", DeprecationWarning)
+                      "please use tg.hooks.notify instead", DeprecationWarning)
         tg.hooks.notify(hook, args=l, kwargs=kw,
                         controller=self.controller, context_config=tgl.config)
+
+    def register_hook(self, hook_name, func):
+        warnings.warn("Decoration.register_hook is deprecated, "
+                      "please use tg.hooks.register instead", DeprecationWarning)
+        tg.hooks.register(hook_name, func, controller=self.controller)
 
     def register_template_engine(self,
             content_type, engine, template, exclude_names, render_params):
