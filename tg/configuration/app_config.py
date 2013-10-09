@@ -168,6 +168,7 @@ class AppConfig(Bunch):
         self.prefer_toscawidgets2 = False
         self.use_dotted_templatenames = not minimal
         self.handle_error_page = not minimal
+        self.registry_streaming = True
 
         self.use_sessions = not minimal
         self.i18n_enabled = not minimal
@@ -1300,7 +1301,7 @@ class AppConfig(Bunch):
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
-            app = RegistryManager(app, streaming=True,
+            app = RegistryManager(app, streaming=config.get('registry_streaming', True),
                                   preserve_exceptions=asbool(global_conf.get('debug')))
 
             # Place the debuggers after the registry so that we
