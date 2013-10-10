@@ -288,7 +288,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         result['response'] = rendered
         return result
 
-    def _handle_validation_errors(self, controller, remainder, params, exception, tgl=None):
+    @classmethod
+    def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
         """Handle validation errors.
 
         Sets up validation status and error tracking
@@ -337,7 +338,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
             validation_status['values'] = getattr(exception, 'value', {})
 
-        validation_status['error_handler'] = error_handler = controller.decoration.validation.error_handler
+        deco = controller.decoration
+        validation_status['error_handler'] = error_handler = deco.validation.error_handler
         if error_handler is None:
             validation_status['error_handler'] = error_handler = controller
             output = error_handler(*remainder, **dict(params))
