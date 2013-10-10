@@ -43,6 +43,7 @@ class Decoration(object):
         self.render_custom_format = None
         self.validation = None
         self.inherit = False
+        self.requirement = None
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -782,6 +783,12 @@ class require(_BaseProtectionDecorator):
 
     """
     def __call__(self, action_):
+        # Even though @require is not Decoration based
+        # provide a requirement attribute to decoration to
+        # let the user inspect the method requirements
+        deco = Decoration.get_decoration(action_)
+        deco.requirement = self
+
         return decorator(self.wrap_action, action_)
 
     def wrap_action(self, action_, *args, **kwargs):
