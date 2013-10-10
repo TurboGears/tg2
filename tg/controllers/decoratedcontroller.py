@@ -134,7 +134,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         return response['response']
 
-    def _perform_validate(self, controller, params):
+    @classmethod
+    def _perform_validate(cls, controller, params):
         """Run validation for the controller with the given parameters.
 
         Validation is stored on the "validation" attribute of the controller's
