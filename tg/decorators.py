@@ -110,7 +110,7 @@ class Decoration(object):
         tg.hooks.notify(hook, args=l, kwargs=kw,
                         controller=self.controller, context_config=tgl.config)
 
-    def register_hook(self, hook_name, func):
+    def register_hook(self, hook_name, func): #pragma: no cover
         warnings.warn("Decoration.register_hook is deprecated, "
                       "please use tg.hooks.register instead", DeprecationWarning)
         tg.hooks.register(hook_name, func, controller=self.controller)
