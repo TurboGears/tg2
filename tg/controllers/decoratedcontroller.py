@@ -77,7 +77,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             #compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
 
-        context_config = tg.config
+        context_config = tg.config._current_obj()
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
@@ -121,7 +121,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             output = controller_caller(controller, remainder, params)
 
         except validation_errors as inv:
-            controller, output = self._handle_validation_errors(controller, remainder, params, inv)
+            controller, output = self._handle_validation_errors(controller, remainder, params,
+                                                                inv, tgl=tgl)
 
         # Render template
         hooks.notify('before_render', args=(remainder, params, output),
@@ -287,8 +288,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         result['response'] = rendered
         return result
 
-    def _handle_validation_errors(self,
-            controller, remainder, params, exception):
+    def _handle_validation_errors(self, controller, remainder, params, exception, tgl=None):
         """Handle validation errors.
 
         Sets up validation status and error tracking
@@ -300,7 +300,11 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         as the error handler instead.
 
         """
-        req = tg.request._current_obj()
+        if tgl is None: #pragma: no cover
+            #compatibility with old code that didn't pass request locals explicitly
+            tgl = tg.request.environ['tg.locals']
+
+        req = tgl.request
 
         validation_status = req.validation
         validation_status['exception'] = exception
