@@ -84,8 +84,5 @@ setup(
     test_suite='nose.collector',
     tests_require = test_requirements,
     entry_points='''
-    ''',
-    dependency_links=[
-        "http://tg.gy/230"
-        ]
+    '''
 )
