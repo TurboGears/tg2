@@ -7,6 +7,7 @@ import tg
 from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
+from tg.util import ContextObj, AttribSafeContextObj
 
 try: #pragma: no cover
     import pylons
@@ -14,36 +15,12 @@ try: #pragma: no cover
 except:
     has_pylons = False
 
+
 class RequestLocals(object):
     __slots__ = ('response', 'request', 'app_globals',
                  'config', 'tmpl_context', 'translator',
                  'session', 'cache', 'url')
 
-class ContextObj(object):
-    def __repr__(self):
-        attrs = sorted((name, value)
-                       for name, value in self.__dict__.items()
-                       if not name.startswith('_'))
-        parts = []
-        for name, value in attrs:
-            value_repr = repr(value)
-            if len(value_repr) > 70:
-                value_repr = value_repr[:60] + '...' + value_repr[-5:]
-            parts.append(' %s=%s' % (name, value_repr))
-        return '<%s.%s at %s%s>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            hex(id(self)),
-            ','.join(parts))
-
-class AttribSafeContextObj(ContextObj):
-    """The :term:`tmpl_context` object, with lax attribute access (
-    returns '' when the attribute does not exist)"""
-    def __getattr__(self, name):
-        try:
-            return object.__getattribute__(self, name)
-        except AttributeError:
-            return ''
 
 class TGApp(object):
     def __init__(self, config=None, **kwargs):

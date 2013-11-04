@@ -78,8 +78,8 @@ def _get_tg_vars():
         identity = req.environ.get('repoze.who.identity'),
         session = session,
         locale = req.plain_languages,
-        errors = getattr(tmpl_context, "form_errors", {}),
-        inputs = getattr(tmpl_context, "form_values", {}),
+        errors = req.validation['errors'],
+        inputs = req.validation['values'],
         request = req,
         auth_stack_enabled = 'repoze.who.plugins' in req.environ,
         predicates = predicates)

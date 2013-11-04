@@ -2,15 +2,19 @@
 from nose.tools import raises
 import os, tg
 from tests.test_stack import TestConfig, app_from_config
-from webtest import TestApp
-from tg.jsonify import JsonEncodeError
-from tg.util import no_warn
+from tg.decorators import Decoration
+from tg.configuration import milestones
 
 from nose.tools import eq_
 from nose import SkipTest
 from tg._compat import PY3, u_
+from tg.util import Bunch
+
 
 class TestHooks(object):
+    def setUp(self):
+        milestones._reset_all()
+
     def test_hooks_syswide(self):
         base_config = TestConfig(folder = 'dispatch',
                                  values = {'use_sqlalchemy': False,
@@ -23,13 +27,36 @@ class TestHooks(object):
             tg.tmpl_context.echo = 'WORKED'
 
         base_config.register_hook('before_call', hook)
-        app = app_from_config(base_config)
+        app = app_from_config(base_config, reset_milestones=False)
 
         ans = app.get('/echo')
         assert 'WORKED' in ans
 
+    def test_decoration_run_hooks_backward_compatibility(self):
+        # TODO: Remove test when Decoration.run_hooks gets removed
+
+        def func(*args, **kw):
+            pass
+
+        def hook(*args, **kw):
+            hook.did_run = True
+        hook.did_run = False
+
+        milestones.renderers_ready.reach()
+        tg.hooks.register('before_call', hook, controller=func)
+
+        deco = Decoration.get_decoration(func)
+        deco.run_hooks(Bunch(config=None), 'before_call')
+
+        assert hook.did_run is True
 
 class TestExpose(object):
+    def setUp(self):
+        milestones.renderers_ready._reset()
+
+    def tearDown(self):
+        milestones.renderers_ready._reset()
+
     def test_unregisterd_renderers_detection(self):
         #If no renderers are available we should just issue a warning
         #and avoid crashing. Simply bypass rendering availability check.
@@ -39,6 +66,7 @@ class TestExpose(object):
                       'use_toscawidgets2': False,
                       'ignore_parameters': ["ignore", "ignore_me"]
             })
+
         app = app_from_config(base_config)
 
         old_renderers = tg.config['renderers']
@@ -49,7 +77,6 @@ class TestExpose(object):
             pass
 
         tg.config['renderers'] = old_renderers
-
 
     def test_use_default_renderer(self):
         base_config = TestConfig(folder = 'dispatch',
@@ -62,9 +89,48 @@ class TestExpose(object):
         app = app_from_config(base_config)
 
         exposition = tg.expose('nonexisting')
+        exposition._resolve_options()
+
         assert exposition.engine == tg.config['default_renderer']
         assert exposition.template == 'nonexisting'
 
+    def test_expose_without_function_does_nothing(self):
+        base_config = TestConfig(folder = 'dispatch',
+            values = {'use_sqlalchemy': False,
+                      'use_toscawidgets': False,
+                      'use_toscawidgets2': False,
+                      'ignore_parameters': ["ignore", "ignore_me"]
+            })
+
+        app = app_from_config(base_config)
+
+        exposition = tg.expose('nonexisting')
+        exposition._apply()
+
+        assert exposition._func is None
+        assert exposition.engine is None
+
+    def test_expose_idempotent(self):
+        base_config = TestConfig(folder = 'dispatch',
+            values = {'use_sqlalchemy': False,
+                      'use_toscawidgets': False,
+                      'use_toscawidgets2': False,
+                      'ignore_parameters': ["ignore", "ignore_me"]
+            })
+
+        app = app_from_config(base_config)
+
+        exposition = tg.expose('nonexisting')
+
+        @exposition
+        @exposition
+        def func(*args, **kw):
+            pass
+
+        milestones.renderers_ready.reach()
+
+        deco = Decoration.get_decoration(func)
+        assert len(deco.engines) == 1, deco.engines
 
 class TestDecorators(object):
     def setup(self):

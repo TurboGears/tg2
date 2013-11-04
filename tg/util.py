@@ -1,10 +1,8 @@
 """Utilities"""
-import os, sys
-import pkg_resources
 from pkg_resources import resource_filename
 import warnings
+from tg.request_local import request
 
-from tg.request_local import config
 
 class DottedFileLocatorError(Exception):pass
 
@@ -173,3 +171,39 @@ def lazify(func):
 
 def call_controller(controller, remainder, params):
     return controller(*remainder, **params)
+
+
+class ContextObj(object):
+    def __repr__(self):
+        attrs = sorted((name, value)
+                       for name, value in self.__dict__.items()
+                       if not name.startswith('_'))
+        parts = []
+        for name, value in attrs:
+            value_repr = repr(value)
+            if len(value_repr) > 70:
+                value_repr = value_repr[:60] + '...' + value_repr[-5:]
+            parts.append(' %s=%s' % (name, value_repr))
+        return '<%s.%s at %s%s>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            ','.join(parts))
+
+    def __getattr__(self, item):
+        if item in ('form_values', 'form_errors'):
+            warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
+                          'use request.validation instead', DeprecationWarning)
+            return request.validation[item[5:]]
+
+        raise AttributeError()
+
+
+class AttribSafeContextObj(ContextObj):
+    """The :term:`tmpl_context` object, with lax attribute access (
+    returns '' when the attribute does not exist)"""
+    def __getattr__(self, name):
+        try:
+            return ContextObj.__getattr__(self, name)
+        except AttributeError:
+            return ''

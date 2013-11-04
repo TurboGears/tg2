@@ -242,8 +242,6 @@ class RegistryManager(object):
         app_iter = None
         reg = environ.setdefault('paste.registry', Registry(self.preserve_exceptions))
         reg.prepare()
-        if self.streaming:
-            return self.streaming_iter(reg, environ, start_response)
 
         try:
             app_iter = self.application(environ, start_response)
@@ -252,19 +250,25 @@ class RegistryManager(object):
             reg.cleanup()
             raise
         else:
-            reg.cleanup()
+            # If we are streaming streaming_iter will cleanup things for us
+            if not self.streaming:
+                reg.cleanup()
+
+        if self.streaming:
+            return self.streaming_iter(reg, app_iter)
 
         return app_iter
 
-    def streaming_iter(self, reg, environ, start_response):
+    def streaming_iter(self, reg, data):
         try:
-            for item in self.application(environ, start_response):
-                yield item
+            for chunk in data:
+                yield chunk
         except:
             reg.preserve()
-            reg.cleanup()
             raise
-        else:
+        finally:
+            if hasattr(data, 'close'):
+                data.close()
             reg.cleanup()
 
 class DispatchingConfig(StackedObjectProxy):

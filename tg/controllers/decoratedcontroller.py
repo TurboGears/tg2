@@ -22,7 +22,8 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
 
-from tg._compat import unicode_text, with_metaclass, im_self, url2pathname
+from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
+from tg.configuration.hooks import hooks
 
 strip_string = operator.methodcaller('strip')
 
@@ -76,6 +77,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             #compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
 
+        context_config = tg.config._current_obj()
         self._initialize_validation_context(tgl)
 
         #This is necessary to prevent spurious Content Type header which would
@@ -90,24 +92,28 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         else:
             remainder = tuple()
 
-        tg_decoration = controller.decoration
         try:
-            tg_decoration.run_hooks(tgl, 'before_validate', remainder, params)
+            hooks.notify('before_validate', args=(remainder, params),
+                         controller=controller, context_config=context_config)
 
             validate_params = get_params_with_argspec(controller, params, remainder)
 
             # Validate user input
             params = self._perform_validate(controller, validate_params)
 
-            tgl.tmpl_context.form_values = params
+            tgl.request.validation['values'] = params
 
-            tg_decoration.run_hooks(tgl, 'before_call', remainder, params)
+            hooks.notify('before_call', args=(remainder, params),
+                         controller=controller, context_config=context_config)
 
             params, remainder = remove_argspec_params_from_params(controller, params, remainder)
 
             #apply controller wrappers
             try:
-                controller_caller = tgl.config['controller_caller']
+                default_controller_caller = context_config['controller_caller']
+                dedicated_controller_wrappers = context_config['dedicated_controller_wrappers']
+                controller_caller = dedicated_controller_wrappers.get(default_im_func(controller),
+                                                                      default_controller_caller)
             except KeyError:
                 controller_caller = call_controller
 
@@ -115,21 +121,22 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             output = controller_caller(controller, remainder, params)
 
         except validation_errors as inv:
-            controller, output = self._handle_validation_errors(controller, remainder, params, inv)
-
-        #Be sure that we run hooks if the controller changed due to validation errors
-        tg_decoration = controller.decoration
+            controller, output = self._handle_validation_errors(controller, remainder, params,
+                                                                inv, tgl=tgl)
 
         # Render template
-        tg_decoration.run_hooks(tgl, 'before_render', remainder, params, output)
+        hooks.notify('before_render', args=(remainder, params, output),
+                     controller=controller, context_config=context_config)
 
         response = self._render_response(tgl, controller, output)
-        
-        tg_decoration.run_hooks(tgl, 'after_render', response)
-        
+
+        hooks.notify('after_render', args=(response,),
+                     controller=controller, context_config=context_config)
+
         return response['response']
 
-    def _perform_validate(self, controller, params):
+    @classmethod
+    def _perform_validate(cls, controller, params):
         """Run validation for the controller with the given parameters.
 
         Validation is stored on the "validation" attribute of the controller's
@@ -281,12 +288,11 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         result['response'] = rendered
         return result
 
-    def _handle_validation_errors(self,
-            controller, remainder, params, exception):
+    @classmethod
+    def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
         """Handle validation errors.
 
-        Sets up tg.tmpl_context.form_values
-        and tg.tmpl_context.form_errors
+        Sets up validation status and error tracking
         to assist generating a form with given values
         and the validation failure messages.
 
@@ -295,21 +301,26 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         as the error handler instead.
 
         """
-        tmpl_context = tg.tmpl_context
-        tmpl_context.validation_exception = exception
-        tmpl_context.form_errors = {}
+        if tgl is None: #pragma: no cover
+            #compatibility with old code that didn't pass request locals explicitly
+            tgl = tg.request.environ['tg.locals']
+
+        req = tgl.request
+
+        validation_status = req.validation
+        validation_status['exception'] = exception
 
         if isinstance(exception, _Tw2ValidationError):
             #Fetch all the children and grandchildren of a widget
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
 
-            errors = [(child.key, child.error_msg) for child in widget_children]
-            tmpl_context.form_errors.update(errors)
-            tmpl_context.form_values = widget.child.value
+            errors = dict((child.key, child.error_msg) for child in widget_children)
+            validation_status['errors'] = errors
+            validation_status['values'] = widget.child.value
         elif isinstance(exception, TGValidationError):
-            tmpl_context.form_errors = exception.error_dict
-            tmpl_context.form_values = exception.value
+            validation_status['errors'] = exception.error_dict
+            validation_status['values'] = exception.value
         else:
             # Most Invalid objects come back with a list of errors in the format:
             #"fieldname1: error\nfieldname2: error"
@@ -320,16 +331,17 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                 #if the error has no field associated with it,
                 #return the error as a global form error
                 if len(field_value) == 1:
-                    tmpl_context.form_errors['_the_form'] = field_value[0]
+                    validation_status['errors']['_the_form'] = field_value[0]
                     continue
 
-                tmpl_context.form_errors[field_value[0]] = field_value[1]
+                validation_status['errors'][field_value[0]] = field_value[1]
 
-            tmpl_context.form_values = getattr(exception, 'value', {})
+            validation_status['values'] = getattr(exception, 'value', {})
 
-        error_handler = controller.decoration.validation.error_handler
+        deco = controller.decoration
+        validation_status['error_handler'] = error_handler = deco.validation.error_handler
         if error_handler is None:
-            error_handler = controller
+            validation_status['error_handler'] = error_handler = controller
             output = error_handler(*remainder, **dict(params))
         else:
             output = error_handler(im_self(controller), *remainder, **dict(params))
@@ -337,8 +349,10 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return error_handler, output
 
     def _initialize_validation_context(self, tgl):
-        tgl.tmpl_context.form_errors = {}
-        tgl.tmpl_context.form_values = {}
+        tgl.request.validation = {'errors': {},
+                                  'values': {},
+                                  'exception': None,
+                                  'error_handler': None}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)

@@ -5,7 +5,7 @@ from tg.util import *
 from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *
-from tg.wsgiapp import ContextObj
+from tg.util import ContextObj, AttribSafeContextObj
 
 import tg._compat
 from tg._compat import u_
@@ -110,6 +110,18 @@ class TestLazyString(object):
         l = LazyString(lambda: '{0}')
         lf = l.format('HI')
         assert lf == 'HI', lf
+
+class TestAttribSafeContextObj(object):
+    def setup(self):
+        self.c = AttribSafeContextObj()
+
+    def test_attribute_default_value(self):
+        assert self.c.something == ''
+
+        self.c.something = 'HELLO'
+        assert self.c.something == 'HELLO'
+
+        assert self.c.more == ''
 
 def test_tmpl_context_long_entry():
     c = ContextObj()
