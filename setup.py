@@ -23,7 +23,8 @@ test_requirements = ['coverage',
                     'WebTest < 2.0',
                     'routes',
                     'backlash',
-                    'sqlalchemy'
+                    'sqlalchemy',
+                    'raven'
                     ]
 
 if py_version == (3, 2):
