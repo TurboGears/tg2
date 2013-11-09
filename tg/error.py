@@ -3,9 +3,11 @@ from paste.deploy.converters import asbool
 
 log = logging.getLogger(__name__)
 
+
 def _turbogears_backlash_context(environ):
     tgl = environ.get('tg.locals')
     return {'request':getattr(tgl, 'request', None)}
+
 
 def ErrorHandler(app, global_conf, **errorware):
     """ErrorHandler Toggle
@@ -31,6 +33,7 @@ def ErrorHandler(app, global_conf, **errorware):
 
     return app
 
+
 def ErrorReporter(app, global_conf, **errorware):
     try:
         import backlash
@@ -38,9 +41,18 @@ def ErrorReporter(app, global_conf, **errorware):
         log.warn('backlash not installed, email tracebacks won\'t be available')
         return app
 
-    from backlash.trace_errors import EmailReporter
+    reporters = []
+
+    if not errorware.get('disable_email', False):
+        from backlash.trace_errors import EmailReporter
+        reporters.append(EmailReporter(**errorware))
+
+    if errorware.get('enable_sentry', False):
+        from backlash.trace_errors.sentry import SentryReporter
+        reporters.append(SentryReporter(**errorware))
+
     if not asbool(global_conf.get('debug')):
-        app = backlash.TraceErrorsMiddleware(app, [EmailReporter(**errorware)],
+        app = backlash.TraceErrorsMiddleware(app, reporters,
                                              context_injectors=[_turbogears_backlash_context])
 
     return app

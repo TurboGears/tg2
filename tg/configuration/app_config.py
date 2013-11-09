@@ -346,15 +346,32 @@ class AppConfig(Bunch):
         errorware['debug'] = conf['debug']
         if not errorware['debug']:
             errorware['debug'] = False
-            errorware['error_email'] = conf.get('email_to')
-            errorware['error_log'] = conf.get('error_log', None)
-            errorware['smtp_server'] = conf.get('smtp_server', 'localhost')
-            errorware['smtp_use_tls'] = asbool(conf.get('smtp_use_tls', False))
-            errorware['smtp_username'] = conf.get('smtp_username')
-            errorware['smtp_password'] = conf.get('smtp_password')
-            errorware['error_subject_prefix'] = conf.get('error_subject_prefix', 'WebApp Error: ')
-            errorware['from_address'] = conf.get('from_address', conf.get('error_email_from', 'turbogears@yourapp.com'))
-            errorware['error_message'] = conf.get('error_message', 'An internal server error occurred')
+
+            trace_errors_config = coerce_config(conf, 'trace_errors.', {'smtp_use_tls': asbool,
+                                                                        'dump_request_size': asint,
+                                                                        'dump_request': asbool,
+                                                                        'dump_local_frames': asbool,
+                                                                        'dump_local_frames_count': asint,
+                                                                        'disable_email': asbool,
+                                                                        'enable_sentry': asbool})
+            if not trace_errors_config:
+                # backward compatibility
+                warnings.warn("direct usage of error tracing options has been deprecated, "
+                              "please specify them as trace_errors.option_name instad of directly "
+                              "setting option_name. EXAMPLE: trace_errors.error_email", DeprecationWarning)
+
+                trace_errors_config['error_email'] = conf.get('email_to')
+                trace_errors_config['error_log'] = conf.get('error_log', None)
+                trace_errors_config['smtp_server'] = conf.get('smtp_server', 'localhost')
+                trace_errors_config['smtp_use_tls'] = asbool(conf.get('smtp_use_tls', False))
+                trace_errors_config['smtp_username'] = conf.get('smtp_username')
+                trace_errors_config['smtp_password'] = conf.get('smtp_password')
+                trace_errors_config['error_subject_prefix'] = conf.get('error_subject_prefix', 'WebApp Error: ')
+                trace_errors_config['from_address'] = conf.get('from_address', conf.get('error_email_from', 'turbogears@yourapp.com'))
+                trace_errors_config['error_message'] = conf.get('error_message', 'An internal server error occurred')
+
+            errorware.update(trace_errors_config)
+
         conf['tg.errorware'] = errorware
 
         # Copy in some defaults
