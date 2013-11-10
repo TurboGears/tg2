@@ -145,6 +145,12 @@ class SubController3(object):
     def get_all(self):
         return 'Sub 3'
 
+    @expose()
+    def controller_url(self, using_tmpl_context='false', *args):
+        if using_tmpl_context == 'true':
+            return tmpl_context.controller_url
+        else:
+            return tg.request.controller_url
 
 class SubController2(object):
 
@@ -357,6 +363,7 @@ class BasicTGController(TGController):
 
     sub = SubController()
     sub2 = SubController2()
+    sub3 = SubController3()
     sub4 = SubController4()
     sub5 = SubController5()
 
@@ -861,3 +868,12 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/hello_ext.jpg.json.html')
         assert 'Main default page' in resp, resp
         assert 'hello_ext.jpg.json' in resp, resp
+
+    def test_controller_url(self):
+        resp = self.app.get('/sub3/controller_url/false/a/b/c')
+        assert resp.text == 'sub3/controller_url', resp.text
+
+    def test_controller_url_backward_compatibility(self):
+        resp = self.app.get('/sub3/controller_url/true/a/b/c')
+        assert resp.text == 'sub3/controller_url', resp.text
+

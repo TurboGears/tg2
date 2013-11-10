@@ -60,7 +60,6 @@ class CoreDispatcher(object):
             req._fast_setattr('_response_ext', ext)
 
         state =  state.controller._dispatch(state, url_path)
-        thread_locals.tmpl_context.controller_url = '/'.join(url_path[:-len(state.remainder)])
 
         if conf.get('enable_routing_args', False):
             state.routing_args.update(params)

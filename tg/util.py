@@ -195,6 +195,10 @@ class ContextObj(object):
             warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
                           'use request.validation instead', DeprecationWarning)
             return request.validation[item[5:]]
+        elif item == 'controller_url':
+            warnings.warn('tmpl_context.controller_url got deprecated, '
+                          'use request.controller_url instead', DeprecationWarning)
+            return request.controller_url
 
         raise AttributeError()
 

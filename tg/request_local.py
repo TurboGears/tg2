@@ -47,6 +47,11 @@ class Request(WebObRequest):
         return self._controller_state
 
     @cached_property
+    def controller_url(self):
+        state = self._controller_state
+        return '/'.join(state.path[:-len(state.remainder)])
+
+    @cached_property
     def plain_languages(self):
         return self.languages_best_match()
 
