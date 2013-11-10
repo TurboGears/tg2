@@ -4,6 +4,9 @@ TurboGears
 .. image:: https://travis-ci.org/TurboGears/tg2.png?branch=development
     :target: https://travis-ci.org/TurboGears/tg2
 
+.. image:: https://coveralls.io/repos/TurboGears/tg2/badge.png?branch=development 
+    :target: https://coveralls.io/r/TurboGears/tg2?branch=development
+
 .. image:: https://pypip.in/v/TurboGears2/badge.png
    :target: https://pypi.python.org/pypi/TurboGears2
 
