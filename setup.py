@@ -76,11 +76,9 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     extras_require={
-        #XXX: Perhaps this 'core-testing' extras_require can be removed
-        #     since tests_require takes care of that as long as TG is tested
-        #     with 'python setup.py test' (which we should IMHO so setuptools
-        #     can take care of these details for us)
-        'core-testing':test_requirements,
+       # Used by Travis and Coverage due to setup.py nosetests
+       # causing a coredump when used with coverage
+       'core-testing':test_requirements,
     },
     test_suite='nose.collector',
     tests_require = test_requirements,
