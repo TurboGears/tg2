@@ -23,6 +23,7 @@ from tg.i18n import setup_i18n
 from tg.decorators import cached_property
 from crank.dispatchstate import DispatchState
 from tg.request_local import WebObResponse
+import weakref
 
 def dispatched_controller():
     state = tg.request._controller_state
@@ -47,7 +48,8 @@ class CoreDispatcher(object):
         conf = thread_locals.config
 
         params = req.args_params
-        state = DispatchState(req, self, params, url_path, conf.get('ignore_parameters', []))
+        state = DispatchState(weakref.proxy(req), self, params, url_path,
+                              conf.get('ignore_parameters', []))
 
         if not conf.get('disable_request_extensions', False):
             ext = state.extension
