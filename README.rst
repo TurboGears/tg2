@@ -1,7 +1,15 @@
 TurboGears
 ==============
 
-.. image:: https://travis-ci.org/TurboGears/tg2.png?branch=development   :target: https://travis-ci.org/TurboGears/tg2
+.. image:: https://travis-ci.org/TurboGears/tg2.png?branch=development
+    :target: https://travis-ci.org/TurboGears/tg2
+
+.. image:: https://pypip.in/v/TurboGears2/badge.png
+   :target: https://pypi.python.org/pypi/TurboGears2
+
+.. image:: https://pypip.in/d/TurboGears2/badge.png
+   :target: https://pypi.python.org/pypi/TurboGears2
+
 
 TurboGears is a hybrid web framework able to act both as a Full Stack
 framework or as a Microframework. TurboGears helps you get going fast
