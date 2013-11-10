@@ -8,5 +8,10 @@ python:
 install:
   - "pip install git+git://github.com/TurboGears/backlash.git"
   - "pip install repoze.who"
+  - "pip install coverage"
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install coveralls --use-mirrors && export HAS_COVERALLS=1; fi
 
-script: "python setup.py nosetests"
+script: "python setup.py nosetests --with-coverage --cover-package=tg --cover-erase"
+
+after_success:
+  - if [[ $HAS_COVERALLS ]]; then coveralls; fi
