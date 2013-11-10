@@ -15,6 +15,8 @@ except ImportError: #pragma: no cover
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
+from webob.request import PATH_SAFE
+from webob.compat import url_quote as webob_url_quote, bytes_ as webob_bytes_
 
 class Request(WebObRequest):
     """WebOb Request subclass
@@ -105,7 +107,15 @@ class Request(WebObRequest):
 
     @cached_property
     def args_params(self):
-        return dict(((str(n), v) for n,v in self.params.mixed().items()))
+        # This was: dict(((str(n), v) for n,v in self.params.mixed().items()))
+        # so that keys were all strings making possible to use them as arguments.
+        # Now it seems that all keys are always strings, did WebOb change behavior?
+        return self.params.mixed()
+
+    @cached_property
+    def quoted_path_info(self):
+        bpath = webob_bytes_(self.path_info, self.url_encoding)
+        return webob_url_quote(bpath, PATH_SAFE)
 
     def _fast_setattr(self, name, value):
         object.__setattr__(self, name, value)

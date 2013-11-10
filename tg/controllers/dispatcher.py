@@ -48,8 +48,9 @@ class CoreDispatcher(object):
         conf = thread_locals.config
 
         params = req.args_params
-        state = DispatchState(weakref.proxy(req), self, params, url_path,
+        state = DispatchState(weakref.proxy(req), self, params, url_path.split('/'),
                               conf.get('ignore_parameters', []))
+        url_path = state.path  # Get back url_path as crank performs some cleaning
 
         if not conf.get('disable_request_extensions', False):
             ext = state.extension
@@ -59,17 +60,18 @@ class CoreDispatcher(object):
                 req._fast_setattr('_response_type', mime_type)
             req._fast_setattr('_response_ext', ext)
 
-        state =  state.controller._dispatch(state, url_path)
-
-        if conf.get('enable_routing_args', False):
-            state.routing_args.update(params)
-            if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
-                state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder, state.routing_args)
+        state = state.controller._dispatch(state, url_path)
 
         #save the controller state for possible use within the controller methods
         req._fast_setattr('_controller_state', state)
 
-        return state.method, state.controller, state.remainder, params
+        if conf.get('enable_routing_args', False):
+            state.routing_args.update(params)
+            if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
+                state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder,
+                                                             state.routing_args)
+
+        return state, params
 
     def _perform_call(self, thread_locals):
         """
@@ -81,25 +83,13 @@ class CoreDispatcher(object):
         if py_config.get('i18n_enabled', True):
             setup_i18n(thread_locals)
 
-        url_path = py_request.path
-
-        try:
-            script_name = py_request.environ['SCRIPT_NAME']
-            if script_name and url_path.startswith(script_name):
-                url_path = url_path[len(script_name):]
-        except KeyError:
-            pass
-
-        url_path = url_path.split('/')[1:]
-        if url_path and url_path[-1] == '':
-            url_path.pop()
-
-        func, controller, remainder, params = self._get_dispatchable(thread_locals, url_path)
+        state, params = self._get_dispatchable(thread_locals, py_request.quoted_path_info)
+        func, controller, remainder = state.method, state.controller, state.remainder
 
         if hasattr(controller, '_before'):
             controller._before(*remainder, **params)
 
-        self._setup_wsgi_script_name(url_path, remainder, params)
+        self._setup_wsgi_script_name(state.path, remainder, params)
 
         r = self._call(func, params, remainder=remainder, tgl=thread_locals)
 
