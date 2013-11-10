@@ -10,7 +10,7 @@ install:
   - "pip install repoze.who"
   - "pip install coverage"
   - "pip install nose"
-  - "pip install -e .[core-testing]"
+  - "pip install -e .[testing]"
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install coveralls --use-mirrors && export HAS_COVERALLS=1; fi
 
 script: "nosetests -v --with-coverage --cover-package=tg --cover-erase"

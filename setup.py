@@ -78,7 +78,7 @@ setup(
     extras_require={
        # Used by Travis and Coverage due to setup.py nosetests
        # causing a coredump when used with coverage
-       'core-testing':test_requirements,
+       'testing':test_requirements,
     },
     test_suite='nose.collector',
     tests_require = test_requirements,
