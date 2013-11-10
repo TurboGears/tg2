@@ -235,14 +235,24 @@ class TestAppConfig:
         self.config.call_on_shutdown = ['not callable']
         self.config._setup_startup_and_shutdown()
 
-    @raises(AtExitTestException)
     def test_setup_startup_and_shutdown_shutdown_callable(self):
         def func():
             raise AtExitTestException()
 
-        self.config.call_on_shutdown = [func]
-        self.config._setup_startup_and_shutdown()
-        atexit._run_exitfuncs()
+        _registered_exit_funcs = []
+        def _fake_atexit_register(what):
+            _registered_exit_funcs.append(what)
+
+        _real_register = atexit.register
+        atexit.register = _fake_atexit_register
+
+        try:
+            self.config.call_on_shutdown = [func]
+            self.config._setup_startup_and_shutdown()
+        finally:
+            atexit.register = _real_register
+
+        assert func in _registered_exit_funcs, _registered_exit_funcs
 
     def test_setup_helpers_and_globals(self):
         self.config.setup_helpers_and_globals()
