@@ -24,7 +24,8 @@ test_requirements = ['coverage',
                     'routes',
                     'backlash',
                     'sqlalchemy',
-                    'raven'
+                    'raven',
+                    'formencode>=1.3.0a1'
                     ]
 
 if py_version == (3, 2):
@@ -39,7 +40,6 @@ if py_version[0] == 2:
                               'Kajiki >= 0.2.2',
                               'Chameleon < 2.0a',
                               'simplegeneric',
-                              'Formencode',
                               'routes',
                               'tgming',
                               'tw.forms',

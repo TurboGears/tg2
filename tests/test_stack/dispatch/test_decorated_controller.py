@@ -144,19 +144,24 @@ class TestDecorators(object):
         self.app = app_from_config(base_config)
 
     def test_variabledecode_fail(self):
-        if PY3: raise SkipTest()
+        resp = self.app.get('/test_vardec', params={'test-1': '1',
+                                                    'test-2': 2,
+                                                    'test--repetitions': 'hi'})
+        assert resp.json['test-1'] == '1', resp.json
+        assert resp.json['test--repetitions'] == 'hi', resp.json
+        assert 'test' not in resp.json, resp.json
 
-        resp = self.app.get('/test_vardec', params={'test-1':'1', 'test-2':2, 'test-':4})
+    def test_variabledecode_partial_fail(self):
+        resp = self.app.get('/test_vardec', params={'test-1': '1',
+                                                    'test-2': 2,
+                                                    'test-': 4})
         assert resp.json['test-1'] == '1'
         assert resp.json['test-'] == '4'
+        assert len(resp.json['test']) == 2
 
     def test_variable_decode(self):
-        if PY3: raise SkipTest()
-
         from formencode.variabledecode import variable_encode
-        obj = dict(
-            a=['1','2','3'],
-            b=dict(c=[dict(d='1')]))
+        obj = dict(a=['1','2','3'], b=dict(c=[dict(d='1')]))
         params = variable_encode(dict(obj=obj), add_repetitions=False)
         resp = self.app.get('/test_vardec', params=params)
         assert resp.json['obj'] == obj, (resp.json['obj'], obj)
