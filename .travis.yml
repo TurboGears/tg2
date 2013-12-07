@@ -6,6 +6,7 @@ python:
   - "3.3"
 
 install:
+  - "pip install git+git://github.com/TurboGears/crank.git"
   - "pip install git+git://github.com/TurboGears/backlash.git"
   - "pip install repoze.who"
   - "pip install coverage"

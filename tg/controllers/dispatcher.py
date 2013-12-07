@@ -46,13 +46,18 @@ class CoreDispatcher(object):
         """
         req = thread_locals.request
         conf = thread_locals.config
+        
+        enable_request_extensions = not conf.get('disable_request_extensions', False)
+        dispatch_path_translator = conf.get('dispatch_path_translator', True)
 
         params = req.args_params
         state = DispatchState(weakref.proxy(req), self, params, url_path.split('/'),
-                              conf.get('ignore_parameters', []))
+                              conf.get('ignore_parameters', []),
+                              strip_extension=enable_request_extensions,
+                              path_translator=dispatch_path_translator)
         url_path = state.path  # Get back url_path as crank performs some cleaning
 
-        if not conf.get('disable_request_extensions', False):
+        if enable_request_extensions:
             ext = state.extension
             if ext is not None:
                 ext = '.' + ext

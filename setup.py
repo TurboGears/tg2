@@ -47,7 +47,7 @@ if py_version[0] == 2:
 
 install_requires=[
     'WebOb >= 1.2',
-    'crank >= 0.6.2',
+    'crank >= 0.7.0',
     'Beaker',
     'decorator',
     'PasteDeploy',
