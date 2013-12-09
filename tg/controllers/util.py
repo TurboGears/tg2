@@ -129,6 +129,8 @@ class LazyUrl(object):
     def format(self, other):
         return self._id.format(other)
 
+    def __json__(self):
+        return str(self)
 
 def lurl(base_url=None, params=None):
     """
