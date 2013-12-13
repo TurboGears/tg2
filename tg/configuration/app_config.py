@@ -832,6 +832,12 @@ class AppConfig(Bunch):
         config['tg.app_globals'].sa_engine = engine
         self.package.model.init_model(engine)
 
+        if not hasattr(self, 'DBSession'):
+            # If the user hasn't specified a scoped_session, assume
+            # he/she uses the default DBSession in model
+            model = getattr(self, 'model', self.package.model)
+            self.DBSession = model.DBSession
+
     def setup_auth(self):
         """
         Override this method to define how you would like the authentication options
@@ -899,8 +905,8 @@ class AppConfig(Bunch):
 
         def load_environment(global_conf, app_conf):
             """Configure the TurboGears environment via ``tg.configuration.config``."""
-            global_conf=Bunch(global_conf)
-            app_conf=Bunch(app_conf)
+            global_conf = Bunch(global_conf)
+            app_conf = Bunch(app_conf)
 
             try:
                 app_package = self.package
@@ -1289,10 +1295,6 @@ class AppConfig(Bunch):
             # a string needs to be applied before this point.
 
             if self.use_sqlalchemy:
-                if not hasattr(self, 'DBSession'):
-                    # If the user hasn't specified a scoped_session, assume
-                    # he/she uses the default DBSession in model
-                    self.DBSession = self.model.DBSession
                 app = self.add_dbsession_remover_middleware(app)
 
             if self.use_ming:
