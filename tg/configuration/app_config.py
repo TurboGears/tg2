@@ -482,7 +482,7 @@ class AppConfig(Bunch):
         from routes import Mapper
 
         map = Mapper(directory=config['paths']['controllers'],
-                    always_scan=config['debug'])
+                     always_scan=config['debug'])
 
         # Setup a default route for the root of object dispatch
         map.connect('*url', controller='root', action='routes_placeholder')
@@ -1197,7 +1197,7 @@ class AppConfig(Bunch):
         import ming.odm.middleware
         return ming.odm.middleware.MingMiddleware(app)
 
-    def add_dbsession_remover_middleware(self, app):
+    def add_sqlalchemy_middleware(self, app):
         """Set up middleware that cleans up the sqlalchemy session.
 
         The default behavior of TG 2 is to clean up the session on every
@@ -1295,7 +1295,7 @@ class AppConfig(Bunch):
             # a string needs to be applied before this point.
 
             if self.use_sqlalchemy:
-                app = self.add_dbsession_remover_middleware(app)
+                app = self.add_sqlalchemy_middleware(app)
 
             if self.use_ming:
                 app = self.add_ming_middleware(app)
