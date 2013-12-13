@@ -1194,8 +1194,8 @@ class AppConfig(Bunch):
 
     def add_ming_middleware(self, app):
         """Set up the ming middleware for the unit of work"""
-        import ming.orm.middleware
-        return ming.orm.middleware.MingMiddleware(app)
+        import ming.odm.middleware
+        return ming.odm.middleware.MingMiddleware(app)
 
     def add_dbsession_remover_middleware(self, app):
         """Set up middleware that cleans up the sqlalchemy session.
