@@ -203,17 +203,6 @@ class AppConfig(Bunch):
         if root_controller is not None:
             self['tg.root_controller'] = root_controller
 
-    def __setitem__(self, key, value):
-        #some entries are required at application setup time
-        #so we need to keep them in sync between tg.config and AppConfig.
-
-        #This is especially true for available renderers which enable
-        #engine check in tg.decorators.Decorator.register_template_engine
-        if key in ['default_renderer', 'renderers']:
-            config[key] = value
-        return super(AppConfig, self).__setattr__(key, value)
-    __setattr__ = __setitem__
-
     def get_root_module(self):
         root_module_path = self.paths['root']
         if not root_module_path:
