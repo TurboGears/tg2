@@ -1,4 +1,4 @@
-from tg import jsonify
+from tg import jsonify, lurl
 from datetime import datetime
 from decimal import Decimal
 from nose.tools import raises
@@ -94,3 +94,7 @@ def test_multidict():
     encoded = jsonify.encode({'md':d})
     assert encoded == '{"md": {"v": 1}}', encoded
 
+def test_json_encode_lazy_url():
+    url = lurl('/test')
+    encoded = jsonify.encode({'url': url})
+    assert encoded == '{"url": "/test"}', encoded
