@@ -929,8 +929,6 @@ class AppConfig(Bunch):
             self._setup_renderers()
             self.setup_persistence()
 
-            milestones.environment_loaded.reach()
-
         return load_environment
 
     def add_error_middleware(self, global_conf, app):
@@ -1248,6 +1246,7 @@ class AppConfig(Bunch):
             # Configure the Application environment
             if load_environment:
                 load_environment(global_conf, app_conf)
+            milestones.environment_loaded.reach()
 
             # Apply controller wrappers to controller caller
             self._setup_controller_wrappers()

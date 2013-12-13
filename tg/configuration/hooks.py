@@ -6,7 +6,7 @@ Provides a consistent API to register and execute hooks.
 
 """
 from tg.configuration.utils import TGConfigError
-from tg.configuration.milestones import config_ready, renderers_ready
+from tg.configuration.milestones import config_ready, renderers_ready, environment_loaded
 from tg.decorators import Decoration
 from tg._compat import default_im_func
 import tg
@@ -72,16 +72,16 @@ class _TGHooks(object):
             tg.hooks.wrap_controller(controller_wrapper, controller=RootController.index)
 
         """
-        if config_ready.reached:
+        if environment_loaded.reached:
             raise TGConfigError('Controller wrappers can be registered only at '
                                 'configuration time.')
 
         if controller is None:
-            config_ready.register(_ApplicationHookRegistration('controller_wrapper', func))
+            environment_loaded.register(_ApplicationHookRegistration('controller_wrapper', func))
         else:
             controller = default_im_func(controller)
             registration = _ControllerHookRegistration(controller, 'controller_wrapper', func)
-            config_ready.register(registration)
+            environment_loaded.register(registration)
 
     def notify(self, hook_name, args=None, kwargs=None, controller=None, context_config=None):
         """Notifies a TurboGears hook.

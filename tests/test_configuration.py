@@ -614,12 +614,16 @@ class TestAppConfig:
             pass
 
         milestones.config_ready._reset()
+        milestones.environment_loaded._reset()
+ 
         self.config.register_hook('startup', dummy)
         self.config.register_hook('shutdown', dummy)
         self.config.register_hook('controller_wrapper', dummy)
         for hook_name in self.config.hooks.keys():
             self.config.register_hook(hook_name, dummy)
+
         milestones.config_ready.reach()
+        milestones.environment_loaded.reach()
 
         for hooks in self.config.hooks.values():
             assert hooks
@@ -1171,13 +1175,13 @@ class TestAppConfig:
         tg.hooks.register('controller_wrapper', None)
 
     @raises(TGConfigError)
-    def test_global_controller_wrapper_after_config_ready(self):
-        milestones.config_ready.reach()
+    def test_global_controller_wrapper_after_milestone_reached(self):
+        milestones.environment_loaded.reach()
         tg.hooks.wrap_controller(None)
 
     @raises(TGConfigError)
-    def test_dedicated_controller_wrapper_after_config_ready(self):
-        milestones.config_ready.reach()
+    def test_dedicated_controller_wrapper_after_milestone_reached(self):
+        milestones.environment_loaded.reach()
 
         def f():
             pass
