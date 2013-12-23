@@ -67,10 +67,13 @@ from tg.controllers.dispatcher import dispatched_controller
 from tg.render import render as render_template
 from tg.configuration.hooks import hooks
 
+from tg.request_local import Request, Response
+
 __version__ = version
 
 __all__ = ['__version__',
     'app_globals', 'expose', 'override_template', 'request',
     'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
     'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'url', 'lurl',
-    'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template']
+    'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',
+    'Request', 'Response']
