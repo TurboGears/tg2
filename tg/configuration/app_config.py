@@ -1141,10 +1141,10 @@ class AppConfig(Bunch):
         if self.default_renderer in Config.preferred_rendering_engines:
             # Kajiki is not available in TW2
             tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
-            tw2_default_engine = 'genshi'
+            tw2_default_engine = self.default_renderer
         else:
             tw2_engines = Config.preferred_rendering_engines
-            tw2_default_engine = self.default_renderer
+            tw2_default_engine = 'genshi'
 
         default_tw2_config = dict( default_engine=tw2_default_engine,
                                    preferred_rendering_engines=tw2_engines,
