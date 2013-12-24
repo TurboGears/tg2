@@ -1138,8 +1138,15 @@ class AppConfig(Bunch):
         """
         from tw2.core.middleware import Config, TwMiddleware
 
-        tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
-        default_tw2_config = dict( default_engine=self.default_renderer,
+        if self.default_renderer in Config.preferred_rendering_engines:
+            # Kajiki is not available in TW2
+            tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
+            tw2_default_engine = 'genshi'
+        else:
+            tw2_engines = Config.preferred_rendering_engines
+            tw2_default_engine = self.default_renderer
+
+        default_tw2_config = dict( default_engine=tw2_default_engine,
                                    preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
                                    get_lang=get_lang,
