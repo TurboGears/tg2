@@ -43,7 +43,7 @@ def ErrorReporter(app, global_conf, **errorware):
 
     reporters = []
 
-    if errorware.get('email_to'):
+    if errorware.get('error_email'):
         from backlash.trace_errors import EmailReporter
         reporters.append(EmailReporter(**errorware))
 

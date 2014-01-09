@@ -356,6 +356,12 @@ class AppConfig(Bunch):
                 trace_errors_config['error_subject_prefix'] = conf.get('error_subject_prefix', 'WebApp Error: ')
                 trace_errors_config['from_address'] = conf.get('from_address', conf.get('error_email_from', 'turbogears@yourapp.com'))
                 trace_errors_config['error_message'] = conf.get('error_message', 'An internal server error occurred')
+            else:
+                # Provide Defaults
+                trace_errors_config.setdefault('error_subject_prefix',
+                                               'WebApp Error: ')
+                trace_errors_config.setdefault('error_message',
+                                               'An internal server error occurred')
 
             errorware.update(trace_errors_config)
 

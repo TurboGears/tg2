@@ -16,7 +16,7 @@ class TestErrorReporterConfig(object):
         assert 'SentryReporter' not in reporters
 
     def test_enable_email(self):
-        app = ErrorReporter(simple_app, {}, email_to='user@somedomain.com')
+        app = ErrorReporter(simple_app, {}, error_email='user@somedomain.com')
         reporters = [r.__class__.__name__ for r in app.reporters]
         assert 'EmailReporter' in reporters
 
