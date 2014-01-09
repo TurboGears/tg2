@@ -16,7 +16,6 @@ from crank.util import (get_params_with_argspec,
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
-from tg.controllers.util import pylons_formencode_gettext
 from tg.util import call_controller
 from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
@@ -164,7 +163,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             return params
 
         # An object used by FormEncode to get translator function
-        formencode_state = type('state', (), {'_': staticmethod(pylons_formencode_gettext)})
+        formencode_state = type('state', (), {'_': staticmethod(tg.i18n._formencode_gettext)})
 
         #Initialize new_params -- if it never gets updated just return params
         new_params = {}

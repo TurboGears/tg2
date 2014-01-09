@@ -1,14 +1,18 @@
+import copy
 import logging, os
-from gettext import NullTranslations, translation
+import gettext as _gettext
+from gettext import NullTranslations, GNUTranslations
 import tg
 from tg.util import lazify
 from tg._compat import PY3, string_type
 
 log = logging.getLogger(__name__)
 
+
 class LanguageError(Exception):
     """Exception raised when a problem occurs with changing languages"""
     pass
+
 
 def _parse_locale(identifier, sep='_'):
     """
@@ -66,8 +70,8 @@ def gettext_noop(value):
     """Mark a string for translation without translating it. Returns
     value.
     """
-    
     return value
+
 
 def ugettext(value):
     """Mark a string for translation. Returns the localized unicode
@@ -83,6 +87,7 @@ def ugettext(value):
     else:
         return tg.translator.ugettext(value)
 lazy_ugettext = lazify(ugettext)
+
 
 def ungettext(singular, plural, n):
     """Mark a string for translation. Returns the localized unicode
@@ -106,15 +111,47 @@ def ungettext(singular, plural, n):
 lazy_ungettext = lazify(ungettext)
 
 
+_TRANSLATORS_CACHE = {}
+def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
+    """
+    Adapted from python translation function in gettext module
+    to work with a provided list of mo files
+    """
+    if class_ is None:
+        class_ = GNUTranslations
+
+    if not mofiles:
+        if fallback:
+            return NullTranslations()
+        raise LanguageError('No translation file found for domain %s' % domain)
+
+    result = None
+    for mofile in mofiles:
+        key = (class_, os.path.abspath(mofile))
+        t = _TRANSLATORS_CACHE.get(key)
+        if t is None:
+            with open(mofile, 'rb') as fp:
+                # Cache Translator to avoid reading it again
+                t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
+
+        if result is None:
+            # Copy the translation object to be able to append fallbacks
+            # without affecting the cached object.
+            result = copy.copy(t)
+        else:
+            result.add_fallback(t)
+
+    return result
+
+
 def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
-    """Utility method to get a valid translator object from a language
-    name"""
+    """Utility method to get a valid translator object from a language name"""
     if tg_config:
         conf = tg_config
     else:
         if tgl:
             conf = tgl.config
-        else: #pragma: no cover
+        else:  # pragma: no cover
             #backward compatibility with explicit calls without
             #specifying local context or config.
             conf = tg.config.current_conf()
@@ -124,24 +161,45 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
 
     try:
         localedir = conf['localedir']
-    except KeyError: #pragma: no cover
+    except KeyError:  # pragma: no cover
         localedir = os.path.join(conf['paths']['root'], 'i18n')
+    app_domain = conf['package'].__name__
 
     if not isinstance(lang, list):
         lang = [lang]
 
+    mofiles = []
+    supported_languages = []
+    for l in lang:
+        mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
+        if mo is not None:
+            mofiles.append(mo)
+            supported_languages.append(l)
+
     try:
-        translator = translation(conf['package'].__name__, localedir, languages=lang, **kwargs)
+        translator = _translator_from_mofiles(app_domain, mofiles, **kwargs)
     except IOError as ioe:
         raise LanguageError('IOError: %s' % ioe)
 
     translator.tg_lang = lang
-    
+    translator.tg_supported_lang = supported_languages
+
     return translator
 
 
-def get_lang():
-    """Return the current i18n language used"""
+def get_lang(all=True):
+    """
+    Return the current i18n languages used
+
+    returns ``None`` if no supported language is available (no translations
+    are in place) or a list of languages.
+
+    In case ``all`` parameter is ``False`` only the languages for which
+    the application is providing a translation are returned. Otherwise
+    all the languages preferred by the user are returned.
+    """
+    if all is False:
+        return getattr(tg.translator, 'tg_supported_lang', None)
     return getattr(tg.translator, 'tg_lang', None)
 
 
@@ -158,6 +216,7 @@ def add_fallback(lang, **kwargs):
     """
     tgl = tg.request_local.context._current_obj()
     return tg.translator.add_fallback(_get_translator(lang, tgl=tgl, **kwargs))
+
 
 sanitized_language_cache = {}
 def sanitize_language_code(lang):
@@ -212,6 +271,7 @@ def setup_i18n(tgl=None):
             languages = []
     else: #pragma: no cover
         languages = []
+
     languages.extend(map(sanitize_language_code, tgl.request.plain_languages))
     set_temporary_lang(languages, tgl=tgl)
 
@@ -234,10 +294,19 @@ def set_temporary_lang(languages, tgl=None):
     except LanguageError:
         pass
 
+    # If the application has a set of supported translation
+    # limit the formencode translations to those so that
+    # we don't get the application in a language and
+    # the errors in another one
+    supported_languages = get_lang(all=False)
+    if supported_languages:
+        languages = supported_languages
+
     try:
         set_formencode_translation(languages, tgl=tgl)
     except LanguageError:
         pass
+
 
 def set_lang(languages, **kwargs):
     """Set the current language(s) used for translations
@@ -262,26 +331,49 @@ _localdir = None
 def set_formencode_translation(languages, tgl=None):
     """Set request specific translation of FormEncode."""
     global formencode, _localdir
-    if formencode is FormEncodeMissing: #pragma: no cover
+    if formencode is FormEncodeMissing:  # pragma: no cover
         return
 
     if formencode is None:
         try:
             import formencode
             _localdir = formencode.api.get_localedir()
-        except ImportError: #pragma: no cover
+        except ImportError:  # pragma: no cover
             formencode = FormEncodeMissing
             return
 
-    if not tgl: #pragma: no cover
+    if not tgl:  # pragma: no cover
         tgl = tg.request_local.context._current_obj()
 
     try:
-        formencode_translation = translation(
-            'FormEncode',languages=languages, localedir=_localdir)
+        formencode_translation = _gettext.translation('FormEncode',
+                                                      languages=languages,
+                                                      localedir=_localdir)
     except IOError as error:
         raise LanguageError('IOError: %s' % error)
-    tgl.tmpl_context.formencode_translation = formencode_translation
+    tgl.translator._formencode_translation = formencode_translation
+
+
+# Idea stolen from Pylons
+def _formencode_gettext(value):
+    trans = ugettext(value)
+    # Translation failed, try formencode
+    if trans == value:
+        try:
+            fetrans = tg.translator._formencode_translation
+        except (AttributeError, TypeError):
+            # the translator was not set in the TG context
+            # we are certainly in the test framework
+            # let's make sure won't return something that is ok with the caller
+            fetrans = None
+
+        if not fetrans:
+            fetrans = NullTranslations()
+
+        translator_gettext = getattr(fetrans, 'ugettext', fetrans.gettext)
+        trans = translator_gettext(value)
+
+    return trans
 
 
 __all__ = [

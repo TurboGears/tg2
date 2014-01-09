@@ -200,33 +200,4 @@ def abort(status_code=None, detail="", headers=None, comment=None):
 def use_wsgi_app(wsgi_app):
     return tg.request.get_response(wsgi_app)
 
-
-NullTranslations = tg_gettext = None
-
-# Idea stolen from Pylons
-def pylons_formencode_gettext(value):
-    global NullTranslations, tg_gettext
-    if tg_gettext is None:
-        from tg.i18n import ugettext as tg_gettext
-        from gettext import NullTranslations
-
-    trans = tg_gettext(value)
-    # Translation failed, try formencode
-    if trans == value:
-        try:
-            fetrans = tg.tmpl_context.formencode_translation
-        except (AttributeError, TypeError):
-            # the translator was not set in the Pylons context
-            # we are certainly in the test framework
-            # let's make sure won't return something that is ok with the caller
-            fetrans = NullTranslations()
-
-        if not fetrans:
-            fetrans = NullTranslations()
-
-        translator_gettext = getattr(fetrans, 'ugettext', fetrans.gettext)
-        trans = translator_gettext(value)
-
-    return trans
-
 __all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort']
