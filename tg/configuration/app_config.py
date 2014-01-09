@@ -340,9 +340,7 @@ class AppConfig(Bunch):
                                                                         'dump_request_size': asint,
                                                                         'dump_request': asbool,
                                                                         'dump_local_frames': asbool,
-                                                                        'dump_local_frames_count': asint,
-                                                                        'disable_email': asbool,
-                                                                        'enable_sentry': asbool})
+                                                                        'dump_local_frames_count': asint})
             if not trace_errors_config:
                 # backward compatibility
                 warnings.warn("direct usage of error tracing options has been deprecated, "
