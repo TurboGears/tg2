@@ -928,6 +928,10 @@ class AppConfig(Bunch):
             self._setup_renderers()
             self.setup_persistence()
 
+            # Trigger milestone here so that it gets triggered even when
+            # websetup (setup-app command) is performed.
+            milestones.environment_loaded.reach()
+
         return load_environment
 
     def add_error_middleware(self, global_conf, app):
@@ -1253,6 +1257,9 @@ class AppConfig(Bunch):
             # Configure the Application environment
             if load_environment:
                 load_environment(global_conf, app_conf)
+
+            # trigger the environment_loaded milestone again, so that
+            # when load_environment is not provided the attached actions gets performed anyway.
             milestones.environment_loaded.reach()
 
             # Apply controller wrappers to controller caller
