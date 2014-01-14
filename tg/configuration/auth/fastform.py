@@ -1,19 +1,14 @@
 from tg.controllers.util import _build_url
 
 try:
-    from urlparse import urlparse, urlunparse
+    from urlparse import urlparse, urlunparse, parse_qs
 except ImportError: #pragma: no cover
-    from urllib.parse import urlparse, urlunparse
+    from urllib.parse import urlparse, urlunparse, parse_qs
 
 try:
     from urllib import urlencode
 except ImportError: #pragma: no cover
     from urllib.parse import urlencode
-
-try:
-    from urlparse import parse_qs
-except ImportError:#pragma: no cover
-    from cgi import parse_qs
 
 from webob import Request
 from webob.exc import HTTPFound, HTTPUnauthorized
@@ -125,7 +120,8 @@ class FastFormPlugin(object):
             destination = _build_url(environ, self.post_logout_url, params=params)
 
         else:
-            params = {'came_from': _build_url(environ, path_info)}
+            came_from_params = parse_qs(environ.get('QUERY_STRING', ''))
+            params = {'came_from': _build_url(environ, path_info, came_from_params)}
             destination = _build_url(environ, self.login_form_url, params=params)
 
         return HTTPFound(location=destination, headers=headers)

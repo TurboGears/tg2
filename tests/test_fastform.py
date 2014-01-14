@@ -89,6 +89,13 @@ class TestFastFormPlugin(object):
         assert isinstance(ans, HTTPFound)
         assert ans.location == '/SOMEWHERE/login?came_from=%2FSOMEWHERE%2Fprivate'
 
+    def test_challenge_redirect_to_form_with_args(self):
+        env = build_env('/private', qs='A=1&B=2', SCRIPT_NAME='/SOMEWHERE')
+        ans = self.fform.challenge(env, '401 Unauthorized', [('app', '1')], [('forget', '1')])
+
+        assert isinstance(ans, HTTPFound)
+        assert ans.location == '/SOMEWHERE/login?came_from=%2FSOMEWHERE%2Fprivate%3FA%3D1%26B%3D2', ans.location
+
     def test_remember_forget(self):
         env = build_env('/private', SCRIPT_NAME='/SOMEWHERE')
         assert self.fform.remember(env, {}) == 'REMEMBER'
