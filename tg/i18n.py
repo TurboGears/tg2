@@ -134,10 +134,11 @@ def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
                 # Cache Translator to avoid reading it again
                 t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
 
+        t = copy.copy(t)
         if result is None:
             # Copy the translation object to be able to append fallbacks
             # without affecting the cached object.
-            result = copy.copy(t)
+            result = t
         else:
             result.add_fallback(t)
 
