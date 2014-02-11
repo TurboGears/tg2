@@ -88,6 +88,9 @@ class TGApp(object):
             pass
 
     def __call__(self, environ, start_response):
+        # Hide outer middlewares when crash inside application itself
+        __traceback_hide__ = 'before'
+
         testmode, context = self.setup_app_env(environ)
 
         #Expose a path that simply registers the globals and preserves them
