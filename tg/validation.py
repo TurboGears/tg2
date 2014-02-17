@@ -19,10 +19,9 @@ except ImportError: #pragma: no cover
 def _navigate_tw2form_children(w):
     if getattr(w, 'id', None):
         yield w
-    else:
-        for c in getattr(w, 'children', []):
-            for cc in _navigate_tw2form_children(c):
-                yield cc
+    for c in getattr(w, 'children', []):
+        for cc in _navigate_tw2form_children(c):
+            yield cc
 
 class TGValidationError(Exception):
     """Invalid data was encountered during validation.
