@@ -94,7 +94,10 @@ class TestFastFormPlugin(object):
         ans = self.fform.challenge(env, '401 Unauthorized', [('app', '1')], [('forget', '1')])
 
         assert isinstance(ans, HTTPFound)
-        assert ans.location == '/SOMEWHERE/login?came_from=%2FSOMEWHERE%2Fprivate%3FA%3D1%26B%3D2', ans.location
+
+        # Cope with different dictionary ordering on Py2 and Py3
+        assert ans.location in ('/SOMEWHERE/login?came_from=%2FSOMEWHERE%2Fprivate%3FA%3D1%26B%3D2',
+                                '/SOMEWHERE/login?came_from=%2FSOMEWHERE%2Fprivate%3FB%3D2%26A%3D1'), ans.location
 
     def test_remember_forget(self):
         env = build_env('/private', SCRIPT_NAME='/SOMEWHERE')
