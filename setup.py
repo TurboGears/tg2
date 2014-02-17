@@ -25,7 +25,8 @@ test_requirements = ['coverage',
                     'backlash',
                     'sqlalchemy',
                     'raven',
-                    'formencode>=1.3.0a1'
+                    'formencode>=1.3.0a1',
+                    'tw2.forms'
                     ]
 
 if py_version == (3, 2):
@@ -42,8 +43,7 @@ if py_version[0] == 2:
                               'simplegeneric',
                               'routes',
                               'tgming',
-                              'tw.forms',
-                              'tw2.forms'])
+                              'tw.forms'])
 
 install_requires=[
     'WebOb >= 1.2',

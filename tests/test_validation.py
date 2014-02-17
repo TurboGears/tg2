@@ -14,19 +14,25 @@ from tests.base import (TestWSGIController, data_dir,
 from tg._compat import PY3, unicode_text, u_
 from tg.validation import TGValidationError
 
-if not PY3:
-    from formencode import validators, Schema
+from formencode import validators, Schema
 
+import tw2.core as tw2c
+import tw2.forms as tw2f
+
+class MovieForm(tw2f.TableForm):
+    title = tw2f.TextField(validator=tw2c.Required)
+    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
+movie_form = MovieForm(action='save_movie')
+
+class Pwd(Schema):
+    pwd1 = validators.String(not_empty=True)
+    pwd2 = validators.String(not_empty=True)
+    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
+
+
+if not PY3:
     from tw.forms import TableForm, TextField
     from tw.api import WidgetsList
-
-    import tw2.core as tw2c
-    import tw2.forms as tw2f
-
-    class MovieForm(tw2f.TableForm):
-        title = tw2f.TextField(validator=tw2c.Required)
-        year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
-    movie_form = MovieForm(action='save_movie')
 
     class MyForm(TableForm):
         class fields(WidgetsList):
@@ -34,64 +40,9 @@ if not PY3:
             title=TextField(validator = validators.NotEmpty())
             year = TextField(size=4, validator=validators.Int())
     myform = MyForm("my_form", action='create')
-
-    class Pwd(Schema):
-        pwd1 = validators.String(not_empty=True)
-        pwd2 = validators.String(not_empty=True)
-        chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 else:
-    movie_form = None
     myform = None
 
-    class validators(object):
-        """Simulate Formencode"""
-        Invalid = TGValidationError
-
-        class FancyValidator(object):
-            def _to_python(self, value):
-                return value
-
-            def validate_python(self, value, state=None):
-                if not value:
-                    raise TGValidationError('Empty')
-
-            def to_python(self, value, state=None):
-                try:
-                    pyv = self._to_python(value)
-                except Exception as e:
-                    raise TGValidationError(str(e))
-
-                self.validate_python(pyv, None)
-                return pyv
-
-        class Int(FancyValidator):
-            def _to_python(self, value):
-                try:
-                    return int(value)
-                except:
-                    raise TGValidationError('Must be an integer')
-
-        class Email(FancyValidator):
-            def _to_python(self, value):
-                if '@' not in value:
-                    raise TGValidationError('not email')
-                return value
-
-        class StringBool(FancyValidator):
-            def validate_python(self, value, state=None):
-                return value
-
-            def _to_python(self, value):
-                if not value:
-                    return value
-
-                if value == 'True':
-                    return True
-                raise TGValidationError('Not True')
-
-    class tw2c(object):
-        class IntValidator(validators.Int):
-            pass
 
 def setup():
     setup_session_dir()
@@ -216,14 +167,13 @@ class BasicTGController(TGController):
         tg.session.save()
         return 'ok'
 
-    if not PY3:
-        @expose()
-        @validate(validators=Pwd())
-        def password(self, pwd1, pwd2):
-            if tg.request.validation['errors']:
-                return "There was an error"
-            else:
-                return "Password ok!"
+    @expose()
+    @validate(validators=Pwd())
+    def password(self, pwd1, pwd2):
+        if tg.request.validation['errors']:
+            return "There was an error"
+        else:
+            return "Password ok!"
 
     @expose('json:')
     @before_render(lambda rem,params,output:output.update({'GOT_ERROR':'HOOKED'}))
@@ -358,8 +308,6 @@ class TestTGController(TestWSGIController):
             'Error message not found: %r' % values['errors']
 
     def test_tw2form_validation(self):
-        if PY3: raise SkipTest()
-
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_tw2_to_error_handler', form_values)
         values = loads(resp.body.decode('utf-8'))
@@ -367,8 +315,6 @@ class TestTGController(TestWSGIController):
         'Error message not found: %r' % values['errors']
 
     def test_tw2dict_validation(self):
-        if PY3: raise SkipTest()
-
         resp = self.app.post('/tw2_dict_validation', {'param': "7"})
         assert '{}' in str(resp.body)
 
@@ -401,8 +347,6 @@ class TestTGController(TestWSGIController):
 
     def test_form_validation_error(self):
         """Test schema validation"""
-        if PY3: raise SkipTest()
-
         form_values = {'pwd1': 'me', 'pwd2': 'you'}
         resp = self.app.post('/password', form_values)
         assert "There was an error" in resp, resp

@@ -546,6 +546,7 @@ class validate(object):
 
     """
     def __init__(self, validators=None, error_handler=None, form=None):
+        self.validators = None
         if form:
             self.validators = form
         if validators:

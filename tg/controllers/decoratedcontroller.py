@@ -325,7 +325,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             #"fieldname1: error\nfieldname2: error"
             error_list = exception.__str__().split('\n')
             for error in error_list:
-                field_value = map(strip_string, error.split(':', 1))
+                field_value = list(map(strip_string, error.split(':', 1)))
 
                 #if the error has no field associated with it,
                 #return the error as a global form error
