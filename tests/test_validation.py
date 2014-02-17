@@ -29,6 +29,12 @@ class Pwd(Schema):
     pwd2 = validators.String(not_empty=True)
     chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
+class FormWithFieldSet(tw2f.TableForm):
+    class fields1(tw2f.ListFieldSet):
+        f1 = tw2f.TextField(validator=tw2c.Required)
+
+    class fields2(tw2f.ListFieldSet):
+        f2 = tw2f.TextField(validator=tw2c.IntValidator)
 
 if not PY3:
     from tw.forms import TableForm, TextField
@@ -160,6 +166,11 @@ class BasicTGController(TGController):
     @validate({'param':tw2c.IntValidator()})
     def tw2_dict_validation(self, **kwargs):
         return str(tg.request.validation['errors'])
+
+    @expose('text/plain')
+    @validate(form=FormWithFieldSet, error_handler=tw2form_error_handler)
+    def tw2_fieldset_submit(self, **kwargs):
+        return 'passed validation'
 
     @expose()
     def set_lang(self, lang=None):
@@ -371,3 +382,11 @@ class TestTGController(TestWSGIController):
     def test_validation_error_has_message(self):
         e = TGValidationError('This is a validation error')
         assert str(e) == 'This is a validation error'
+
+    def test_tw2_fieldset(self):
+        form_values = {'fields1:f1': 'Razer', 'fields2:f2': "t007"}
+        resp = self.app.post('/tw2_fieldset_submit', form_values)
+        values = loads(resp.body.decode('utf-8'))
+
+        assert "Must be an integer" in values['errors'].get('fields2:f2', ''),\
+        'Error message not found: %r' % values['errors']

@@ -314,7 +314,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
 
-            errors = dict((child.key, child.error_msg) for child in widget_children)
+            errors = dict((child.compound_key, child.error_msg) for child in widget_children)
             validation_status['errors'] = errors
             validation_status['values'] = widget.child.value
         elif isinstance(exception, TGValidationError):
