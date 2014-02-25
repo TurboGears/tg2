@@ -17,11 +17,8 @@ def _format_attrs(**attrs):
     strings = [' %s="%s"' % (attr, escape(value)) for attr, value in attrs.items() if value is not None]
     return Markup("".join(strings))
 
-def _make_link(text, href, **attrs):
-    return Markup('<a%s href="%s">%s</a>' % (_format_attrs(**attrs), href, escape(text)))
-
-def _make_span(text, **attrs):
-    return Markup('<span%s>%s</span>' % (_format_attrs(**attrs), escape(text)))
+def _make_tag(template, text, **attrs):
+    return Markup(template % (_format_attrs(**attrs), escape(text))) 
 
 class _SQLAlchemyQueryWrapper(object):
     def __init__(self, obj):
@@ -124,6 +121,8 @@ class Page(object):
               link_attr={'class':'pager_link'},
               curpage_attr={'class':'pager_curpage'},
               dotdot_attr={'class':'pager_dotdot'},
+              page_link_template='<a%s>%s</a>',
+              page_plain_template='<span%s>%s</span>',
               **kwargs):
         """
         Return string with links to other pages (e.g. "1 2 [3] 4 5 6 7").
@@ -243,6 +242,17 @@ class Page(object):
 
             Default: { 'class':'pager_dotdot' }
 
+        page_link_template (optional)
+            A string with the template used to render page links
+
+            Default: '<a%s>%s</a>'
+
+        page_plain_template (optional)
+            A string with the template used to render current page,
+            and dots in pagination.
+
+            Default: '<span%s>%s</span>'
+
         onclick (optional)
             This paramter is a string containing optional Javascript code
             that will be used as the 'onclick' action of each pager link.
@@ -290,6 +300,8 @@ class Page(object):
         self.onclick = onclick
         self.link_attr = link_attr
         self.dotdot_attr = dotdot_attr
+        self.page_link_template = page_link_template
+        self.page_plain_template = page_plain_template
 
         # Don't show navigator if there is no more than one page
         if self.page_count == 0 or (self.page_count == 1 and not show_if_single_page):
@@ -358,7 +370,7 @@ class Page(object):
             # Wrap in a SPAN tag if nolink_attr is set
             text = '..'
             if self.dotdot_attr:
-                text = _make_span(text, **self.dotdot_attr)
+                text = _make_tag(self.page_plain_template, text, **self.dotdot_attr)
             nav_items.append(text)
 
         for thispage in range(leftmost_page, rightmost_page+1):
@@ -367,7 +379,7 @@ class Page(object):
                 text = '%s' % (thispage,)
                 # Wrap in a SPAN tag if nolink_attr is set
                 if self.curpage_attr:
-                    text = _make_span(text, **self.curpage_attr)
+                    text = _make_tag(self.page_plain_template, text, **self.curpage_attr)
                 nav_items.append(text)
             # Otherwise create just a link to that page
             else:
@@ -380,7 +392,7 @@ class Page(object):
             text = '..'
             # Wrap in a SPAN tag if nolink_attr is set
             if self.dotdot_attr:
-                text = _make_span(text, **self.dotdot_attr)
+                text = _make_tag(self.page_plain_template, text, **self.dotdot_attr)
             nav_items.append(text)
 
         # Create a link to the very last page (unless we are on the last
@@ -424,9 +436,9 @@ class Page(object):
                   "partial_url": partial_url,
                   "page": pagenr
                 })
-            return _make_link(text, href=link_url, onclick=onclick_action, **self.link_attr)
+            return _make_tag(self.page_link_template, text, href=link_url, onclick=onclick_action, **self.link_attr)
         else: # return static link
-            return _make_link(text, href=link_url, **self.link_attr)
+            return _make_tag(self.page_link_template, text, href=link_url, **self.link_attr)
 
     def __iter__(self):
         return iter(self.items)

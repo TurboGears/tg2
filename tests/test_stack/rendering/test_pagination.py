@@ -15,10 +15,10 @@ def setup_noDB():
 
 
 _pager = ('<div id="pager"><span class="pager_curpage">1</span>'
-    ' <a class="pager_link" href="%(url)s?page=2">2</a>'
-    ' <a class="pager_link" href="%(url)s?page=3">3</a>'
+    ' <a href="%(url)s?page=2">2</a>'
+    ' <a href="%(url)s?page=3">3</a>'
     ' <span class="pager_dotdot">..</span>'
-    ' <a class="pager_link" href="%(url)s?page=5">5</a></div>')
+    ' <a href="%(url)s?page=5">5</a></div>')
 
 _data = '<ul id="data">%s</ul>' % ''.join(
         '<li>%d</li>' % i for i in range(10))
