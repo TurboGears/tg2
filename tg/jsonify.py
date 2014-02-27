@@ -2,6 +2,7 @@
 
 import datetime
 import decimal
+import types
 
 from json import JSONEncoder
 
@@ -54,6 +55,8 @@ class GenericJSON(JSONEncoder):
             return str(obj)
         elif isinstance(obj, MultiDict):
             return obj.mixed()
+        elif isinstance(obj, types.GeneratorType):
+            return list(obj)
         else:
             return JSONEncoder.default(self, obj)
 
