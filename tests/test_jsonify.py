@@ -98,3 +98,7 @@ def test_json_encode_lazy_url():
     url = lurl('/test')
     encoded = jsonify.encode({'url': url})
     assert encoded == '{"url": "/test"}', encoded
+
+def test_json_encode_generators():
+    encoded = jsonify.encode({'values': (v for v in [1, 2, 3])})
+    assert encoded == '{"values": [1, 2, 3]}', encoded
