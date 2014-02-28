@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
+from functools import partial
 from nose.tools import raises
 from nose import SkipTest
+from crank.util import get_params_with_argspec
 
 import tg
 import tests
 from json import loads, dumps
 
-from tg.controllers import TGController
-from tg.decorators import expose, validate, before_render
+from tg.controllers import TGController, DecoratedController
+from tg.decorators import expose, validate, before_render, before_call
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
-from tg._compat import PY3, unicode_text, u_
-from tg.validation import TGValidationError
+from tg._compat import PY3, unicode_text, u_, default_im_func
+from tg.util import call_controller
+from tg.validation import TGValidationError, validation_errors
 
 from formencode import validators, Schema
 
@@ -75,6 +78,13 @@ class ColonValidator(validators.FancyValidator):
 class ColonLessGenericValidator(object):
     def validate(self, value, state=None):
         raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
+
+def error_handler_function(controller_instance, uid, num):
+    return 'UID: %s' % uid
+
+class ErrorHandlerCallable(object):
+    def __call__(self, controller_instance, uid, num):
+        return 'UID: %s' % uid
 
 class BasicTGController(TGController):
     @expose()
@@ -212,13 +222,88 @@ class BasicTGController(TGController):
     def validate_other_error_handler(self, some_int):
         return dict(response=some_int)
 
-class TestTGController(TestWSGIController):
+    def unexposed_error_handler(self, uid, **kw):
+        return 'UID: %s' % uid
 
+    @expose()
+    @validate({'uid': validators.Int(),
+               'num': validators.Int()},
+              error_handler=unexposed_error_handler)
+    def validate_unexposed(self, uid, num):
+        return 'HUH'
+
+    @expose()
+    @validate({'num': validators.Int()},
+              error_handler=partial(unexposed_error_handler,
+                                    uid=5))
+    def validate_partial(self, num):
+        return 'HUH'
+
+    @expose()
+    @validate({'uid': tw2c.IntValidator(),
+               'num': tw2c.IntValidator()},
+              error_handler=error_handler_function)
+    def validate_function(self, uid, num):
+        return 'HUH'
+
+    @expose()
+    @validate({'uid': validators.Int(),
+               'num': validators.Int()},
+              error_handler=ErrorHandlerCallable())
+    def validate_callable(self, uid, num):
+        return 'HUH'
+
+    @expose()
+    @before_call(lambda remainder, params: params.setdefault('num', 5))
+    def hooked_error_handler(self, uid, num):
+        return 'UID: %s, NUM: %s' % (uid, num)
+
+    @expose()
+    @validate({'uid': validators.Int()},
+              error_handler=hooked_error_handler)
+    def validate_hooked(self, uid):
+        return 'HUH'
+
+    @expose()
+    def manually_handle_validation(self):
+        # This is done to check that we don't break compatibility
+        # with external modules that perform custom validation like tgext.socketio
+
+        controller = self.__class__.validate_function
+        args = (2, 'NaN')
+        try:
+            output = ''
+            validate_params = get_params_with_argspec(controller, {}, args)
+            params = DecoratedController._perform_validate(controller,
+                                                           validate_params)
+        except validation_errors as inv:
+            handler, output = DecoratedController._handle_validation_errors(controller,
+                                                                            args, {},
+                                                                            inv, None)
+
+        return output
+
+def ControllerWrapperForErrorHandler(app_config, caller):
+    def call(*args, **kw):
+        value = caller(*args, **kw)
+        return value + 'X'
+    return call
+
+class TestTGController(TestWSGIController):
     def setUp(self):
         TestWSGIController.setUp(self)
         tg.config.update({
             'paths': {'root': data_dir},
-            'package': tests})
+            'package': tests,
+        })
+
+        # Mimic configuration of a controller wrapper, this is required as
+        # TestWSGIController doesn't actually create an AppConfig
+        # so configurations don't get resolved.
+        cwrapper = ControllerWrapperForErrorHandler(None, call_controller)
+        wrappers_conf = {default_im_func(BasicTGController.hooked_error_handler): cwrapper}
+        tg.config.update({'dedicated_controller_wrappers': wrappers_conf})
+
         self.app = make_app(BasicTGController)
 
     def test_basic_validation_and_jsonification(self):
@@ -390,3 +475,32 @@ class TestTGController(TestWSGIController):
 
         assert "Must be an integer" in values['errors'].get('fields2:f2', ''),\
         'Error message not found: %r' % values['errors']
+
+    def test_validate_partial(self):
+        resp = self.app.post('/validate_partial', {'num': 'NaN'})
+        assert resp.text == 'UID: 5', resp
+
+    def test_validate_unexposed(self):
+        resp = self.app.post('/validate_unexposed', {'uid': 2,
+                                                     'num': 'NaN'})
+        assert resp.text == 'UID: 2', resp
+
+    def test_validate_function(self):
+        resp = self.app.post('/validate_function', {'uid': 2,
+                                                    'num': 'NaN'})
+        assert resp.text == 'UID: 2', resp
+
+    def test_validate_callable(self):
+        resp = self.app.post('/validate_callable', {'uid': 2,
+                                                    'num': 'NaN'})
+        assert resp.text == 'UID: 2', resp
+
+    def test_validate_hooked(self):
+        resp = self.app.post('/validate_hooked', {'uid': 'NaN'})
+        assert resp.text == 'UID: NaN, NUM: 5X', resp
+
+    def test_manually_handle_validation(self):
+        # This is done to check that we don't break compatibility
+        # with external modules that perform custom validation like tgext.socketio
+        resp = self.app.post('/manually_handle_validation')
+        assert resp.text == 'UID: 2', resp

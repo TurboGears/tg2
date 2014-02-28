@@ -23,6 +23,7 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
 
 from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
 from tg.configuration.hooks import hooks
+from functools import partial
 
 strip_string = operator.methodcaller('strip')
 
@@ -49,7 +50,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
             return method.decoration.exposed
 
-    def _call(self, controller, params, remainder=None, tgl=None):
+    def _call(self, controller, params, remainder=None, context=None):
         """Run the controller with the given parameters.
 
         _call is called by _perform_call in CoreDispatcher.
@@ -72,17 +73,17 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         rendering.
 
         """
-        if tgl is None: #pragma: no cover
+        if context is None: #pragma: no cover
             #compatibility with old code that didn't pass request locals explicitly
-            tgl = tg.request.environ['tg.locals']
+            context = tg.request.environ['tg.locals']
 
         context_config = tg.config._current_obj()
-        self._initialize_validation_context(tgl)
+        self._initialize_validation_context(context)
 
         #This is necessary to prevent spurious Content Type header which would
         #cause problems to paste.response.replace_header calls and cause
         #responses wihout content type to get out with a wrong content type
-        resp_headers = tgl.response.headers
+        resp_headers = context.response.headers
         if not resp_headers.get('Content-Type'):
             resp_headers.pop('Content-Type', None)
 
@@ -91,43 +92,48 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         else:
             remainder = tuple()
 
-        try:
-            hooks.notify('before_validate', args=(remainder, params),
-                         controller=controller, context_config=context_config)
+        hooks.notify('before_validate', args=(remainder, params),
+                     controller=controller, context_config=context_config)
 
+        try:
             validate_params = get_params_with_argspec(controller, params, remainder)
 
             # Validate user input
             params = self._perform_validate(controller, validate_params)
-
-            tgl.request.validation['values'] = params
-
-            hooks.notify('before_call', args=(remainder, params),
-                         controller=controller, context_config=context_config)
+            context.request.validation['values'] = params
 
             params, remainder = remove_argspec_params_from_params(controller, params, remainder)
-
-            #apply controller wrappers
-            try:
-                default_controller_caller = context_config['controller_caller']
-                dedicated_controller_wrappers = context_config['dedicated_controller_wrappers']
-                controller_caller = dedicated_controller_wrappers.get(default_im_func(controller),
-                                                                      default_controller_caller)
-            except KeyError:
-                controller_caller = call_controller
-
-            # call controller method
-            output = controller_caller(controller, remainder, params)
-
+            bound_controller_callable = controller
         except validation_errors as inv:
-            controller, output = self._handle_validation_errors(controller, remainder, params,
-                                                                inv, tgl=tgl)
+            instance, controller = self._process_validation_errors(controller,
+                                                                   remainder, params,
+                                                                   inv, context=context)
+            bound_controller_callable = partial(controller, instance)
+
+        hooks.notify('before_call', args=(remainder, params),
+                     controller=controller, context_config=context_config)
+
+        #apply controller wrappers
+        try:
+            default_controller_caller = context_config['controller_caller']
+        except KeyError:
+            default_controller_caller = call_controller
+
+        try:
+            dedicated_controller_wrappers = context_config['dedicated_controller_wrappers']
+            controller_caller = dedicated_controller_wrappers.get(default_im_func(controller),
+                                                                  default_controller_caller)
+        except KeyError:
+            controller_caller = default_controller_caller
+
+        # call controller method
+        output = controller_caller(bound_controller_callable, remainder, params)
 
         # Render template
         hooks.notify('before_render', args=(remainder, params, output),
                      controller=controller, context_config=context_config)
 
-        response = self._render_response(tgl, controller, output)
+        response = self._render_response(context, controller, output)
 
         hooks.notify('after_render', args=(response,),
                      controller=controller, context_config=context_config)
@@ -288,23 +294,19 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return result
 
     @classmethod
-    def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
-        """Handle validation errors.
+    def _process_validation_errors(cls, controller, remainder, params, exception, context):
+        """Process validation errors.
 
         Sets up validation status and error tracking
         to assist generating a form with given values
         and the validation failure messages.
 
-        The error handler in decoration.validation.error_handler is called.
-        If an error_handler isn't given, the original controller is used
-        as the error handler instead.
+        The error handler in decoration.validation.error_handler resolved
+        and returned to be called as a controller.
+        If an error_handler isn't given, the original controller is returned instead.
 
         """
-        if tgl is None: #pragma: no cover
-            #compatibility with old code that didn't pass request locals explicitly
-            tgl = tg.request.environ['tg.locals']
-
-        req = tgl.request
+        req = context.request
 
         validation_status = req.validation
         validation_status['exception'] = exception
@@ -338,14 +340,29 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             validation_status['values'] = getattr(exception, 'value', {})
 
         deco = controller.decoration
-        validation_status['error_handler'] = error_handler = deco.validation.error_handler
-        if error_handler is None:
-            validation_status['error_handler'] = error_handler = controller
-            output = error_handler(*remainder, **dict(params))
-        else:
-            output = error_handler(im_self(controller), *remainder, **dict(params))
 
-        return error_handler, output
+        error_handler = deco.validation.error_handler
+        if error_handler is None:
+            error_handler = default_im_func(controller)
+
+        validation_status['error_handler'] = error_handler
+        return im_self(controller), error_handler
+
+    @classmethod
+    def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
+        """Handle validation errors.
+
+        Processes validation errors and call the error_handler,
+        this is not used by TurboGears itself and is mostly provided
+        for backward compatibility.
+        """
+        if tgl is None: #pragma: no cover
+            #compatibility with old code that didn't pass request locals explicitly
+            tgl = tg.request.environ['tg.locals']
+
+        obj, error_handler = cls._process_validation_errors(controller, remainder, params,
+                                                            exception, tgl)
+        return error_handler, error_handler(obj, *remainder, **dict(params))
 
     def _initialize_validation_context(self, tgl):
         tgl.request.validation = {'errors': {},

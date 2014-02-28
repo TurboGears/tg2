@@ -78,17 +78,17 @@ class CoreDispatcher(object):
 
         return state, params
 
-    def _perform_call(self, thread_locals):
+    def _perform_call(self, context):
         """
         This function is called from within Pylons and should not be overidden.
         """
-        py_request = thread_locals.request
-        py_config = thread_locals.config
+        py_request = context.request
+        py_config = context.config
 
         if py_config.get('i18n_enabled', True):
-            setup_i18n(thread_locals)
+            setup_i18n(context)
 
-        state, params = self._get_dispatchable(thread_locals, py_request.quoted_path_info)
+        state, params = self._get_dispatchable(context, py_request.quoted_path_info)
         func, controller, remainder = state.method, state.controller, state.remainder
 
         if hasattr(controller, '_before'):
@@ -96,7 +96,7 @@ class CoreDispatcher(object):
 
         self._setup_wsgi_script_name(state.path, remainder, params)
 
-        r = self._call(func, params, remainder=remainder, tgl=thread_locals)
+        r = self._call(func, params, remainder=remainder, context=context)
 
         if hasattr(controller, '_after'):
             controller._after(*remainder, **params)
