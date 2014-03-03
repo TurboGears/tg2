@@ -272,7 +272,7 @@ class AppConfig(Bunch):
                                 'environment has already been loaded')
 
         self.application_wrappers_dependencies.setdefault(after, []).append(wrapper)
-        milestones.environment_loaded.register(self._order_wrappers)
+        milestones.environment_loaded.register(self._configure_application_wrappers)
 
     def register_rendering_engine(self, factory):
         """Registers a rendering engine ``factory``.
@@ -286,16 +286,6 @@ class AppConfig(Bunch):
             self.rendering_engines_options[engine] = options
             if factory.with_tg_vars is False:
                 self.rendering_engines_without_vars.add(engine)
-
-    def _order_wrappers(self):
-        visit_queue = deque([False, None])
-        while visit_queue:
-            current = visit_queue.popleft()
-            if current not in (False, None):
-                self.application_wrappers.append(current)
-
-            dependant_wrappers = self.application_wrappers_dependencies.pop(current, [])
-            visit_queue.extendleft(reversed(dependant_wrappers))
 
     def _setup_startup_and_shutdown(self):
         for cmd in self.call_on_startup:
@@ -313,7 +303,17 @@ class AppConfig(Bunch):
             else:
                 log.warn("Unable to register %s for shutdown" % cmd )
 
-    def _setup_package_paths(self):
+    def _configure_application_wrappers(self):
+        visit_queue = deque([False, None])
+        while visit_queue:
+            current = visit_queue.popleft()
+            if current not in (False, None):
+                self.application_wrappers.append(current)
+
+            dependant_wrappers = self.application_wrappers_dependencies.pop(current, [])
+            visit_queue.extendleft(reversed(dependant_wrappers))
+
+    def _configure_package_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
         paths = Bunch(root=root,
@@ -753,7 +753,7 @@ class AppConfig(Bunch):
                 app_package = None
 
             if app_package:
-                self._setup_package_paths()
+                self._configure_package_paths()
 
             self._init_config(global_conf, app_conf)
 
