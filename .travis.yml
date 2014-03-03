@@ -11,10 +11,11 @@ install:
   - "pip install repoze.who"
   - "pip install coverage"
   - "pip install nose"
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
   - "pip install -e .[testing]"
 
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
+ 
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install coveralls && export HAS_COVERALLS=1; fi
 
 script: "nosetests -v --with-coverage --cover-package=tg --cover-erase"
