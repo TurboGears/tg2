@@ -16,13 +16,13 @@ class which provides the ordinary TurboGears mechanism.
 
 """
 import tg, sys
-import mimetypes
 from webob.exc import HTTPException
 from tg._compat import unicode_text
 from tg.i18n import setup_i18n
 from tg.decorators import cached_property
 from crank.dispatchstate import DispatchState
 from tg.request_local import WebObResponse
+import mimetypes as default_mimetypes
 import weakref
 
 def dispatched_controller():
@@ -58,6 +58,11 @@ class CoreDispatcher(object):
         url_path = state.path  # Get back url_path as crank performs some cleaning
 
         if enable_request_extensions:
+            try:
+                mimetypes = conf['mimetypes']
+            except KeyError:
+                mimetypes = default_mimetypes
+
             ext = state.extension
             if ext is not None:
                 ext = '.' + ext

@@ -333,7 +333,7 @@ class AppConfig(Bunch):
 
         """
         # Load the mimetypes with its default types
-        mimetypes.init()
+        self.mimetypes = mimetypes.MimeTypes()
 
         try:
             self.package_name = self.package.__name__
@@ -533,11 +533,12 @@ class AppConfig(Bunch):
             config['pylons.app_globals'] = g
 
     def setup_mimetypes(self):
-        lookup = {'.json':'application/json'}
+        lookup = {'.json': 'application/json',
+                  '.js': 'application/javascript'}
         lookup.update(config.get('mimetype_lookup', {}))
 
         for key, value in lookup.items():
-            mimetypes.add_type(value, key)
+            self.mimetypes.add_type(value, key)
 
     def setup_persistence(self):
         """Override this method to define how your application configures it's persistence model.
