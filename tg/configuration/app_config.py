@@ -436,6 +436,8 @@ class AppConfig(Bunch):
             config['tg.strict_tmpl_context'] = False
 
         self.after_init_config()
+        self._configure_mimetypes()
+
         milestones.config_ready.reach()
 
     def _configure_renderers(self):
@@ -447,6 +449,14 @@ class AppConfig(Bunch):
             first_renderer = self.renderers[0]
             log.warn('Default renderer not in renders, automatically switching to %s' % first_renderer)
             self.default_renderer = first_renderer
+
+    def _configure_mimetypes(self):
+        lookup = {'.json': 'application/json',
+                  '.js': 'application/javascript'}
+        lookup.update(config.get('mimetype_lookup', {}))
+
+        for key, value in lookup.items():
+            self.mimetypes.add_type(value, key)
 
     def after_init_config(self):
         """
@@ -531,14 +541,6 @@ class AppConfig(Bunch):
 
         if config.get('tg.pylons_compatible', True):
             config['pylons.app_globals'] = g
-
-    def setup_mimetypes(self):
-        lookup = {'.json': 'application/json',
-                  '.js': 'application/javascript'}
-        lookup.update(config.get('mimetype_lookup', {}))
-
-        for key, value in lookup.items():
-            self.mimetypes.add_type(value, key)
 
     def setup_persistence(self):
         """Override this method to define how your application configures it's persistence model.
@@ -764,7 +766,6 @@ class AppConfig(Bunch):
             if app_package:
                 self.setup_helpers_and_globals()
 
-            self.setup_mimetypes()
             self.setup_auth()
             self._setup_renderers()
             self.setup_persistence()
