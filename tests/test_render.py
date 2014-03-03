@@ -149,7 +149,3 @@ class TestMakoLookup(object):
         finally:
             os.stat = old_stat
 
-
-
-
-

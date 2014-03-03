@@ -15,7 +15,7 @@ class TestConfig(AppConfig):
             values = {}
         AppConfig.__init__(self)
         #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako', 'jinja','json']
+        self.renderers = ['genshi', 'mako', 'jinja','json', 'jsonp']
         if not PY3:
             self.renderers.extend(['kajiki'])
 

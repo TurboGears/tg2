@@ -11,6 +11,8 @@ from tg.util import Bunch
 from tg._compat import PY3, im_func
 from tg.renderers.genshi import GenshiRenderer
 from tg import expose
+from tg import TGController, AppConfig
+from webtest import TestApp
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer
@@ -661,3 +663,11 @@ class TestTemplateCaching(object):
         resp = self.app.get('/template_caching_options', params={'cache_key':'TEST'})
         resp = json.loads(resp.text)
         assert resp['cls'] == 'NoImplementation', resp
+
+    def test_jsonp(self):
+        resp = self.app.get('/get_jsonp', params={'call': 'callme'})
+        assert 'callme({"value": 5});' in resp.text, resp
+
+    def test_jsonp_missing_callback(self):
+        resp = self.app.get('/get_jsonp', status=400)
+        assert 'JSONP requires a "call" parameter with callback name' in resp.text, resp

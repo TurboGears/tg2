@@ -434,3 +434,7 @@ class RootController(TGController):
             return _cache_options
         finally:
             tg.cache = old_cache
+
+    @expose('jsonp', render_params={'callback_name': 'call'})
+    def get_jsonp(self, **kwargs):
+        return {'value': 5}
