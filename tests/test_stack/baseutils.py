@@ -18,7 +18,7 @@ default_config = {
         'buffet.template_options': {},
         'default_renderer':'json',
         'renderers': ['json'],
-        'render_functions':{'json':tg.render.render_json},
+        'render_functions': {'json': tg.renderers.json.JSONRenderer()},
         'use_legacy_renderers':False,
         'use_sqlalchemy': False,
         'lang': None

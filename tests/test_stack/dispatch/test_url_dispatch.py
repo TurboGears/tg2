@@ -113,8 +113,11 @@ def test_flash_redirect():
     assert 'Wow, flash!' in resp, resp
 
 def test_bigflash_redirect():
-    resp = app.get('/bigflash_redirect', status=500)
-    assert 'Flash value is too long (cookie would be >4k)' in resp.body.decode('ascii')
+    try:
+        resp = app.get('/bigflash_redirect')
+        assert False
+    except Exception as e:
+        assert 'Flash value is too long (cookie would be >4k)' in str(e)
 
 def test_flash_no_redirect():
     resp = app.get('/flash_no_redirect')
@@ -168,8 +171,11 @@ def test_ignore_parameters():
     assert "None Received"
 
 def test_json_return_list():
-    resp = app.get("/json_return_list", status=500)
-    assert 'You may not expose with JSON a list' in resp.body.decode('ascii')
+    try:
+        resp = app.get("/json_return_list")
+        assert False
+    except Exception as e:
+        assert 'You may not expose with JSON a list' in str(e)
 
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")

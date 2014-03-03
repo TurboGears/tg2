@@ -1,6 +1,7 @@
-"""Reimplementation of the Mako template loader that supports dotted names."""
+from __future__ import absolute_import
 
 import os
+import logging
 import stat
 
 try:
@@ -8,12 +9,109 @@ try:
 except ImportError: #pragma: no cover
     import dummy_threading as threading
 
-
-from mako.template import Template
-from mako import exceptions
 from paste.deploy.converters import asbool
+from markupsafe import Markup
+from tg.render import cached_template
+from .base import RendererFactory
 
-import tg
+try:
+    import mako
+except ImportError:
+    mako = None
+
+if mako is not None:
+    from mako.template import Template
+    from mako import exceptions
+    from mako.lookup import TemplateLookup
+
+__all__ = ['MakoRenderer']
+
+log = logging.getLogger(__name__)
+
+
+class MakoRenderer(RendererFactory):
+    engines = ['mako']
+
+    @classmethod
+    def create(cls, config, app_globals):
+        """
+        Setup a renderer and loader for mako templates.
+        """
+        if mako is None:
+            return None
+
+        use_dotted_templatenames = config.get('use_dotted_templatenames', True)
+
+        # If no dotted names support was required we will just setup
+        # a file system based template lookup mechanism.
+        compiled_dir = config.get('templating.mako.compiled_templates_dir', None)
+
+        if not compiled_dir or compiled_dir.lower() in ('none', 'false'):
+            # Cache compiled templates in-memory
+            compiled_dir = None
+        else:
+            bad_path = None
+            if os.path.exists(compiled_dir):
+                if not os.access(compiled_dir, os.W_OK):
+                    bad_path = compiled_dir
+                    compiled_dir = None
+            else:
+                try:
+                    os.makedirs(compiled_dir)
+                except:
+                    bad_path = compiled_dir
+                    compiled_dir = None
+            if bad_path:
+                log.warn("Unable to write cached templates to %r; falling back "
+                         "to an in-memory cache. Please set the `templating.mak"
+                         "o.compiled_templates_dir` configuration option to a "
+                         "writable directory." % bad_path)
+
+        dotted_finder = app_globals.dotted_filename_finder
+        if use_dotted_templatenames:
+            # Support dotted names by injecting a slightly different template
+            # lookup system that will return templates from dotted template notation.
+            mako_lookup = DottedTemplateLookup(
+                input_encoding='utf-8', output_encoding='utf-8',
+                imports=['from markupsafe import escape_silent as escape'],
+                package_name=config.package_name,
+                dotted_finder=dotted_finder,
+                module_directory=compiled_dir,
+                default_filters=['escape'],
+                auto_reload_templates=config.auto_reload_templates)
+
+        else:
+            mako_lookup = TemplateLookup(
+                directories=config.paths['templates'],
+                module_directory=compiled_dir,
+                input_encoding='utf-8', output_encoding='utf-8',
+                imports=['from markupsafe import escape_silent as escape'],
+                default_filters=['escape'],
+                filesystem_checks=config.auto_reload_templates)
+
+        return {'mako': cls(dotted_finder, mako_lookup, use_dotted_templatenames)}
+
+    def __init__(self, dotted_finder, mako_lookup, use_dotted_templatenames):
+        self.dotted_finder = dotted_finder
+        self.loader = mako_lookup
+        self.use_dotted_templatenames = use_dotted_templatenames
+
+    def __call__(self, template_name, template_vars,
+                 cache_key=None, cache_type=None, cache_expire=None):
+
+        if self.use_dotted_templatenames:
+            template_name = self.dotted_finder.get_dotted_filename(template_name,
+                                                                   template_extension='.mak')
+
+        # Create a render callable for the cache function
+        def render_template():
+            # Grab a template reference
+            template = self.loader.get_template(template_name)
+            return Markup(template.render_unicode(**template_vars))
+
+        return cached_template(template_name, render_template, cache_key=cache_key,
+                               cache_type=cache_type, cache_expire=cache_expire)
+
 
 class DottedTemplateLookup(object):
     """Mako template lookup emulation that supports
@@ -36,8 +134,12 @@ class DottedTemplateLookup(object):
     """
 
     def __init__(self, input_encoding, output_encoding,
-            imports, default_filters, module_directory=None,
-            auto_reload_templates=False):
+                 imports, default_filters, package_name,
+                 dotted_finder, module_directory=None,
+                 auto_reload_templates=False):
+
+        self.package_name = package_name
+        self.dotted_finder = dotted_finder
 
         self.input_encoding = input_encoding
         self.output_encoding = output_encoding
@@ -62,15 +164,15 @@ class DottedTemplateLookup(object):
 
         """
         if uri.startswith('local:'):
-            uri = tg.config['package'].__name__ + '.' + uri[6:]
+            uri = self.package_name + '.' + uri[6:]
 
         if '.' in uri:
             # We are in the DottedTemplateLookup system so dots in
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = tg.config['tg.app_globals'].\
-                dotted_filename_finder.get_dotted_filename(template_name=uri, template_extension='.mak')
+            result = self.dotted_finder.get_dotted_filename(template_name=uri,
+                                                            template_extension='.mak')
 
             if not uri in self.template_filenames_cache:
                 # feed our filename cache if needed.

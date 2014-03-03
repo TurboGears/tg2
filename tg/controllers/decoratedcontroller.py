@@ -27,6 +27,7 @@ from functools import partial
 
 strip_string = operator.methodcaller('strip')
 
+
 class _DecoratedControllerMeta(type):
     def __init__(cls, name, bases, attrs):
         super(_DecoratedControllerMeta, cls).__init__(name, bases, attrs)
@@ -37,6 +38,7 @@ class _DecoratedControllerMeta(type):
                     parent_method = getattr(pcls, name, None)
                     if parent_method and hasattr(parent_method, 'decoration'):
                         value.decoration.merge(parent_method.decoration)
+
 
 class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
     """Decorated controller object.
@@ -364,16 +366,17 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                                                             exception, tgl)
         return error_handler, error_handler(obj, *remainder, **dict(params))
 
-    def _initialize_validation_context(self, tgl):
-        tgl.request.validation = {'errors': {},
-                                  'values': {},
-                                  'exception': None,
-                                  'error_handler': None}
+    def _initialize_validation_context(self, context):
+        context.request.validation = {'errors': {},
+                                      'values': {},
+                                      'exception': None,
+                                      'error_handler': None}
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
         if predicate is None:
             return True
+
         try:
             predicate.check_authorization(tg.request.environ)
         except NotAuthorizedError as e:

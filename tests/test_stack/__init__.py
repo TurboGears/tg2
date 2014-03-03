@@ -17,7 +17,7 @@ class TestConfig(AppConfig):
         #First we setup some base values that we know will work
         self.renderers = ['genshi', 'mako', 'jinja','json']
         if not PY3:
-            self.renderers.extend(['chameleon_genshi', 'kajiki'])
+            self.renderers.extend(['kajiki'])
 
         self.render_functions = tg.util.Bunch()
         self.package = tests.test_stack
@@ -47,6 +47,9 @@ class TestConfig(AppConfig):
         tg.config['tg.app_globals'] = self.globals
         g = tg.config['tg.app_globals']
         g.dotted_filename_finder = DottedFileNameFinder()
+
+    def add_debugger_middleware(self, global_conf, app):
+        return app
 
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:

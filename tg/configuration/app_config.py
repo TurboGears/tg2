@@ -8,10 +8,11 @@ from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin, deque
 
-from tg.i18n import ugettext, ungettext, get_lang
+from tg.i18n import ugettext, get_lang
 
 from tg.support.middlewares import SessionMiddleware, CacheMiddleware
-from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, DBSessionRemoverMiddleware
+from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
+    DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
 from paste.deploy.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
@@ -21,6 +22,12 @@ from tg.configuration.utils import coerce_config
 from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
 from tg.configuration import milestones
 from tg.configuration.utils import TGConfigError
+
+from tg.renderers.genshi import GenshiRenderer
+from tg.renderers.json import JSONRenderer
+from tg.renderers.jinja import JinjaRenderer
+from tg.renderers.mako import MakoRenderer
+from tg.renderers.kajiki import KajikiRenderer
 
 log = logging.getLogger(__name__)
 
@@ -154,7 +161,9 @@ class AppConfig(Bunch):
         self.renderers = []
         self.default_renderer = 'genshi'
         self.render_functions = Bunch()
- 
+        self.rendering_engines = {}
+        self.rendering_engines_without_vars = set()
+
         self.enable_routes = False
         self.enable_routing_args = False
         self.disable_request_extensions = minimal
@@ -202,6 +211,12 @@ class AppConfig(Bunch):
         #This is for minimal mode to set root controller manually
         if root_controller is not None:
             self['tg.root_controller'] = root_controller
+
+        self.register_rendering_engine(JSONRenderer)
+        self.register_rendering_engine(GenshiRenderer)
+        self.register_rendering_engine(MakoRenderer)
+        self.register_rendering_engine(JinjaRenderer)
+        self.register_rendering_engine(KajikiRenderer)
 
     def get_root_module(self):
         root_module_path = self.paths['root']
@@ -257,6 +272,12 @@ class AppConfig(Bunch):
 
         self.application_wrappers_dependencies.setdefault(after, []).append(wrapper)
         milestones.environment_loaded.register(self._order_wrappers)
+
+    def register_rendering_engine(self, factory):
+        for engine in factory.engines:
+            self.rendering_engines[engine] = factory
+            if factory.with_tg_vars is False:
+                self.rendering_engines_without_vars.add(engine)
 
     def _order_wrappers(self):
         visit_queue = deque([False, None])
@@ -503,209 +524,6 @@ class AppConfig(Bunch):
         if config.get('tg.pylons_compatible', True):
             config['pylons.app_globals'] = g
 
-    def setup_mako_renderer(self, use_dotted_templatenames=None):
-        """Setup a renderer and loader for mako templates.
-
-        Override this to customize the way that the mako template
-        renderer is setup.  In particular if you want to setup
-        a different set of search paths, different encodings, or
-        additonal imports, all you need to do is update the
-        ``TemplateLookup`` constructor.
-
-        You can also use your own render_mako function instead of the one
-        provided by tg.render.
-
-        """
-
-        from tg.render import render_mako
-
-        if not use_dotted_templatenames:
-            use_dotted_templatenames = asbool(config.get('use_dotted_templatenames', 'true'))
-
-
-        # If no dotted names support was required we will just setup
-        # a file system based template lookup mechanism.
-        compiled_dir = tg.config.get('templating.mako.compiled_templates_dir', None)
-
-        if not compiled_dir or compiled_dir.lower() in ('none', 'false'):
-            # Cache compiled templates in-memory
-            compiled_dir = None
-        else:
-            bad_path = None
-            if os.path.exists(compiled_dir):
-                if not os.access(compiled_dir, os.W_OK):
-                    bad_path = compiled_dir
-                    compiled_dir = None
-            else:
-                try:
-                    os.makedirs(compiled_dir)
-                except:
-                    bad_path = compiled_dir
-                    compiled_dir = None
-            if bad_path:
-                log.warn("Unable to write cached templates to %r; falling back "
-                         "to an in-memory cache. Please set the `templating.mak"
-                         "o.compiled_templates_dir` configuration option to a "
-                         "writable directory." % bad_path)
-
-        if use_dotted_templatenames:
-            # Support dotted names by injecting a slightly different template
-            # lookup system that will return templates from dotted template notation.
-            from tg.dottednames.mako_lookup import DottedTemplateLookup
-            config['tg.app_globals'].mako_lookup = DottedTemplateLookup(
-                input_encoding='utf-8', output_encoding='utf-8',
-                imports=['from markupsafe import escape_silent as escape'],
-                module_directory=compiled_dir,
-                default_filters=['escape'],
-                auto_reload_templates=self.auto_reload_templates)
-
-        else:
-            from mako.lookup import TemplateLookup
-            config['tg.app_globals'].mako_lookup = TemplateLookup(
-                directories=self.paths['templates'],
-                module_directory=compiled_dir,
-                input_encoding='utf-8', output_encoding='utf-8',
-                imports=['from markupsafe import escape_silent as escape'],
-                default_filters=['escape'],
-                filesystem_checks=self.auto_reload_templates)
-
-        self.render_functions.mako = render_mako
-
-    def setup_chameleon_genshi_renderer(self): #pragma: no cover
-        """Setup a renderer and loader for the chameleon.genshi engine."""
-        from tg.render import RenderChameleonGenshi
-
-        try:
-            import chameleon.genshi.loader
-        except ImportError:
-            return False
-
-        if config.get('use_dotted_templatenames', True):
-            from tg.dottednames.chameleon_genshi_lookup \
-                import ChameleonGenshiTemplateLoader as TemplateLoader
-        else:
-            from chameleon.genshi.loader import TemplateLoader
-        loader = TemplateLoader(search_path=self.paths.templates,
-                                auto_reload=self.auto_reload_templates)
-
-        self.render_functions.chameleon_genshi = RenderChameleonGenshi(loader)
-
-    def setup_genshi_renderer(self):
-        """Setup a renderer and loader for Genshi templates.
-
-        Override this to customize the way that the internationalization
-        filter, template loader
-
-        """
-        from tg.render import RenderGenshi
-        from genshi.filters import Translator
-
-        def template_loaded(template):
-            """Plug-in our i18n function to Genshi, once the template is loaded.
-
-            This function will be called by the Genshi TemplateLoader after
-            loading the template.
-
-            """
-            translator = Translator(ugettext)
-            template.filters.insert(0, translator)
-            if hasattr(template, 'add_directives'):
-                template.add_directives(Translator.NAMESPACE, translator)
-
-        if config.get('use_dotted_templatenames', True):
-            from tg.dottednames.genshi_lookup \
-                import GenshiTemplateLoader as TemplateLoader
-        else:
-            from genshi.template import TemplateLoader
-        loader = TemplateLoader(search_path=self.paths.templates,
-                                max_cache_size=asint(self.get('genshi.max_cache_size', 30)),
-                                auto_reload=self.auto_reload_templates,
-                                callback=template_loaded)
-
-        self.render_functions.genshi = RenderGenshi(loader)
-
-    def setup_kajiki_renderer(self):
-        """Setup a renderer and loader for the fastpt engine."""
-        from tg.dottednames.kajiki_lookup import KajikiTemplateLoader
-        from tg.render import render_kajiki
-        loader = KajikiTemplateLoader(self.paths.templates[0],
-                                      force_mode='xml',
-                                      reload=self.auto_reload_templates)
-        config['tg.app_globals'].kajiki_loader = loader
-        self.render_functions.kajiki = render_kajiki
-
-    def setup_jinja_renderer(self):
-        """Setup a renderer and loader for Jinja2 templates."""
-        from jinja2 import ChoiceLoader, Environment
-        from jinja2.filters import FILTERS
-        from tg.render import render_jinja
-
-        if config.get('use_dotted_templatenames', True):
-            from tg.dottednames.jinja_lookup import JinjaTemplateLoader as TemplateLoader
-        else:
-            from jinja2 import FileSystemLoader as TemplateLoader
-
-        if not 'jinja_extensions' in self :
-            self.jinja_extensions = []
-
-        # Add i18n extension by default
-        if not "jinja2.ext.i18n" in self.jinja_extensions:
-            self.jinja_extensions.append("jinja2.ext.i18n")
-
-        if not 'jinja_filters' in self:
-            self.jinja_filters = {}
-
-        loader = ChoiceLoader(
-            [TemplateLoader(path) for path in self.paths['templates']])
-
-        config['tg.app_globals'].jinja2_env = Environment(loader=loader, autoescape=True,
-                 auto_reload=self.auto_reload_templates, extensions=self.jinja_extensions)
-
-        # Try to load custom filters module under app_package.lib.templatetools
-        try:
-            if not self.package_name:
-                raise AttributeError()
-
-            filter_package = self.package_name + ".lib.templatetools"
-            autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
-            try:
-                autoload_filters = dict(
-                    map(lambda x: (x,autoload_lib.jinja_filters.__dict__[x]), autoload_lib.jinja_filters.__all__)
-                )
-            except AttributeError: #pragma: no cover
-                autoload_filters = dict(
-                    filter(lambda x: callable(x[1]),
-                        autoload_lib.jinja_filters.__dict__.iteritems())
-                )
-        except (ImportError, AttributeError):
-            autoload_filters = {}
-
-        # Add jinja filters
-        filters = dict(FILTERS, **autoload_filters)
-        filters.update(self.jinja_filters)
-        config['tg.app_globals'].jinja2_env.filters = filters
-
-        # Jinja's unable to request c's attributes without strict_c
-        config['tg.strict_tmpl_context'] = True
-
-        # Add gettext functions to the jinja environment
-        config['tg.app_globals'].jinja2_env.install_gettext_callables(ugettext, ungettext)
-
-        self.render_functions.jinja = render_jinja
-
-    def setup_amf_renderer(self): #pragma: no cover
-        try:
-            from tg.amfify import render_amf
-        except ImportError:
-            log.error('PyAMF not installed')
-            return False
-
-        self.render_functions.amf = render_amf
-
-    def setup_json_renderer(self):
-        from tg.render import render_json
-        self.render_functions.json = render_json
-
     def setup_mimetypes(self):
         lookup = {'.json':'application/json'}
         lookup.update(config.get('mimetype_lookup', {}))
@@ -876,11 +694,25 @@ class AppConfig(Bunch):
     def _setup_renderers(self):
         for renderer in self.renderers[:]:
             setup = getattr(self, 'setup_%s_renderer'%renderer, None)
-            if setup:
+            if setup is not None:
+                # Backward compatible old-way of configuring rendering engines
+                warnings.warn("Using setup_NAME_renderer to configure rendering engines"
+                              "is now deprecated, please use register_rendering_engine "
+                              "with a tg.renderers.base.RendererFactory subclass instead",
+                              DeprecationWarning, stacklevel=2)
+
                 success = setup()
                 if success is False:
                     log.error('Failed to initialize %s template engine, removing it...' % renderer)
                     self.renderers.remove(renderer)
+            elif renderer in self.rendering_engines:
+                rendering_engine = self.rendering_engines[renderer]
+                engines = rendering_engine.create(config, config['tg.app_globals'])
+                if engines is None:
+                    log.error('Failed to initialize %s template engine, removing it...' % renderer)
+                    self.renderers.remove(renderer)
+                else:
+                    self.render_functions.update(engines)
             else:
                 raise TGConfigError('This configuration object does not support the %s renderer' % renderer)
 

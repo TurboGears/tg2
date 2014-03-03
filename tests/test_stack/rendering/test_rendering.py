@@ -8,10 +8,17 @@ from tg.configuration import milestones
 
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch
-from tg._compat import PY3
-from tg.render import RenderGenshi
+from tg._compat import PY3, im_func
+from tg.renderers.genshi import GenshiRenderer
+from tg import expose
 
-def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, extra={}):
+try:
+    from tgext.chameleon_genshi import ChameleonGenshiRenderer
+except ImportError:
+    ChameleonGenshiRenderer = None
+
+def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, extra={},
+               extra_init=None):
     base_config = TestConfig(folder='rendering', values={
         'use_sqlalchemy': False,
        'use_legacy_renderer': False,
@@ -34,6 +41,10 @@ def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, ex
         deployment_config['templating.genshi.encoding'] = genshi_encoding
 
     deployment_config.update(extra)
+
+    if extra_init is not None:
+        extra_init(base_config)
+
     return app_from_config(base_config, deployment_config)
 
 def test_default_genshi_renderer():
@@ -255,15 +266,34 @@ def test_genshi_sub_inheritance_from_bottom():
     assert "Master template" in resp
 
 def test_chameleon_genshi_base():
-    if PY3: raise SkipTest()
+    if ChameleonGenshiRenderer is None:
+        raise SkipTest()
 
-    app = setup_noDB()
+    def add_chameleon_renderer(app_config):
+        app_config.register_rendering_engine(ChameleonGenshiRenderer)
+        app_config.renderers.append('chameleon_genshi')
+
+    app = setup_noDB(extra_init=add_chameleon_renderer)
+
+    # Manually add the exposition again as it was already discarded
+    # due to chameleon_genshi not being in the available renderes.
+    milestones.renderers_ready._reset()
+    from .controllers.root import RootController
+    controller = im_func(RootController.chameleon_genshi_index)
+    expose('chameleon_genshi:index.html')(controller)
+    milestones.renderers_ready.reach()
+
     resp = app.get('/chameleon_genshi_index')
     assert ("<p>TurboGears 2 is rapid web application development toolkit"
         " designed to make your life easier.</p>") in resp
 
 def test_chameleon_genshi_inheritance():
-    if PY3: raise SkipTest()
+    if ChameleonGenshiRenderer is None:
+        raise SkipTest()
+
+    def add_chameleon_renderer(app_config):
+        app_config.register_rendering_engine(ChameleonGenshiRenderer)
+        app_config.renderers.append('chameleon_genshi')
 
     try:
         import lxml
@@ -271,7 +301,15 @@ def test_chameleon_genshi_inheritance():
         # match templates need lxml, but since they don're really work anyway
         # (at least not fully compatible with Genshi), we just skip this test
         return
-    app = setup_noDB()
+
+    app = setup_noDB(extra_init=add_chameleon_renderer)
+
+    milestones.renderers_ready._reset()
+    from .controllers.root import RootController
+    controller = im_func(RootController.chameleon_genshi_inherits)
+    expose('chameleon_genshi:genshi_inherits.html')(controller)
+    milestones.renderers_ready.reach()
+
     try:
         resp = app.get('/chameleon_genshi_inherits')
     except NameError as e:
@@ -288,7 +326,12 @@ def test_chameleon_genshi_inheritance():
 
 def test_jinja_autoload():
     app = setup_noDB()
-    resp = app.get('/jinja_autoload', status=500)
+
+    try:
+        resp = app.get('/jinja_autoload')
+        assert False
+    except Exception as e:
+        assert "no filter named 'polluting_function'" in str(e)
 
 def _test_jinja_inherits():
     app = setup_noDB()
@@ -342,7 +385,13 @@ def test_jinja_custom_filters():
                                        }
                              )
     app = app_from_config(base_config)
-    resp = app.get('/jinja_filters')
+
+    try:
+        resp = app.get('/jinja_filters')
+    finally:
+        # Remove filters so we don't mess with other test units
+        tg.config.pop('jinja_filters')
+
     assert '8bb23e0b574ecb147536efacc864891b' in resp, resp
 
 def test_jinja_autoload_filters():
@@ -481,8 +530,12 @@ def test_template_custom_format_html():
 
 def test_template_custom_format_nonexisting():
     app = setup_noDB()
-    resp = app.get('/custom_format?format=csv', status=500)
-    assert 'not a valid custom_format' in resp
+
+    try:
+        resp = app.get('/custom_format?format=csv')
+        assert False
+    except Exception as e:
+        assert 'not a valid custom_format' in str(e)
 
 def test_template_override_multiple_content_type():
     app = setup_noDB()
@@ -540,7 +593,7 @@ def test_genshi_manual_render_svg_doctype():
     assert '<!DOCTYPE svg' in resp
 
 def test_genshi_methods_for_doctype():
-    assert RenderGenshi.method_for_doctype('application/xml') == 'xhtml'
+    assert GenshiRenderer.method_for_doctype('application/xml') == 'xhtml'
 
 def test_variable_provider():
     app = setup_noDB(extra={'variable_provider': lambda: {'inject_this_var':5}})

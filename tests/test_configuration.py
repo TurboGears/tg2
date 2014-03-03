@@ -193,12 +193,6 @@ class TestAppConfig:
         #This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller')
 
-    def test_amf_initialization(self):
-        conf = AppConfig(minimal=True)
-        conf.renderers.append('amf')
-        app = conf.make_wsgi_app()
-        assert 'amf' not in conf.renderers
-
     def test_enable_routes(self):
         if PY3: raise SkipTest()
 
@@ -268,30 +262,6 @@ class TestAppConfig:
         conf.setup_auth()
 
         assert len(ConfigWithSetupAuthBackend.called) >= 1
-
-    def test_setup_chameleon_genshi_renderer(self):
-        if PY3: raise SkipTest()
-
-        self.config.paths.templates = 'template_path'
-        self.config.setup_chameleon_genshi_renderer()
-
-    def test_setup_kajiki_renderer(self):
-        if PY3: raise SkipTest()
-
-        self.config.paths.templates = 'template_path'
-        self.config.setup_kajiki_renderer()
-
-    def test_setup_genshi_renderer(self):
-        self.config.paths.templates = 'template_path'
-        self.config.setup_genshi_renderer()
-
-    def test_setup_jinja_renderer(self):
-        self.config.paths.templates = 'template_path'
-        self.config.setup_jinja_renderer()
-
-    def test_setup_mako_renderer(self):
-        self.config.paths.templates = ['template_path']
-        self.config.setup_mako_renderer(use_dotted_templatenames=True)
 
     def test_setup_jinja_without_package(self):
         class RootController(TGController):

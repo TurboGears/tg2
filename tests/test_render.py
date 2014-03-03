@@ -5,7 +5,7 @@ from nose.tools import raises
 from nose import SkipTest
 
 import tg
-from tg.render import MissingRendererError, render_jinja, render_mako
+from tg.render import MissingRendererError
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 
 from tg.configuration import AppConfig
@@ -41,7 +41,9 @@ def test_jinja_lookup_nonexisting_template():
 
     from jinja2 import TemplateNotFound
     try:
-        render_jinja('tg.this_template_does_not_exists', {'app_globals':tg.config['tg.app_globals']})
+        render_jinja = conf.render_functions['jinja']
+        render_jinja('tg.this_template_does_not_exists',
+                     {'app_globals':tg.config['tg.app_globals']})
         assert False
     except TemplateNotFound:
         pass
@@ -52,10 +54,12 @@ class TestMakoLookup(object):
         conf.use_dotted_templatenames = True
         conf.renderers.append('mako')
         conf.package = FakePackage()
+        self.conf = conf
         self.app = conf.make_wsgi_app()
 
     def test_adjust_uri(self):
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
 
         assert mlookup.adjust_uri('this_template_should_pass_unaltered', None) == 'this_template_should_pass_unaltered'
 
@@ -66,6 +70,7 @@ class TestMakoLookup(object):
         assert dotted_test.endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
 
     def test_local_lookup(self):
+        render_mako = self.conf.render_functions['mako']
         res = render_mako('tests.test_stack.rendering.templates.mako_inherits_local',
                           {'app_globals':tg.config['tg.app_globals']})
         assert 'inherited mako page' in res
@@ -74,7 +79,8 @@ class TestMakoLookup(object):
         from mako.template import Template
         t = Template('Hi')
 
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
         mlookup.template_cache['hi_template'] = t
         assert mlookup.get_template('hi_template') is t
 
@@ -83,18 +89,21 @@ class TestMakoLookup(object):
         from mako.template import Template
         t = Template('Hi', filename='deleted_template.mak')
 
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
         mlookup.template_cache['deleted_template'] = t
         mlookup.get_template('deleted_template')
 
     @raises(IOError)
     def test_never_existed(self):
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
 
         mlookup.get_template('deleted_template')
 
     def test__check_should_reload_on_cache_expire(self):
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
         t = mlookup.get_template(template_path) #cache the template
@@ -117,7 +126,8 @@ class TestMakoLookup(object):
             os.stat = old_stat
 
     def test__check_should_not_reload_when_disabled(self):
-        mlookup = tg.config['tg.app_globals'].mako_lookup
+        render_mako = self.conf.render_functions['mako']
+        mlookup = render_mako.loader
         mlookup.auto_reload = False
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)

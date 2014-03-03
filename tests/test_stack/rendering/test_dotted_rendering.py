@@ -4,9 +4,17 @@ from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
 from webtest import TestApp
-from tg._compat import PY3, u_
+from tg._compat import PY3, u_, im_func
+from tg.configuration import milestones
+from tg import expose
+from tg.decorators import Decoration
 
-def setup_noDB():
+try:
+    from tgext.chameleon_genshi import ChameleonGenshiRenderer
+except ImportError:
+    ChameleonGenshiRenderer = None
+
+def setup_noDB(extra_init=None):
     base_config = TestConfig(folder = 'rendering',
                      values = {'use_sqlalchemy': False,
                                # we want to test the new renderer functions
@@ -17,12 +25,30 @@ def setup_noDB():
                                'use_toscawidgets2': False
                                }
                              )
+
+    if extra_init is not None:
+        extra_init(base_config)
+
     return app_from_config(base_config)
 
 def test_default_chameleon_genshi_renderer():
-    if PY3: raise SkipTest()
+    if ChameleonGenshiRenderer is None:
+        raise SkipTest()
 
-    app = setup_noDB()
+    def add_chameleon_renderer(app_config):
+        app_config.register_rendering_engine(ChameleonGenshiRenderer)
+        app_config.renderers.append('chameleon_genshi')
+
+    app = setup_noDB(add_chameleon_renderer)
+
+    # Manually add the exposition again as it was already discarded
+    # due to chameleon_genshi not being in the available renderes.
+    milestones.renderers_ready._reset()
+    from .controllers.root import RootController
+    controller = im_func(RootController.chameleon_index_dotted)
+    expose('chameleon_genshi:tests.test_stack.rendering.templates.index')(controller)
+    milestones.renderers_ready.reach()
+
     resp = app.get('/chameleon_index_dotted')
     assert "Welcome" in resp, resp
     assert "TurboGears" in resp, resp

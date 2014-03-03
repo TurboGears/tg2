@@ -39,7 +39,7 @@ else:
 if py_version[0] == 2:
     test_requirements.extend(['TurboKid >= 1.0.4',
                               'Kajiki >= 0.2.2',
-                              'Chameleon < 2.0a',
+                              'tgext.chameleon_genshi',
                               'simplegeneric',
                               'routes',
                               'tgming',

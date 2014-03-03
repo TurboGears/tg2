@@ -10,6 +10,7 @@ import tg
 from tg import predicates
 from tg.util import Bunch
 
+
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
         Exception.__init__(self,
@@ -18,6 +19,7 @@ class MissingRendererError(Exception):
             "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
             template_engine=template_engine))
         self.template_engine = template_engine
+
 
 def _get_tg_vars():
     """Create a Bunch of variables that should be available in all templates.
@@ -119,6 +121,7 @@ except ImportError:
     pass
 # end monkeying around
 
+
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
     config = tg.config._current_obj()
 
@@ -149,7 +152,15 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
         func(template_engine, template_name, template_vars, kwargs)
 
     tg_vars = template_vars
-    if template_engine not in ("json", 'amf'):
+
+    try:
+        engines_without_vars = config['rendering_engines_without_vars']
+    except KeyError:
+        # This should actually never happen unless things got configured
+        # in an odd way. (Happens in test suite)
+        engines_without_vars = ('amf', 'json')
+
+    if template_engine not in engines_without_vars:
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
@@ -223,222 +234,4 @@ def cached_template(template_name, render_func, ns_options=(),
         return content
     else:
         return render_func()
-
-
-class RenderChameleonGenshi(object): #pragma: no cover
-    """Singleton that can be called as the Chameleon-Genshi render function."""
-
-    format_for_content_type = {
-        'text/plain': 'text',
-        'text/css': 'text',
-        'text/html': 'xml',
-        'text/xml': 'xml',
-        'application/xml': 'xml',
-        'application/xhtml+xml': 'xml',
-        'application/atom+xml': 'xml',
-        'application/rss+xml': 'xml',
-        'application/soap+xml': 'xml',
-        'image/svg+xml': 'xml'}
-
-    def __init__(self, loader):
-        self.load_template = loader.load
-
-    def __call__(self, template_name, template_vars, **kwargs):
-        """Render the template_vars with the Chameleon-Genshi template."""
-        config = tg.config._current_obj()
-
-        # Gets template format from content type or from config options
-        format = kwargs.get('format')
-        if not format:
-            format = self.format_for_content_type.get(tg.response.content_type)
-            if not format:
-                format = config.get('templating.chameleon.genshi.format')
-                if not format:
-                    format = config.get('templating.genshi.method')
-                    if not format or format not in ('xml', 'text'):
-                        format = 'xml'
-
-        def render_template():
-            template = self.load_template(template_name, format=format)
-            return Markup(template.render(**template_vars))
-
-        return cached_template(template_name, render_template,
-                               ns_options=('doctype', 'method'), **kwargs)
-
-
-class RenderGenshi(object):
-    """Singleton that can be called as the Genshi render function."""
-
-    genshi_functions = {}  # auxiliary Genshi functions loaded on demand
-
-    default_doctype = default_method = None
-
-    doctypes_for_methods = {
-        'html': 'html-transitional',
-        'xhtml': 'xhtml-transitional'}
-
-    doctypes_for_content_type = {
-        'text/html': ('html', 'html-transitional',
-            'html-frameset', 'html5',
-            'xhtml', 'xhtml-strict',
-            'xhtml-transitional', 'xhtml-frameset'),
-        'application/xhtml+xml': ('xhtml', 'xhtml-strict',
-            'xhtml-transitional',
-            'xhtml-frameset', 'xhtml11'),
-        'image/svg+xml': ('svg', 'svg-full', 'svg-basic', 'svg-tiny')}
-
-    methods_for_content_type = {
-        'text/plain': ('text',),
-        'text/css': ('text',),
-        'text/html': ('html', 'xhtml'),
-        'text/xml': ('xml', 'xhtml'),
-        'application/xml': ('xml', 'xhtml'),
-        'application/xhtml+xml': ('xhtml',),
-        'application/atom+xml': ('xml',),
-        'application/rss+xml': ('xml',),
-        'application/soap+xml': ('xml',),
-        'image/svg+xml': ('xml',)}
-
-    def __init__(self, loader):
-        if not self.genshi_functions:
-            from genshi import HTML, XML
-            self.genshi_functions.update(HTML=HTML, XML=XML)
-        self.load_template = loader.load
-        doctype = tg.config.get('templating.genshi.doctype')
-        if doctype:
-            if isinstance(doctype, str):
-                self.default_doctype = doctype
-            elif isinstance(doctype, dict):
-                doctypes = self.doctypes_for_content_type.copy()
-                doctypes.update(doctype)
-                self.doctypes_for_content_type = doctypes
-        method = tg.config.get('templating.genshi.method')
-        if method:
-            if isinstance(method, str):
-                self.default_method = method
-            elif isinstance(method, dict):
-                methods = self.methods_for_content_type.copy()
-                methods.update(method)
-                self.methods_for_content_type = methods
-
-    @staticmethod
-    def method_for_doctype(doctype):
-        method = 'xhtml'
-        if doctype:
-            if doctype.startswith('html'):
-                method = 'html'
-            elif doctype.startswith('xhtml'):
-                method = 'xhtml'
-            elif doctype.startswith('svg'):
-                method = 'xml'
-            else:
-                method = 'xhtml'
-        return method
-
-    def __call__(self, template_name, template_vars, **kwargs):
-        """Render the template_vars with the Genshi template.
-
-        If you don't pass a doctype or pass 'auto' as the doctype,
-        then the doctype will be automatically determined.
-        If you pass a doctype of None, then no doctype will be injected.
-        If you don't pass a method or pass 'auto' as the method,
-        then the method will be automatically determined.
-
-        """
-        response = tg.response._current_obj()
-        config = tg.config._current_obj()
-
-        template_vars.update(self.genshi_functions)
-
-        # Gets document type from content type or from config options
-        doctype = kwargs.get('doctype', 'auto')
-        if doctype == 'auto':
-            doctype = self.default_doctype
-            if not doctype:
-                method = kwargs.get('method') or self.default_method or 'xhtml'
-                doctype = self.doctypes_for_methods.get(method)
-            doctypes = self.doctypes_for_content_type.get(response.content_type)
-            if doctypes and (not doctype or doctype not in doctypes):
-                doctype = doctypes[0]
-            kwargs['doctype'] = doctype
-
-        # Gets rendering method from content type or from config options
-        method = kwargs.get('method')
-        if not method or method == 'auto':
-            method = self.default_method
-            if not method:
-                method = self.method_for_doctype(doctype)
-            methods = self.methods_for_content_type.get(response.content_type)
-            if methods and (not method or method not in methods):
-                method = methods[0]
-            kwargs['method'] = method
-
-        def render_template():
-            template = self.load_template(template_name)
-            return Markup(template.generate(**template_vars).render(
-                    doctype=doctype, method=method, encoding=None))
-
-        return cached_template(template_name, render_template,
-                               ns_options=('doctype', 'method'), **kwargs)
-
-
-def render_mako(template_name, globs,
-        cache_key=None, cache_type=None, cache_expire=None):
-    config = tg.config._current_obj()
-
-    if asbool(config.get('use_dotted_templatenames', 'true')):
-        template_name = globs[
-            'app_globals'].dotted_filename_finder.get_dotted_filename(
-                template_name, template_extension='.mak')
-
-    # Create a render callable for the cache function
-    def render_template():
-        # Grab a template reference
-        template = globs['app_globals'].mako_lookup.get_template(template_name)
-        return Markup(template.render_unicode(**globs))
-
-    return cached_template(template_name, render_template, cache_key=cache_key,
-                           cache_type=cache_type, cache_expire=cache_expire)
-
-
-def render_json(template_name, template_vars, **kwargs):
-    return tg.json_encode(template_vars)
-
-
-def render_kajiki(template_name, globs, cache_key=None,
-                  cache_type=None, cache_expire=None, method='xhtml'):
-    """Render a template with Kajiki
-
-    Accepts the cache options ``cache_key``, ``cache_type``, and
-    ``cache_expire`` in addition to method which are passed to Kajiki's
-    render function.
-
-    """
-    # Create a render callable for the cache function
-    def render_template():
-        # Grab a template reference
-        template = globs['app_globals'].kajiki_loader.load(template_name)
-        return Markup(template(globs).render())
-
-    return cached_template(template_name, render_template,
-        cache_key=cache_key, cache_type=cache_type, cache_expire=cache_expire,
-        ns_options=('method'), method=method)
-
-
-def render_jinja(template_name, globs, cache_key=None,
-                 cache_type=None, cache_expire=None):
-    """Render a template with Jinja2
-
-    Accepts the cache options ``cache_key``, ``cache_type``, and
-    ``cache_expire``.
-
-    """
-    # Create a render callable for the cache function
-    def render_template():
-        # Grab a template reference
-        template = globs['app_globals'].jinja2_env.get_template(template_name)
-        return Markup(template.render(**globs))
-
-    return cached_template(template_name, render_template,
-        cache_key=cache_key, cache_type=cache_type, cache_expire=cache_expire)
 
