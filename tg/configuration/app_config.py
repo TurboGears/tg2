@@ -275,6 +275,12 @@ class AppConfig(Bunch):
         milestones.environment_loaded.register(self._order_wrappers)
 
     def register_rendering_engine(self, factory):
+        """Registers a rendering engine ``factory``.
+
+        Rendering engine factories are :class:`tg.renderers.base.RendererFactory`
+        subclasses in charge of creating a rendering engine.
+
+        """
         for engine, options in factory.engines.items():
             self.rendering_engines[engine] = factory
             self.rendering_engines_options[engine] = options
