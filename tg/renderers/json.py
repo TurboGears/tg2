@@ -22,7 +22,7 @@ class JSONRenderer(RendererFactory):
 
     @staticmethod
     def render_jsonp(template_name, template_vars, **kwargs):
-        pname = kwargs.get('callback_name', 'callback')
+        pname = kwargs.get('callback_param', 'callback')
         callback = tg.request.GET.get(pname)
         if callback is None:
             raise HTTPBadRequest('JSONP requires a "%s" parameter with callback name' % pname)
