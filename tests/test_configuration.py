@@ -1312,3 +1312,21 @@ class TestAppConfig:
 
         resp = app.get('/test', status=403)
         assert 'ERROR!!!' in resp, resp
+
+    def test_errorware_configuration(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'HI'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        app = conf.make_wsgi_app(global_conf={'trace_errors.error_email': 'test@domain.com'},
+                                 full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'HI' in resp, resp
+
+        assert config['tg.errorware']['error_email'] == 'test@domain.com'
+        assert config['tg.errorware']['error_subject_prefix'] == 'WebApp Error: '
+        assert config['tg.errorware']['error_message'] == 'An internal server error occurred'
