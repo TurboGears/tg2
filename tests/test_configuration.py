@@ -1330,3 +1330,66 @@ class TestAppConfig:
         assert config['tg.errorware']['error_email'] == 'test@domain.com'
         assert config['tg.errorware']['error_subject_prefix'] == 'WebApp Error: '
         assert config['tg.errorware']['error_message'] == 'An internal server error occurred'
+
+    def test_tw2_unsupported_renderer(self):
+        import tw2.core
+
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                rl = tw2.core.core.request_local()
+                tw2conf = rl['middleware'].config
+                return ','.join(tw2conf.preferred_rendering_engines)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.prefer_toscawidgets2 = True
+        conf.renderers = ['kajiki', 'genshi']
+        conf.default_renderer = 'kajiki'
+
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'genshi' in resp, resp
+
+    def test_tw2_renderers_preference(self):
+        import tw2.core
+
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                rl = tw2.core.core.request_local()
+                tw2conf = rl['middleware'].config
+                return ','.join(tw2conf.preferred_rendering_engines)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.prefer_toscawidgets2 = True
+        conf.renderers = ['genshi']
+        conf.default_renderer = 'genshi'
+
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'genshi' in resp, resp
+
+    def test_tw2_unsupported(self):
+        import tw2.core
+
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                rl = tw2.core.core.request_local()
+                tw2conf = rl['middleware'].config
+                return ','.join(tw2conf.preferred_rendering_engines)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.prefer_toscawidgets2 = True
+        conf.renderers = ['kajiki']
+        conf.default_renderer = 'kajiki'
+
+        try:
+            app = conf.make_wsgi_app(full_stack=True)
+            assert False
+        except TGConfigError as e:
+            assert 'None of the configured rendering engines is supported' in str(e)

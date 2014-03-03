@@ -978,14 +978,19 @@ class AppConfig(Bunch):
         """
         from tw2.core.middleware import Config, TwMiddleware
 
-        if self.default_renderer in Config.preferred_rendering_engines:
-            tw2_engines = [self.default_renderer] + Config.preferred_rendering_engines
+        shared_engines = list(set(self.renderers) & set(Config.preferred_rendering_engines))
+        if not shared_engines:
+            raise TGConfigError('None of the configured rendering engines is supported'
+                                'by ToscaWidgets2, unable to configure ToscaWidgets.')
+
+        if self.default_renderer in shared_engines:
+            tw2_engines = [self.default_renderer] + shared_engines
             tw2_default_engine = self.default_renderer
         else:
-            # If preferred rendering engine is not available in TW2, fallback to Genshi
+            # If preferred rendering engine is not available in TW2, fallback to another one
             # This happens for Kajiki which is not supported by recent TW2 versions.
-            tw2_engines = Config.preferred_rendering_engines
-            tw2_default_engine = 'genshi'
+            tw2_engines = shared_engines
+            tw2_default_engine = shared_engines[0]
 
         default_tw2_config = dict( default_engine=tw2_default_engine,
                                    preferred_rendering_engines=tw2_engines,
