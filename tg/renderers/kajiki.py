@@ -18,7 +18,7 @@ __all__ = ['KajikiRenderer']
 
 
 class KajikiRenderer(RendererFactory):
-    engines = ['kajiki']
+    engines = {'kajiki': {'content_type': 'text/html'}}
 
     @classmethod
     def create(cls, config, app_globals):

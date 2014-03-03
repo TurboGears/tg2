@@ -5,7 +5,7 @@ __all__ = ['JSONRenderer']
 
 
 class JSONRenderer(RendererFactory):
-    engines = ['json']
+    engines = {'json': {'content_type': 'application/json'}}
     with_tg_vars = False
 
     @classmethod

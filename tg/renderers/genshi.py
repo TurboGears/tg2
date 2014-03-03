@@ -25,7 +25,7 @@ __all__ = ['GenshiRenderer']
 
 class GenshiRenderer(RendererFactory):
     """Singleton that can be called as the Genshi render function."""
-    engines = ['genshi']
+    engines = {'genshi': {'content_type': 'text/html'}}
 
     doctypes_for_methods = {
         'html': 'html-transitional',

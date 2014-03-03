@@ -42,6 +42,7 @@ def make_app(controller_klass=None, environ=None):
         controller_klass = TGController
 
     tg.config['renderers'] = default_config['renderers']
+    tg.config['rendering_engines_options'] = default_config['rendering_engines_options']
 
     app = TGApp(config=default_config)
     app.controller_classes['root'] = ControllerWrap(controller_klass)

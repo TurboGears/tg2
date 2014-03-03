@@ -163,6 +163,7 @@ class AppConfig(Bunch):
         self.render_functions = Bunch()
         self.rendering_engines = {}
         self.rendering_engines_without_vars = set()
+        self.rendering_engines_options = {}
 
         self.enable_routes = False
         self.enable_routing_args = False
@@ -274,8 +275,9 @@ class AppConfig(Bunch):
         milestones.environment_loaded.register(self._order_wrappers)
 
     def register_rendering_engine(self, factory):
-        for engine in factory.engines:
+        for engine, options in factory.engines.items():
             self.rendering_engines[engine] = factory
+            self.rendering_engines_options[engine] = options
             if factory.with_tg_vars is False:
                 self.rendering_engines_without_vars.add(engine)
 

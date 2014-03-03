@@ -1,8 +1,13 @@
 
 class RendererFactory(object):
-    # Here specify the list of engine names for which this factory
-    # will create a rendering engine.
-    engines = []
+    # Here specify the list of engines for which this factory
+    # will create a rendering engine and their options.
+    # They must be specified like:
+    #
+    #   engines = {'json': {'content_type': 'application/json'}}
+    #
+    # Currently only supported option is ``content_type``.
+    options = {}
 
     # Here specify if turbogears variables have to be injected
     # in the template context before using any of the declared engines.

@@ -433,12 +433,12 @@ class expose(object):
             engine, template = None, None
 
         if content_type is None:
-            if engine == 'json':
-                content_type = 'application/json'
-            else:
-                content_type = 'text/html'
+            all_engines_options = config.get('rendering_engines_options', {})
+            engine_options = all_engines_options.get(engine, {})
+            content_type = engine_options.get('content_type', 'text/html')
 
-        if engine in ('json', 'amf') and 'tmpl_context' not in exclude_names:
+        engines_without_vars = config.get('rendering_engines_without_vars', [])
+        if engine in engines_without_vars and 'tmpl_context' not in exclude_names:
             exclude_names.append('tmpl_context')
 
         self.engine = engine

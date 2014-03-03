@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 
 class MakoRenderer(RendererFactory):
-    engines = ['mako']
+    engines = {'mako': {'content_type': 'text/html'}}
 
     @classmethod
     def create(cls, config, app_globals):

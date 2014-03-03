@@ -23,7 +23,7 @@ __all__ = ['JinjaRenderer']
 
 
 class JinjaRenderer(RendererFactory):
-    engines = ['jinja']
+    engines = {'jinja': {'content_type': 'text/html'}}
 
     @classmethod
     def create(cls, config, app_globals):
