@@ -6,12 +6,12 @@ from .base import RendererFactory
 
 try:
     import kajiki
-except ImportError:
+except ImportError:  # pragma: no cover
     kajiki = None
 
 if kajiki is not None:
     from kajiki.loader import FileLoader
-else:
+else:  # pragma: no cover
     class FileLoader(object): pass
 
 __all__ = ['KajikiRenderer']
@@ -23,7 +23,7 @@ class KajikiRenderer(RendererFactory):
     @classmethod
     def create(cls, config, app_globals):
         """Setup a renderer and loader for the Kajiki engine."""
-        if kajiki is None:
+        if kajiki is None:  # pragma: no cover
             return None
 
         loader = KajikiTemplateLoader(config.paths.templates[0],

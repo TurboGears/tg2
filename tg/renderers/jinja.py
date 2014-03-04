@@ -8,7 +8,7 @@ from .base import RendererFactory
 
 try:
     import jinja2
-except ImportError:
+except ImportError:  # pragma: no cover
     jinja2 = None
 
 if jinja2 is not None:
@@ -16,7 +16,7 @@ if jinja2 is not None:
     from jinja2 import ChoiceLoader, Environment
     from jinja2.filters import FILTERS
     from jinja2.exceptions import TemplateNotFound
-else:
+else:  # pragma: no cover
     class FileSystemLoader(object): pass
 
 __all__ = ['JinjaRenderer']
@@ -28,7 +28,7 @@ class JinjaRenderer(RendererFactory):
     @classmethod
     def create(cls, config, app_globals):
         """Setup a renderer and loader for Jinja2 templates."""
-        if jinja2 is None:
+        if jinja2 is None:  # pragma: no cover
             return None
 
         if config.get('use_dotted_templatenames', True):

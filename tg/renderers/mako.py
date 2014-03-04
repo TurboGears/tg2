@@ -16,7 +16,7 @@ from .base import RendererFactory
 
 try:
     import mako
-except ImportError:
+except ImportError:  # pragma: no cover
     mako = None
 
 if mako is not None:
@@ -37,7 +37,7 @@ class MakoRenderer(RendererFactory):
         """
         Setup a renderer and loader for mako templates.
         """
-        if mako is None:
+        if mako is None:  # pragma: no cover
             return None
 
         use_dotted_templatenames = config.get('use_dotted_templatenames', True)

@@ -9,14 +9,14 @@ import tg
 
 try:
     import genshi
-except ImportError:
+except ImportError:  # pragma: no cover
     genshi = None
 
 if genshi is not None:
     from genshi.template import TemplateLoader as GenshiTemplateLoader
     from genshi.filters import Translator
     from genshi import HTML, XML
-else:
+else:  # pragma: no cover
     class GenshiTemplateLoader(object): pass
 
 
@@ -61,7 +61,7 @@ class GenshiRenderer(RendererFactory):
         filter, template loader
 
         """
-        if genshi is None:
+        if genshi is None:  # pragma: no cover
             # Genshi not available
             return None
 
