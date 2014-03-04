@@ -18,6 +18,7 @@ import tg.i18n
 from tg import TGController, expose, response, request, abort
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
 from webtest import TestApp
+from tg.renderers.base import RendererFactory
 
 from tg.wsgiapp import TGApp
 from tg._compat import PY3
@@ -1393,3 +1394,80 @@ class TestAppConfig:
             assert False
         except TGConfigError as e:
             assert 'None of the configured rendering engines is supported' in str(e)
+
+    def test_backward_compatible_engine_failed_setup(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'HELLO'
+
+        def setup_broken_renderer():
+            return False
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.setup_broken_renderer = setup_broken_renderer
+        conf.renderers = ['json', 'broken']
+
+        app = conf.make_wsgi_app(full_stack=True)
+        assert conf.renderers == ['json']
+
+    def test_backward_compatible_engine_success_setup(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'HELLO'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        def setup_broken_renderer():
+            conf.render_functions.broken = 'BROKEN'
+            return True
+
+        conf.setup_broken_renderer = setup_broken_renderer
+        conf.renderers = ['json', 'broken']
+
+        app = conf.make_wsgi_app(full_stack=True)
+        assert conf.renderers == ['json', 'broken']
+        assert conf.render_functions.broken == 'BROKEN'
+
+    def test_render_factory_success(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'HELLO'
+
+        class FailedFactory(RendererFactory):
+            engines = {'broken': {'content_type': 'text/plain'}}
+
+            @classmethod
+            def create(cls, config, app_globals):
+                return {'broken': 'BROKEN'}
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_rendering_engine(FailedFactory)
+        conf.renderers = ['json', 'broken']
+
+        app = conf.make_wsgi_app(full_stack=True)
+        assert conf.renderers == ['json', 'broken']
+        assert conf.render_functions.broken == 'BROKEN'
+
+    def test_render_factory_failure(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'HELLO'
+
+        class FailedFactory(RendererFactory):
+            engines = {'broken': {'content_type': 'text/plain'}}
+
+            @classmethod
+            def create(cls, config, app_globals):
+                return None
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_rendering_engine(FailedFactory)
+        conf.renderers = ['json', 'broken']
+
+        app = conf.make_wsgi_app(full_stack=True)
+        assert conf.renderers == ['json']
+

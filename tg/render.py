@@ -153,13 +153,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     tg_vars = template_vars
 
-    try:
-        engines_without_vars = config['rendering_engines_without_vars']
-    except KeyError:
-        # This should actually never happen unless things got configured
-        # in an odd way. (Happens in test suite)
-        engines_without_vars = ('amf', 'json')
-
+    engines_without_vars = config['rendering_engines_without_vars']
     if template_engine not in engines_without_vars:
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
