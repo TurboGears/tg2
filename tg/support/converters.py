@@ -23,7 +23,7 @@ def asint(obj):
 
 
 def aslist(obj, sep=None, strip=True):
-    if isinstance(obj, basestring):
+    if isinstance(obj, string_type):
         lst = obj.split(sep)
         if strip:
             lst = [v.strip() for v in lst]
