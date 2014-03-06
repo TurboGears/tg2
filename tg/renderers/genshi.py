@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from markupsafe import Markup
-from paste.deploy.converters import asint, asbool
+from tg.support.converters import asint, asbool
 from tg.i18n import ugettext
 from tg.render import cached_template
 from .base import RendererFactory

@@ -3,7 +3,7 @@ try:
 except ImportError: #pragma: no cover
     from urllib.parse import quote_plus
 
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 from markupsafe import Markup
 
 import tg

@@ -1,5 +1,5 @@
 import logging
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 
 log = logging.getLogger(__name__)
 

@@ -49,7 +49,6 @@ install_requires=[
     'crank >= 0.7.0',
     'Beaker',
     'decorator',
-    'PasteDeploy',
     'repoze.lru'
 ]
 

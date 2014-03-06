@@ -14,7 +14,7 @@ from tg.support.middlewares import SessionMiddleware, CacheMiddleware
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
-from paste.deploy.converters import asbool, asint
+from tg.support.converters import asbool, asint
 from tg.request_local import config as reqlocal_config
 
 import tg

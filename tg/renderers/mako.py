@@ -9,7 +9,7 @@ try:
 except ImportError: #pragma: no cover
     import dummy_threading as threading
 
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 from markupsafe import Markup
 from tg.render import cached_template
 from .base import RendererFactory

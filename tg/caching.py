@@ -1,7 +1,7 @@
 """Caching decorator, took as is from pylons"""
 import tg, inspect, time
 from decorator import decorator
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 from tg._compat import im_func, im_class
 
 class cached_property(object):

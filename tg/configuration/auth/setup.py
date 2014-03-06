@@ -5,7 +5,7 @@ This aims to provide an easier way to setup auth layer in TurboGears2
 and removes the dependency from repoze.what.
 """
 import sys, logging, re
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 from zope.interface import implementer
 from repoze.who.middleware import PluggableAuthenticationMiddleware
 from repoze.who.interfaces import IIdentifier, IAuthenticator, IChallenger
