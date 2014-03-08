@@ -1,5 +1,30 @@
 = Change Log =
 
+== 2.3.2 (**March 8, 2014**) ==
+
+* Quickstarted applications have been upgrade to Bootstrap3 CSS Framework
+* Python3 support now includes TurboGears Admin
+* Multiple Speedups in request dispatch and memory collection
+* JSONP renderer is now provided built-in
+* Renderers support has been rewrote, renderers are now easily pluginable
+* Error reporting improvements: Reporting to Sentry is now built-in, when reporting exceptions by email it is now possible to attach request dump and local frame. Error options are now grouped in trace_errors namespace.
+* Remove PasteDeploy dependency removed when in Minimal (microframework) mode.
+
+* Support simple custom templates for paginator
+* Support for URL translations, it is now possible to serve as controllers urls that contain odd characters.
+* Improve TW2 rendering engine detection
+* Quickstarted applications now enable the debugbar if installed
+* Improve error_handler support in validation, they can now keep decoration and wrappers
+* AppConfig plain configuration methods got renamed to _configure_* convention
+* TGMing dependency has been removed when quickstarting with MongoDB/Ming
+* chameleon_genshi renderer support moved to an external extension
+* Improved the JSON Encoder, generators are now resolved as lists and tg.lurl() result can be encoded.
+* Fix validation error reporting for TW2 with nested layouts
+* Login should now forward also url GET parameters when redirecting
+* Improvements to i18n support major feature is the ability to make get_lang() return only the languages supported by the application instead of returning all languages requested by user.
+* Trigger controller_wrappers resolution on environment_loaded milestone instead of config_ready so that they can be register on setup hook
+* To be coherent with add_ming_middleware rename the sqlalchemy related middleware setup method to add_sqlalchemy_middleware
+
 == 2.3.1 (**November 4, 2013**) ==
 
 * Also make error handling a class method as it is not bound to the controller instance
