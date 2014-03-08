@@ -11,7 +11,7 @@ everything you need to build dynamic, database driven applications.
 It provides a full range of tools for front end javascript
 develeopment, back database development and everything in between:
 
- * dynamic javascript powered widgets (ToscaWidgets)
+ * dynamic javascript powered widgets (ToscaWidgets2)
  * automatic JSON generation from your controllers
  * powerful, designer friendly XHTML based templating (Genshi)
  * object or route based URL dispatching
@@ -26,6 +26,6 @@ The latest development version is available in the
 url="http://www.turbogears.org/"
 author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen, Alessandro Molina, and the TurboGears community"
 email = "mark.ramm@gmail.com, alberto@toscat.net, m.pedersen@icelus.org, amol@turbogears.org"
-copyright = """Copyright 2005-2013 Kevin Dangoor,
+copyright = """Copyright 2005-2014 Kevin Dangoor,
 Alberto Valverde, Mark Ramm, Christopher Perkins and contributors"""
 license = "MIT"
