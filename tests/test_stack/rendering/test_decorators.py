@@ -72,6 +72,7 @@ class TestExposeInheritance(object):
         resp2 = self.app.get('/sub2/data')
         assert ('"v"' in resp2 and '"parent_value"' in resp2 and '"child_value"' in resp2)
 
+
 class TestExposeLazyInheritance(object):
     def test_lazy_inheritance(self):
         milestones.renderers_ready._reset()
@@ -90,4 +91,86 @@ class TestExposeLazyInheritance(object):
 
         deco = Decoration.get_decoration(SubController.func)
         assert len(deco.engines) == 1, deco.engines
-        assert deco.engines['text/html'][1] == 'template.html'
+        assert deco.engines['text/html'][1] == 'template.html', deco.engines
+
+    def test_lazy_inheritance_with_template(self):
+        milestones.renderers_ready._reset()
+
+        class BaseController(tg.TGController):
+            @tg.expose('template.html')
+            def func(self):
+                pass
+
+        class SubController(BaseController):
+            @tg.expose('new_template.html', inherit=True)
+            def func(self):
+                pass
+
+        milestones.renderers_ready.reach()
+
+        deco = Decoration.get_decoration(SubController.func)
+        assert len(deco.engines) == 1, deco.engines
+        assert deco.engines['text/html'][1] == 'new_template.html', deco.engines
+
+    def test_lazy_inheritance_with_nested_template(self):
+        milestones.renderers_ready._reset()
+
+        class BaseController(tg.TGController):
+            @tg.expose('template.html')
+            @tg.expose('template.html', content_type='text/plain')
+            def func(self):
+                pass
+
+        class SubController(BaseController):
+            @tg.expose('new_template.html', inherit=True)
+            @tg.expose('new_template.html', content_type='text/plain')
+            def func(self):
+                pass
+
+        class SubSubController(SubController):
+            @tg.expose('new2_template.html', inherit=True)
+            def func(self):
+                pass
+
+        milestones.renderers_ready.reach()
+
+        deco = Decoration.get_decoration(SubSubController.func)
+        assert len(deco.engines) == 2, deco.engines
+        assert deco.engines['text/html'][1] == 'new2_template.html', deco.engines
+        assert deco.engines['text/plain'][1] == 'new_template.html', deco.engines
+
+    def test_lazy_inheritance_with_3nested_template(self):
+        milestones.renderers_ready._reset()
+
+        class BaseController(tg.TGController):
+            @tg.expose('template.html')
+            @tg.expose('template.html', content_type='text/plain')
+            @tg.expose('template.html', content_type='text/javascript')
+            def func(self):
+                pass
+
+        class SubController(BaseController):
+            @tg.expose('new_template.html', inherit=True)
+            @tg.expose('new_template.html', content_type='text/plain')
+            @tg.expose('new_template.html', content_type='text/javascript')
+            def func(self):
+                pass
+
+        class SubSubController(SubController):
+            @tg.expose('new2_template.html', inherit=True)
+            @tg.expose('new2_template.html', content_type='text/javascript')
+            def func(self):
+                pass
+
+        class SubSubSubController(SubSubController):
+            @tg.expose('new3_template.html', inherit=True)
+            def func(self):
+                pass
+
+        milestones.renderers_ready.reach()
+
+        deco = Decoration.get_decoration(SubSubSubController.func)
+        assert len(deco.engines) == 3, deco.engines
+        assert deco.engines['text/html'][1] == 'new3_template.html', deco.engines
+        assert deco.engines['text/plain'][1] == 'new_template.html', deco.engines
+        assert deco.engines['text/javascript'][1] == 'new2_template.html', deco.engines

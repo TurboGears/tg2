@@ -60,12 +60,15 @@ class Decoration(object):
             dec = func.decoration = cls(func)
         return dec
 
-    def _register_exposition(self, exposition, inherit=False):
+    def _register_exposition(self, exposition, inherit=False, before=False):
         """Register an exposition for later application"""
 
         # We need to store a reference to the exposition
         # so that we can merge them when inheritance is performed
-        self._expositions.append(exposition)
+        if before:
+            self._expositions.insert(0, exposition)
+        else:
+            self._expositions.append(exposition)
 
         if inherit:
             # if at least one exposition is in inherit mode
@@ -94,8 +97,8 @@ class Decoration(object):
         self.custom_engines = dict(tuple(deco.custom_engines.items()) + tuple(self.custom_engines.items()))
 
         # This merges yet to register template engines
-        for exposition in deco._expositions:
-            self._register_exposition(exposition._clone(self.controller))
+        for exposition in reversed(deco._expositions):
+            self._register_exposition(exposition._clone(self.controller), before=True)
 
         # inherit all the parent hooks
         # parent hooks before current hooks so that they get called before
