@@ -200,8 +200,8 @@ def get_lang(all=True):
     all the languages preferred by the user are returned.
     """
     if all is False:
-        return getattr(tg.translator, 'tg_supported_lang', None)
-    return getattr(tg.translator, 'tg_lang', None)
+        return getattr(tg.translator, 'tg_supported_lang', [])
+    return getattr(tg.translator, 'tg_lang', [])
 
 
 def add_fallback(lang, **kwargs):
@@ -290,10 +290,9 @@ def set_temporary_lang(languages, tgl=None):
     if not tgl:
         tgl = tg.request_local.context._current_obj()
 
-    try:
-        tgl.translator = _get_translator(languages, tgl=tgl)
-    except LanguageError:
-        pass
+    # Should only raise exceptions in case of IO errors,
+    # so we let them propagate to the developer.
+    tgl.translator = _get_translator(languages, tgl=tgl, fallback=True)
 
     # If the application has a set of supported translation
     # limit the formencode translations to those so that

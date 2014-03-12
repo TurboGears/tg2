@@ -140,7 +140,7 @@ class TestI18NStack(object):
 
     def test_get_lang(self):
         r = self.app.get('/get_lang?skip_lang=1')
-        assert 'null' in r
+        assert '[]' in r, r.body
 
     def test_gettext_default_lang(self):
         r = self.app.get('/hello?skip_lang=1')
@@ -155,7 +155,7 @@ class TestI18NStack(object):
 
     def test_get_lang_nonexisting_lang(self):
         r = self.app.get('/get_lang?force_lang=fa')
-        assert 'null' in r, r
+        assert 'fa' in r, r
 
     def test_get_lang_existing(self):
         r = self.app.get('/get_lang?force_lang=de')
@@ -164,6 +164,10 @@ class TestI18NStack(object):
     def test_fallback(self):
         r = self.app.get('/fallback?force_lang=it&fallback=de')
         assert 'Dies ist' in r, r
+
+    @raises(i18n.LanguageError)
+    def test_fallback_non_existing(self):
+        r = self.app.get('/fallback?force_lang=it&fallback=ko')
 
     def test_fallback_fallback(self):
         r = self.app.get('/fallback?force_lang=it&fallback=ko&fallback-fallback=true')
@@ -174,9 +178,14 @@ class TestI18NStack(object):
         langs = r.json['lang']
         assert langs == ['ru', 'de'], langs
 
+    def test_get_lang_supported_without_lang(self):
+        r = self.app.get('/get_supported_lang?skip_lang=1')
+        langs = r.json['lang']
+        assert langs == [], langs
+
     def test_force_lang(self):
         r = self.app.get('/get_lang?skip_lang=1')
-        assert 'null' in r
+        assert '[]' in r, r.body
 
         r = self.app.get('/force_german?skip_lang=1')
         assert 'tg_test_session' in r.headers.get('Set-cookie')
@@ -187,4 +196,4 @@ class TestI18NStack(object):
 
     def test_get_lang_no_session(self):
         r = self.app.get('/get_lang?skip_lang=1', extra_environ={})
-        assert 'null' in r
+        assert '[]' in r, r.body
