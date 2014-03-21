@@ -10,7 +10,6 @@ needed to support these decorators.
 """
 import copy
 import warnings
-from decorator import decorator
 
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
 from tg.support.paginate import Page
@@ -29,6 +28,7 @@ import tg
 
 import logging
 log = logging.getLogger(__name__)
+
 
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
