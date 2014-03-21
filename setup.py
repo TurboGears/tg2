@@ -24,7 +24,7 @@ test_requirements = ['coverage',
                     'routes',
                     'backlash',
                     'sqlalchemy',
-                    'raven < 0.5',
+                    'raven < 4.1.0',
                     'formencode>=1.3.0a1',
                     'tw2.forms'
                     ]
