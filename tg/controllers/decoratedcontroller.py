@@ -16,7 +16,7 @@ from crank.util import (get_params_with_argspec,
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
-from tg.util import call_controller
+from tg.util import call_controller, Bunch
 from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
@@ -367,10 +367,10 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return error_handler, error_handler(obj, *remainder, **dict(params))
 
     def _initialize_validation_context(self, context):
-        context.request.validation = {'errors': {},
-                                      'values': {},
-                                      'exception': None,
-                                      'error_handler': None}
+        context.request.validation = Bunch(errors={},
+                                           values={},
+                                           exception=None,
+                                           error_handler=None)
 
     def _check_security(self):
         predicate = getattr(self, 'allow_only', None)
