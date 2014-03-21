@@ -755,47 +755,38 @@ def with_trailing_slash(remainder, params):
         redirect(request.url+'/', redirect_with=HTTPMovedPermanently)
 
 
-#{ Authorization decorators
-class _BaseProtectionDecorator(object):
-    default_denial_handler = None
-
-    def __init__(self, predicate, denial_handler=None, smart_denial=False):
-        """Verify that the predicate is met.
-
-        :param predicate: An object with a check_authorization(environ) method which
-            must raise a tg.predicates.NotAuthorizedError if not met.
-        :param denial_handler: The callable to be run if authorization is
-            denied (overrides :attr:`default_denial_handler` if defined).
-
-        If called, ``denial_handler`` will be passed a positional argument
-        which represents a message on why authorization was denied.
-
-        """
-        self.predicate = predicate
-        self.denial_handler = denial_handler or self.default_denial_handler
-        self.smart_denial = smart_denial
-
-class require(_BaseProtectionDecorator):
+class require(object):
     """
-    TurboGears-specific action protector.
+    Decorator that checks if the specified predicate it met, if it isn't
+    it calls the denial_handler to prevent access to the decorated method.
 
     The default authorization denial handler of this protector will flash
     the message of the unmet predicate with ``warning`` or ``error`` as the
     flash status if the HTTP status code is 401 or 403, respectively.
 
-    See :class:`allow_only` for controller-wide authorization.
+    :param predicate: An object with a check_authorization(environ) method which
+        must raise a tg.predicates.NotAuthorizedError if not met.
+    :param denial_handler: The callable to be run if authorization is
+        denied (overrides :attr:`default_denial_handler` if defined).
+
+    If called, ``denial_handler`` will be passed a positional argument
+    which represents a message on why authorization was denied.
+
+    Use ``allow_only`` property of ``TGController`` for controller-wide authorization.
 
     """
-    def __call__(self, action_):
-        # Even though @require is not Decoration based
-        # provide a requirement attribute to decoration to
-        # let the user inspect the method requirements
-        deco = Decoration.get_decoration(action_)
+    def __init__(self, predicate, denial_handler=None, smart_denial=False):
+        self.predicate = predicate
+        self.denial_handler = denial_handler or self.default_denial_handler
+        self.smart_denial = smart_denial
+
+    def __call__(self, func):
+        deco = Decoration.get_decoration(func)
         deco.requirement = self
+        deco._register_hook('before_call', self._check_authorization)
+        return func
 
-        return decorator(self.wrap_action, action_)
-
-    def wrap_action(self, action_, *args, **kwargs):
+    def _check_authorization(self, *args, **kwargs):
         req = request._current_obj()
 
         try:
@@ -810,7 +801,6 @@ class require(_BaseProtectionDecorator):
                 code = 401
             response.status = code
             return self.denial_handler(reason)
-        return action_(*args, **kwargs)
 
     def default_denial_handler(self, reason):
         """Authorization denial handler for protectors."""
@@ -821,6 +811,7 @@ class require(_BaseProtectionDecorator):
             if response.content_type not in ['application/json', 'text/xml']:
                 flash(reason, status=status)
         abort(response.status_int, reason)
+
 
 class with_engine(object):
     """
@@ -862,4 +853,3 @@ class with_engine(object):
         decoration = Decoration.get_decoration(func)
         decoration._register_hook('before_validate', self.before_validate)
         return func
-#}
