@@ -2,22 +2,51 @@
 import tg, inspect, time
 from decorator import decorator
 from tg.support.converters import asbool
+from tg.support import NoDefault, EmptyContext
 from tg._compat import im_func, im_class
 
+
 class cached_property(object):
+    """
+    Works like python @property but the decorated function only gets
+    executed once, successive accesses to the property will just
+    return the value previously stored into the object.
+
+    The ``@cached_property`` decorator can be executed within a
+    provided context, for example to make the cached property
+    thread safe a Lock can be provided::
+
+        from threading import Lock
+        from tg.caching import cached_property
+
+        class MyClass(object):
+            @cached_property
+            def my_property(self):
+                return 'Value!'
+            my_property.context = Lock()
+
+    """
     def __init__(self, func):
         self.__name__ = func.__name__
         self.__module__ = func.__module__
         self.__doc__ = func.__doc__
         self.func = func
+        self.context = EmptyContext()
+
+    def _get_value(self, obj):
+        value = obj.__dict__.get(self.__name__, NoDefault)
+        if value is NoDefault:
+            value = self.func(obj)
+            obj.__dict__[self.__name__] = value
+        return value
 
     def __get__(self, obj, type=None):
         if obj is None:
             return self
 
-        value = self.func(obj)
-        obj.__dict__[self.__name__] = value
-        return value
+        with self.context:
+            return self._get_value(obj)
+
 
 def beaker_cache(key="cache_default", expire="never", type=None,
                  query_args=False,
@@ -129,6 +158,7 @@ def beaker_cache(key="cache_default", expire="never", type=None,
         return response['content']
     return decorator(wrapper)
 
+
 def create_cache_key(func, key_dict=None, self=None):
     """Get a cache namespace and key used by the beaker_cache decorator.
 
@@ -158,6 +188,7 @@ def create_cache_key(func, key_dict=None, self=None):
         return '%s.%s' % (kls.__module__, kls.__name__), cache_key
     else:
         return func.__module__, cache_key
+
 
 def _make_dict_from_args(func, args):
     """Inspects function for name of args"""

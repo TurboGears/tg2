@@ -6,6 +6,7 @@ from tg.request_local import request
 
 class DottedFileLocatorError(Exception):pass
 
+
 def get_partial_dict(prefix, dictionary):
     """Given a dictionary and a prefix, return a Bunch, with just items
     that start with prefix

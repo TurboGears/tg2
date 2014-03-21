@@ -9,6 +9,7 @@ global objects for TurboGears2.
 """
 
 from tg.support.objectproxy import TurboGearsObjectProxy
+from tg.support import NoDefault
 import itertools, time
 import threading as threadinglocal
 
@@ -20,7 +21,6 @@ def _getboolattr(obj, attrname):
     except AttributeError:
         return None
 
-class NoDefault(object): pass
 
 class StackedObjectProxy(TurboGearsObjectProxy):
     """Track an object instance internally using a stack
