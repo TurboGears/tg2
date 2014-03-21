@@ -24,11 +24,12 @@ from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort
 from tg.wsgiapp import ContextObj, TGApp
 from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
+from tg.decorators import Decoration
 
 from .baseutils import ControllerWrap, FakeRoutes, default_config
 
 from tg.configuration.auth import setup_auth, TGAuthMetadata
-from tg.predicates import is_user, not_anonymous
+from tg.predicates import is_user, not_anonymous, in_group, has_permission
 
 from tg.error import ErrorHandler
 
@@ -40,6 +41,37 @@ session_dir = os.path.join(data_dir, 'session')
 
 # Just in case...
 rmtree(session_dir, ignore_errors=True)
+
+
+class TestAuthMetadata(TGAuthMetadata):
+    """
+    Provides a way to lookup for user, groups and permissions
+    given the current identity. This has to be specialized
+    for each storage backend.
+
+    By default it returns empty lists for groups and permissions
+    and None for the user.
+    """
+    def get_user(self, identity, userid):
+        if ':' in userid:
+            return userid.split(':')[0]
+
+        return super(TestAuthMetadata, self).get_user(identity, userid)
+
+    def get_groups(self, identity, userid):
+        if userid:
+            parts = userid.split(':')
+            return parts[1:2]
+
+        return super(TestAuthMetadata, self).get_groups(identity, userid)
+
+    def get_permissions(self, identity, userid):
+        if userid:
+            parts = userid.split(':')
+            return parts[2:]
+
+        return super(TestAuthMetadata, self).get_permissions(identity, userid)
+
 
 def make_app(controller_klass, environ={}, with_errors=False):
     """Creates a ``TestApp`` instance."""
@@ -61,7 +93,7 @@ def make_app(controller_klass, environ={}, with_errors=False):
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
     identifiers = [('cookie', cookie)]
 
-    app = setup_auth(app, TGAuthMetadata(),
+    app = setup_auth(app, TestAuthMetadata(),
                      identifiers=identifiers, skip_authentication=True,
                      authenticators=[], challengers=[])
 
@@ -152,6 +184,13 @@ class RootController(TGController):
     def smartabort(self):
         return {'key': 'value'}
 
+    @expose()
+    @require(in_group('managers'))
+    @require(has_permission('commit'))
+    def force_commit(self):
+        return 'you can commit'
+
+
 class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
     """Mock TG2 protected controller using the .allow_only attribute"""
 
@@ -210,6 +249,30 @@ class TestRequire(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'developer'}
         resp = self.app.get('/commit', extra_environ=environ, status=200)
         self.assertEqual("you can commit", resp.body.decode('utf-8'))
+
+    def test_multiple_requirements_passed(self):
+        environ = {'REMOTE_USER': 'developer:managers:commit'}
+        resp = self.app.get('/force_commit', extra_environ=environ, status=200)
+        self.assertEqual("you can commit", resp.text)
+
+    def test_multiple_requirements_blocked_1(self):
+        environ = {'REMOTE_USER': 'tester:testing:commit'}
+        resp = self.app.get('/force_commit', extra_environ=environ, status=403)
+        assert 'The current user must belong to the group "managers"' in resp.text, resp.text
+
+    def test_multiple_requirements_blocked_2(self):
+        environ = {'REMOTE_USER': 'manager:managers:viewonly'}
+        resp = self.app.get('/force_commit', extra_environ=environ, status=403)
+        assert 'The user must have the "commit" permission' in resp.text, resp.text
+
+    def test_multiple_requirements_all_registered(self):
+        deco = Decoration.get_decoration(RootController.force_commit)
+        assert len(deco.requirements) == 2, deco.requirements
+
+    def test_multiple_requirements_backward_compatibility(self):
+        deco = Decoration.get_decoration(RootController.force_commit)
+        predicate = deco.requirement.predicate
+        assert isinstance(predicate, has_permission), predicate
 
     def test_authz_denied_in_root_controller(self):
         # As an anonymous user:

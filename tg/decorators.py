@@ -43,7 +43,7 @@ class Decoration(object):
         self.render_custom_format = None
         self.validation = None
         self.inherit = False
-        self.requirement = None
+        self.requirements = []
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -85,6 +85,12 @@ class Decoration(object):
                 exposition._apply()
             except IndexError:
                 break
+
+    @property
+    def requirement(self):  # pragma: no cover
+        warnings.warn("Decoration.requirement is deprecated, "
+                      "please use 'requirements' instead", DeprecationWarning)
+        return self.requirements[0]
 
     @property
     def exposed(self):
@@ -262,6 +268,10 @@ class Decoration(object):
         cycle.)
         """
         self.hooks.setdefault(hook_name, []).append(func)
+
+    def _register_requirement(self, requirement):
+        self._register_hook('before_call', requirement._check_authorization)
+        self.requirements.append(requirement)
 
 
 class _hook_decorator(object):
@@ -782,8 +792,7 @@ class require(object):
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-        deco.requirement = self
-        deco._register_hook('before_call', self._check_authorization)
+        deco._register_requirement(self)
         return func
 
     def _check_authorization(self, *args, **kwargs):

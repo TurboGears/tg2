@@ -92,6 +92,7 @@ class _AuthenticationForgerMiddleware(PluggableAuthenticationMiddleware):
             classifier, challenge_decider, log_stream, log_level,
             'repoze.who.testutil.userid')
 
+
 def setup_auth(app, authmetadata,
               form_plugin=None, form_identifies=True,
               cookie_secret='secret', cookie_name='authtkt',

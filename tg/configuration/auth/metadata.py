@@ -1,6 +1,7 @@
 from zope.interface import implementer
 from repoze.who.interfaces import IMetadataProvider, IAuthenticator
 
+
 class TGAuthMetadata(object):
     """
     Provides a way to lookup for user, groups and permissions
@@ -51,6 +52,7 @@ class _AuthMetadataProvider(object):
         environ['repoze.what.credentials'].update(identity)
         environ['repoze.what.credentials']['repoze.what.userid'] = userid
 
+
 @implementer(IAuthenticator)
 class _AuthMetadataAuthenticator(object):
     def __init__(self, tgmdprovider, using_password):
@@ -62,6 +64,7 @@ class _AuthMetadataAuthenticator(object):
         if self.using_password and not ('login' in identity and 'password' in identity):
             return None
         return self.tgmdprovider.authenticate(environ, identity)
+
 
 def create_default_authenticator(using_password=True, translations=None,
                                  user_class=None, dbsession=None,
