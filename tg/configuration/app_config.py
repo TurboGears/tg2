@@ -19,7 +19,7 @@ from tg.request_local import config as reqlocal_config
 
 import tg
 from tg.configuration.utils import coerce_config
-from tg.util import Bunch, get_partial_dict, DottedFileNameFinder, call_controller
+from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
 from tg.configuration import milestones
 from tg.configuration.utils import TGConfigError
 
@@ -124,6 +124,29 @@ reqlocal_config.push_process_config(deepcopy(defaults))
 config = DispatchingConfigWrapper(reqlocal_config)
 
 
+def call_controller(tg_config, controller, remainder, params):
+    return controller(*remainder, **params)
+
+
+class _DeprecatedControllerWrapper(object):
+    def __init__(self, controller_wrapper, config, next_wrapper):
+        # Backward compatible old-way of configuring controller wrappers
+        warnings.warn("Controller wrapper will now accept the configuration"
+                      "as parameter when called instead of receiving it as"
+                      "a constructor parameter, please refer to the documentation"
+                      "to update your controller wrappers",
+                      DeprecationWarning, stacklevel=2)
+
+        def _adapted_next_wrapper(controller, remainder, params):
+            return next_wrapper(tg.config._current_obj(),
+                                controller, remainder, params)
+
+        self.wrapper = controller_wrapper(config, _adapted_next_wrapper)
+
+    def __call__(self, config, controller, remainder, params):
+        return self.wrapper(controller, remainder, params)
+
+
 class AppConfig(Bunch):
     """Class to store application configuration.
 
@@ -189,7 +212,6 @@ class AppConfig(Bunch):
         self.call_on_shutdown = []
         self.controller_caller = call_controller
         self.controller_wrappers = []
-        self.dedicated_controller_wrappers = {}
         self.application_wrappers = []
         self.application_wrappers_dependencies = {False: [],
                                                   None: []}
@@ -687,20 +709,11 @@ class AppConfig(Bunch):
 
         controller_caller = base_controller_caller
         for wrapper in self.get('controller_wrappers', []):
-            controller_caller = wrapper(self, controller_caller)
+            try:
+                controller_caller = wrapper(controller_caller)
+            except TypeError:
+                controller_caller = _DeprecatedControllerWrapper(wrapper, self, controller_caller)
         config['controller_caller'] = controller_caller
-
-        dedicated_wrappers = config.get('dedicated_controller_wrappers', {})
-        for wrapped_controller in dedicated_wrappers:
-            controller_caller = base_controller_caller
-            wrappers = dedicated_wrappers[wrapped_controller]
-            # Apply custom wrappers for controller
-            for wrapper in wrappers:
-                controller_caller = wrapper(self, controller_caller)
-            # Apply generic wrappers for application
-            for wrapper in self.get('controller_wrappers', []):
-                controller_caller = wrapper(self, controller_caller)
-            dedicated_wrappers[wrapped_controller] = controller_caller
 
     def _setup_renderers(self):
         for renderer in self.renderers[:]:

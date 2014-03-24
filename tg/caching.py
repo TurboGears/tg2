@@ -48,12 +48,103 @@ class cached_property(object):
             return self._get_value(obj)
 
 
+def _cached_call(func, args, kwargs, key_func, key_dict,
+                 expire="never", type=None, starttime=None,
+                 cache_headers=('content-type', 'content-length'),
+                 cache_response=True, cache_extra_args=None):
+    """
+    Optional arguments:
+
+    ``key_func``
+        Function used to genereate the cache key, the function name
+        and class will be used as the base for the cache key. If None
+        the ``func`` itself will be used. It's usually handy when
+        creating caches for decorated functions, for which we want the
+        cache key to be generated on the decorated function and not on
+        the decorator.
+    ``key_dict``
+        Arguments used to generate the cache key, only the arguments
+        listed into this dictionary will be used to generate the
+        cache key together with the key_func.
+    ``expire``
+        Time in seconds before cache expires, or the string "never".
+        Defaults to "never"
+    ``type``
+        Type of cache to use: dbm, memory, file, memcached, or None for
+        Beaker's default
+    ``cache_headers``
+        A tuple of header names indicating response headers that
+        will also be cached.
+    ``invalidate_on_startup``
+        If True, the cache will be invalidated each time the application
+        starts or is restarted.
+    ``cache_response``
+        Determines whether the response at the time beaker_cache is used
+        should be cached or not, defaults to True.
+
+        .. note::
+            When cache_response is set to False, the cache_headers
+            argument is ignored as none of the response is cached.
+
+    If cache_enabled is set to False in the .ini file, then cache is
+    disabled globally.
+    """
+
+    tg_locals = tg.request.environ['tg.locals']
+    enabled = tg_locals.config.get("cache_enabled", "True")
+
+    if not asbool(enabled):
+        return func(*args, **kwargs)
+
+    cache_extra_args = cache_extra_args or {}
+
+    self = None
+    if args:
+        self = args[0]
+    namespace, cache_key = create_cache_key(key_func, key_dict, self)
+
+    if type:
+        cache_extra_args['type'] = type
+
+    cache_obj = getattr(tg_locals, 'cache', None)
+    if not cache_obj:  # pragma: no cover
+        raise Exception('TurboGears Cache object not found')
+
+    my_cache = cache_obj.get_cache(namespace, **cache_extra_args)
+
+    if expire == "never":
+        cache_expire = None
+    else:
+        cache_expire = expire
+
+    def create_func():
+        result = func(*args, **kwargs)
+        glob_response = tg_locals.response
+        headers = glob_response.headerlist
+        status = glob_response.status
+        full_response = dict(headers=headers, status=status,
+                             cookies=None, content=result)
+        return full_response
+
+    response = my_cache.get_value(cache_key,
+                                  createfunc=create_func,
+                                  expiretime=cache_expire,
+                                  starttime=starttime)
+    if cache_response:
+        glob_response = tg_locals.response
+        glob_response.headerlist = [header for header in response['headers']
+                                    if header[0].lower() in cache_headers]
+        glob_response.status = response['status']
+
+    return response['content']
+
+
 def beaker_cache(key="cache_default", expire="never", type=None,
                  query_args=False,
                  cache_headers=('content-type', 'content-length'),
                  invalidate_on_startup=False,
                  cache_response=True, **b_kwargs):
-    """Cache decorator utilizing Beaker. Caches action or other
+    """Cache decorator utilizing Beaker. Caches a
     function that returns a pickle-able object as a result.
 
     Optional arguments:
@@ -96,20 +187,13 @@ def beaker_cache(key="cache_default", expire="never", type=None,
     cache_headers = set(cache_headers)
 
     def wrapper(func, *args, **kwargs):
-        """Decorator wrapper"""
-        tg_locals = tg.request.environ['tg.locals']
-        enabled = tg_locals.config.get("cache_enabled", "True")
-
-        if not asbool(enabled):
-            return func(*args, **kwargs)
-
         if key:
             key_dict = kwargs.copy()
             key_dict.update(_make_dict_from_args(func, args))
             if query_args:
-                key_dict.update(tg_locals.request.GET.mixed())
+                key_dict.update(tg.request.GET.mixed())
 
-            if key != "cache_default":
+            if key != 'cache_default':
                 if isinstance(key, list):
                     key_dict = dict((k, key_dict[k]) for k in key)
                 else:
@@ -117,45 +201,11 @@ def beaker_cache(key="cache_default", expire="never", type=None,
         else:
             key_dict = None
 
-        self = None
-        if args:
-            self = args[0]
-        namespace, cache_key = create_cache_key(func, key_dict, self)
+        return _cached_call(func, args, kwargs, func, key_dict,
+                            expire, type, starttime,
+                            cache_headers, cache_response,
+                            b_kwargs)
 
-        if type:
-            b_kwargs['type'] = type
-
-        cache_obj = getattr(tg_locals, 'cache', None)
-        if not cache_obj: # pragma: no cover
-            raise Exception('No CacheMiddleware or cache object on '
-                            ' app_globals was found')
-
-        my_cache = cache_obj.get_cache(namespace, **b_kwargs)
-
-        if expire == "never":
-            cache_expire = None
-        else:
-            cache_expire = expire
-
-        def create_func():
-            result = func(*args, **kwargs)
-            glob_response = tg_locals.response
-            headers = glob_response.headerlist
-            status = glob_response.status
-            full_response = dict(headers=headers, status=status,
-                                 cookies=None, content=result)
-            return full_response
-
-        response = my_cache.get_value(cache_key, createfunc=create_func,
-                                      expiretime=cache_expire,
-                                      starttime=starttime)
-        if cache_response:
-            glob_response = tg_locals.response
-            glob_response.headerlist = [header for header in response['headers']
-                                        if header[0].lower() in cache_headers]
-            glob_response.status = response['status']
-
-        return response['content']
     return decorator(wrapper)
 
 

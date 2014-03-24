@@ -12,6 +12,7 @@ import tg
 from tg._compat import string_type, url_encode, unicode_text, bytes_
 from tg.exceptions import HTTPFound
 
+
 def _smart_str(s):
     """
     Returns a bytestring version of 's', encoded as specified in 'encoding'.

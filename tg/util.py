@@ -170,9 +170,6 @@ def lazify(func):
         (func.__name__, func.__doc__)
     return newfunc
 
-def call_controller(controller, remainder, params):
-    return controller(*remainder, **params)
-
 
 class ContextObj(object):
     def __repr__(self):

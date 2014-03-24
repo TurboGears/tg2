@@ -9,12 +9,11 @@ import tests
 from json import loads, dumps
 
 from tg.controllers import TGController, DecoratedController
-from tg.decorators import expose, validate, before_render, before_call
+from tg.decorators import expose, validate, before_render, before_call, Decoration
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.util import call_controller
 from tg.validation import TGValidationError, validation_errors
 
 from formencode import validators, Schema
@@ -81,6 +80,14 @@ class ColonLessGenericValidator(object):
 
 def error_handler_function(controller_instance, uid, num):
     return 'UID: %s' % uid
+
+
+def ControllerWrapperForErrorHandler(caller):
+    def call(*args, **kw):
+        value = caller(*args, **kw)
+        return value + 'X'
+    return call
+
 
 class ErrorHandlerCallable(object):
     def __call__(self, controller_instance, uid, num):
@@ -264,6 +271,10 @@ class BasicTGController(TGController):
     def validate_hooked(self, uid):
         return 'HUH'
 
+    # Decorate validate_hooked with a controller wrapper
+    Decoration.get_decoration(hooked_error_handler)\
+        ._register_controller_wrapper(ControllerWrapperForErrorHandler)
+
     @expose()
     def manually_handle_validation(self):
         # This is done to check that we don't break compatibility
@@ -283,11 +294,6 @@ class BasicTGController(TGController):
 
         return output
 
-def ControllerWrapperForErrorHandler(app_config, caller):
-    def call(*args, **kw):
-        value = caller(*args, **kw)
-        return value + 'X'
-    return call
 
 class TestTGController(TestWSGIController):
     def setUp(self):
@@ -296,13 +302,6 @@ class TestTGController(TestWSGIController):
             'paths': {'root': data_dir},
             'package': tests,
         })
-
-        # Mimic configuration of a controller wrapper, this is required as
-        # TestWSGIController doesn't actually create an AppConfig
-        # so configurations don't get resolved.
-        cwrapper = ControllerWrapperForErrorHandler(None, call_controller)
-        wrappers_conf = {default_im_func(BasicTGController.hooked_error_handler): cwrapper}
-        tg.config.update({'dedicated_controller_wrappers': wrappers_conf})
 
         self.app = make_app(BasicTGController)
 

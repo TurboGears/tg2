@@ -81,7 +81,7 @@ class _TGHooks(object):
         else:
             controller = default_im_func(controller)
             registration = _ControllerHookRegistration(controller, 'controller_wrapper', func)
-            environment_loaded.register(registration)
+            renderers_ready.register(registration)
 
     def notify(self, hook_name, args=None, kwargs=None, controller=None, context_config=None):
         """Notifies a TurboGears hook.
@@ -182,9 +182,8 @@ class _ControllerHookRegistration(object):
                   self.func, self.hook_name, self.controller)
 
         if self.hook_name == 'controller_wrapper':
-            config = tg.config._current_obj()
-            dedicated_wrappers = config['dedicated_controller_wrappers']
-            dedicated_wrappers.setdefault(self.controller, []).append(self.func)
+            deco = Decoration.get_decoration(self.controller)
+            deco._register_controller_wrapper(self.func)
         else:
             deco = Decoration.get_decoration(self.controller)
             deco._register_hook(self.hook_name, self.func)

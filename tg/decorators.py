@@ -10,16 +10,18 @@ needed to support these decorators.
 """
 import copy
 import warnings
-
+import time
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
+from tg.support import NoDefault
 from tg.support.paginate import Page
 from tg.configuration import config
+from tg.configuration.app_config import _DeprecatedControllerWrapper, call_controller
 from tg.controllers.util import abort, redirect
 from tg import tmpl_context, request, response
 from tg.util import partial, Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
-from tg.caching import beaker_cache, cached_property
+from tg.caching import beaker_cache, cached_property, _cached_call
 from tg.predicates import NotAuthorizedError
 from tg._compat import default_im_func, unicode_text
 from webob.acceptparse import Accept
@@ -30,11 +32,21 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def _decorated_controller_caller(tg_config, controller, remainder, params):
+    try:
+        application_controller_caller = tg_config['controller_caller']
+    except KeyError:
+        application_controller_caller = call_controller
+
+    return application_controller_caller(tg_config, controller, remainder, params)
+
+
 class Decoration(object):
     """ Simple class to support 'simple registration' type decorators
     """
     def __init__(self, controller):
         self.controller = controller
+        self.controller_caller = _decorated_controller_caller
         self._expositions = []
         self.engines = {}
         self.engines_keys = []
@@ -272,6 +284,13 @@ class Decoration(object):
     def _register_requirement(self, requirement):
         self._register_hook('before_call', requirement._check_authorization)
         self.requirements.append(requirement)
+
+    def _register_controller_wrapper(self, wrapper):
+        try:
+            self.controller_caller = wrapper(self.controller_caller)
+        except TypeError:
+            self.controller_caller = _DeprecatedControllerWrapper(wrapper, tg.config,
+                                                                  self.controller_caller)
 
 
 class _hook_decorator(object):
@@ -861,4 +880,82 @@ class with_engine(object):
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
         decoration._register_hook('before_validate', self.before_validate)
+        return func
+
+
+class cached(object):
+    """
+    Decorator to cache the controller, if you also want to cache
+    template remember to return ``tg_cache`` option from the controller.
+
+    The following parameters are accepted:
+
+    ``key`` - Specifies the controller parameters used to generate the cache key.
+        NoDefault - Uses function name and all parameters as the key (default)
+        None - No variable key, uses only function name as key
+        string - Use function name and only "key" parameter
+        list - Use function name and all parameters listed
+    ``expire``
+        Time in seconds before cache expires, or the string "never".
+        Defaults to "never"
+    ``type``
+        Type of cache to use: dbm, memory, file, memcached, or None for
+        Beaker's default
+    ``cache_headers``
+        A tuple of header names indicating response headers that
+        will also be cached.
+    ``invalidate_on_startup``
+        If True, the cache will be invalidated each time the application
+        starts or is restarted.
+    ``cache_response``
+        Determines whether the response at the time beaker_cache is used
+        should be cached or not, defaults to True.
+
+        .. note::
+            When cache_response is set to False, the cache_headers
+            argument is ignored as none of the response is cached.
+    """
+    def __init__(self, key=NoDefault, expire="never", type=None,
+                 query_args=None,  # Backward compatibility, actually ignored
+                 cache_headers=('content-type', 'content-length'),
+                 invalidate_on_startup=False, cache_response=True,
+                 **b_kwargs):
+        self.key = key
+        self.expire = expire
+        self.type = type
+        self.cache_headers = cache_headers
+        self.invalidate_on_startup = invalidate_on_startup
+        self.cache_response = cache_response
+        self.beaker_options = b_kwargs
+
+    def __call__(self, func):
+        decoration = Decoration.get_decoration(func)
+
+        def controller_wrapper(__, next_caller):
+            if self.invalidate_on_startup:
+                starttime = time.time()
+            else:
+                starttime = None
+
+            def cached_call_controller(controller, remainder, params):
+                if self.key:
+                    key_dict = tg.request.args_params
+                    if self.key != NoDefault:
+                        if isinstance(self.key, (list, tuple)):
+                            key_dict = dict((k, key_dict[k]) for k in key_dict)
+                        else:
+                            key_dict = {self.key: key_dict[self.key]}
+                else:
+                    key_dict = {}
+
+                return _cached_call(next_caller, (controller, remainder, params), {},
+                                    key_func=func, key_dict=key_dict,
+                                    expire=self.expire, type=self.type,
+                                    starttime=starttime, cache_headers=self.cache_headers,
+                                    cache_response=self.cache_response,
+                                    cache_extra_args=self.beaker_options)
+
+            return cached_call_controller
+
+        decoration._register_controller_wrapper(controller_wrapper)
         return func

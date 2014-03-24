@@ -615,6 +615,22 @@ class TestAppConfig:
         self.config._setup_controller_wrappers()
         assert config['controller_caller'] == orig_caller
 
+        def controller_wrapper(caller):
+            def call(*args, **kw):
+                return caller(*args, **kw)
+            return call
+
+        orig_caller = self.config.controller_caller
+        self.config.controller_wrappers = [controller_wrapper]
+        self.config._setup_controller_wrappers()
+        assert config['controller_caller'].__name__ == controller_wrapper(orig_caller).__name__
+
+    def test_backward_compatible_controler_wrapper_setup(self):
+        orig_caller = self.config.controller_caller
+        self.config.controller_wrappers = []
+        self.config._setup_controller_wrappers()
+        assert config['controller_caller'] == orig_caller
+
         def controller_wrapper(app_config, caller):
             def call(*args, **kw):
                 return caller(*args, **kw)
@@ -623,7 +639,9 @@ class TestAppConfig:
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = [controller_wrapper]
         self.config._setup_controller_wrappers()
-        assert config['controller_caller'].__name__ == controller_wrapper(self.config, orig_caller).__name__
+
+        deprecated_wrapper = config['controller_caller'].wrapper
+        assert deprecated_wrapper.__name__ == controller_wrapper(self.config, orig_caller).__name__
 
     def test_global_controller_wrapper(self):
         milestones._reset_all()
@@ -634,7 +652,7 @@ class TestAppConfig:
                 return 'HI!'
 
         wrapper_has_been_visited = []
-        def controller_wrapper(app_config, caller):
+        def controller_wrapper(caller):
             def call(*args, **kw):
                 wrapper_has_been_visited.append(True)
                 return caller(*args, **kw)
@@ -649,7 +667,7 @@ class TestAppConfig:
         assert 'HI!' in app.get('/test')
         assert wrapper_has_been_visited[0] is True
 
-    def test_dedicated_controller_wrapper(self):
+    def test_backward_compatible_global_controller_wrapper(self):
         milestones._reset_all()
 
         class RootController(TGController):
@@ -659,6 +677,44 @@ class TestAppConfig:
 
         wrapper_has_been_visited = []
         def controller_wrapper(app_config, caller):
+            def call(*args, **kw):
+                wrapper_has_been_visited.append(True)
+                return caller(*args, **kw)
+            return call
+
+        def controller_wrapper2(app_config, caller):
+            def call(controller, remainder, params):
+                wrapper_has_been_visited.append(True)
+                return caller(controller, remainder, params)
+            return call
+
+        def controller_wrapper3(caller):
+            def call(config, controller, remainder, params):
+                wrapper_has_been_visited.append(True)
+                return caller(config, controller, remainder, params)
+            return call
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_hook('controller_wrapper', controller_wrapper2)
+        conf.register_hook('controller_wrapper', controller_wrapper3)
+        conf.register_hook('controller_wrapper', controller_wrapper)
+        conf.package = PackageWithModel()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert len(wrapper_has_been_visited) == 3
+
+    def test_dedicated_controller_wrapper(self):
+        milestones._reset_all()
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        wrapper_has_been_visited = []
+        def controller_wrapper(caller):
             def call(*args, **kw):
                 wrapper_has_been_visited.append(True)
                 return caller(*args, **kw)
@@ -682,14 +738,14 @@ class TestAppConfig:
                 return 'HI!'
 
         app_wrapper_has_been_visited = []
-        def app_controller_wrapper(app_config, caller):
+        def app_controller_wrapper(caller):
             def call(*args, **kw):
                 app_wrapper_has_been_visited.append(True)
                 return caller(*args, **kw)
             return call
 
         wrapper_has_been_visited = []
-        def controller_wrapper(app_config, caller):
+        def controller_wrapper(caller):
             def call(*args, **kw):
                 wrapper_has_been_visited.append(True)
                 return caller(*args, **kw)

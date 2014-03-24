@@ -16,7 +16,7 @@ from crank.util import (get_params_with_argspec,
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
-from tg.util import call_controller, Bunch
+from tg.util import Bunch
 from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _Tw2ValidationError, validation_errors,
                            _FormEncodeValidator, TGValidationError)
@@ -115,21 +115,9 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         hooks.notify('before_call', args=(remainder, params),
                      controller=controller, context_config=context_config)
 
-        #apply controller wrappers
-        try:
-            default_controller_caller = context_config['controller_caller']
-        except KeyError:
-            default_controller_caller = call_controller
-
-        try:
-            dedicated_controller_wrappers = context_config['dedicated_controller_wrappers']
-            controller_caller = dedicated_controller_wrappers.get(default_im_func(controller),
-                                                                  default_controller_caller)
-        except KeyError:
-            controller_caller = default_controller_caller
-
-        # call controller method
-        output = controller_caller(bound_controller_callable, remainder, params)
+        # call controller method with applied wrappers
+        controller_caller = controller.decoration.controller_caller
+        output = controller_caller(context_config, bound_controller_callable, remainder, params)
 
         # Render template
         hooks.notify('before_render', args=(remainder, params, output),
