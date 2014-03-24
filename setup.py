@@ -48,7 +48,6 @@ install_requires=[
     'WebOb >= 1.2',
     'crank >= 0.7.0',
     'Beaker',
-    'decorator',
     'repoze.lru'
 ]
 

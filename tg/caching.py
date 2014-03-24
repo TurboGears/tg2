@@ -1,10 +1,9 @@
 """Caching decorator, took as is from pylons"""
 import tg, inspect, time
-from decorator import decorator
 from tg.support.converters import asbool
 from tg.support import NoDefault, EmptyContext
 from tg._compat import im_func, im_class
-
+from functools import wraps
 
 class cached_property(object):
     """
@@ -186,27 +185,31 @@ def beaker_cache(key="cache_default", expire="never", type=None,
         starttime = None
     cache_headers = set(cache_headers)
 
-    def wrapper(func, *args, **kwargs):
-        if key:
-            key_dict = kwargs.copy()
-            key_dict.update(_make_dict_from_args(func, args))
-            if query_args:
-                key_dict.update(tg.request.GET.mixed())
+    def beaker_cache_decorate(func):
+        @wraps(func)
+        def beaker_cached_call(*args, **kwargs):
+            if key:
+                key_dict = kwargs.copy()
+                key_dict.update(_make_dict_from_args(func, args, kwargs))
+                if query_args:
+                    key_dict.update(tg.request.GET.mixed())
 
-            if key != 'cache_default':
-                if isinstance(key, list):
-                    key_dict = dict((k, key_dict[k]) for k in key)
-                else:
-                    key_dict = {key: key_dict[key]}
-        else:
-            key_dict = None
+                if key != 'cache_default':
+                    if isinstance(key, list):
+                        key_dict = dict((k, key_dict[k]) for k in key)
+                    else:
+                        key_dict = {key: key_dict[key]}
+            else:
+                key_dict = None
 
-        return _cached_call(func, args, kwargs, func, key_dict,
-                            expire, type, starttime,
-                            cache_headers, cache_response,
-                            b_kwargs)
+            return _cached_call(func, args, kwargs, func, key_dict,
+                                expire, type, starttime,
+                                cache_headers, cache_response,
+                                b_kwargs)
 
-    return decorator(wrapper)
+        return beaker_cached_call
+
+    return beaker_cache_decorate
 
 
 def create_cache_key(func, key_dict=None, self=None):
@@ -240,10 +243,13 @@ def create_cache_key(func, key_dict=None, self=None):
         return func.__module__, cache_key
 
 
-def _make_dict_from_args(func, args):
+def _make_dict_from_args(func, args, kwargs):
     """Inspects function for name of args"""
     args_keys = {}
     for i, arg in enumerate(inspect.getargspec(func)[0]):
         if arg != "self":
-            args_keys[arg] = args[i]
+            try:
+                args_keys[arg] = args[i]
+            except IndexError:
+                args_keys[arg] = kwargs[arg]
     return args_keys
