@@ -92,6 +92,20 @@ def test_lurl():
     assert value.startswith('/lurl')
     assert str(value) == repr(value) == value.id == value.encode('utf-8').decode('utf-8') == value.__html__()
 
+def test_lurl_as_HTTPFound_location():
+    create_request('/')
+    exc = HTTPFound(location=lurl('/lurl'))
+
+    def _fake_start_response(*args, **kw):
+        pass
+
+    resp = exc({'PATH_INFO':'/',
+                'wsgi.url_scheme': 'HTTP',
+                'REQUEST_METHOD': 'GET',
+                'SERVER_NAME': 'localhost',
+                'SERVER_PORT': '80'}, _fake_start_response)
+    assert 'resource was found at http://localhost:80/lurl' in resp[0]
+ 
 @no_warn
 def test_lurl_format():
     """url() can handle list parameters, with unicode too"""

@@ -133,6 +133,14 @@ class LazyUrl(object):
     def __json__(self):
         return str(self)
 
+    # Those are required to make webob.exc.HTTPFound able
+    # to use LazyUrl as a location
+    def find(self, *args, **kw):
+        return self._id.find(*args, **kw)
+
+    def __getitem__(self, *args, **kw):
+        return self._id.__getitem__(*args, **kw)
+
 def lurl(base_url=None, params=None):
     """
     Like tg.url but is lazily evaluated.
