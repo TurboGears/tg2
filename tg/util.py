@@ -2,6 +2,7 @@
 from pkg_resources import resource_filename
 import warnings
 from tg.request_local import request
+from functools import partial, update_wrapper
 
 
 class DottedFileLocatorError(Exception):pass
@@ -31,6 +32,7 @@ def get_partial_dict(prefix, dictionary):
     else:
         raise AttributeError
 
+
 class Bunch(dict):
     """A dictionary that provides attribute-style access."""
 
@@ -51,16 +53,6 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(name)
 
-
-def partial(*args, **create_time_kwds):
-    func = args[0]
-    create_time_args = args[1:]
-    def curried_function(*call_time_args, **call_time_kwds):
-        args = create_time_args + call_time_args
-        kwds = create_time_kwds.copy()
-        kwds.update(call_time_kwds)
-        return func(*args, **kwds)
-    return curried_function
 
 class DottedFileNameFinder(object):
     """this class implements a cache system above the
@@ -120,22 +112,14 @@ class DottedFileNameFinder(object):
 
             return result
 
-def wrap(wrapper, wrapped):
-    """Update a wrapper function to look like the wrapped function"""
-    for attr in ('__module__', '__name__', '__doc__'):
-        setattr(wrapper, attr, getattr(wrapped, attr))
-    for attr in     ('__dict__',):
-        getattr(wrapper, attr).update(getattr(wrapped, attr, {}))
-    # Return the wrapper so this can be used as a decorator via partial()
-    return wrapper
-
 
 def no_warn(f, *args, **kwargs):
     def _f(*args, **kwargs):
         warnings.simplefilter("ignore")
         f(*args, **kwargs)
         warnings.resetwarnings()
-    return wrap(_f, f)
+    return update_wrapper(_f, f)
+
 
 class LazyString(object):
     """Has a number of lazily evaluated functions replicating a
@@ -160,6 +144,7 @@ class LazyString(object):
 
     def format(self, other):
         return self.eval().format(other)
+
 
 def lazify(func):
     """Decorator to return a lazy-evaluated version of the original"""
