@@ -104,8 +104,21 @@ def test_lurl_as_HTTPFound_location():
                 'REQUEST_METHOD': 'GET',
                 'SERVER_NAME': 'localhost',
                 'SERVER_PORT': '80'}, _fake_start_response)
-    assert 'resource was found at http://localhost:80/lurl' in resp[0]
+    assert b'resource was found at http://localhost:80/lurl' in resp[0]
+
+def test_HTTPFound_without_location():
+    exc = HTTPFound(add_slash=True)
  
+    def _fake_start_response(*args, **kw):
+        pass
+
+    resp = exc({'PATH_INFO':'/here',
+                'wsgi.url_scheme': 'HTTP',
+                'REQUEST_METHOD': 'GET',
+                'SERVER_NAME': 'localhost',
+                'SERVER_PORT': '80'}, _fake_start_response)
+    assert b'resource was found at http://localhost:80/here/' in resp[0]
+
 @no_warn
 def test_lurl_format():
     """url() can handle list parameters, with unicode too"""
