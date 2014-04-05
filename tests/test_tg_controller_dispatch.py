@@ -89,6 +89,9 @@ class NewBeforeController(TGController):
     def _after(self, *args, **kw):
         global_craziness = '__my_after__'
 
+    def _visit(self, *remainder, **params):
+        tmpl_context.visit = 'visited'
+
     @expose()
     def index(self):
         assert tmpl_context.var
@@ -100,6 +103,9 @@ class NewBeforeController(TGController):
         assert tmpl_context.params
         return tmpl_context.var + tmpl_context.params['environ']['webob._parsed_query_vars'][0]['x']
 
+    @expose()
+    def visited(self):
+        return tmpl_context.visit
 
 class SubController(object):
 
@@ -675,6 +681,10 @@ class TestTGController(TestWSGIController):
     def test_new_before_controller(self):
         r = self.app.get('/sub/newbefore')
         assert '__my_before__' in r, r
+
+    def test_visit_entry_point(self):
+        r = self.app.get('/sub/newbefore/visited')
+        assert 'visited' in r, r
 
     def test_before_with_args(self):
         r = self.app.get('/sub/newbefore/with_args/1/2?x=5')

@@ -25,11 +25,13 @@ from tg.request_local import WebObResponse
 import mimetypes as default_mimetypes
 import weakref
 
+
 def dispatched_controller():
     state = tg.request._controller_state
     for location, cont in reversed(state.controller_path):
         if cont.mount_point:
             return cont
+
 
 class CoreDispatcher(object):
     """Extend this class to define your own mechanism for dispatch."""
@@ -83,9 +85,16 @@ class CoreDispatcher(object):
 
         return state, params
 
+    def _enter_controller(self, state, remainder):
+        if hasattr(state.controller, '_visit'):
+            state.controller._visit(*remainder, **state.params)
+
+        return super(CoreDispatcher, self)._enter_controller(state, remainder)
+
     def _perform_call(self, context):
         """
-        This function is called from within Pylons and should not be overidden.
+        This function is called by __call__ to actually perform the controller
+        execution.
         """
         py_request = context.request
         py_config = context.config
