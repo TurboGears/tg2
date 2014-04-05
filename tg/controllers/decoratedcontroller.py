@@ -361,10 +361,17 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                                            error_handler=None)
 
     def _check_security(self):
-        predicate = getattr(self, 'allow_only', None)
-        if predicate is None:
+        requirement = getattr(self, 'allow_only', None)
+        if requirement is None:
             return True
 
+        if hasattr(requirement, 'predicate'):
+            # It is a full requirement, let it build the response
+            requirement._check_authorization()
+            return True
+
+        # It is directly a predicate, build the response ourselves
+        predicate = requirement
         try:
             predicate.check_authorization(tg.request.environ)
         except NotAuthorizedError as e:

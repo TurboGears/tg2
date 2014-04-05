@@ -93,6 +93,13 @@ class _AuthenticationForgerMiddleware(PluggableAuthenticationMiddleware):
             'repoze.who.testutil.userid')
 
 
+def turbogears_challenge_decider(environ, status, headers):
+    if 'tg.skip_auth_challenge' in environ:
+        return None
+
+    return default_challenge_decider(environ, status, headers)
+
+
 def setup_auth(app, authmetadata,
               form_plugin=None, form_identifies=True,
               cookie_secret='secret', cookie_name='authtkt',
@@ -174,7 +181,7 @@ def setup_auth(app, authmetadata,
 
     # Set up default challenger decider
     if 'challenge_decider' not in who_args:
-        who_args['challenge_decider'] = default_challenge_decider
+        who_args['challenge_decider'] = turbogears_challenge_decider
 
     skip_authn = who_args.pop('skip_authentication', False)
     if asbool(skip_authn):

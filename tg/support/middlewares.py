@@ -40,7 +40,7 @@ class StatusCodeRedirect(object):
 
     Should an application wish to bypass the error response (ie, to
     purposely return a 401), set
-    ``environ['tg.status_code_redirect'] = True`` in the application.
+    ``environ['tg.status_code_redirect'] = False`` in the application.
 
     """
     def __init__(self, app, errors=(400, 401, 403, 404),

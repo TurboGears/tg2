@@ -57,6 +57,7 @@ def _urlencode(params):
     """
     return url_encode([i for i in _generate_smart_str(params)])
 
+
 def _build_url(environ, base_url='/', params=None):
     if base_url.startswith('/'):
         base_url = environ['SCRIPT_NAME'] + base_url
@@ -65,6 +66,7 @@ def _build_url(environ, base_url='/', params=None):
         return '?'.join((base_url, _urlencode(params)))
 
     return base_url
+
 
 def url(base_url='/', params=None, qualified=False):
     """Generate an absolute URL that's specific to this application.
@@ -168,6 +170,7 @@ def redirect(base_url='/', params={}, redirect_with=HTTPFound, **kwargs):
     new_url = url(base_url, params=params)
     raise redirect_with(location=new_url)
 
+
 IF_NONE_MATCH = re.compile('(?:W/)?(?:"([^"]*)",?\s*)')
 def etag_cache(key=None):
     """Use the HTTP Entity Tag cache for Browser side caching
@@ -187,19 +190,42 @@ def etag_cache(key=None):
         response.headers.pop('Pragma', None)
         raise status_map[304]()
 
-def abort(status_code=None, detail="", headers=None, comment=None):
+
+def abort(status_code=None, detail="", headers=None, comment=None,
+          passthrough=False):
     """Aborts the request immediately by returning an HTTP exception
 
     In the event that the status_code is a 300 series error, the detail
     attribute will be used as the Location header should one not be
     specified in the headers attribute.
 
+    **passthrough**
+        When ``True`` instead of displaying the custom error
+        document for errors or the authentication page for
+        failed authorizations the response will just pass
+        through as is.
+
+        Set to ``"json"`` to send out the response body in
+        JSON format.
+
     """
     exc = status_map[status_code](detail=detail, headers=headers,
                                   comment=comment)
+
+    if passthrough == 'json':
+        exc.content_type = 'application/json'
+        exc.body = tg.json_encode(dict(status=status_code,
+                                       detail=str(exc)))
+
+    if passthrough:
+        tg.request.environ['tg.status_code_redirect'] = False
+        tg.request.environ['tg.skip_auth_challenge'] = False
+
     raise exc
+
 
 def use_wsgi_app(wsgi_app):
     return tg.request.get_response(wsgi_app)
+
 
 __all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort']

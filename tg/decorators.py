@@ -797,6 +797,10 @@ class require(object):
         must raise a tg.predicates.NotAuthorizedError if not met.
     :param denial_handler: The callable to be run if authorization is
         denied (overrides :attr:`default_denial_handler` if defined).
+    :param smart_denial: A list of response types for which to trigger
+        the smart denial, which will act as an API providing a pass-through
+        :func:`tg.controllers.util.abort`.
+        If ``True``, ``('application/json', 'text/xml')`` will be used.
 
     If called, ``denial_handler`` will be passed a positional argument
     which represents a message on why authorization was denied.
@@ -807,6 +811,9 @@ class require(object):
     def __init__(self, predicate, denial_handler=None, smart_denial=False):
         self.predicate = predicate
         self.denial_handler = denial_handler or self.default_denial_handler
+
+        if smart_denial is True:
+            smart_denial = ('application/json', 'text/xml')
         self.smart_denial = smart_denial
 
     def __call__(self, func):
@@ -832,13 +839,22 @@ class require(object):
 
     def default_denial_handler(self, reason):
         """Authorization denial handler for protectors."""
-        status = 'warning' if response.status_int == 401 else 'error'
-        if not self.smart_denial:
+        passthrough_abort = False
+
+        if self.smart_denial:
+            response_type = response.content_type or request.response_type
+            if response_type in self.smart_denial:
+                # It's an API response, use a pass-through abort
+                passthrough_abort = True
+                if response_type == 'application/json':
+                    passthrough_abort = 'json'
+
+        if passthrough_abort is False:
+            # Plain HTML page
+            status = 'warning' if response.status_int == 401 else 'error'
             flash(reason, status=status)
-        else:
-            if response.content_type not in ['application/json', 'text/xml']:
-                flash(reason, status=status)
-        abort(response.status_int, reason)
+
+        abort(response.status_int, reason, passthrough=passthrough_abort)
 
 
 class with_engine(object):

@@ -161,9 +161,16 @@ class CustomAllowOnly(TGController):
 
     allow_only = something()
 
+class SmartDenialAllowOnly(TGController):
+    allow_only = require(is_user('developer'), smart_denial=True)
+
+    @expose('json')
+    def data(self):
+        return {'key': 'value'}
+
 class RootController(TGController):
     custom_allow = CustomAllowOnly()
-
+    smart_allow = SmartDenialAllowOnly()
     cp = ControlPanel()
 
     rest = DaRestController()
@@ -179,7 +186,7 @@ class RootController(TGController):
     def commit(self):
         return 'you can commit'
 
-    @expose()
+    @expose('json:')
     @require(is_user('developer'), smart_denial=True)
     def smartabort(self):
         return {'key': 'value'}
@@ -310,12 +317,36 @@ class TestRequire(BaseIntegrationTests):
         gooduser = {'accept': 'application/json',
                 'REMOTE_USER': 'developer'}
 
-        resp = self.app.get('/smartabort', extra_environ=nouser, status=401)
+        resp = self.app.get('/smartabort.json', extra_environ=nouser, status=401)
         assert resp.status == '401 Unauthorized', 'Expected 401, got %s' % (resp.status)
-        resp = self.app.get('/smartabort', extra_environ=baduser, status=403)
+        assert 'The current user must be "developer"' in resp.json['detail']
+
+        resp = self.app.get('/smartabort.json', extra_environ=baduser, status=403)
         assert resp.status == '403 Forbidden', 'Expected 403, got %s' % (resp.status)
+        assert 'The current user must be "developer"' in resp.json['detail']
+
         resp = self.app.get('/smartabort.json', extra_environ=gooduser, status=200)
         assert resp.status == '200 OK', 'Expected 200, got %s' % (resp.body)
+        assert {'key': 'value'} == resp.json, resp.json
+
+    def test_smart_auth_json_allow_only(self):
+        nouser = {'accept': 'application/json'}
+        baduser = {'accept': 'application/json',
+                'REMOTE_USER': 'foobar'}
+        gooduser = {'accept': 'application/json',
+                'REMOTE_USER': 'developer'}
+
+        resp = self.app.get('/smart_allow/data.json', extra_environ=nouser, status=401)
+        assert resp.status == '401 Unauthorized', 'Expected 401, got %s' % (resp.status)
+        assert 'The current user must be "developer"' in resp.json['detail']
+
+        resp = self.app.get('/smart_allow/data.json', extra_environ=baduser, status=403)
+        assert resp.status == '403 Forbidden', 'Expected 403, got %s' % (resp.status)
+        assert 'The current user must be "developer"' in resp.json['detail']
+
+        resp = self.app.get('/smart_allow/data.json', extra_environ=gooduser, status=200)
+        assert resp.status == '200 OK', 'Expected 200, got %s' % (resp.body)
+        assert {'key': 'value'} == resp.json, resp.json
 
 
 class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
