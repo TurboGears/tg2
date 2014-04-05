@@ -214,8 +214,9 @@ def abort(status_code=None, detail="", headers=None, comment=None,
 
     if passthrough == 'json':
         exc.content_type = 'application/json'
+        exc.charset = 'utf-8'
         exc.body = tg.json_encode(dict(status=status_code,
-                                       detail=str(exc)))
+                                       detail=str(exc))).encode('utf-8')
 
     if passthrough:
         tg.request.environ['tg.status_code_redirect'] = False
