@@ -24,8 +24,18 @@ try:
 except ImportError: #pragma: no cover
     ObjectId=NotExistingImport
 
+try:
+    import ming
+    import ming.odm
+except ImportError: #pragma: no cover
+    ming=NotExistingImport
+
 def is_saobject(obj):
     return hasattr(obj, '_sa_class_manager')
+
+def is_mingobject(obj):
+    return hasattr(obj, '__ming__')
+
 
 class JsonEncodeError(Exception):
     """JSON Encode error"""
@@ -46,6 +56,14 @@ class GenericJSON(JSONEncoder):
             for key in obj.__dict__:
                 if not key.startswith('_sa_'):
                     props[key] = getattr(obj, key)
+            return props
+        elif is_mingobject(obj) and ming is not NotExistingImport:
+            prop_names = [prop.name for prop in ming.odm.mapper(obj).properties
+                          if isinstance(prop, ming.odm.property.FieldProperty)]
+
+            props = {}
+            for key in prop_names:
+                props[key] = getattr(obj, key)
             return props
         elif isinstance(obj, ResultProxy):
             return dict(rows=list(obj), count=obj.rowcount)

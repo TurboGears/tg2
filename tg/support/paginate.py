@@ -9,8 +9,14 @@ try:
     import sqlalchemy
     import sqlalchemy.orm
     from sqlalchemy.orm.query import Query as SQLAQuery
-except ImportError: #pragma: no cover
+except ImportError:  # pragma: no cover
     class SQLAQuery(object):
+        pass
+
+try:
+    from ming.odm.odmsession import ODMCursor as MingCursor
+except ImportError:  # pragma: no cover
+    class MingCursor(object):
         pass
 
 def _format_attrs(**attrs):
@@ -30,9 +36,21 @@ class _SQLAlchemyQueryWrapper(object):
     def __len__(self):
         return self.obj.count()
 
+class _MingQueryWrapper(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __getitem__(self, range):
+        return self.obj.skip(range.start).limit(range.stop-range.start)
+
+    def __len__(self):
+        return self.obj.count()
+
 def _wrap_collection(col):
     if isinstance(col, SQLAQuery):
         return _SQLAlchemyQueryWrapper(col)
+    elif isinstance(col, MingCursor):
+        return _MingQueryWrapper(col)
     return col
 
 class Page(object):

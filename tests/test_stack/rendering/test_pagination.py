@@ -1,4 +1,5 @@
 import json
+from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.support.paginate import Page
 from tg.controllers.util import _urlencode
@@ -250,3 +251,80 @@ class TestPageSQLA(object):
         assert len(res['entries']) == 1
         assert res['total'] == 2
         assert res['entries'][0]['val'] == 'fred'
+
+
+try:
+    import ming
+    from ming import create_datastore, Session, schema, ASCENDING
+    from ming.odm import ODMSession, FieldProperty, ForeignIdProperty, RelationProperty, Mapper
+    from ming.odm.declarative import MappedClass
+except ImportError:
+    ming = None
+
+
+class TestPageMing(object):
+    @classmethod
+    def setupClass(cls):
+        if ming is None:
+            raise SkipTest('Ming not available...')
+
+        cls.basic_session = Session(create_datastore('mim:///'))
+        cls.s = ODMSession(cls.basic_session)
+
+        class Author(MappedClass):
+            class __mongometa__:
+                session = cls.s
+                name = 'wiki_author'
+
+            _id = FieldProperty(schema.ObjectId)
+            name = FieldProperty(str)
+            pages = RelationProperty('WikiPage')
+
+        class WikiPage(MappedClass):
+            class __mongometa__:
+                session = cls.s
+                name = 'wiki_page'
+
+            _id = FieldProperty(schema.ObjectId)
+            title = FieldProperty(str)
+            text = FieldProperty(str)
+            order = FieldProperty(int)
+            author_id = ForeignIdProperty(Author)
+            author = RelationProperty(Author)
+
+        cls.Author = Author
+        cls.WikiPage = WikiPage
+        Mapper.compile_all()
+
+        cls.author = Author(name='author1')
+        author2 = Author(name='author2')
+
+        WikiPage(title='Hello', text='Text', order=1, author=cls.author)
+        WikiPage(title='Another', text='Text', order=2, author=cls.author)
+        WikiPage(title='ThirdOne', text='Text', order=3, author=author2)
+        cls.s.flush()
+        cls.s.clear()
+
+    def teardown(self):
+        self.s.clear()
+
+    def test_query(self):
+        q = self.WikiPage.query.find().sort([('order', ASCENDING)])
+        p = Page(q, items_per_page=1, page=1)
+        assert len(list(p)) == 1
+        assert list(p)[0].title == 'Hello', list(p)
+
+    def test_json_query(self):
+        q = self.WikiPage.query.find().sort([('order', ASCENDING)])
+        p = Page(q, items_per_page=1, page=1)
+        res = json.loads(json_encode(p))
+        assert len(res['entries']) == 1
+        assert res['total'] == 3
+        assert res['entries'][0]['title'] == 'Hello', res['entries']
+        assert res['entries'][0]['author_id'] == str(self.author._id), res['entries']
+
+    def test_relation(self):
+        a = self.Author.query.find({'name': 'author1'}).first()
+        p = Page(a.pages, items_per_page=1, page=1)
+        assert len(list(p)) == 1
+        assert list(p)[0].title in ('Hello', 'Another'), list(p)
