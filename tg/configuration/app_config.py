@@ -612,7 +612,7 @@ class AppConfig(Bunch):
         datastore_options.pop('port', None)
 
         datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''), **datastore_options)
-        config['pylons.app_globals'].ming_datastore = datastore
+        config['tg.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
     def setup_sqlalchemy(self):
