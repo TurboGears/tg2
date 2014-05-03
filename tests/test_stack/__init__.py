@@ -9,6 +9,7 @@ from tg._compat import PY3
 
 
 class TestConfig(AppConfig):
+    __test__ = False
 
     def __init__(self, folder, values=None):
         if values is None:
