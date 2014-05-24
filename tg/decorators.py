@@ -907,7 +907,7 @@ class cached(object):
     The following parameters are accepted:
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
-        NoDefault - Uses function name and all parameters as the key (default)
+        NoDefault - Uses function name and all request parameters as the key (default)
         None - No variable key, uses only function name as key
         string - Use function name and only "key" parameter
         list - Use function name and all parameters listed
@@ -924,7 +924,7 @@ class cached(object):
         If True, the cache will be invalidated each time the application
         starts or is restarted.
     ``cache_response``
-        Determines whether the response at the time beaker_cache is used
+        Determines whether the response at the time the cache is used
         should be cached or not, defaults to True.
 
         .. note::
