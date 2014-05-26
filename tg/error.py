@@ -41,8 +41,8 @@ def ErrorReporter(app, global_conf, **errorware):
         log.warn('backlash not installed, email tracebacks won\'t be available')
         return app
 
-    reporters = []
 
+    reporters = []
     if errorware.get('error_email'):
         from backlash.trace_errors import EmailReporter
         reporters.append(EmailReporter(**errorware))
@@ -56,3 +56,29 @@ def ErrorReporter(app, global_conf, **errorware):
                                              context_injectors=[_turbogears_backlash_context])
 
     return app
+
+
+def SlowReqsReporter(app, global_conf, **errorware):
+    try:
+        import backlash
+    except ImportError: #pragma: no cover
+        log.warn('backlash not installed, slow requests reporting won\'t be available')
+        return app
+
+    reporters = []
+    if errorware.get('error_email'):
+        from backlash.tracing.reporters.mail import EmailReporter
+        reporters.append(EmailReporter(**errorware))
+
+    if errorware.get('sentry_dsn'):
+        from backlash.tracing.reporters.sentry import SentryReporter
+        reporters.append(SentryReporter(**errorware))
+
+    if not asbool(global_conf.get('debug')):
+        app = backlash.TraceSlowRequestsMiddleware(app, reporters, interval=errorware.get('interval', 25),
+                                                   exclude_paths=errorware.get('exclude', None),
+                                                   context_injectors=[_turbogears_backlash_context])
+
+    return app
+
+

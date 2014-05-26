@@ -414,6 +414,18 @@ class AppConfig(Bunch):
 
         conf['tg.errorware'] = errorware
 
+        slowreqsware = coerce_config(conf, 'trace_slowreqs.', {'smtp_use_tls': asbool,
+                                                               'dump_request_size': asint,
+                                                               'dump_request': asbool,
+                                                               'dump_local_frames': asbool,
+                                                               'dump_local_frames_count': asint,
+                                                               'enable': asbool,
+                                                               'interval': asint})
+        slowreqsware.setdefault('error_subject_prefix', 'Slow Request: ')
+        slowreqsware.setdefault('error_message', 'A request is taking too much time')
+        for erroropt in errorware: slowreqsware.setdefault(erroropt, errorware[erroropt])
+        conf['tg.slowreqs'] = slowreqsware
+
         # Copy in some defaults
         if 'cache_dir' in conf:
             conf.setdefault('beaker.session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
@@ -802,6 +814,10 @@ class AppConfig(Bunch):
 
         return app
 
+    def add_slowreqs_middleware(self, global_conf, app):
+        from tg.error import SlowReqsReporter
+        return SlowReqsReporter(app, global_conf, **config['tg.slowreqs'])
+
     def add_debugger_middleware(self, global_conf, app):
         from tg.error import ErrorHandler
         return ErrorHandler(app, global_conf)
@@ -1173,13 +1189,14 @@ class AppConfig(Bunch):
                 full_stack = False
 
             if asbool(full_stack):
+                # This should never be true for internal nested apps
                 if (self.auth_backend is None
                         and 401 not in self.handle_status_codes):
                     # If there's no auth backend configured which traps 401
                     # responses we redirect those responses to a nicely
                     # formatted error page
                     self.handle_status_codes.append(401)
-                # This should never be true for internal nested apps
+                app = self.add_slowreqs_middleware(global_conf, app)
                 app = self.add_error_middleware(global_conf, app)
 
             # Establish the registry for this application
