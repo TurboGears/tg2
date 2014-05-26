@@ -36,17 +36,13 @@ class DispatchingConfigWrapper(DictMixin):
     """Wrapper for the Dispatching configuration.
 
     Simple wrapper for the DispatchingConfig object that provides attribute
-    style access to the Pylons config dictionary.
+    style access to the config dictionary.
 
     This class works by proxying all attribute and dictionary access to
     the underlying DispatchingConfig config object, which is an application local
     proxy that allows for multiple TG2 applications to live
     in the same process simultaneously, but to always get the right
     config data for the application that's requesting them.
-
-    Sites, with seeking to maximize needs may prefer to use the Pylons
-    config stacked object proxy directly, using just dictionary style
-    access, particularly whenever config is checked on a per-request basis.
 
     """
 
