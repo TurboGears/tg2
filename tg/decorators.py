@@ -908,8 +908,11 @@ class cached(object):
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
         NoDefault - Uses function name and all request parameters as the key (default)
+        
         None - No variable key, uses only function name as key
+        
         string - Use function name and only "key" parameter
+        
         list - Use function name and all parameters listed
     ``expire``
         Time in seconds before cache expires, or the string "never".
