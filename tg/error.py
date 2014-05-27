@@ -62,7 +62,7 @@ def SlowReqsReporter(app, global_conf, **errorware):
     try:
         import backlash
     except ImportError: #pragma: no cover
-        log.warn('backlash not installed, slow requests reporting won\'t be available')
+        log.warning('backlash not installed, slow requests reporting won\'t be available')
         return app
 
     reporters = []
