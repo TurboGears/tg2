@@ -25,7 +25,7 @@ def ErrorHandler(app, global_conf, **errorware):
     try:
         import backlash
     except ImportError: #pragma: no cover
-        log.warn('backlash not installed, debug mode won\'t be available')
+        log.warning('backlash not installed, debug mode won\'t be available')
         return app
 
     if asbool(global_conf.get('debug')):
@@ -38,7 +38,7 @@ def ErrorReporter(app, global_conf, **errorware):
     try:
         import backlash
     except ImportError: #pragma: no cover
-        log.warn('backlash not installed, email tracebacks won\'t be available')
+        log.warning('backlash not installed, email tracebacks won\'t be available')
         return app
 
     reporters = []
