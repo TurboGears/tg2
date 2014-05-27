@@ -14,7 +14,7 @@ from tg.support.middlewares import SessionMiddleware, CacheMiddleware
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
-from tg.support.converters import asbool, asint
+from tg.support.converters import asbool, asint, aslist
 from tg.request_local import config as reqlocal_config
 
 import tg
@@ -420,7 +420,8 @@ class AppConfig(Bunch):
                                                                'dump_local_frames': asbool,
                                                                'dump_local_frames_count': asint,
                                                                'enable': asbool,
-                                                               'interval': asint})
+                                                               'interval': asint,
+                                                               'exclude': aslist})
         slowreqsware.setdefault('error_subject_prefix', 'Slow Request: ')
         slowreqsware.setdefault('error_message', 'A request is taking too much time')
         for erroropt in errorware: slowreqsware.setdefault(erroropt, errorware[erroropt])
