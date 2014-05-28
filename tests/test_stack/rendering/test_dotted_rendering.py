@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 from nose import SkipTest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
@@ -55,6 +56,7 @@ def test_default_chameleon_genshi_renderer():
 
 def test_default_kajiki_renderer():
     if PY3: raise SkipTest()
+    if '__pypy__' in sys.builtin_module_names: raise SkipTest()
 
     app = setup_noDB()
     resp = app.get('/kajiki_index_dotted')
