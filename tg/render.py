@@ -123,6 +123,56 @@ except ImportError:
 
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):
+    """Renders a specific template in current TurboGears context.
+
+    Permits to manually render any template like TurboGears would for
+    expositions. It also guarantees that the ``before_render_call`` and
+    ``after_render_call`` hooks are called in the process.
+
+    :param dict template_vars: This is the dictonary of variables that should
+                               become available to the template. Template
+                               vars can also include the ``tg_cache`` dictionary
+                               which enables template caching.
+    :param str template_engine: This is the template engine name, same as
+                                specified inside AppConfig.renderers.
+    :param str template_name: This is the template to render, can be specified
+                              both as a path or using dotted notation if available.
+
+    TurboGears injects some additional variables in the template context,
+    those include:
+
+        - tg.config -> like tg.config in controllers
+        - tg.flash_obj -> the flash object, call ``render`` on it to display it.
+        - tg.quote_plus -> function to perform percentage escaping (%xx)
+        - tg.url -> like tg.url in controllers
+        - tg.identity -> like tg.request.identity in controllers
+        - tg.session -> like tg.session in controllers
+        - tg.locale -> Languages of the current request
+        - tg.errors -> Validation errors
+        - tg.inputs -> Values submitted for validation
+        - tg.request -> like tg.request in controllers
+        - tg.auth_stack_enabled -> if authentication is enabled or not
+        - tg.predicates -> like tg.predicates in controllers
+
+        - tmpl_context -> like tg.tmpl_context in controllers
+        - response -> like tg.response in controllers
+        - request -> like tg.request in controllers
+        - config -> like tg.config in controllers
+        - app_globals -> like tg.app_globals in controllers
+        - session -> like tg.session in controllers
+        - url -> like tg.url in controllers
+        - h -> Your application helpers
+        - translator -> The current gettext translator
+        - _ -> like tg.i18n.ugettext
+
+    Additional variables can be added to every template by a
+    ``variable_provider`` function inside the application
+    configuration. This function is expected to return
+    a ``dict`` with any variable that should be added
+    the default template variables. It can even replace
+    existing variables.
+
+    """
     config = tg.config._current_obj()
 
     render_function = None
