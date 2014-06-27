@@ -424,7 +424,8 @@ class AppConfig(Bunch):
                                                                'exclude': aslist})
         slowreqsware.setdefault('error_subject_prefix', 'Slow Request: ')
         slowreqsware.setdefault('error_message', 'A request is taking too much time')
-        for erroropt in errorware: slowreqsware.setdefault(erroropt, errorware[erroropt])
+        for erroropt in errorware:
+            slowreqsware.setdefault(erroropt, errorware[erroropt])
         conf['tg.slowreqs'] = slowreqsware
 
         # Copy in some defaults

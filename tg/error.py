@@ -44,11 +44,11 @@ def ErrorReporter(app, global_conf, **errorware):
 
     reporters = []
     if errorware.get('error_email'):
-        from backlash.trace_errors import EmailReporter
+        from backlash.tracing.reporters.mail import EmailReporter
         reporters.append(EmailReporter(**errorware))
 
     if errorware.get('sentry_dsn'):
-        from backlash.trace_errors.sentry import SentryReporter
+        from backlash.tracing.reporters.sentry import SentryReporter
         reporters.append(SentryReporter(**errorware))
 
     if not asbool(global_conf.get('debug')):
