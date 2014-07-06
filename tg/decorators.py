@@ -102,7 +102,10 @@ class Decoration(object):
     def requirement(self):  # pragma: no cover
         warnings.warn("Decoration.requirement is deprecated, "
                       "please use 'requirements' instead", DeprecationWarning)
-        return self.requirements[0]
+        try:
+            return self.requirements[0]
+        except IndexError:
+            return None
 
     @property
     def exposed(self):

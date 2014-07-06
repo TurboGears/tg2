@@ -281,6 +281,14 @@ class TestRequire(BaseIntegrationTests):
         predicate = deco.requirement.predicate
         assert isinstance(predicate, has_permission), predicate
 
+    def test_no_requirements_backward_compatibility(self):
+        deco = Decoration.get_decoration(RootController.force_commit)
+        reqs = deco.requirements
+        deco.requirements = []
+        requirement = deco.requirement
+        deco.requirements = reqs
+        assert requirement is None, requirement
+
     def test_authz_denied_in_root_controller(self):
         # As an anonymous user:
         resp = self.app.get('/commit', status=401)
