@@ -1,5 +1,28 @@
 = Change Log =
 
+== 2.3.3 (**July 7, 2014**) ==
+
+* Quickstart now uses HTTPFound instead of redirect to avoid appending SCRIPT_NAME multiple times
+* Decoration.requirement is now a wrapper against first of Decoration.requirements
+* Avoid Deprecation warnings on backlash
+* Improving tg.render_template documentation
+* Add support for backlash slow requests reporting
+* Fix issue with app_globals when pylons compatibility mode is turned off
+* Pagination and JSON encoding of Ming query cursors
+* _visit now available with _before and _after, makes possible to implement custom behavior when the controller is visited for dispatching (before authorization)
+* Pass through abort and SmartDenial improvements to authorization
+* wrap and partial are built-in into python as we support only 2.6+
+* Support using LazyUrl as a location for HTTPFound
+* Refactor @beaker_cache to remove dependency on decorator module
+* @cached decorator which replaced @beaker_cache and decoupling controller wrappers from app configurator
+* It is now possible to register multiple requirements per method, provide API and tests
+* decorator not used anymore as @require is now a Decoration based decorator
+* As we don't depend on repoze.what anymore, make @require use Decoration instead of behing a plain python decorator
+* Store validation context in a Bunch, so that it can be accessed with dotted notation
+* make possible to provide a context for @cached_property, useful to make it thread safe
+* get_lang now always returns a list
+* Fix wrong ordering in exposition inheritance when renderers are not ready yet
+
 == 2.3.2 (**March 8, 2014**) ==
 
 * Quickstarted applications have been upgrade to Bootstrap3 CSS Framework
