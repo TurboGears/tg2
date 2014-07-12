@@ -119,6 +119,27 @@ return{payload:h,render:d}}})();webflash.lj=function(s){var r;eval("r="+s);retur
         return self.pop_payload().get('status') or self.default_status
 
 
+class BootstrapFlash(TGFlash):
+    def __init__(self, cookie_name="webflash", default_status="success"):
+        super(BootstrapFlash, self).__init__(cookie_name, default_status)
+
+    static_template = '<div id="%(container_id)s">'\
+                      '<div class="alert alert-%(status)s">%(message)s'\
+                      '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>'\
+                      '</div>'\
+                      '</div>'
+
+class FoundationFlash(TGFlash):
+    def __init__(self, cookie_name="webflash", default_status="success"):
+        super(FoundationFlash, self).__init__(cookie_name, default_status)
+
+    static_template = '<div id="%(container_id)s">'\
+                      '<div data-alert class="alert-box radius %(status)s">%(message)s'\
+                      '<a href="#" class="close">&times;</a>'\
+                      '</div>'\
+                      '</div>'
+
+
 flash = TGFlash()
 
 #TODO: Deprecate these?
