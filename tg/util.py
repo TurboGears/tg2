@@ -88,8 +88,23 @@ class DottedFileNameFinder(object):
 
             return result
 
+    @classmethod
+    def lookup(cls, name, extension='.html'):
+        """Convenience method that permits to quickly get a file by dotted notation.
+
+        Creates a :class:`.DottedFileNameFinder` and uses it to lookup the given file
+        using dotted notation. As :class:`.DottedFileNameFinder` provides a lookup
+        cache, using this method actually disables the cache as a new finder is created
+        each time, for this reason if you have recurring lookups it's better to actually
+        create a dotted filename finder and reuse it.
+
+        """
+        finder = cls()
+        return finder.get_dotted_filename(name, extension)
+
 
 def no_warn(f, *args, **kwargs):
+    """Decorator that suppresses warnings inside the decorated function"""
     def _f(*args, **kwargs):
         warnings.simplefilter("ignore")
         f(*args, **kwargs)
@@ -98,8 +113,12 @@ def no_warn(f, *args, **kwargs):
 
 
 class LazyString(object):
-    """Has a number of lazily evaluated functions replicating a
-    string. Just override the eval() method to produce the actual value.
+    """Behaves like a string, but no instance is created until the string is actually used.
+
+    Takes a function which should be a string factory and a set of arguments to pass
+    to the factory. Whenever the string is accessed or manipulated the factory is called
+    to create the actual string. This is used mostly by lazy internationalization.
+
     """
     def __init__(self, func, *args, **kwargs):
         self.func = func
@@ -123,50 +142,15 @@ class LazyString(object):
 
 
 def lazify(func):
-    """Decorator to return a lazy-evaluated version of the original"""
+    """Decorator to return a lazy-evaluated version of the original
+
+    Applying decorator to a function it will create a :class:`.LazyString`
+    with the decorated function as factory.
+
+    """
     def newfunc(*args, **kwargs):
         return LazyString(func, *args, **kwargs)
     newfunc.__name__ = 'lazy_%s' % func.__name__
     newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
         (func.__name__, func.__doc__)
     return newfunc
-
-
-class ContextObj(object):
-    def __repr__(self):
-        attrs = sorted((name, value)
-                       for name, value in self.__dict__.items()
-                       if not name.startswith('_'))
-        parts = []
-        for name, value in attrs:
-            value_repr = repr(value)
-            if len(value_repr) > 70:
-                value_repr = value_repr[:60] + '...' + value_repr[-5:]
-            parts.append(' %s=%s' % (name, value_repr))
-        return '<%s.%s at %s%s>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            hex(id(self)),
-            ','.join(parts))
-
-    def __getattr__(self, item):
-        if item in ('form_values', 'form_errors'):
-            warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
-                          'use request.validation instead', DeprecationWarning)
-            return request.validation[item[5:]]
-        elif item == 'controller_url':
-            warnings.warn('tmpl_context.controller_url got deprecated, '
-                          'use request.controller_url instead', DeprecationWarning)
-            return request.controller_url
-
-        raise AttributeError()
-
-
-class AttribSafeContextObj(ContextObj):
-    """The :term:`tmpl_context` object, with lax attribute access (
-    returns '' when the attribute does not exist)"""
-    def __getattr__(self, name):
-        try:
-            return ContextObj.__getattr__(self, name)
-        except AttributeError:
-            return ''

@@ -6,7 +6,7 @@ from tg.configuration.utils import get_partial_dict
 from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *
-from tg.util import ContextObj, AttribSafeContextObj
+from tg.wsgiapp import TemplateContext, AttribSafeTemplateContext
 
 import tg._compat
 from tg._compat import u_
@@ -98,6 +98,9 @@ class TestDottedNameFinder(object):
     def test_local_file(self):
         assert DottedFileNameFinder().get_dotted_filename('this_should_be_my_template') == 'this_should_be_my_template'
 
+    def test_local_file_utility_method(self):
+        assert DottedFileNameFinder.lookup('this_should_be_my_template') == 'this_should_be_my_template'
+
 class TestLazyString(object):
     def test_lazy_string_to_str(self):
         l = LazyString(lambda: 'HI')
@@ -114,7 +117,7 @@ class TestLazyString(object):
 
 class TestAttribSafeContextObj(object):
     def setup(self):
-        self.c = AttribSafeContextObj()
+        self.c = AttribSafeTemplateContext()
 
     def test_attribute_default_value(self):
         assert self.c.something == ''
@@ -125,6 +128,6 @@ class TestAttribSafeContextObj(object):
         assert self.c.more == ''
 
 def test_tmpl_context_long_entry():
-    c = ContextObj()
+    c = TemplateContext()
     c.something = '3'*300
     assert len(str(c)) < 300

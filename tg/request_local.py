@@ -1,4 +1,4 @@
-import hmac, base64, binascii, re
+import hmac, base64, binascii
 from tg.support.objectproxy import TurboGearsObjectProxy
 from tg.support.registry import StackedObjectProxy, DispatchingConfig
 from tg.caching import cached_property
@@ -170,4 +170,5 @@ tmpl_context = TurboGearsContextMember(name="tmpl_context")
 url = TurboGearsContextMember(name="url")
 translator = TurboGearsContextMember(name="translator")
 
-__all__ = ['app_globals', 'request', 'response', 'tmpl_context', 'session', 'cache', 'translator', 'url', 'config']
+__all__ = ['app_globals', 'request', 'response', 'tmpl_context', 'session',
+           'cache', 'translator', 'url', 'config']

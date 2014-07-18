@@ -1,4 +1,5 @@
 import os, sys, logging
+import warnings
 from webob.exc import HTTPNotFound
 
 log = logging.getLogger(__name__)
@@ -7,7 +8,6 @@ import tg
 from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
-from tg.util import ContextObj, AttribSafeContextObj
 
 try: #pragma: no cover
     import pylons
@@ -146,9 +146,9 @@ class TGApp(object):
         translator = _get_translator(lang, tg_config=conf)
 
         if self.strict_tmpl_context:
-            tmpl_context = ContextObj()
+            tmpl_context = TemplateContext()
         else:
-            tmpl_context = AttribSafeContextObj()
+            tmpl_context = AttribSafeTemplateContext()
 
         app_globals = self.globals
         session = environ.get('beaker.session')
@@ -276,3 +276,49 @@ class TGApp(object):
 
         # Controller is assumed to handle a WSGI call
         return controller(environ, context)
+
+
+class TemplateContext(object):
+    """Used by TurboGears as ``tg.tmpl_context``.
+
+    It's just a plain python object with an improved representation
+    to show all the attributes currently available into the object.
+
+    """
+    def __repr__(self):
+        attrs = sorted((name, value)
+                       for name, value in self.__dict__.items()
+                       if not name.startswith('_'))
+        parts = []
+        for name, value in attrs:
+            value_repr = repr(value)
+            if len(value_repr) > 70:
+                value_repr = value_repr[:60] + '...' + value_repr[-5:]
+            parts.append(' %s=%s' % (name, value_repr))
+        return '<%s.%s at %s%s>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            ','.join(parts))
+
+    def __getattr__(self, item):
+        if item in ('form_values', 'form_errors'):
+            warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
+                          'use request.validation instead', DeprecationWarning)
+            return tg.request.validation[item[5:]]
+        elif item == 'controller_url':
+            warnings.warn('tmpl_context.controller_url got deprecated, '
+                          'use request.controller_url instead', DeprecationWarning)
+            return tg.request.controller_url
+
+        raise AttributeError()
+
+
+class AttribSafeTemplateContext(TemplateContext):
+    """The ``tg.tmpl_context`` object, with lax attribute access (
+    returns '' when the attribute does not exist)"""
+    def __getattr__(self, name):
+        try:
+            return TemplateContext.__getattr__(self, name)
+        except AttributeError:
+            return ''

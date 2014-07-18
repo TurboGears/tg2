@@ -19,7 +19,7 @@ import tg
 from tg import tmpl_context, request_local
 from tg.configuration import milestones
 
-from tg.wsgiapp import ContextObj, TGApp, RequestLocals
+from tg.wsgiapp import TemplateContext, TGApp, RequestLocals
 from tg.controllers import TGController
 
 from .test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
@@ -79,7 +79,7 @@ def create_request(path, environ=None):
 
     # Setup turbogears context with request, url and tmpl_context
     tgl = RequestLocals()
-    tgl.tmpl_context = ContextObj()
+    tgl.tmpl_context = TemplateContext()
     tgl.request = req
 
     request_local.context._push_object(tgl)
@@ -92,7 +92,7 @@ class TestWSGIController(TestCase):
         tmpl_options['genshi.search_path'] = ['tests']
 
         self._tgl = RequestLocals()
-        self._tgl.tmpl_context = ContextObj()
+        self._tgl.tmpl_context = TemplateContext()
         request_local.context._push_object(self._tgl)
 
         # Mark configuration milestones as passed as
