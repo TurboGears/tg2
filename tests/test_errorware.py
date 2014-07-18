@@ -1,4 +1,5 @@
 from tg.error import ErrorReporter
+from tg.error import SlowReqsReporter
 
 
 def simple_app(environ, start_response):
@@ -22,5 +23,23 @@ class TestErrorReporterConfig(object):
 
     def test_enable_sentry(self):
         app = ErrorReporter(simple_app, {}, sentry_dsn='http://public:secret@example.com/1')
+        reporters = [r.__class__.__name__ for r in app.reporters]
+        assert 'SentryReporter' in reporters
+
+
+class TestSlowReqsReporterConfig(object):
+    def test_disable_all(self):
+        app = SlowReqsReporter(simple_app, {})
+        reporters = [r.__class__.__name__ for r in app.reporters]
+        assert 'EmailReporter' not in reporters
+        assert 'SentryReporter' not in reporters
+
+    def test_enable_email(self):
+        app = SlowReqsReporter(simple_app, {}, error_email='user@somedomain.com')
+        reporters = [r.__class__.__name__ for r in app.reporters]
+        assert 'EmailReporter' in reporters
+
+    def test_enable_sentry(self):
+        app = SlowReqsReporter(simple_app, {}, sentry_dsn='http://public:secret@example.com/1')
         reporters = [r.__class__.__name__ for r in app.reporters]
         assert 'SentryReporter' in reporters
