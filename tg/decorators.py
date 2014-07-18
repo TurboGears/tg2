@@ -11,6 +11,7 @@ needed to support these decorators.
 import copy
 import warnings
 import time
+from functools import partial
 from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
 from tg.support import NoDefault
 from tg.support.paginate import Page
@@ -18,7 +19,7 @@ from tg.configuration import config
 from tg.configuration.app_config import _DeprecatedControllerWrapper, call_controller
 from tg.controllers.util import abort, redirect
 from tg import tmpl_context, request, response
-from tg.util import partial, Bunch
+from tg.util import Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
 from tg.caching import beaker_cache, cached_property, _cached_call

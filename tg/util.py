@@ -2,35 +2,11 @@
 from pkg_resources import resource_filename
 import warnings
 from tg.request_local import request
-from functools import partial, update_wrapper
+from functools import update_wrapper
+from tg.configuration.utils import get_partial_dict
 
 
 class DottedFileLocatorError(Exception):pass
-
-
-def get_partial_dict(prefix, dictionary):
-    """Given a dictionary and a prefix, return a Bunch, with just items
-    that start with prefix
-
-    The returned dictionary will have 'prefix.' stripped so:
-
-    get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3})
-
-    would return:
-
-    {'xyz':1,'zyx':2}
-    """
-
-    match = prefix + "."
-    n = len(match)
-
-    new_dict = Bunch([(key[n:], dictionary[key])
-                       for key in dictionary.keys()
-                       if key.startswith(match)])
-    if new_dict:
-        return new_dict
-    else:
-        raise AttributeError
 
 
 class Bunch(dict):
@@ -43,7 +19,7 @@ class Bunch(dict):
         try:
             return self[name]
         except KeyError:
-            return get_partial_dict(name, self)
+            return get_partial_dict(name, self, Bunch)
 
     __setattr__ = dict.__setitem__
 

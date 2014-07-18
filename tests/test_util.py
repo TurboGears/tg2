@@ -2,6 +2,7 @@
 
 import tg
 from tg.util import *
+from tg.configuration.utils import get_partial_dict
 from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *

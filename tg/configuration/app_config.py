@@ -18,10 +18,9 @@ from tg.support.converters import asbool, asint, aslist
 from tg.request_local import config as reqlocal_config
 
 import tg
-from tg.configuration.utils import coerce_config
-from tg.util import Bunch, get_partial_dict, DottedFileNameFinder
+from tg.util import Bunch, DottedFileNameFinder
 from tg.configuration import milestones
-from tg.configuration.utils import TGConfigError
+from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict
 
 from tg.renderers.genshi import GenshiRenderer
 from tg.renderers.json import JSONRenderer
@@ -71,7 +70,7 @@ class DispatchingConfigWrapper(DictMixin):
             try:
                 return self.config_proxy.current_conf()[key]
             except KeyError:
-                return get_partial_dict(key, self.config_proxy.current_conf())
+                return get_partial_dict(key, self.config_proxy.current_conf(), Bunch)
 
     def __setattr__(self, key, value):
         self.config_proxy.current_conf()[key] = value
