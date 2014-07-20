@@ -108,10 +108,11 @@ class _TGHooks(object):
 
         try:
             syswide_hooks = context_config['hooks'][hook_name]
+        except KeyError:  # pragma: no cover
+            pass
+        else:
             for func in syswide_hooks:
                 func(*args, **kwargs)
-        except KeyError: #pragma: no cover
-            pass
 
         if controller is not None:
             controller = default_im_func(controller)
@@ -132,15 +133,16 @@ class _TGHooks(object):
             app = tg.hooks.notify_with_value('before_config', app)
 
         """
-        if context_config is None: #pragma: no cover
+        if context_config is None:   # pragma: no cover
             context_config = tg.config._current_obj()
 
         try:
             syswide_hooks = context_config['hooks'][hook_name]
+        except KeyError:  # pragma: no cover
+            pass
+        else:
             for func in syswide_hooks:
                 value = func(value)
-        except KeyError: #pragma: no cover
-            pass
 
         if controller is not None:
             controller = default_im_func(controller)
