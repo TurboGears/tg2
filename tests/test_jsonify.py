@@ -74,6 +74,16 @@ def test_datetime():
     encoded = jsonify.encode({'date':d})
     assert str(d.year) in encoded, (str(d), encoded)
 
+def test_datetime_iso():
+    isodates_encoder = jsonify.JSONEncoder(isodates=True)
+
+    d = datetime.utcnow()
+    encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
+
+    isoformat_without_millis = json.dumps({'date': d.isoformat()[:19]})
+    assert isoformat_without_millis == encoded, (isoformat_without_millis, encoded)
+    assert 'T' in encoded, encoded
+
 def test_decimal():
     d = Decimal('3.14')
     encoded = jsonify.encode({'dec':d})

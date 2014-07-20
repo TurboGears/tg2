@@ -7,6 +7,7 @@ from tg.controllers import TGController
 from tg.validation import TGValidationError
 from tg._compat import PY3
 from tg.render import _get_tg_vars, cached_template
+import datetime
 
 if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
@@ -438,3 +439,11 @@ class RootController(TGController):
     @expose('jsonp', render_params={'callback_param': 'call'})
     def get_jsonp(self, **kwargs):
         return {'value': 5}
+
+    @expose('json', render_params={'isodates': True})
+    def get_json_isodates_on(self, **kwargs):
+        return {'date': datetime.datetime.utcnow()}
+
+    @expose('json', render_params={'isodates': False})
+    def get_json_isodates_off(self, **kwargs):
+        return {'date': datetime.datetime.utcnow()}

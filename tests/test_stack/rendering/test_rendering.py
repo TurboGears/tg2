@@ -13,6 +13,7 @@ from tg.renderers.genshi import GenshiRenderer
 from tg import expose
 from tg import TGController, AppConfig
 from webtest import TestApp
+from datetime import datetime
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer
@@ -671,3 +672,12 @@ class TestTemplateCaching(object):
     def test_jsonp_missing_callback(self):
         resp = self.app.get('/get_jsonp', status=400)
         assert 'JSONP requires a "call" parameter with callback name' in resp.text, resp
+
+    def test_json_isodates(self):
+        resp = self.app.get('/get_json_isodates_on')
+        assert 'T' in resp.json_body['date']
+        assert resp.json_body['date'].startswith(datetime.utcnow().strftime('%Y-%m-%d'))
+
+    def test_json_without_isodates(self):
+        resp = self.app.get('/get_json_isodates_off')
+        assert ' ' in resp.json_body['date'], resp

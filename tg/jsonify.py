@@ -4,10 +4,14 @@ import datetime
 import decimal
 import types
 
-from json import JSONEncoder
+from json import JSONEncoder as _JSONEncoder
 
 from webob.multidict import MultiDict
 from tg._compat import string_type
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class NotExistingImport:
     pass
@@ -41,14 +45,44 @@ class JsonEncodeError(Exception):
     """JSON Encode error"""
 
 
-class GenericJSON(JSONEncoder):
+class JSONEncoder(_JSONEncoder):
     """JSON Encoder class"""
 
+    def __init__(self, **kwargs):
+        self._registered_types_map = {}
+        self._registered_types_list = tuple()
+
+        kwargs = self.configure(**kwargs)
+        super(JSONEncoder, self).__init__(**kwargs)
+
+    def configure(self, isodates=False, custom_encoders=None, **kwargs):
+        self._isodates = isodates
+        if custom_encoders is not None:
+            for type_, encoder in custom_encoders.items():
+                self.register_custom_encoder(type_, encoder)
+        return kwargs
+
+    def register_custom_encoder(self, objtype, encoder):
+        if objtype in self._registered_types_map:
+            log.warning('%s type already registered for a custom encoder, replacing it', objtype)
+
+        self._registered_types_map[objtype] = encoder
+        # Append to head, so we find first the last registered types
+        self._registered_types_list = (objtype, ) + self._registered_types_list
+
     def default(self, obj):
-        if hasattr(obj, '__json__') and callable(obj.__json__):
+        if isinstance(obj, self._registered_types_list):
+            # Minor optimization, enter loop only when we are instance of a supported type.
+            for type_, encoder in self._registered_types_map.items():
+                if isinstance(obj, type_):
+                    return encoder(obj)
+        elif hasattr(obj, '__json__') and callable(obj.__json__):
             return obj.__json__()
         elif isinstance(obj, (datetime.date, datetime.datetime)):
-            return str(obj)
+            if self._isodates:
+                return obj.replace(microsecond=0).isoformat()
+            else:
+                return str(obj)
         elif isinstance(obj, decimal.Decimal):
             return float(obj)
         elif is_saobject(obj):
@@ -76,38 +110,23 @@ class GenericJSON(JSONEncoder):
         elif isinstance(obj, types.GeneratorType):
             return list(obj)
         else:
-            return JSONEncoder.default(self, obj)
-
-try: #pragma: no cover
-    from simplegeneric import generic
-
-    _default = GenericJSON()
-
-    @generic
-    def jsonify(obj):
-        return _default.default(obj)
-
-    class GenericFunctionJSON(GenericJSON):
-        """Generic Function JSON Encoder class."""
-
-        def default(self, obj):
-            return jsonify(obj)
-
-    _instance = GenericFunctionJSON()
-except ImportError:
-
-    def jsonify(obj): #pragma: no cover
-        raise ImportError('simplegeneric is not installed')
-
-    _instance = GenericJSON()
+            return _JSONEncoder.default(self, obj)
 
 
-# General encoding functions
+_default_encoder = JSONEncoder()
 
-def encode(obj):
+
+def encode(obj, encoder=None, iterencode=False):
     """Return a JSON string representation of a Python object."""
+    if encoder is None:
+        encoder = _default_encoder
+
+    encode_func = encoder.encode
+    if iterencode:
+        encode_func = encoder.iterencode
+
     if isinstance(obj, string_type):
-        return _instance.encode(obj)
+        return encode_func(obj)
 
     try:
         value = obj['test']
@@ -117,9 +136,9 @@ def encode(obj):
     except:
         pass
 
-    return _instance.encode(obj)
+    return encode_func(obj)
 
 
-def encode_iter(obj):
+def encode_iter(obj, encoder=None):
     """Encode object, yielding each string representation as available."""
-    return _instance.iterencode(obj)
+    return encode(obj, encoder=encoder, iterencode=True)
