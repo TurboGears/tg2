@@ -1,12 +1,11 @@
 """Utilities"""
 from pkg_resources import resource_filename
 import warnings
-from tg.request_local import request
+from tg.request_local import request, response
 from functools import update_wrapper
-from tg.configuration.utils import get_partial_dict
+from tg.configuration.utils import get_partial_dict, TGConfigError
 
-
-class DottedFileLocatorError(Exception):pass
+class DottedFileLocatorError(Exception): pass
 
 
 class Bunch(dict):
@@ -154,3 +153,37 @@ def lazify(func):
     newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
         (func.__name__, func.__doc__)
     return newfunc
+
+
+def auth_force_login(user_name):
+    """Forces user login if authentication is enabled.
+
+    As TurboGears identifies users by ``user_name`` the passed parameter should
+    be anything your application declares being the ``user_name`` field in models.
+
+    """
+    req = request._current_obj()
+    resp = response._current_obj()
+
+    api = req.environ.get('repoze.who.api')
+    if api:
+        authentication_plugins = req.environ['repoze.who.plugins']
+        try:
+            identifier = authentication_plugins['main_identifier']
+        except KeyError:
+            raise TGConfigError('No repoze.who plugin registered as "main_identifier"')
+
+        resp.headers.extend(api.remember({
+            'repoze.who.userid': user_name,
+            'identifier': identifier
+        }))
+
+
+def auth_force_logout():
+    """Forces user logout if authentication is enabled."""
+    req = request._current_obj()
+    resp = response._current_obj()
+
+    api = req.environ.get('repoze.who.api')
+    if api:
+        resp.headers.extend(api.forget())

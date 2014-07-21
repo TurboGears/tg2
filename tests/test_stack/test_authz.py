@@ -12,19 +12,22 @@ this writing).
 from unittest import TestCase
 from shutil import rmtree
 import os
+from nose.tools import raises
 
 from tg._compat import url_unquote
+from tg.configuration.utils import TGConfigError
 
 from tg.support.registry import RegistryManager
 from webob import Response, Request
 from webtest import TestApp
 
-from tg import request, response, expose, require
+from tg import request, response, expose, require, redirect
 from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort
 from tg.wsgiapp import TGApp
 from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 from tg.decorators import Decoration
+from tg.util import auth_force_login, auth_force_logout
 
 from .baseutils import ControllerWrap, FakeRoutes, default_config
 
@@ -96,6 +99,10 @@ def make_app(controller_klass, environ={}, with_errors=False):
     app = setup_auth(app, TestAuthMetadata(),
                      identifiers=identifiers, skip_authentication=True,
                      authenticators=[], challengers=[])
+
+    # As setup_auth with skip_authentication sets empty authenticators always
+    # we must manually append it after creating the middleware.
+    app.api_factory.authenticators.append(('cookie', cookie))
 
     return TestApp(app)
 
@@ -197,6 +204,17 @@ class RootController(TGController):
     def force_commit(self):
         return 'you can commit'
 
+    @expose()
+    def login_logout(self, username, noidentifier='0'):
+        if noidentifier == '1':
+            request.environ['repoze.who.plugins'] = {}
+
+        if username == 'logout':
+            auth_force_logout()
+        else:
+            auth_force_login('%s:managers' % username)
+
+        return 'OK'
 
 class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
     """Mock TG2 protected controller using the .allow_only attribute"""
@@ -244,6 +262,28 @@ class BaseIntegrationTests(TestCase):
             msg = '"%s"' % msg
             assert msg in flash, 'Message %s not in flash: %s' % (msg, flash)
 
+class TestLoginLogout(BaseIntegrationTests):
+    def test_user_login(self):
+        resp = self.app.get('/login_logout?username=developer')
+        cookie = resp.headers['Set-Cookie']
+        assert 'authtkt="' in cookie
+        assert 'developer' in cookie
+
+    @raises(TGConfigError)
+    def test_user_login_without_identifier(self):
+        resp = self.app.get('/login_logout?username=developer&noidentifier=1')
+
+    def test_user_logout(self):
+        AUTH_TOKEN = 'authtkt="f0657f514a6b960d50ea199aea76534d53cd0dd4developer%3Amanagers!"'
+        resp = self.app.get('/login_logout?username=logout', headers=[('Cookie', AUTH_TOKEN)])
+        assert 'authtkt="INVALID"' in str(resp), resp
+
+    def test_user_override(self):
+        AUTH_TOKEN = 'authtkt="f0657f514a6b960d50ea199aea76534d53cd0dd4developer%3Amanagers!"'
+        resp = self.app.get('/login_logout?username=admin', headers=[('Cookie', AUTH_TOKEN)])
+        cookie = resp.headers['Set-Cookie']
+        assert 'authtkt="' in cookie, resp
+        assert 'admin' in cookie, resp
 
 class TestRequire(BaseIntegrationTests):
     """Test case for the @require decorator"""
