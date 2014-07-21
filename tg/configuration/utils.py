@@ -1,3 +1,6 @@
+from .milestones import config_ready
+
+
 class TGConfigError(Exception):pass
 
 
@@ -37,3 +40,50 @@ def get_partial_dict(prefix, dictionary, container_type=dict):
         return new_dict
     else:
         raise AttributeError
+
+
+class GlobalConfigurable(object):
+    """Defines a configurable TurboGears object with a global default instance.
+
+    GlobalConfigurable are objects which the user can create multiple instances to use
+    in its own application or third party module, but for which TurboGears provides
+    a default instance.
+
+    Common examples are ``tg.flash`` and the default JSON encoder for which
+    TurboGears provides default instances of ``.TGFlash`` and ``.JSONEncoder`` classes
+    but users can create their own.
+
+    While user created versions are configured calling the :meth:`.GlobalConfigurable.configure`
+    method, global versions are configured by :class:`.AppConfig` which configures them when
+    ``config_ready`` milestone is reached.
+
+    """
+    CONFIG_NAMESPACE = None
+    CONFIG_OPTIONS = {}
+
+    def configure(self, **options):
+        """Expected to be implemented by each object to proceed with actualy configuration.
+
+        Configure method will receive all the options whose name starts with ``CONFIG_NAMESPACE``
+        (example ``json.isodates`` has ``json.`` namespace).
+
+        If ``CONFIG_OPTIONS`` is specified options values will be converted with
+        :func:`coerce_config` passing ``CONFIG_OPTIONS`` as the ``converters`` dictionary.
+
+        """
+        raise NotImplementedError('GlobalConfigurable objects must implement a configure method')
+
+    @classmethod
+    def create_global(cls):
+        """Creates a global instance which configuration will be bound to :class:`.AppConfig`."""
+        if cls.CONFIG_NAMESPACE is None:
+            raise TGConfigError('Must specify a CONFIG_NAMESPACE attribute in class for the'
+                                'namespace used by all configuration options.')
+
+        obj = cls()
+        config_ready.register(obj._load_config, persist_on_reset=True)
+        return obj
+
+    def _load_config(self):
+        from tg.configuration import config
+        self.configure(**coerce_config(config, self.CONFIG_NAMESPACE,  self.CONFIG_OPTIONS))

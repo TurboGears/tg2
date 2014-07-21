@@ -5,9 +5,11 @@ import decimal
 import types
 
 from json import JSONEncoder as _JSONEncoder
+from tg.support.converters import asbool
 
 from webob.multidict import MultiDict
 from tg._compat import string_type
+from tg.configuration.utils import GlobalConfigurable
 import logging
 
 log = logging.getLogger(__name__)
@@ -45,7 +47,7 @@ class JsonEncodeError(Exception):
     """JSON Encode error"""
 
 
-class JSONEncoder(_JSONEncoder):
+class JSONEncoder(_JSONEncoder, GlobalConfigurable):
     """TurboGears custom JSONEncoder.
 
     Provides support for encoding objects commonly used in TurboGears apps, like:
@@ -60,7 +62,10 @@ class JSONEncoder(_JSONEncoder):
     that will be called on the object by the JSONEncoder when provided and through
     the ability to register custom encoder for specific types using
     :meth:`.JSONEncoder.register_custom_encoder`.
+
     """
+    CONFIG_NAMESPACE = 'json.'
+    CONFIG_OPTIONS = {'isodates': asbool}
 
     def __init__(self, **kwargs):
         self._registered_types_map = {}
@@ -141,7 +146,7 @@ class JSONEncoder(_JSONEncoder):
             return _JSONEncoder.default(self, obj)
 
 
-_default_encoder = JSONEncoder()
+_default_encoder = JSONEncoder.create_global()
 
 
 def encode(obj, encoder=None, iterencode=False):

@@ -5,6 +5,7 @@ from tg.request_local import request, response
 from functools import update_wrapper
 from tg.configuration.utils import get_partial_dict, TGConfigError
 
+
 class DottedFileLocatorError(Exception): pass
 
 

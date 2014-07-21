@@ -21,17 +21,21 @@ class _ConfigMilestoneTracker(object):
         self.name = name
         self._actions = dict()
         self._reached = False
+        self._keep_on_reset = []
 
     @property
     def reached(self):
         return self._reached
 
-    def register(self, action):
+    def register(self, action, persist_on_reset=False):
         """Registers an action to be called on milestone completion.
 
         If milestone is already passed action is immediately called
 
         """
+        if persist_on_reset:
+            self._keep_on_reset.append(action)
+
         if self._reached:
             log.debug('%s milestone passed, calling %s directly', self.name, action)
             action()
@@ -60,6 +64,8 @@ class _ConfigMilestoneTracker(object):
         """This is just for testing purposes"""
         self._reached = False
         self._actions = dict()
+        for action in self._keep_on_reset:
+            self.register(action)
 
 
 config_ready = _ConfigMilestoneTracker('config_ready')

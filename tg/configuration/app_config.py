@@ -28,7 +28,6 @@ from tg.renderers.jinja import JinjaRenderer
 from tg.renderers.mako import MakoRenderer
 from tg.renderers.kajiki import KajikiRenderer
 
-from tg.jsonify import _default_encoder
 
 log = logging.getLogger(__name__)
 
@@ -467,9 +466,6 @@ class AppConfig(Bunch):
             config['tg.strict_tmpl_context'] = True
         else:
             config['tg.strict_tmpl_context'] = False
-
-        # Configure JSON support
-        _default_encoder.configure(**coerce_config(config, 'json.', {'isodates': asbool}))
 
         self.after_init_config()
         self._configure_mimetypes()

@@ -440,6 +440,10 @@ class RootController(TGController):
     def get_jsonp(self, **kwargs):
         return {'value': 5}
 
+    @expose('json')
+    def get_json_isodates_default(self, **kwargs):
+        return {'date': datetime.datetime.utcnow()}
+
     @expose('json', render_params={'isodates': True})
     def get_json_isodates_on(self, **kwargs):
         return {'date': datetime.datetime.utcnow()}

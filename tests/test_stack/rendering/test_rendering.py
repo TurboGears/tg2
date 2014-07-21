@@ -665,6 +665,24 @@ class TestTemplateCaching(object):
         resp = json.loads(resp.text)
         assert resp['cls'] == 'NoImplementation', resp
 
+
+class TestJSONRendering(object):
+    def setUp(self):
+        base_config = TestConfig(folder='rendering', values={
+            'use_sqlalchemy': False,
+            'use_legacy_renderer': False,
+            # this is specific to mako  to make sure inheritance works
+            'use_dotted_templatenames': False,
+            'use_toscawidgets': False,
+            'use_toscawidgets2': False,
+            'cache_dir': '.',
+            'json.isodates': True
+        })
+        self.app = app_from_config(base_config)
+
+    def teardown(self):
+        milestones._reset_all()
+
     def test_jsonp(self):
         resp = self.app.get('/get_jsonp', params={'call': 'callme'})
         assert 'callme({"value": 5});' in resp.text, resp
@@ -672,6 +690,11 @@ class TestTemplateCaching(object):
     def test_jsonp_missing_callback(self):
         resp = self.app.get('/get_jsonp', status=400)
         assert 'JSONP requires a "call" parameter with callback name' in resp.text, resp
+
+    def test_json_isodates_default(self):
+        resp = self.app.get('/get_json_isodates_default')
+        assert 'T' in resp.json_body['date']
+        assert resp.json_body['date'].startswith(datetime.utcnow().strftime('%Y-%m-%d'))
 
     def test_json_isodates(self):
         resp = self.app.get('/get_json_isodates_on')
