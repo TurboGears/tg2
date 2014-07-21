@@ -46,7 +46,21 @@ class JsonEncodeError(Exception):
 
 
 class JSONEncoder(_JSONEncoder):
-    """JSON Encoder class"""
+    """TurboGears custom JSONEncoder.
+
+    Provides support for encoding objects commonly used in TurboGears apps, like:
+
+        - SQLAlchemy queries
+        - Ming queries
+        - Dates
+        - Decimals
+        - Generators
+
+    Support for additional types is provided through the ``__json__`` method
+    that will be called on the object by the JSONEncoder when provided and through
+    the ability to register custom encoder for specific types using
+    :meth:`.JSONEncoder.register_custom_encoder`.
+    """
 
     def __init__(self, **kwargs):
         self._registered_types_map = {}
@@ -56,6 +70,13 @@ class JSONEncoder(_JSONEncoder):
         super(JSONEncoder, self).__init__(**kwargs)
 
     def configure(self, isodates=False, custom_encoders=None, **kwargs):
+        """Configures the JSONEncoder.
+
+        This is used to specify if dates should be encoded in ISO8601 format
+        and to register ``custom_encoders``. This is automatically called
+        by ``__init__`` and :class:`.AppConfig`.
+
+        """
         self._isodates = isodates
         if custom_encoders is not None:
             for type_, encoder in custom_encoders.items():
@@ -63,6 +84,13 @@ class JSONEncoder(_JSONEncoder):
         return kwargs
 
     def register_custom_encoder(self, objtype, encoder):
+        """Register a custom encoder for the given type.
+
+        Instead of using standard behavior for encoding the given type to JSON, the
+        ``encoder`` will used instead. ``encoder`` must be a callable that takes
+        the object as argument and returns an object that can be encoded in JSON (usually a dict).
+
+        """
         if objtype in self._registered_types_map:
             log.warning('%s type already registered for a custom encoder, replacing it', objtype)
 
