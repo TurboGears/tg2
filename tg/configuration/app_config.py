@@ -1153,8 +1153,8 @@ class AppConfig(Bunch):
             app = self.add_core_middleware(app)
 
             if self.auth_backend:
-                # Skipping authentication if explicitly requested. Used by
-                # repoze.who-testutil:
+                # Skipping authentication if explicitly requested.
+                # Used by repoze.who-testutil:
                 skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
 
@@ -1186,7 +1186,7 @@ class AppConfig(Bunch):
                 app = SeekableRequestBodyMiddleware(app)
 
             if 'PYTHONOPTIMIZE' in os.environ:
-                warnings.warn("Forcing full_stack=False due to PYTHONOPTIMIZE enabled. "+\
+                warnings.warn("Forcing full_stack=False due to PYTHONOPTIMIZE enabled. "
                               "Error Middleware will be disabled", RuntimeWarning, stacklevel=2)
                 full_stack = False
 
