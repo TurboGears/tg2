@@ -63,7 +63,7 @@ class TestAsTemplate(object):
 
     @raises(ValueError)
     def test_nonstring(self):
-        print astemplate(55)
+        astemplate(55)
 
     def test_aslready_template(self):
         assert astemplate(astemplate('You are ${name}')).substitute(name='John') == 'You are John'
