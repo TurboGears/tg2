@@ -135,8 +135,9 @@ def test_flash_status():
 def test_flash_javascript():
     resp = app.get('/flash_render?using_js=True')
     webflash_js_parameters = json.dumps({"id": "flash", "name": "webflash"})
-    expected = 'webflash(%s).render()' % webflash_js_parameters
-    assert expected in resp
+    expected = 'webflash(%s)' % webflash_js_parameters
+    assert expected in resp, resp
+    assert 'webflash.render()' in resp, resp
 
 def test_flash_render_plain():
     resp = app.get('/flash_render')

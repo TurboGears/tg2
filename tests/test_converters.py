@@ -1,5 +1,5 @@
 from nose.tools import raises
-from tg.support.converters import asbool, asint, aslist
+from tg.support.converters import asbool, asint, aslist, astemplate
 
 class TestAsBool(object):
     def test_asbool_truthy(self):
@@ -54,3 +54,16 @@ class TestAsList(object):
 
     def test_None(self):
         assert aslist(None) == []
+
+
+class TestAsTemplate(object):
+    def test_fine(self):
+        assert hasattr(astemplate('You are ${name}'), 'substitute')
+        assert astemplate('You are ${name}').substitute(name='John') == 'You are John'
+
+    @raises(ValueError)
+    def test_nonstring(self):
+        print astemplate(55)
+
+    def test_aslready_template(self):
+        assert astemplate(astemplate('You are ${name}')).substitute(name='John') == 'You are John'

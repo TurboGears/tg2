@@ -1,7 +1,9 @@
 # (c) 2005 Ian Bicking and contributors; written for Paste (http://pythonpaste.org)
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+#
+# Adapted to TurboGears 2.3
 from tg._compat import string_type
-
+from string import Template
 
 def asbool(obj):
     if isinstance(obj, string_type):
@@ -34,3 +36,13 @@ def aslist(obj, sep=None, strip=True):
         return []
     else:
         return [obj]
+
+
+def astemplate(obj):
+    if isinstance(obj, Template):
+        return obj
+
+    if not isinstance(obj, string_type):
+        raise ValueError('Templates must be strings')
+
+    return Template(obj)
