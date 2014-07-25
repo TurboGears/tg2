@@ -2,7 +2,8 @@
 import tg
 from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
 from tg import cache, i18n, request
-from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render
+from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render, \
+    json_params
 from tg.controllers import TGController
 from tg.validation import TGValidationError
 from tg._compat import PY3
@@ -451,3 +452,8 @@ class RootController(TGController):
     @expose('json', render_params={'isodates': False})
     def get_json_isodates_off(self, **kwargs):
         return {'date': datetime.datetime.utcnow()}
+
+    @expose('json')
+    @json_params
+    def echo_json(self, **kwargs):
+        return kwargs

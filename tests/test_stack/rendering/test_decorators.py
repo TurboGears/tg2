@@ -52,6 +52,11 @@ class TestTGController(object):
         resp = self.app.get('/multiple_engines')
         assert default_renderer in resp, resp
 
+    def test_json_params(self):
+        params = {'name': 'Name', 'surname': 'Surname'}
+        resp = self.app.post_json('/echo_json', params)
+        assert resp.json_body == params
+
 class TestExposeInheritance(object):
     def setup(self):
         self.app = make_app()

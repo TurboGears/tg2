@@ -737,6 +737,13 @@ def variable_decode(remainder, params):
 
 
 @before_validate
+def json_params(remainder, params):
+    """Decorator that enables parsing JSON body as method arguments."""
+    if request.content_type == 'application/json':
+        params.update(request.json_body)
+
+
+@before_validate
 def without_trailing_slash(remainder, params):
     """This decorator allows you to ensure that the URL does not end in "/".
 
