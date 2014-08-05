@@ -273,7 +273,7 @@ def setup_i18n(tgl=None):
     else: #pragma: no cover
         languages = []
 
-    languages.extend(map(sanitize_language_code, tgl.request.plain_languages))
+    languages.extend(map(sanitize_language_code, tgl.request.languages))
     set_temporary_lang(languages, tgl=tgl)
 
 

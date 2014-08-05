@@ -57,7 +57,7 @@ class Request(WebObRequest):
     def plain_languages(self):
         return self.languages_best_match()
 
-    @property
+    @cached_property
     def languages(self):
         return self.languages_best_match(self._language)
 

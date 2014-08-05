@@ -119,6 +119,7 @@ class TestI18NStack(object):
         conf['paths']['root'] = 'tests'
         conf['i18n_enabled'] = True
         conf['use_sessions'] = True
+        conf['lang'] = None
         conf['beaker.session.key'] = 'tg_test_session'
         conf['beaker.session.secret'] = 'this-is-some-secret'
         conf.renderers = ['json']
@@ -197,3 +198,10 @@ class TestI18NStack(object):
     def test_get_lang_no_session(self):
         r = self.app.get('/get_lang?skip_lang=1', extra_environ={})
         assert '[]' in r, r.body
+
+    def test_get_lang_supported_with_default_lang(self):
+        tg.config['lang'] = 'kr'
+        r = self.app.get('/get_supported_lang?skip_lang=1',
+                         headers={'Accept-Language': 'ru,en,de;q=0.5'})
+        langs = r.json['lang']
+        assert langs == ['ru', 'de', 'kr'], langs
