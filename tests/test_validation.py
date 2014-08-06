@@ -8,7 +8,8 @@ import tg
 import tests
 from json import loads, dumps
 
-from tg.controllers import TGController, DecoratedController
+from tg.controllers import TGController, DecoratedController, abort
+from tg.controllers.util import validation_errors_response
 from tg.decorators import expose, validate, before_render, before_call, Decoration
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
@@ -261,6 +262,18 @@ class BasicTGController(TGController):
         return 'HUH'
 
     @expose()
+    @validate({'uid': validators.Int()},
+              error_handler=abort(412, error_handler=True))
+    def abort_error_handler(self):
+        return 'HUH'
+
+    @expose()
+    @validate({'uid': validators.Int()},
+              error_handler=validation_errors_response)
+    def validate_json_errors(self):
+        return 'HUH'
+
+    @expose()
     @before_call(lambda remainder, params: params.setdefault('num', 5))
     def hooked_error_handler(self, uid, num):
         return 'UID: %s, NUM: %s' % (uid, num)
@@ -503,3 +516,12 @@ class TestTGController(TestWSGIController):
         # with external modules that perform custom validation like tgext.socketio
         resp = self.app.post('/manually_handle_validation')
         assert resp.text == 'UID: 2', resp
+
+    def test_abort_error_handler(self):
+        resp = self.app.post('/abort_error_handler', {'uid': 'NaN'}, status=412)
+        assert resp.status.startswith('412')
+
+    def test_json_error_handler(self):
+        resp = self.app.post('/validate_json_errors', {'uid': 'NaN'}, status=412)
+        assert resp.json['errors']['uid'] == 'Please enter an integer value'
+

@@ -595,6 +595,29 @@ class validate(object):
         return func
 
 
+class decode_params(object):
+    """Decorator that enables parsing parameters from request body.
+
+    By default the arguments are parsed in **JSON** format (which is
+    currently the only supported format).
+
+    """
+    def __init__(self, format='json'):
+        if format not in ('json', ):
+            raise ValueError('Currently only JSON format is supported')
+
+        self._format = format
+
+    def run_hook(self, remainder, params):
+        if self._format == 'json' and request.content_type == 'application/json':
+            params.update(request.json_body)
+
+    def __call__(self, func):
+        decoration = Decoration.get_decoration(func)
+        decoration._register_hook('before_validate', self.run_hook)
+        return func
+
+
 class paginate(object):
     """Paginate a given collection.
 
@@ -734,13 +757,6 @@ def variable_decode(remainder, params):
         params.update(new_params)
     except:
         pass
-
-
-@before_validate
-def json_params(remainder, params):
-    """Decorator that enables parsing JSON body as method arguments."""
-    if request.content_type == 'application/json':
-        params.update(request.json_body)
 
 
 @before_validate
@@ -969,7 +985,7 @@ class cached(object):
 
             def cached_call_controller(controller, remainder, params):
                 if self.key:
-                    key_dict = tg.request.args_params
+                    key_dict = request.args_params
                     if self.key != NoDefault:
                         if isinstance(self.key, (list, tuple)):
                             key_dict = dict((k, key_dict[k]) for k in key_dict)

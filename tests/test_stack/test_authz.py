@@ -23,11 +23,10 @@ from webtest import TestApp
 
 from tg import request, response, expose, require, redirect
 from tg.controllers import TGController, WSGIAppController, RestController
-from tg.controllers.util import abort
+from tg.controllers.util import abort, auth_force_login, auth_force_logout
 from tg.wsgiapp import TGApp
 from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 from tg.decorators import Decoration
-from tg.util import auth_force_login, auth_force_logout
 
 from .baseutils import ControllerWrap, FakeRoutes, default_config
 

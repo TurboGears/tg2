@@ -11,6 +11,8 @@ import tg
 
 from tg._compat import string_type, url_encode, unicode_text, bytes_
 from tg.exceptions import HTTPFound
+from tg.request_local import request, response, Response
+from tg.configuration.utils import TGConfigError
 
 
 def _smart_str(s):
@@ -192,7 +194,7 @@ def etag_cache(key=None):
 
 
 def abort(status_code=None, detail="", headers=None, comment=None,
-          passthrough=False):
+          passthrough=False, error_handler=False):
     """Aborts the request immediately by returning an HTTP exception
 
     In the event that the status_code is a 300 series error, the detail
@@ -208,6 +210,23 @@ def abort(status_code=None, detail="", headers=None, comment=None,
         Set to ``"json"`` to send out the response body in
         JSON format.
 
+    **error_handler**
+        When ``True`` instead of immediately abort the request
+        it will create a callable that can be used as ``@validate``
+        error_handler.
+
+        A common case is ``abort(404, error_handler=True)`` as
+        ``error_handler`` for validation that retrieves objects
+        from database::
+
+            from formencode.validators import Wrapper
+
+            @validate({'team': Wrapper(to_python=lambda value:
+                                        Group.query.find({'group_name': value}).one())},
+                      error_handler=abort(404, error_handler=True))
+            def view_team(self, team):
+                return dict(team=team)
+
     """
     exc = status_map[status_code](detail=detail, headers=headers,
                                   comment=comment)
@@ -218,15 +237,78 @@ def abort(status_code=None, detail="", headers=None, comment=None,
         exc.body = tg.json_encode(dict(status=status_code,
                                        detail=str(exc))).encode('utf-8')
 
-    if passthrough:
-        tg.request.environ['tg.status_code_redirect'] = False
-        tg.request.environ['tg.skip_auth_challenge'] = False
+    def _abortion(*args, **kwargs):
+        if passthrough:
+            tg.request.environ['tg.status_code_redirect'] = False
+            tg.request.environ['tg.skip_auth_challenge'] = False
+        raise exc
 
-    raise exc
+    if error_handler is False:
+        return _abortion()
+    else:
+        return _abortion
 
 
 def use_wsgi_app(wsgi_app):
     return tg.request.get_response(wsgi_app)
 
 
-__all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort']
+def auth_force_login(user_name):
+    """Forces user login if authentication is enabled.
+
+    As TurboGears identifies users by ``user_name`` the passed parameter should
+    be anything your application declares being the ``user_name`` field in models.
+
+    """
+    req = request._current_obj()
+    resp = response._current_obj()
+
+    api = req.environ.get('repoze.who.api')
+    if api:
+        authentication_plugins = req.environ['repoze.who.plugins']
+        try:
+            identifier = authentication_plugins['main_identifier']
+        except KeyError:
+            raise TGConfigError('No repoze.who plugin registered as "main_identifier"')
+
+        resp.headers.extend(api.remember({
+            'repoze.who.userid': user_name,
+            'identifier': identifier
+        }))
+
+
+def auth_force_logout():
+    """Forces user logout if authentication is enabled."""
+    req = request._current_obj()
+    resp = response._current_obj()
+
+    api = req.environ.get('repoze.who.api')
+    if api:
+        resp.headers.extend(api.forget())
+
+
+def validation_errors_response(*args, **kwargs):
+    """Returns a :class:`.Response` object with validation errors.
+
+    The response will be created with a *412 Precondition Failed*
+    status code and errors are reported in JSON format as response body.
+
+    Typical usage is as ``error_handler`` for JSON based api::
+
+        @expose('json')
+        @validate({'display_name': validators.NotEmpty(),
+                   'group_name': validators.NotEmpty()},
+                  error_handler=validation_errors_response)
+        def post(self, **params):
+            group = Group(**params)
+            return dict(group=group)
+
+    """
+    req = request._current_obj()
+    errors = dict(((str(key), str(error)) for key, error in req.validation.errors.items()))
+    values = req.validation['values']
+    return Response(status=412, json_body={'errors': errors,
+                                           'values': values})
+
+__all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort', 'auth_force_logout',
+           'auth_force_login', 'validation_errors_response', 'use_wsgi_app']

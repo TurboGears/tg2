@@ -1,8 +1,9 @@
+from nose.tools import raises
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import no_warn
 from tg.configuration import config
 from tg.configuration import milestones
-from tg.decorators import Decoration
+from tg.decorators import Decoration, decode_params
 import tg
 import json
 
@@ -52,10 +53,17 @@ class TestTGController(object):
         resp = self.app.get('/multiple_engines')
         assert default_renderer in resp, resp
 
-    def test_json_params(self):
+    def test_decode_params_json(self):
         params = {'name': 'Name', 'surname': 'Surname'}
         resp = self.app.post_json('/echo_json', params)
         assert resp.json_body == params
+
+    @raises(ValueError)
+    def test_decode_params_notjson(self):
+        @decode_params('xml')
+        def _fakefunc():
+            pass
+
 
 class TestExposeInheritance(object):
     def setup(self):
