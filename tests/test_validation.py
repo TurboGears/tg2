@@ -7,6 +7,7 @@ from crank.util import get_params_with_argspec
 import tg
 import tests
 from json import loads, dumps
+import datetime
 
 from tg.controllers import TGController, DecoratedController, abort
 from tg.controllers.util import validation_errors_response
@@ -274,6 +275,11 @@ class BasicTGController(TGController):
         return 'HUH'
 
     @expose()
+    def validate_json_errors_complex_types(self, date):
+        tg.request.validation['values'] = {'date': datetime.datetime.utcnow()}
+        return validation_errors_response()
+
+    @expose()
     @before_call(lambda remainder, params: params.setdefault('num', 5))
     def hooked_error_handler(self, uid, num):
         return 'UID: %s, NUM: %s' % (uid, num)
@@ -524,4 +530,9 @@ class TestTGController(TestWSGIController):
     def test_json_error_handler(self):
         resp = self.app.post('/validate_json_errors', {'uid': 'NaN'}, status=412)
         assert resp.json['errors']['uid'] == 'Please enter an integer value'
+
+    def test_json_error_handler_complex_type(self):
+        resp = self.app.post('/validate_json_errors_complex_types', {'date': '2014-01-01'},
+                             status=412)
+        assert resp.json['values']['date'] == '2014-01-01', resp
 

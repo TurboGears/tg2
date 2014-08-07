@@ -307,8 +307,15 @@ def validation_errors_response(*args, **kwargs):
     req = request._current_obj()
     errors = dict(((str(key), str(error)) for key, error in req.validation.errors.items()))
     values = req.validation['values']
-    return Response(status=412, json_body={'errors': errors,
-                                           'values': values})
+    try:
+        return Response(status=412, json_body={'errors': errors,
+                                               'values': values})
+    except TypeError:
+        # values cannot be encoded to JSON, this might happen after
+        # validation passed and validators converted them to complex objects.
+        # In this case use request params, instead of controller params.
+        return Response(status=412, json_body={'errors': errors,
+                                               'values': req.args_params})
 
 __all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort', 'auth_force_logout',
            'auth_force_login', 'validation_errors_response', 'use_wsgi_app']
