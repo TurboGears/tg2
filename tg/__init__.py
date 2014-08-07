@@ -62,7 +62,7 @@ from tg.decorators import (validate, expose, override_template, use_custom_forma
 
 from tg.flash import flash, get_flash, get_status
 from tg.jsonify import encode as json_encode
-from tg.controllers.util import use_wsgi_app
+from tg.controllers.util import *
 from tg.controllers.dispatcher import dispatched_controller
 from tg.render import render as render_template
 from tg.configuration.hooks import hooks
