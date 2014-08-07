@@ -1,4 +1,5 @@
 import hmac, base64, binascii
+import warnings
 from tg.support.objectproxy import TurboGearsObjectProxy
 from tg.support.registry import StackedObjectProxy, DispatchingConfig
 from tg.caching import cached_property
@@ -17,6 +18,7 @@ from webob import Request as WebObRequest
 from webob import Response as WebObResponse
 from webob.request import PATH_SAFE
 from webob.compat import url_quote as webob_url_quote, bytes_ as webob_bytes_
+
 
 class Request(WebObRequest):
     """WebOb Request subclass
@@ -63,10 +65,16 @@ class Request(WebObRequest):
 
     @property
     def language(self):
+        warnings.warn("request.language is now deprecated, use tg.config['lang'] to"
+                      "read application fallback language.",
+                      DeprecationWarning, stacklevel=2)
         return self._language
 
     @language.setter
     def language(self, value):
+        warnings.warn("Setting request.language is now deprecated, use tg.i18n functions"
+                      "to change the fallback language.",
+                      DeprecationWarning, stacklevel=2)
         self._language = value
 
     @property
@@ -120,6 +128,7 @@ class Request(WebObRequest):
     def _fast_setattr(self, name, value):
         object.__setattr__(self, name, value)
 
+
 class Response(WebObResponse):
     """WebOb Response subclass"""
     content = WebObResponse.body
@@ -145,6 +154,7 @@ class Response(WebObResponse):
 
 config = DispatchingConfig()
 context = StackedObjectProxy(name="context")
+
 
 class TurboGearsContextMember(TurboGearsObjectProxy):
     """Member of the TurboGears request context.
