@@ -113,7 +113,9 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
             return obj.__json__()
         elif isinstance(obj, (datetime.date, datetime.datetime)):
             if self._isodates:
-                return obj.replace(microsecond=0).isoformat()
+                if isinstance(obj, datetime.datetime):
+                    obj = obj.replace(microsecond=0)
+                return obj.isoformat()
             else:
                 return str(obj)
         elif isinstance(obj, decimal.Decimal):

@@ -84,6 +84,18 @@ def test_datetime_iso():
     assert isoformat_without_millis == encoded, (isoformat_without_millis, encoded)
     assert 'T' in encoded, encoded
 
+def test_date_iso():
+    isodates_encoder = jsonify.JSONEncoder(isodates=True)
+
+    d = datetime.utcnow().date()
+    encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
+
+    isoformat_without_millis = json.dumps({'date': d.isoformat()})
+    assert isoformat_without_millis == encoded, (isoformat_without_millis, encoded)
+
+    loaded_date = json.loads(encoded)
+    assert len(loaded_date['date'].split('-')) == 3
+
 def test_decimal():
     d = Decimal('3.14')
     encoded = jsonify.encode({'dec':d})
