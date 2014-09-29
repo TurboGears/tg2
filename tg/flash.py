@@ -60,7 +60,22 @@ class TGFlash(GlobalConfigurable):
     javascript object which exposes ``.payload()`` and ``.render()`` methods that can
     be used to get current message and render it from javascript.
 
-    Some options are available to configure the flash message behavior:
+    For a complete list of options supported by Flash objects see :meth:`.TGFlash.configure`.
+    """
+
+    CONFIG_NAMESPACE = 'flash.'
+    CONFIG_OPTIONS = {'template': converters.astemplate,
+                      'js_template': converters.astemplate}
+
+    def __init__(self, **options):
+        self.configure(**options)
+
+    def configure(self, cookie_name="webflash", default_status="ok",
+                  template=DEFAULT_FLASH_TEMPLATE,
+                  js_call='webflash.render()',
+                  js_template=DEFAULT_JSFLASH_TEMPLATE):
+        """Flash messages can be configured through :class:`.AppConfig` (``app_cfg.base_config``)
+        using the following options:
 
         - ``flash.cookie_name`` -> Name of the cookie used to store flash messages
         - ``flash.default_status`` -> Default message status if not specified (``ok`` by default)
@@ -77,19 +92,7 @@ class TGFlash(GlobalConfigurable):
           already displayed messages. The template will receive: ``$container_id``,
           ``$cookie_name``, ``$js_call`` variables.
 
-    """
-
-    CONFIG_NAMESPACE = 'flash.'
-    CONFIG_OPTIONS = {'template': converters.astemplate,
-                      'js_template': converters.astemplate}
-
-    def __init__(self, **options):
-        self.configure(**options)
-
-    def configure(self, cookie_name="webflash", default_status="ok",
-                  template=DEFAULT_FLASH_TEMPLATE,
-                  js_call='webflash.render()',
-                  js_template=DEFAULT_JSFLASH_TEMPLATE):
+        """
         self.default_status = default_status
         self.cookie_name = cookie_name
         self.static_template = template

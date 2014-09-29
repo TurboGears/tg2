@@ -75,11 +75,12 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         super(JSONEncoder, self).__init__(**kwargs)
 
     def configure(self, isodates=False, custom_encoders=None, **kwargs):
-        """Configures the JSONEncoder.
+        """JSON encoder can be configured through :class:`.AppConfig` (``app_cfg.base_config``)
+        using the following options:
 
-        This is used to specify if dates should be encoded in ISO8601 format
-        and to register ``custom_encoders``. This is automatically called
-        by ``__init__`` and :class:`.AppConfig`.
+        - ``json.isodates`` -> encode dates using ISO8601 format
+        - ``json.custom_encoders`` -> List of tuples ``(type, encode_func)`` to register
+          custom encoders for specific types.
 
         """
         self._isodates = isodates
