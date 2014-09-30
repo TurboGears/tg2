@@ -1,5 +1,21 @@
 = Change Log =
 
+== 2.3.4 (**September 30, 2014**) ==
+
+* Support for customizing Flash template
+* Improving JSON support, permit customization without need for simplegeneric and support ISO dates
+* Reference for configuration options is now automatically generate out of .configure methods of GlobalConfigurable objects
+* Support the trace_slowreqs.enable config switch, this permits to actually turn off slow requests tracing.
+* PyPy is now a test environment for TurboGears, each build is tested against it
+* request.language is now deprecated as it was just a duplicate of tg.config['lang']
+* tg.abort can now be used as an error_handler to give an error response in case of validation failure
+* tg.validation_errors_response can be used to quickly return a 412 response with errors in JSON format in case of validation falure
+* Ensure that when 'lang' option is set and i18n is enabled lang is used as fallback language
+* @decode_params decorator is now available to accept controller parameters from request json body
+* Utility functions to login/logout users
+* Avoid shadowing KeyError exceptions in hooks, previously KeyError during hooks were swallowed
+* All functions in tg.util are now public and documented for use by TurboGears users.
+
 == 2.3.3 (**July 7, 2014**) ==
 
 * Quickstart now uses HTTPFound instead of redirect to avoid appending SCRIPT_NAME multiple times
