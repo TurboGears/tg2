@@ -1,6 +1,6 @@
 = Change Log =
 
-== 2.3.4 (**September 30, 2014**) ==
+== 2.3.4 (**October 2, 2014**) ==
 
 * Support for customizing Flash template
 * Improving JSON support, permit customization without need for simplegeneric and support ISO dates
