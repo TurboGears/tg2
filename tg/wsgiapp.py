@@ -91,13 +91,12 @@ class TGApp(object):
         # Hide outer middlewares when crash inside application itself
         __traceback_hide__ = 'before'
 
-        testmode, context = self.setup_app_env(environ)
+        testmode, context, registry = self.setup_app_env(environ)
 
-        #Expose a path that simply registers the globals and preserves them
+        # Expose a path that simply registers the globals and preserves them
         # without doing much else
         if testmode is True and environ['PATH_INFO'] == '/_test_vars':
-            registry = environ['paste.registry']
-            registry.preserve()
+            registry.preserve(force=True)
             start_response('200 OK', [('Content-type', 'text/plain')])
             return ['DONE'.encode('utf-8')]
 
@@ -129,6 +128,7 @@ class TGApp(object):
         the testmode is enabled or not and the TurboGears context.
         """
         conf = self.config
+        testing = False
 
         # Setup the basic global objects
         req = Request(environ)
@@ -170,12 +170,13 @@ class TGApp(object):
 
         environ['tg.locals'] = locals
 
-        #Register Global objects
+        # Register Global objects
         registry = environ['paste.registry']
         registry.register(request_local.config, conf)
         registry.register(request_local.context, locals)
 
         if 'paste.testing_variables' in environ:
+            testing = True
             testenv = environ['paste.testing_variables']
             testenv['req'] = req
             testenv['response'] = response
@@ -184,9 +185,8 @@ class TGApp(object):
             testenv['config'] = conf
             testenv['session'] = locals.session
             testenv['cache'] = locals.cache
-            return True, locals
 
-        return False, locals
+        return testing, locals, registry
 
     def resolve(self, environ, context):
         """Uses dispatching information found in

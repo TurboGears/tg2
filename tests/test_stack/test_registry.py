@@ -288,16 +288,47 @@ def test_registry_streaming_exception():
                 raise SystemError('Woah!')
             else:
                 yield str(i)
-    rm = RegistryManager(app, streaming=True, preserve_exceptions=True)
+    app_with_rm = RegistryManager(app, streaming=True, preserve_exceptions=True)
     environ = {}
     try:
-        for x in rm(environ, None):
+        for x in app_with_rm(environ, None):
             assert len(regobj._object_stack())
     except:
         #check the object got preserved due to exception
         assert regobj._object_stack()
         regobj._pop_object()
         raise
+
+
+def test_registry_not_preserved_when_disabled():
+    def app(environ, start_response):
+        environ['paste.registry'].register(regobj, {'hi':'people'})
+        environ['paste.registry'].preserve()
+        return ['HI']
+
+    app_with_rm = RegistryManager(app, streaming=False, preserve_exceptions=False)
+    environ = {}
+
+    app_with_rm(environ, None)
+
+    # check the object are not preserved as preserve_exceptions is False
+    assert not regobj._object_stack()
+
+
+def test_registry_preserved_when_forcefuly_preserved():
+    def app(environ, start_response):
+        environ['paste.registry'].register(regobj, {'hi':'people'})
+        environ['paste.registry'].preserve(force=True)
+        return ['HI']
+
+    app_with_rm = RegistryManager(app, streaming=False, preserve_exceptions=False)
+    environ = {}
+
+    app_with_rm(environ, None)
+
+    # check the object are preserved as force=True was used
+    assert regobj._object_stack()
+
 
 def test_dispatch_config():
     conf = DispatchingConfig()

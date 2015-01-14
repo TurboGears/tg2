@@ -142,6 +142,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         object, preserved = objects[-1]
         return preserved
 
+
 class Registry(object):
     """Track objects and stacked object proxies for removal
 
@@ -210,13 +211,14 @@ class Registry(object):
                 stacked._pop_object(obj)
         self.reglist.pop()
 
-    def preserve(self):
-        if not self.enable_preservation:
+    def preserve(self, force=False):
+        if not self.enable_preservation and force is False:
             return
 
         for stacked, obj in self.reglist[-1].values():
             if hasattr(stacked, '_preserve_object'):
                 stacked._preserve_object()
+
 
 class RegistryManager(object):
     """Creates and maintains a Registry context
@@ -270,6 +272,7 @@ class RegistryManager(object):
             if hasattr(data, 'close'):
                 data.close()
             reg.cleanup()
+
 
 class DispatchingConfig(StackedObjectProxy):
     """

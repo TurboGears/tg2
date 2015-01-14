@@ -1175,7 +1175,6 @@ class AppConfig(Bunch):
             # from here on the response is a generator
             # so any middleware that relies on the response to be
             # a string needs to be applied before this point.
-
             if self.use_sqlalchemy:
                 app = self.add_sqlalchemy_middleware(app)
 
