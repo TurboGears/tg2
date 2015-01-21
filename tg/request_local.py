@@ -120,7 +120,7 @@ class Request(WebObRequest):
         # Now it seems that all keys are always strings, did WebOb change behavior?
         return self.params.mixed()
 
-    @cached_property
+    @property
     def quoted_path_info(self):
         bpath = webob_bytes_(self.path_info, self.url_encoding)
         return webob_url_quote(bpath, PATH_SAFE)
