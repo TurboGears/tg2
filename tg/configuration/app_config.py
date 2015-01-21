@@ -28,6 +28,7 @@ from tg.renderers.jinja import JinjaRenderer
 from tg.renderers.mako import MakoRenderer
 from tg.renderers.kajiki import KajikiRenderer
 
+from tg.support.appwrappers import ErrorPageApplicationWrapper
 
 log = logging.getLogger(__name__)
 
@@ -196,12 +197,16 @@ class AppConfig(Bunch):
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
         self.use_dotted_templatenames = not minimal
-        self.handle_error_page = not minimal
         self.registry_streaming = True
 
         self.use_sessions = not minimal
         self.i18n_enabled = not minimal
         self.serve_static = not minimal
+
+        # Support Custom Error pages
+        self.status_code_redirect = False  # Use old StatusCodeRedirect middleware
+        self['errorpage.enabled'] = not minimal
+        self['errorpage.status_codes'] = [403, 404]
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -219,10 +224,6 @@ class AppConfig(Bunch):
                           after_render_call=[],
                           before_config=[],
                           after_config=[])
-
-        # The codes TG should display an error page for. All other HTTP errors are
-        # sent to the client or left for some middleware above us to handle
-        self.handle_status_codes = [403, 404]
 
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
@@ -282,15 +283,15 @@ class AppConfig(Bunch):
                     return self.handler(environ, context)
         """
         if milestones.environment_loaded.reached:
-            # We must block registering wrappers if milestone passed, this is because
-            # wrappers are consumed by TGApp constructor, and all the hooks available
+            # Wrappers are consumed by TGApp constructor, and all the hooks available
             # after the milestone and that could register new wrappers are actually
             # called after TGApp constructors and so the wrappers wouldn't be applied.
-            raise TGConfigError('Cannot register application wrappers after application '
-                                'environment has already been loaded')
+            log.warning('Application Wrapper %s registered after environment loaded'
+                        'milestone has been reached, the wrapper will be used only'
+                        'for future TGApp instances.', wrapper)
 
         self.application_wrappers_dependencies.setdefault(after, []).append(wrapper)
-        milestones.environment_loaded.register(self._configure_application_wrappers)
+        self._configure_application_wrappers()
 
     def register_rendering_engine(self, factory):
         """Registers a rendering engine ``factory``.
@@ -322,13 +323,20 @@ class AppConfig(Bunch):
                 log.warn("Unable to register %s for shutdown" % cmd )
 
     def _configure_application_wrappers(self):
-        visit_queue = deque([False, None])
+        # Those are the heads of the dependencies tree
+        DEPENDENCY_HEADS = (False, None, True)
+
+        # Clear in place, this is to avoid desync between self and config
+        self.application_wrappers[:] = []
+
+        registered_wrappers = self.application_wrappers_dependencies.copy()
+        visit_queue = deque(DEPENDENCY_HEADS)
         while visit_queue:
             current = visit_queue.popleft()
-            if current not in (False, None):
+            if current not in DEPENDENCY_HEADS:
                 self.application_wrappers.append(current)
 
-            dependant_wrappers = self.application_wrappers_dependencies.pop(current, [])
+            dependant_wrappers = registered_wrappers.pop(current, [])
             visit_queue.extendleft(reversed(dependant_wrappers))
 
     def _configure_package_paths(self):
@@ -458,6 +466,7 @@ class AppConfig(Bunch):
             self.serve_static = False
 
         self._configure_renderers()
+        self._configure_error_pages()
 
         config.update(self)
 
@@ -489,6 +498,22 @@ class AppConfig(Bunch):
 
         for key, value in lookup.items():
             self.mimetypes.add_type(value, key)
+
+    def _configure_error_pages(self):
+        if (self.auth_backend is None and 401 not in self['errorpage.status_codes']):
+            # If there's no auth backend configured which traps 401
+            # responses we redirect those responses to a nicely
+            # formatted error page
+            self['errorpage.status_codes'] = list(self['errorpage.status_codes']) + [401]
+
+        if self.status_code_redirect is True:
+            # The codes TG should display an error page for. All other HTTP errors are
+            # sent to the client or left for some middleware above us to handle
+            self.handle_error_page = self['errorpage.enabled']
+            self.handle_status_codes = self['errorpage.status_codes']
+        else:
+            if self['errorpage.enabled'] is True:
+                self.register_wrapper(ErrorPageApplicationWrapper, after=True)
 
     def after_init_config(self):
         """
@@ -804,15 +829,19 @@ class AppConfig(Bunch):
         from tg.error import ErrorReporter
         app = ErrorReporter(app, global_conf, **config['tg.errorware'])
 
-        if self.handle_error_page:
-            from tg.support.middlewares import StatusCodeRedirect
+        if self.status_code_redirect is True:
+            warnings.warn("Support for StatusCodeRedirect is deprecated and "
+                          "will be removed in next major release", DeprecationWarning)
 
-            # Display error documents for self.handle_status_codes status codes (and
-            # 500 when debug is disabled)
-            if asbool(config['debug']):
-                app = StatusCodeRedirect(app, self.handle_status_codes)
-            else:
-                app = StatusCodeRedirect(app, self.handle_status_codes + [500])
+            if self.handle_error_page:
+                from tg.support.middlewares import StatusCodeRedirect
+                # Display error documents for self.handle_status_codes status codes (and
+                # 500 when debug is disabled)
+                if asbool(config['debug']):
+                    app = StatusCodeRedirect(app, self.handle_status_codes)
+                else:
+                    app = StatusCodeRedirect(app, self.handle_status_codes + [500])
+
 
         return app
 
@@ -1191,12 +1220,6 @@ class AppConfig(Bunch):
 
             if asbool(full_stack):
                 # This should never be true for internal nested apps
-                if (self.auth_backend is None
-                        and 401 not in self.handle_status_codes):
-                    # If there's no auth backend configured which traps 401
-                    # responses we redirect those responses to a nicely
-                    # formatted error page
-                    self.handle_status_codes.append(401)
                 app = self.add_slowreqs_middleware(global_conf, app)
                 app = self.add_error_middleware(global_conf, app)
 

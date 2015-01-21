@@ -4,6 +4,7 @@ Testing for TG2 Configuration
 from nose import SkipTest
 from nose.tools import eq_, raises
 import atexit, sys, os
+from tg.support.appwrappers import ErrorPageApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
@@ -811,18 +812,6 @@ class TestAppConfig:
         assert conf.application_wrappers[3] == AppWrapper4
         assert conf.application_wrappers[4] == AppWrapper5
 
-    @raises(TGConfigError)
-    def test_application_wrapper_blocked_after_milestone(self):
-        class AppWrapper1:
-            pass
-        class AppWrapper2:
-            pass
-
-        conf = AppConfig(minimal=True)
-        conf.register_wrapper(AppWrapper1)
-        milestones.environment_loaded.reach()
-        conf.register_wrapper(AppWrapper2)
-
     def test_wrap_app(self):
         class RootController(TGController):
             @expose()
@@ -1265,7 +1254,7 @@ class TestAppConfig:
     def test_application_test_vars(self):
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = PackageWithModel()
-        app = conf.make_wsgi_app(global_conf={'debug':True})
+        app = conf.make_wsgi_app(global_conf={'debug': True})
         app = TestApp(app)
 
         assert 'DONE' in app.get('/_test_vars')
@@ -1310,7 +1299,7 @@ class TestAppConfig:
                 return self.dispatcher(None, environ, start_response)
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.application_wrappers.append(AppWrapper)
+        conf.register_wrapper(AppWrapper)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
@@ -1339,7 +1328,8 @@ class TestAppConfig:
                 abort(403)
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.handle_error_page = True
+        conf['errorpage.enabled'] = True
+        conf['errorpage.handle_exceptions'] = False
         app = conf.make_wsgi_app(full_stack=True)
         app = TestApp(app)
 
@@ -1363,12 +1353,216 @@ class TestAppConfig:
                 return _output()
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.handle_error_page = True
+        conf['errorpage.enabled'] = True
+        conf['errorpage.handle_exceptions'] = False
         app = conf.make_wsgi_app(full_stack=True)
         app = TestApp(app)
 
         resp = app.get('/test', status=403)
         assert 'ERROR!!!' in resp, resp
+
+    def test_custom_old_error_document(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(403)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf.status_code_redirect = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_custom_old_error_document_with_streamed_response(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                response.status_code = 403
+                def _output():
+                    yield 'Hi'
+                    yield 'World'
+                return _output()
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf.status_code_redirect = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_custom_500_document(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(500)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['debug'] = False
+        conf['errorpage.handle_exceptions'] = False
+        conf['errorpage.status_codes'] += [500]
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_custom_500_document_on_crash(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                raise Exception('Crash!')
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['debug'] = False
+        conf['errorpage.handle_exceptions'] = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_old_custom_500_document(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(500)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['debug'] = False
+        conf.status_code_redirect = True
+        conf['errorpage.enabled'] = True
+        conf['errorpage.status_codes'] += [500]
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'ERROR!!!' in resp, resp
+
+    def test_skips_custom_500_document_when_debug(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(500)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['debug'] = True
+        conf['errorpage.handle_exceptions'] = False
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'ERROR!!!' not in resp, resp
+
+    def test_skips_old_custom_500_document_when_debug(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(500)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['debug'] = True
+        conf.status_code_redirect = True
+        conf['errorpage.enabled'] = True
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'ERROR!!!' not in resp, resp
+
+    def test_skips_custom_error_document_when_disabled(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(403)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = False
+        conf['errorpage.status_codes'] = (403, 404)
+        conf['errorpage.handle_exceptions'] = False
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' not in resp, resp
+
+    def test_skips_custom_error_document_when_disabled_and_manually_registered(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(403)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_wrapper(ErrorPageApplicationWrapper)
+        conf['errorpage.enabled'] = False
+        conf['errorpage.status_codes'] = (403, 404)
+        conf['errorpage.handle_exceptions'] = False
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=403)
+        assert 'ERROR!!!' not in resp, resp
 
     def test_errorware_configuration(self):
         class RootController(TGController):
