@@ -621,9 +621,19 @@ class AppConfig(Bunch):
         try:
             from ming import create_datastore
             def create_ming_datastore(url, database, **kw):
-                if database and url[-1] != '/':
-                    url += '/'
-                ming_url = url + database
+                if "," in url:
+                    from ming import create_engine
+                    from pymongo import MongoReplicaSetClient, ReadPreference
+                    bind = create_engine(url,
+                                         replicaSet=config['app_conf']['ming.replica_set'],
+                                         read_preference=ReadPreference.PRIMARY_PREFERRED,
+                                         use_class=MongoReplicaSetClient)
+                    ming_url = database
+                    kw['bind'] = bind
+                else:
+                    if database and url[-1] != '/':
+                        url += '/'
+                    ming_url = url + database
                 return create_datastore(ming_url, **kw)
         except ImportError: #pragma: no cover
             from ming.datastore import DataStore
