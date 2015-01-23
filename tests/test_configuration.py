@@ -491,8 +491,6 @@ class TestAppConfig:
             config.pop('sqlalchemy.master.url')
 
     def test_setup_ming_persistance(self):
-        if PY3: raise SkipTest()
-
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
@@ -505,8 +503,6 @@ class TestAppConfig:
         assert app is not None
 
     def test_setup_ming_persistance_with_url_alone(self):
-        if PY3: raise SkipTest()
-
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
@@ -518,8 +514,6 @@ class TestAppConfig:
         assert app is not None
 
     def test_setup_ming_persistance_advanced_options(self):
-        if PY3: raise SkipTest()
-
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
@@ -532,7 +526,8 @@ class TestAppConfig:
         assert app is not None
 
     def test_setup_ming_persistance_replica_set(self):
-        if PY3: raise SkipTest()
+        if sys.version_info[:2] == (2, 6):
+            raise SkipTest()
 
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -551,6 +546,27 @@ class TestAppConfig:
         dstore = config['tg.app_globals'].ming_datastore
         assert expected_db == dstore.name, dstore.name
         assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
+
+    def test_setup_mig_persistance_replica_set_option(self):
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mongodb://localhost:27017,localhost:27018/testdb'
+        conf['ming.connection.replicaSet'] = 'test'
+        conf['ming.db'] = ''
+
+        app = conf.make_wsgi_app()
+        assert app is not None
+
+        expected_url = 'mongodb://localhost:27017,localhost:27018/'
+        expected_db = 'testdb'
+
+        dstore = config['tg.app_globals'].ming_datastore
+        assert expected_db == dstore.name, dstore.name
+        assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
+        assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
     def test_add_auth_middleware(self):
         class Dummy:pass
