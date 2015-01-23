@@ -531,6 +531,27 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
+    def test_setup_ming_persistance_replica_set(self):
+        if PY3: raise SkipTest()
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mongodb://localhost:27017,localhost:27018/testdb?replicaSet=test'
+        conf['ming.db'] = ''
+
+        app = conf.make_wsgi_app()
+        assert app is not None
+
+        expected_url = 'mongodb://localhost:27017,localhost:27018/?replicaSet=test'
+        expected_db = 'testdb'
+
+        dstore = config['tg.app_globals'].ming_datastore
+        assert expected_db == dstore.name, dstore.name
+        assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
+
     def test_add_auth_middleware(self):
         class Dummy:pass
 
