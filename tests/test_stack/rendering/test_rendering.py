@@ -58,6 +58,34 @@ def test_default_genshi_renderer():
     assert "Welcome" in resp
     assert "TurboGears" in resp
 
+def test_genshi_nameconstant():
+    from genshi.template.astutil import ASTCodeGenerator, parse
+    from tg.renderers.genshi import GenshiRenderer
+
+    # This checks genshi gets monkeypatched to fix it on Py34 if option is provided
+    GenshiRenderer.create(Bunch({
+        'genshi.name_constant_patch': True,
+        'use_dotted_templatenames': False,
+        'auto_reload_templates': False,
+        'paths': Bunch({'templates': '/tmp'})
+    }), None)
+    assert hasattr(ASTCodeGenerator, 'visit_NameConstant')
+
+    astgen = ASTCodeGenerator(parse('range(10)', mode='eval'))
+    for n in (False, True, None):
+        astgen._new_line()
+        astgen.visit_NameConstant(Bunch(value=n))
+        line = str(astgen.line)
+        assert line == str(n), line
+
+    astgen._new_line()
+    try:
+        astgen.visit_NameConstant(Bunch(value='HELLO_WORLD'))
+    except Exception as e:
+        'Unknown NameConstant' in str(e)
+    else:
+        assert False
+
 def test_genshi_doctype_html5():
     app = setup_noDB(genshi_doctype='html5')
     resp = app.get('/')

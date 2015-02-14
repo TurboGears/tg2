@@ -65,6 +65,21 @@ class GenshiRenderer(RendererFactory):
             # Genshi not available
             return None
 
+        # Patch for Genshi on Python3.4
+        if asbool(config.get('genshi.name_constant_patch', False)):
+            from genshi.template.astutil import ASTCodeGenerator
+            if not hasattr(ASTCodeGenerator, 'visit_NameConstant'):
+                def _visit_NameConstant(self, node):
+                    if node.value is None:
+                        self._write('None')
+                    elif node.value is True:
+                        self._write('True')
+                    elif node.value is False:
+                        self._write('False')
+                    else:
+                        raise Exception("Unknown NameConstant %r" % (node.value,))
+                ASTCodeGenerator.visit_NameConstant = _visit_NameConstant
+
         if config.get('use_dotted_templatenames', True):
             TemplateLoader = DottedTemplateLoader
             template_loader_args = {'dotted_finder': app_globals.dotted_filename_finder}
@@ -174,7 +189,10 @@ class GenshiRenderer(RendererFactory):
         def render_template():
             template = self.load_template(template_name)
             return Markup(template.generate(**template_vars).render(
-                    doctype=doctype, method=method, encoding=None))
+                doctype=doctype,
+                method=method,
+                encoding=None)
+            )
 
         return cached_template(template_name, render_template,
                                ns_options=('doctype', 'method'), **kwargs)
