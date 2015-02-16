@@ -82,7 +82,7 @@ def test_genshi_nameconstant():
     try:
         astgen.visit_NameConstant(Bunch(value='HELLO_WORLD'))
     except Exception as e:
-        'Unknown NameConstant' in str(e)
+        assert 'Unknown NameConstant' in str(e)
     else:
         assert False
 
