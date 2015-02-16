@@ -1,27 +1,51 @@
 import logging
 import sys
+from tg.configuration.utils import coerce_config
+from tg.support.converters import asbool, aslist, asint
 from tg.request_local import Response
 
 log = logging.getLogger(__name__)
 
 
 class ErrorPageApplicationWrapper(object):
-    """Given an Application it intercepts the response code and shows a custom page"""
+    """Given an Application it intercepts the response code and shows a custom page.
+
+    Supported options are:
+
+        - ``errorpage.enabled``: Whenever the custom error page is enabled or not.
+        - ``errorpage.status_codes``: List of HTTP errors that should be trapped.
+          By default 403, 404, 500.
+        - ``errorpage.handle_exceptions``: Whenever exceptions should be trapped and
+          treated as a 500 error or not. By default this is ``True`` when ``debug=false``.
+        - ``errorapge.path``: Path of the controller should be displayed in case of
+          errors. By default ``/error/document``.
+    """
 
     def __init__(self, handler, config):
-        self.handle_error_enabled = config.get('errorpage.enabled', False)
-        self.handle_status_codes = set(config.get('errorpage.status_codes', tuple()))
-        self.handle_exceptions = config.get('errorpage.handle_exceptions',
-                                            not config.get('debug', False))
-        self.handle_error_path = config.get('errorpage.path', '/error/document')
-
         self._handler = handler
+
+        options = {
+            'enabled': False,
+            'status_codes': tuple(),
+            'handle_exceptions': not asbool(config.get('debug', False)),
+            'path': '/error/document'
+        }
+        options.update(coerce_config(config, 'errorpage.',  {
+            'enabled': asbool,
+            'status_codes': aslist,
+            'handle_exceptions': asbool,
+        }))
+
+        self.handle_error_enabled = options['enabled']
+        self.handle_status_codes = set(asint(s) for s in options['status_codes'])
+        self.handle_exceptions = options['handle_exceptions']
+        self.handle_error_path = options['path']
 
         if self.handle_exceptions and 500 not in self.handle_status_codes:
             self.handle_status_codes.add(500)
 
         log.debug('ErrorPageApplicationWrapper enabled: %s -> %s',
-                  self.handle_error_enabled, self.handle_status_codes)
+                  self.handle_error_enabled, options)
 
     def __call__(self, controller, environ, context):
         if self.handle_error_enabled is False:

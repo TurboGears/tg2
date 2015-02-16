@@ -527,13 +527,16 @@ def use_custom_format(controller, custom_format):
     render_custom_format[default_im_func(controller)] = custom_format
 
 
-def override_template(controller, template):
+def override_template(view, template):
     """Override the template to be used.
 
-    Use override_template in a controller in order to change the template
+    Use override_template in a controller method in order to change the template
     that will be used to render the response dictionary dynamically.
 
-    The template string passed in requires that
+    The ``view`` argument is the actual controller method for which you
+    want to replace the template.
+
+    The ``template`` string passed in requires that
     you include the template engine name, even if you're using the default.
 
     So you have to pass in a template id string like::
@@ -545,7 +548,7 @@ def override_template(controller, template):
 
     """
     try:
-        engines = controller.decoration.engines
+        engines = view.decoration.engines
     except:
         return
 
@@ -556,7 +559,7 @@ def override_template(controller, template):
             override_mapping = request._override_mapping
         except AttributeError:
             override_mapping = request._override_mapping = {}
-        override_mapping.setdefault(default_im_func(controller), {}).update({content_type: tmpl})
+        override_mapping.setdefault(default_im_func(view), {}).update({content_type: tmpl})
 
 
 class validate(object):

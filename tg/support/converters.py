@@ -5,6 +5,7 @@
 from tg._compat import string_type
 from string import Template
 
+
 def asbool(obj):
     if isinstance(obj, string_type):
         obj = obj.strip().lower()

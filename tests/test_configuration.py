@@ -4,7 +4,10 @@ Testing for TG2 Configuration
 from nose import SkipTest
 from nose.tools import eq_, raises
 import atexit, sys, os
-from tg.support.appwrappers import ErrorPageApplicationWrapper
+
+from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
+from tg.appwrappers.mingflush import MingApplicationWrapper
+from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
@@ -314,10 +317,139 @@ class TestAppConfig:
 
         app = conf.make_wsgi_app()
 
+        # Check the custom manager got configured
         assert conf.did_perform_custom_tm == True
-        assert conf.application_wrappers == []
+
+        # Wrapper before the last one should be the transaction manager
+        last_wrapper = TGApp().wrapped_dispatch._handler
+        assert last_wrapper.enabled is False, last_wrapper
 
     def test_sqlalchemy_commit_veto(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+            @expose()
+            def crash(self):
+                raise Exception('crash')
+
+            @expose()
+            def forbidden(self):
+                response.status = 403
+                return 'FORBIDDEN'
+
+            @expose()
+            def notfound(self):
+                response.status = 404
+                return 'NOTFOUND'
+
+        def custom_commit_veto(environ, status, headers):
+            if status.startswith('404'):
+                return True
+            return False
+
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf['tm.enabled'] = True
+        conf['tm.commit_veto'] = custom_commit_veto
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert hasattr(conf, 'use_transaction_manager') is False
+
+        app.get('/test')
+        assert fake_transaction.aborted == False
+
+        try:
+            app.get('/crash')
+        except:
+            pass
+        assert fake_transaction.aborted == True
+
+        app.get('/forbidden', status=403)
+        assert fake_transaction.aborted == False
+
+        app.get('/notfound', status=404)
+        assert fake_transaction.aborted == True
+
+        transaction.manager = prev_transaction_manager
+
+    def test_sqlalchemy_doom(self):
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
+
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                fake_transaction.doom()
+                return 'HI!'
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf['tm.enabled'] = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert hasattr(conf, 'use_transaction_manager') is False
+
+        app.get('/test')
+        assert fake_transaction.aborted == True
+
+        transaction.manager = prev_transaction_manager
+
+    def test_sqlalchemy_retry(self):
+        fake_transaction = FakeTransaction()
+        import transaction
+        prev_transaction_manager = transaction.manager
+        transaction.manager = fake_transaction
+
+        from transaction.interfaces import TransientError
+
+        class RootController(TGController):
+            attempts = []
+
+            @expose()
+            def test(self):
+                self.attempts.append(True)
+                if len(self.attempts) == 3:
+                    return 'HI!'
+                raise TransientError()
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf['tm.enabled'] = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        conf['tm.attempts'] = 3
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert hasattr(conf, 'use_transaction_manager') is False
+
+        resp = app.get('/test')
+        assert 'HI' in resp
+
+        transaction.manager = prev_transaction_manager
+
+    def test_old_sqlalchemy_commit_veto(self):
         class RootController(TGController):
             @expose()
             def test(self):
@@ -376,7 +508,7 @@ class TestAppConfig:
 
         transaction.manager = prev_transaction_manager
 
-    def test_sqlalchemy_doom(self):
+    def test_old_sqlalchemy_doom(self):
         fake_transaction = FakeTransaction()
         import transaction
         prev_transaction_manager = transaction.manager
@@ -404,7 +536,7 @@ class TestAppConfig:
 
         transaction.manager = prev_transaction_manager
 
-    def test_sqlalchemy_retry(self):
+    def test_old_sqlalchemy_retry(self):
         fake_transaction = FakeTransaction()
         import transaction
         prev_transaction_manager = transaction.manager
@@ -438,6 +570,22 @@ class TestAppConfig:
         assert 'HI' in resp
 
         transaction.manager = prev_transaction_manager
+
+    def test_old_sqlalchemy_is_disabled_when_missing(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = False
+        conf.use_transaction_manager = True
+
+        app = conf.make_wsgi_app()
+        assert conf.use_transaction_manager is False
 
     def test_setup_sqla_persistance(self):
         config['sqlalchemy.url'] = 'sqlite://'
@@ -491,8 +639,13 @@ class TestAppConfig:
             config.pop('sqlalchemy.master.url')
 
     def test_setup_ming_persistance(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
         package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=None)
+        conf = AppConfig(minimal=True, root_controller=RootController())
         conf.package = package
         conf.model = package.model
         conf.use_ming = True
@@ -500,7 +653,73 @@ class TestAppConfig:
         conf['ming.db'] = 'inmemdb'
 
         app = conf.make_wsgi_app()
-        assert app is not None
+
+        tgapp = app.application
+        while not isinstance(tgapp, TGApp):
+            tgapp = tgapp.app
+
+        ming_handler = tgapp.wrapped_dispatch._handler._handler
+        assert isinstance(ming_handler, MingApplicationWrapper), ming_handler
+
+        class FakeMingSession(object):
+            actions = []
+
+            def flush_all(self):
+                self.actions.append('FLUSH')
+
+            def close_all(self):
+                self.actions.append('CLOSE')
+
+        ming_handler.ThreadLocalODMSession = FakeMingSession()
+
+        app = TestApp(app)
+        resp = app.get('/test')
+        assert 'HI' in resp
+
+        assert ming_handler.ThreadLocalODMSession.actions == ['FLUSH']
+
+    def test_setup_ming_persistance_closes_on_failure(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                raise Exception('CRASH!')
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mim://'
+        conf['ming.db'] = 'inmemdb'
+
+        app = conf.make_wsgi_app()
+
+        tgapp = app.application
+        while not isinstance(tgapp, TGApp):
+            tgapp = tgapp.app
+
+        ming_handler = tgapp.wrapped_dispatch._handler._handler
+        assert isinstance(ming_handler, MingApplicationWrapper), ming_handler
+
+        class FakeMingSession(object):
+            actions = []
+
+            def flush_all(self):
+                self.actions.append('FLUSH')
+
+            def close_all(self):
+                self.actions.append('CLOSE')
+
+        ming_handler.ThreadLocalODMSession = FakeMingSession()
+
+        app = TestApp(app)
+
+        try:
+            app.get('/test', status=500)
+        except:
+            assert ming_handler.ThreadLocalODMSession.actions == ['CLOSE']
+        else:
+            assert False, 'Should have raised exception'
 
     def test_setup_ming_persistance_with_url_alone(self):
         package = PackageWithModel()

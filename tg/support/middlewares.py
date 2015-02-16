@@ -134,6 +134,31 @@ class DBSessionRemoverMiddleware(object):
             raise
 
 
+class MingSessionRemoverMiddleware(object):
+    def __init__(self, ThreadLocalODMSession, app):
+        self.app = app
+        self.ThreadLocalODMSession = ThreadLocalODMSession
+
+    def _stream_response(self, data):
+        try:
+            for chunk in data:
+                yield chunk
+        finally:
+            log.debug("Removing ThreadLocalODMSession from current thread")
+            if hasattr(data, 'close'):
+                data.close()
+            self.ThreadLocalODMSession.close_all()
+
+    def __call__(self, environ, start_response):
+        try:
+            return self._stream_response(self.app(environ, start_response))
+        except:
+            log.debug("Removing ThreadLocalODMSession from current thread")
+            self.ThreadLocalODMSession.close_all()
+            raise
+
+
+
 from .statics import StaticsMiddleware
 
 __all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware',

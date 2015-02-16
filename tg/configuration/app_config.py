@@ -28,7 +28,9 @@ from tg.renderers.jinja import JinjaRenderer
 from tg.renderers.mako import MakoRenderer
 from tg.renderers.kajiki import KajikiRenderer
 
-from tg.support.appwrappers import ErrorPageApplicationWrapper
+from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
+from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
+from tg.appwrappers.mingflush import MingApplicationWrapper
 
 log = logging.getLogger(__name__)
 
@@ -191,8 +193,9 @@ class AppConfig(Bunch):
 
         self.use_ming = False
         self.use_sqlalchemy = False
-        self.use_transaction_manager = not minimal
-        self.commit_veto = None
+
+        self['tm.enabled'] = not minimal
+
         self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
@@ -215,7 +218,8 @@ class AppConfig(Bunch):
         self.controller_wrappers = []
         self.application_wrappers = []
         self.application_wrappers_dependencies = {False: [],
-                                                  None: []}
+                                                  None: [],
+                                                  True: []}
         self.hooks = dict(before_validate=[],
                           before_call=[],
                           before_render=[],
@@ -237,6 +241,10 @@ class AppConfig(Bunch):
         self.register_rendering_engine(MakoRenderer)
         self.register_rendering_engine(JinjaRenderer)
         self.register_rendering_engine(KajikiRenderer)
+
+        self.register_wrapper(MingApplicationWrapper, after=True)
+        self.register_wrapper(TransactionApplicationWrapper, after=True)
+        self.register_wrapper(ErrorPageApplicationWrapper, after=True)
 
     def get_root_module(self):
         root_module_path = self.paths['root']
@@ -342,10 +350,12 @@ class AppConfig(Bunch):
     def _configure_package_paths(self):
         root = os.path.dirname(os.path.abspath(self.package.__file__))
         # The default paths:
-        paths = Bunch(root=root,
-                     controllers=os.path.join(root, 'controllers'),
-                     static_files=os.path.join(root, 'public'),
-                     templates=[os.path.join(root, 'templates')])
+        paths = Bunch(
+            root=root,
+            controllers=os.path.join(root, 'controllers'),
+            static_files=os.path.join(root, 'public'),
+            templates=[os.path.join(root, 'templates')]
+        )
         # If the user defined custom paths, then use them instead of the
         # default ones:
         paths.update(self.paths)
@@ -446,10 +456,6 @@ class AppConfig(Bunch):
             self.use_toscawidgets = False
             self.use_toscawidgets2 = True
 
-        if not self.use_sqlalchemy:
-            #Transaction manager is useless with Ming
-            self.use_transaction_manager = False
-
         # Load conf dict into the global config object
         config.update(conf)
 
@@ -467,6 +473,8 @@ class AppConfig(Bunch):
 
         self._configure_renderers()
         self._configure_error_pages()
+        self._configure_ming()
+        self._configure_transaction_manager()
 
         config.update(self)
 
@@ -499,6 +507,14 @@ class AppConfig(Bunch):
         for key, value in lookup.items():
             self.mimetypes.add_type(value, key)
 
+    def _configure_ming(self):
+        try:
+            autoflush_enabled = self['ming.autoflush']
+        except KeyError:
+            autoflush_enabled = True
+
+        self['ming.autoflush'] = self.use_ming and autoflush_enabled
+
     def _configure_error_pages(self):
         if (self.auth_backend is None and 401 not in self['errorpage.status_codes']):
             # If there's no auth backend configured which traps 401
@@ -511,9 +527,19 @@ class AppConfig(Bunch):
             # sent to the client or left for some middleware above us to handle
             self.handle_error_page = self['errorpage.enabled']
             self.handle_status_codes = self['errorpage.status_codes']
-        else:
-            if self['errorpage.enabled'] is True:
-                self.register_wrapper(ErrorPageApplicationWrapper, after=True)
+            self['errorpage.enabled'] = False
+
+    def _configure_transaction_manager(self):
+        if getattr(self, 'use_transaction_manager', False):
+            warnings.warn("Transaction Manager middleware has been deprecated, "
+                          "please use the tm.enabled=True option to switch "
+                          "to the transaction application wrapper",
+                          DeprecationWarning, stacklevel=2)
+            self['tm.enabled'] = False
+
+            if not self.use_sqlalchemy:
+                log.debug('Disabling Transaction Manager as SQLAlchemy is not available')
+                self.use_transaction_manager = False
 
     def after_init_config(self):
         """
@@ -1089,21 +1115,27 @@ class AppConfig(Bunch):
           transaction.doom()
 
         By default http error responses also roll back transactions, but this
-        behavior can be overridden by overriding base_config.commit_veto.
+        behavior can be overridden by overriding base_config['tm.commit_veto'].
 
         """
         from tg.support.transaction_manager import TGTransactionManager
 
-        #TODO: remove self.commit_veto option in future release
-        #backward compatibility with "commit_veto" option
-        config['tm.commit_veto'] = self.commit_veto
+        try:
+            # TODO: remove self.commit_veto option in future release
+            # backward compatibility with "commit_veto" option
+            config['tm.commit_veto'] = self.commit_veto
+            warnings.warn("commit_veto option has been replaced by tm.commit_veto",
+                          DeprecationWarning, stacklevel=2)
+        except AttributeError:
+            pass
 
         return TGTransactionManager(app, config)
 
     def add_ming_middleware(self, app):
         """Set up the ming middleware for the unit of work"""
-        import ming.odm.middleware
-        return ming.odm.middleware.MingMiddleware(app)
+        from tg.support.middlewares import MingSessionRemoverMiddleware
+        from ming.odm import ThreadLocalODMSession
+        return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
     def add_sqlalchemy_middleware(self, app):
         """Set up middleware that cleans up the sqlalchemy session.
@@ -1187,8 +1219,9 @@ class AppConfig(Bunch):
                 skip_authentication = app_conf.get('skip_authentication', False)
                 app = self.add_auth_middleware(app, skip_authentication)
 
-            if self.use_transaction_manager:
+            if getattr(self, 'use_transaction_manager', False):
                 app = self.add_tm_middleware(app)
+
 
             # TODO: Middlewares before this point should be converted to App Wrappers.
             # They provide some basic TG features like AUTH, Caching and transactions
@@ -1213,11 +1246,6 @@ class AppConfig(Bunch):
             if config.get('make_body_seekable'):
                 app = SeekableRequestBodyMiddleware(app)
 
-            if 'PYTHONOPTIMIZE' in os.environ:
-                warnings.warn("Forcing full_stack=False due to PYTHONOPTIMIZE enabled. "
-                              "Error Middleware will be disabled", RuntimeWarning, stacklevel=2)
-                full_stack = False
-
             if asbool(full_stack):
                 # This should never be true for internal nested apps
                 app = self.add_slowreqs_middleware(global_conf, app)
@@ -1231,14 +1259,13 @@ class AppConfig(Bunch):
             # can preserve context in case of exceptions
             app = self.add_debugger_middleware(global_conf, app)
 
-            # Static files (if running in production, and Apache or another
-            # web server is serving static files)
-
-            #if the user has set the value in app_config, don't pull it from the ini
+            # if the user has set the value in app_config, don't pull it from the ini
             forced_serve_static = config.get('serve_static')
             if forced_serve_static is not None:
                 self.serve_static = asbool(forced_serve_static)
 
+            # Static files (if running in production, and Apache or another
+            # web server is serving static files)
             if self.serve_static:
                 app = self.add_static_file_middleware(app)
 

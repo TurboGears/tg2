@@ -1,6 +1,7 @@
 from webtest import TestApp
 from tg.support.middlewares import StatusCodeRedirect
 from tg.support.middlewares import DBSessionRemoverMiddleware
+from tg.support.middlewares import MingSessionRemoverMiddleware
 
 
 def FakeApp(environ, start_response):
@@ -35,6 +36,9 @@ class FakeDBSession(object):
     def remove(self):
         self.removed = True
 
+    def close_all(self):
+        self.remove()
+
 
 class FakeAppWithClose(object):
     closed = False
@@ -42,6 +46,10 @@ class FakeAppWithClose(object):
 
     def __call__(self, environ, start_response):
         start_response('200 Success', [])
+
+        if environ['PATH_INFO'] == '/crash':
+            raise Exception('crashed')
+
         return self
 
     def __iter__(self):
@@ -74,4 +82,35 @@ class TestDBSessionRemoverMiddleware(object):
 
     def test_session_is_removed(self):
         r = self.app.get('/nonerror')
+        assert self.session.removed == True, self.app_with_close
+
+    def test_session_is_removed_on_crash(self):
+        try:
+            r = self.app.get('/crash')
+        except:
+            pass
+
+        assert self.session.removed == True, self.app_with_close
+
+
+class TestMingSessionRemoverMiddlewaree(object):
+    def setup(self):
+        self.app_with_close = FakeAppWithClose()
+        self.session = FakeDBSession()
+        self.app = TestApp(MingSessionRemoverMiddleware(self.session, self.app_with_close))
+
+    def test_close_is_called(self):
+        r = self.app.get('/nonerror')
+        assert self.app_with_close.closed == True, self.app_with_close
+
+    def test_session_is_removed(self):
+        r = self.app.get('/nonerror')
+        assert self.session.removed == True, self.app_with_close
+
+    def test_session_is_removed_on_crash(self):
+        try:
+            r = self.app.get('/crash')
+        except:
+            pass
+
         assert self.session.removed == True, self.app_with_close
