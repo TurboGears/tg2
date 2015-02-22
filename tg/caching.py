@@ -5,6 +5,7 @@ from tg.support import NoDefault, EmptyContext
 from tg._compat import im_func, im_class
 from functools import wraps
 
+
 class cached_property(object):
     """
     Works like python @property but the decorated function only gets
@@ -85,14 +86,14 @@ def _cached_call(func, args, kwargs, key_func, key_dict,
             When cache_response is set to False, the cache_headers
             argument is ignored as none of the response is cached.
 
-    If cache_enabled is set to False in the .ini file, then cache is
+    If cache.enabled is set to False in the .ini file, then cache is
     disabled globally.
     """
 
     tg_locals = tg.request.environ['tg.locals']
-    enabled = tg_locals.config.get("cache_enabled", "True")
+    enabled = asbool(tg_locals.config.get("cache.enabled", True))
 
-    if not asbool(enabled):
+    if not enabled:
         return func(*args, **kwargs)
 
     cache_extra_args = cache_extra_args or {}
@@ -107,7 +108,7 @@ def _cached_call(func, args, kwargs, key_func, key_dict,
 
     cache_obj = getattr(tg_locals, 'cache', None)
     if not cache_obj:  # pragma: no cover
-        raise Exception('TurboGears Cache object not found')
+        raise Exception('TurboGears Cache object not found, ensure cache.enabled=True')
 
     my_cache = cache_obj.get_cache(namespace, **cache_extra_args)
 
@@ -175,7 +176,7 @@ def beaker_cache(key="cache_default", expire="never", type=None,
             When cache_response is set to False, the cache_headers
             argument is ignored as none of the response is cached.
 
-    If cache_enabled is set to False in the .ini file, then cache is
+    If cache.enabled is set to False in the .ini file, then cache is
     disabled globally.
 
     """

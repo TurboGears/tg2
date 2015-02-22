@@ -262,7 +262,7 @@ def setup_i18n(tgl=None):
         session_existed = session_.accessed()
         # If session is available, we try to see if there are languages set
         languages = session_.get(tgl.config.get('lang_session_key', 'tg_lang'))
-        if not session_existed and tgl.config.get('beaker.session.tg_avoid_touch'):
+        if not session_existed and tgl.config.get('i18n.no_session_touch'):
             session_.__dict__['_sess'] = None
 
         if languages:

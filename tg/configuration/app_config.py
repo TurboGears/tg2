@@ -10,7 +10,6 @@ from collections import MutableMapping as DictMixin, deque
 
 from tg.i18n import ugettext, get_lang
 
-from tg.support.middlewares import SessionMiddleware, CacheMiddleware
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
@@ -28,6 +27,8 @@ from tg.renderers.jinja import JinjaRenderer
 from tg.renderers.mako import MakoRenderer
 from tg.renderers.kajiki import KajikiRenderer
 
+from tg.appwrappers.caching import CacheApplicationWrapper
+from tg.appwrappers.session import SessionApplicationWrapper
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
 from tg.appwrappers.mingflush import MingApplicationWrapper
@@ -202,7 +203,8 @@ class AppConfig(Bunch):
         self.use_dotted_templatenames = not minimal
         self.registry_streaming = True
 
-        self.use_sessions = not minimal
+        self['session.enabled'] = not minimal
+        self['cache.enabled'] = not minimal
         self.i18n_enabled = not minimal
         self.serve_static = not minimal
 
@@ -242,6 +244,8 @@ class AppConfig(Bunch):
         self.register_rendering_engine(JinjaRenderer)
         self.register_rendering_engine(KajikiRenderer)
 
+        self.register_wrapper(SessionApplicationWrapper, after=True)
+        self.register_wrapper(CacheApplicationWrapper, after=True)
         self.register_wrapper(MingApplicationWrapper, after=True)
         self.register_wrapper(TransactionApplicationWrapper, after=True)
         self.register_wrapper(ErrorPageApplicationWrapper, after=True)
@@ -966,23 +970,10 @@ class AppConfig(Bunch):
         return app
 
     def add_core_middleware(self, app):
-        """Add support for routes dispatch, sessions, and caching.
-        This is where you would want to override if you wanted to provide your
-        own routing, session, or caching middleware.  Your app_cfg.py might look something
-        like this::
+        """Add support for routes dispatch, sessions, and caching middlewares
 
-            from tg.configuration import AppConfig
-            from routes.middleware import RoutesMiddleware
-            from beaker.middleware import CacheMiddleware
-            from mysessionier.middleware import SessionMiddleware
-
-            class MyAppConfig(AppConfig):
-                def add_core_middleware(self, app):
-                    app = RoutesMiddleware(app, config['routes.map'])
-                    app = SessionMiddleware(app, config)
-                    app = CacheMiddleware(app, config)
-                    return app
-            base_config = MyAppConfig()
+        Those are all deprecated middlewares and will be removed in future TurboGears
+        versions as they have been replaced by other tools.
         """
         if self.enable_routes:
             warnings.warn("Internal routes support will be deprecated soon, please "
@@ -990,10 +981,19 @@ class AppConfig(Bunch):
             from routes.middleware import RoutesMiddleware
             app = RoutesMiddleware(app, config['routes.map'])
 
-        if self.use_sessions:
+        if getattr(self, 'use_session_middleware', False):
+            warnings.warn('SessionMiddleware is deprecated and will be removed soon, '
+                          'please consider using SessionApplicationWrapper instead.',
+                          DeprecationWarning)
+            from tg.support.middlewares import SessionMiddleware
             app = SessionMiddleware(app, config)
-        
-        app = CacheMiddleware(app, config)
+
+        if getattr(self, 'use_cache_middleware', False):
+            warnings.warn('CacheMiddleware is deprecated and will be removed soon, '
+                          'please consider using CacheApplicationWrapper instead.',
+                          DeprecationWarning)
+            from tg.support.middlewares import CacheMiddleware
+            app = CacheMiddleware(app, config)
 
         return app
 
@@ -1210,11 +1210,6 @@ class AppConfig(Bunch):
 
             # Apply controller wrappers to controller caller
             self._setup_controller_wrappers()
-
-            # TODO: This should be moved in configuration phase.
-            # It is here as it requires both the .ini file and AppConfig to be ready
-            avoid_sess_touch = config.get('beaker.session.tg_avoid_touch', 'false')
-            config['beaker.session.tg_avoid_touch'] = asbool(avoid_sess_touch)
 
             app = TGApp()
             if wrap_app:

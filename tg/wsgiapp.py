@@ -162,8 +162,6 @@ class TGApp(object):
             tmpl_context = AttribSafeTemplateContext()
 
         app_globals = self.globals
-        session = environ.get('beaker.session')
-        cache = environ.get('beaker.cache')
 
         locals = RequestLocals()
         locals.response = response
@@ -172,8 +170,8 @@ class TGApp(object):
         locals.config = conf
         locals.tmpl_context = tmpl_context
         locals.translator = translator
-        locals.session = session
-        locals.cache = cache
+        locals.session = environ.get('beaker.session')  # Usually None, unless middleware in place
+        locals.cache = environ.get('beaker.cache')  # Usually None, unless middleware in place
 
         if self.enable_routes: #pragma: no cover
             url = environ.get('routes.url')

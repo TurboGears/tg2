@@ -2,14 +2,14 @@
 
 import os, shutil
 from unittest import TestCase
+from tg.appwrappers.caching import CacheApplicationWrapper
+from tg.appwrappers.session import SessionApplicationWrapper
 
 try:
     from xmlrpclib import loads, dumps
 except ImportError:
     from xmlrpc.client import loads, dumps
 import warnings
-
-import beaker
 
 from tg.support.registry import Registry, RegistryManager
 
@@ -24,10 +24,9 @@ from tg.controllers import TGController
 
 from .test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
 
-from beaker.middleware import CacheMiddleware
-
 data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
+cache_dir = os.path.join(data_dir, 'cache')
 
 def setup_session_dir():
     if not os.path.exists(session_dir):
@@ -36,7 +35,7 @@ def setup_session_dir():
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
-def make_app(controller_klass=None, environ=None):
+def make_app(controller_klass=None, environ=None, config_options=None):
     """Creates a `TestApp` instance."""
     if controller_klass is None:
         controller_klass = TGController
@@ -44,14 +43,24 @@ def make_app(controller_klass=None, environ=None):
     tg.config['renderers'] = default_config['renderers']
     tg.config['rendering_engines_options'] = default_config['rendering_engines_options']
 
-    app = TGApp(config=default_config)
+    config = default_config.copy()
+    config['application_wrappers'] = [
+        CacheApplicationWrapper,
+        SessionApplicationWrapper
+    ]
+    config['session.enabled'] = True
+    config['session.data_dir'] = session_dir
+    config['cache.enabled'] = True
+    config['cache.cache_dir'] = cache_dir
+
+    if config_options is not None:
+        config.update(config_options)
+
+    app = TGApp(config=config)
     app.controller_classes['root'] = ControllerWrap(controller_klass)
 
     app = FakeRoutes(app)
-
     app = RegistryManager(app)
-    app = beaker.middleware.SessionMiddleware(app, {}, data_dir=session_dir)
-    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
     return TestApp(app)
 
 def create_request(path, environ=None):

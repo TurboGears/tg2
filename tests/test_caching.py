@@ -175,6 +175,7 @@ class TestEtagCaching(TestWSGIController):
         resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': '"foo"'})
         assert "304" in resp.status, resp
 
+
 class SessionTouchController(TGController):
     @expose()
     def session_get(self):
@@ -183,25 +184,73 @@ class SessionTouchController(TGController):
         else:
             return 'NOTOUCH'
 
-class TestSessionTouch(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
-        self.app = make_app(SessionTouchController)
 
+class TestSessionTouch(TestWSGIController):
     def test_prova(self):
-        tg.config['beaker.session.tg_avoid_touch'] = False
-        assert 'ACCESSED' in self.app.get('/session_get')
+        app = make_app(SessionTouchController, config_options={
+            'session.tg_avoid_touch': False
+        })
+        assert 'ACCESSED' in app.get('/session_get')
 
     def test_avoid_touch(self):
-        tg.config['beaker.session.tg_avoid_touch'] = True
-        assert 'NOTOUCH' in self.app.get('/session_get')
+        app = make_app(SessionTouchController, config_options={
+            'session.tg_avoid_touch': True
+        })
+        assert 'NOTOUCH' in app.get('/session_get')
+
+
+class CustomSessionController(TGController):
+    @expose('json')
+    def session_init(self):
+        tg.session['counter'] = 0
+        tg.session.save()
+
+        get_session = tg.request.environ['beaker.get_session']
+        other_sess = get_session()
+        other_sess['counter'] = 0
+        other_sess.save()
+
+        return dict(session_id=other_sess.id)
+
+    @expose('json')
+    def session_get(self, session_id):
+        tg.session['counter'] -= 1
+        tg.session.save()
+
+        get_session = tg.request.environ['beaker.get_session']
+        other_sess = get_session(session_id)
+        other_sess['counter'] +=1
+        other_sess.save()
+
+        return dict(tg_session_counter=tg.session['counter'],
+                    other_session_counter=other_sess['counter'])
+
+
+class TestMultipleSessions(TestWSGIController):
+    def __init__(self, *args, **kargs):
+        TestWSGIController.__init__(self, *args, **kargs)
+        self.app = make_app(CustomSessionController, config_options={
+            'session.key': 'test_app'
+        })
+
+    def test_multiple_sessions_work(self):
+        resp = self.app.get('/session_init')
+        session_id = resp.json['session_id']
+
+        counters = self.app.get('/session_get', dict(session_id=session_id)).json
+        assert counters['tg_session_counter'] == -1, counters
+        assert counters['other_session_counter'] == 1, counters
+
+        counters = self.app.get('/session_get', dict(session_id=session_id)).json
+        assert counters['tg_session_counter'] == -2, counters
+        assert counters['other_session_counter'] == 2, counters
 
 
 def disable_cache(wrapped):
     def wrapper(*args, **kws):
-        tg.config['cache_enabled'] = False
+        tg.config['cache.enabled'] = False
         x = wrapped(*args, **kws)
-        tg.config['cache_enabled'] = True
+        tg.config['cache.enabled'] = True
         return x
     return wrapper
 

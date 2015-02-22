@@ -586,12 +586,14 @@ class TestTGController(TestWSGIController):
         self.app = make_app(BasicTGController)
 
     def test_enable_routing_args(self):
-        config.enable_routing_args = True
-        r =self.app.get('/with_routing_args?a=1&b=2&c=3')
+        self.app = make_app(BasicTGController, config_options={
+            'enable_routing_args': True
+        })
+
+        r = self.app.get('/with_routing_args?a=1&b=2&c=3')
         assert 'a' in str(r)
         assert 'b' in str(r)
         assert 'c' in str(r)
-        config.enable_routing_args = False
 
     def test_response_without_charset(self):
         r = self.app.get('/index_unicode')

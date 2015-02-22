@@ -21,7 +21,7 @@ default_config = {
         'render_functions': {'json': tg.renderers.json.JSONRenderer.render_json},
         'rendering_engines_options': {'json': {'content_type': 'application/json'}},
         'rendering_engines_without_vars': set(('json',)),
-        'use_legacy_renderers':False,
+        'use_legacy_renderers': False,
         'use_sqlalchemy': False,
         'lang': None
 }

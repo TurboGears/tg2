@@ -4,6 +4,7 @@ Testing for TG2 Configuration
 from nose import SkipTest
 from nose.tools import eq_, raises
 import atexit, sys, os
+from datetime import datetime
 
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.mingflush import MingApplicationWrapper
@@ -876,6 +877,94 @@ class TestAppConfig:
         self.config.auth_backend = 'sqlalchemy'
         config.pop('beaker.session.secret', None)
         self.config.setup_auth()
+
+    def test_sessions_enabled(self):
+        class RootController(TGController):
+            @expose('json')
+            def test(self):
+                try:
+                    tg.session['counter'] += 1
+                except KeyError:
+                    tg.session['counter'] = 0
+
+                tg.session.save()
+                return dict(counter=tg.session['counter'])
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['session.enabled'] = True
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert resp.json['counter'] == 0, resp
+
+        resp = app.get('/test')
+        assert resp.json['counter'] == 1, resp
+
+    def test_backware_compatible_sessions_enabled(self):
+        class RootController(TGController):
+            @expose('json')
+            def test(self):
+                try:
+                    tg.session['counter'] += 1
+                except KeyError:
+                    tg.session['counter'] = 0
+
+                tg.session.save()
+                return dict(counter=tg.session['counter'])
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['session.enabled'] = False
+        conf['use_session_middleware'] = True
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert resp.json['counter'] == 0, resp
+
+        resp = app.get('/test')
+        assert resp.json['counter'] == 1, resp
+
+    def test_caching_enabled(self):
+        class RootController(TGController):
+            @expose('json')
+            def test(self):
+                cache = tg.cache.get_cache('test_caching_enabled')
+                now = cache.get_value('test_cache_key', createfunc=datetime.utcnow)
+                return dict(now=now)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['cache.enabled'] = True
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        now = resp.json['now']
+
+        for x in range(20):
+            resp = app.get('/test')
+            assert resp.json['now'] == now, (resp, now)
+
+    def test_backward_compatible_caching_enabled(self):
+        class RootController(TGController):
+            @expose('json')
+            def test(self):
+                cache = tg.cache.get_cache('test_caching_enabled')
+                now = cache.get_value('test_cache_key', createfunc=datetime.utcnow)
+                return dict(now=now)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['cache.enabled'] = False
+        conf['use_cache_middleware'] = True
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        now = resp.json['now']
+
+        for x in range(20):
+            resp = app.get('/test')
+            assert resp.json['now'] == now, (resp, now)
 
     def test_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
