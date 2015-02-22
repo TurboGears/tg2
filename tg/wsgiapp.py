@@ -285,7 +285,8 @@ class TGApp(object):
         if has_pylons and self.pylons_compatible: #pragma: no cover
             self.setup_pylons_compatibility(environ, controller)
 
-        # Controller is assumed to handle a WSGI call
+        # Controller is assumed to accept WSGI Environ and TG Context
+        # and return a Response object.
         return controller(environ, context)
 
 

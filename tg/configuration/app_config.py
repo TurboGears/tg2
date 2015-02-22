@@ -774,7 +774,9 @@ class AppConfig(Bunch):
             self.sa_auth.setdefault('cookie_secret', config['beaker.session.secret'])
 
     def _setup_controller_wrappers(self):
-        base_controller_caller = config.get('controller_caller')
+        # This trashes away the current config['controller_caller']
+        # so that the call is idempotent.
+        base_controller_caller = call_controller
 
         controller_caller = base_controller_caller
         for wrapper in self.get('controller_wrappers', []):
@@ -782,6 +784,7 @@ class AppConfig(Bunch):
                 controller_caller = wrapper(controller_caller)
             except TypeError:
                 controller_caller = _DeprecatedControllerWrapper(wrapper, self, controller_caller)
+
         config['controller_caller'] = controller_caller
 
     def _setup_renderers(self):
