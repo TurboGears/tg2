@@ -320,9 +320,12 @@ class TestAppConfig:
         # Check the custom manager got configured
         assert conf.did_perform_custom_tm == True
 
-        # Wrapper before the last one should be the transaction manager
-        last_wrapper = TGApp().wrapped_dispatch._handler
-        assert last_wrapper.enabled is False, last_wrapper
+        # The transaction manager wrapper should not have been enabled.
+        tgapp = TGApp()
+        wrapper = tgapp.wrapped_dispatch
+        while wrapper != tgapp.dispatch:
+            assert not isinstance(wrapper, TransactionApplicationWrapper)
+            wrapper = wrapper.next_handler
 
     def test_sqlalchemy_commit_veto(self):
         class RootController(TGController):
@@ -658,7 +661,11 @@ class TestAppConfig:
         while not isinstance(tgapp, TGApp):
             tgapp = tgapp.app
 
-        ming_handler = tgapp.wrapped_dispatch._handler._handler
+        ming_handler = tgapp.wrapped_dispatch
+        while ming_handler != tgapp.dispatch:
+            if isinstance(ming_handler, MingApplicationWrapper):
+                break
+            ming_handler = ming_handler.next_handler
         assert isinstance(ming_handler, MingApplicationWrapper), ming_handler
 
         class FakeMingSession(object):
@@ -698,7 +705,11 @@ class TestAppConfig:
         while not isinstance(tgapp, TGApp):
             tgapp = tgapp.app
 
-        ming_handler = tgapp.wrapped_dispatch._handler._handler
+        ming_handler = tgapp.wrapped_dispatch
+        while ming_handler != tgapp.dispatch:
+            if isinstance(ming_handler, MingApplicationWrapper):
+                break
+            ming_handler = ming_handler.next_handler
         assert isinstance(ming_handler, MingApplicationWrapper), ming_handler
 
         class FakeMingSession(object):

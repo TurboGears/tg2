@@ -56,7 +56,17 @@ class TGApp(object):
         self.wrapped_dispatch = self.dispatch
         for wrapper in self.config.get('application_wrappers', []):
             try:
-                self.wrapped_dispatch = wrapper(self.wrapped_dispatch, self.config)
+                app_wrapper = wrapper(self.wrapped_dispatch, self.config)
+                if getattr(app_wrapper, 'injected', True):
+                    # if it conforms to the ApplicationWrapper ABC inject it only
+                    # when an injected=True property is provided.
+                    self.wrapped_dispatch = app_wrapper
+
+                    # Force resolution of @cached_property, this speeds up requests
+                    # and also acts as a prevention against race conditions on the
+                    # property itself.
+                    getattr(app_wrapper, 'next_handler', None)
+
             except TypeError:
                 #backward compatibility with wrappers that didn't receive the config
                 self.wrapped_dispatch = wrapper(self.wrapped_dispatch)

@@ -1,8 +1,9 @@
 import sys
 import logging
-from tg.configuration.utils import coerce_config
-from tg._compat import reraise
-from tg.support.converters import asbool, asint
+from ..configuration.utils import coerce_config
+from .._compat import reraise
+from ..support.converters import asbool, asint
+from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class AbortTransaction(Exception):
         self.response = response
 
 
-class TransactionApplicationWrapper(object):
+class TransactionApplicationWrapper(ApplicationWrapper):
     """Wraps the whole application in zope.transaction transaction manager and
     rollbacks transaction in case of crashes.
 
@@ -27,7 +28,7 @@ class TransactionApplicationWrapper(object):
 
     """
     def __init__(self, handler, config):
-        self._handler = handler
+        super(TransactionApplicationWrapper, self).__init__(handler, config)
 
         options = {
             'enabled': False,
@@ -55,10 +56,14 @@ class TransactionApplicationWrapper(object):
         log.debug('TransactionManager enabled: %s -> %s attempts',
                   self.enabled, options)
 
+    @property
+    def injected(self):
+        return self.enabled
+
     def __call__(self, controller, environ, context):
-        if self.enabled is False or 'repoze.tm.active' in environ:
+        if 'repoze.tm.active' in environ:  # pragma: no cover
             # Skip transaction manager if repoze.tm2 is enabled
-            return self._handler(controller, environ, context)
+            return self.next_handler(controller, environ, context)
 
         transaction_manager = self.manager
         total_attempts = self.attempts
@@ -75,7 +80,7 @@ class TransactionApplicationWrapper(object):
                 t = transaction_manager.get()
                 t.note(environ.get('PATH_INFO', ''))
 
-                response = self._handler(controller, environ, context)
+                response = self.next_handler(controller, environ, context)
                 if transaction_manager.isDoomed():
                     log.debug('Transaction doomed')
                     raise AbortTransaction(response)

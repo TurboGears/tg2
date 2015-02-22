@@ -1,13 +1,14 @@
 import logging
 import sys
-from tg.configuration.utils import coerce_config
-from tg.support.converters import asbool, aslist, asint
-from tg.request_local import Response
+from ..configuration.utils import coerce_config
+from ..support.converters import asbool, aslist, asint
+from ..request_local import Response
+from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)
 
 
-class ErrorPageApplicationWrapper(object):
+class ErrorPageApplicationWrapper(ApplicationWrapper):
     """Given an Application it intercepts the response code and shows a custom page.
 
     Supported options are:
@@ -22,7 +23,7 @@ class ErrorPageApplicationWrapper(object):
     """
 
     def __init__(self, handler, config):
-        self._handler = handler
+        super(ErrorPageApplicationWrapper, self).__init__(handler, config)
 
         options = {
             'enabled': False,
@@ -47,12 +48,13 @@ class ErrorPageApplicationWrapper(object):
         log.debug('ErrorPageApplicationWrapper enabled: %s -> %s',
                   self.handle_error_enabled, options)
 
-    def __call__(self, controller, environ, context):
-        if self.handle_error_enabled is False:
-            return self._handler(controller, environ, context)
+    @property
+    def injected(self):
+        return self.handle_error_enabled
 
+    def __call__(self, controller, environ, context):
         try:
-            resp = self._handler(controller, environ, context)
+            resp = self.next_handler(controller, environ, context)
         except:
             if self.handle_exceptions is False:
                 raise
@@ -75,6 +77,6 @@ class ErrorPageApplicationWrapper(object):
             environ['PATH_INFO'] = self.handle_error_path
             log.debug('ErrorPageApplicationWrapper serving %s:%s',
                       controller, self.handle_error_path)
-            resp = self._handler(controller, environ, context)
+            resp = self.next_handler(controller, environ, context)
 
         return resp

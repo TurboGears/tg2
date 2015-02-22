@@ -1,13 +1,12 @@
-import sys
 import logging
 from tg.configuration.utils import coerce_config
-from tg._compat import reraise
 from tg.support.converters import asbool, asint
+from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)
 
 
-class MingApplicationWrapper(object):
+class MingApplicationWrapper(ApplicationWrapper):
     """Automatically flushes the Ming ODMSession.
 
     In case an exception raised during excution it won't flush the session and it will
@@ -19,7 +18,7 @@ class MingApplicationWrapper(object):
 
     """
     def __init__(self, handler, config):
-        self._handler = handler
+        super(MingApplicationWrapper, self).__init__(handler, config)
 
         options = {
             'autoflush': False,
@@ -42,14 +41,15 @@ class MingApplicationWrapper(object):
         log.debug('MingSessionFlush enabled: %s -> %s attempts',
                   self.enabled, options)
 
-    def __call__(self, controller, environ, context):
-        if self.enabled is False:
-            return self._handler(controller, environ, context)
+    @property
+    def injected(self):
+        return self.enabled
 
+    def __call__(self, controller, environ, context):
         session = self.ThreadLocalODMSession
 
         try:
-            resp = self._handler(controller, environ, context)
+            resp = self.next_handler(controller, environ, context)
         except:
             session.close_all()
             raise

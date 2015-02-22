@@ -273,22 +273,30 @@ class AppConfig(Bunch):
         are executed in the context of TurboGears and work
         with abstractions like Request and Respone objects.
 
-        Application wrappers are callables built by passing
-        the next handler in chain and the current TurboGears
-        configuration.
+        See :class:`tg.appwrappers.base.ApplicationWrapper` for
+        complete definition of application wrappers.
 
-        Every wrapper, when called, is expected to accept
-        the WSGI environment and a TurboGears context as parameters
-        and are expected to return a :class:`tg.request_local.Response`
-        instance::
+        The ``after`` parameter defines their position into the
+        wrappers chain. The default value ``None`` means they are
+        executed in a middle point, so they run after the TurboGears
+        wrappers like :class:`.ErrorPageApplicationWrapper` which
+        can intercept their response and return an error page.
 
-            class AppWrapper(object):
-                def __init__(self, handler, config):
-                    self.handler = handler
+        Builtin TurboGears wrappers are usually registered with
+        ``after=True`` which means they run furthest away from the
+        application itself and can intercept the response of any
+        other wrapper.
 
-                def __call__(self, environ, context):
-                    print 'Going to run %s' % context.request.path
-                    return self.handler(environ, context)
+        Providing ``after=False`` means the wrapper will be registered
+        near to the application itself (so wrappers registered at default
+        position and with after=True will be able to see its response).
+
+        ``after`` parameter can also accept an *application wrapper class*.
+        In such case the registered wrapper will be registered right after
+        the specified wrapper and so will be a little further from the
+        application then the specified one (can see the response of the
+        specified one).
+
         """
         if milestones.environment_loaded.reached:
             # Wrappers are consumed by TGApp constructor, and all the hooks available
