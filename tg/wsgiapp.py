@@ -149,7 +149,8 @@ class TGApp(object):
         response = Response(
             content_type=resp_options['content_type'],
             charset=resp_options['charset'],
-            headers=resp_options['headers'])
+            headers=resp_options['headers']
+        )
 
         # Setup the translator object
         lang = conf['lang']
