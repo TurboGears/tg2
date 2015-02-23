@@ -1494,16 +1494,21 @@ class TestAppConfig:
         def after_config_hook(app):
             visited_hooks.append('after_config')
             return app
+        def configure_new_app_hook(app):
+            assert isinstance(app, TGApp)
+            visited_hooks.append('configure_new_app')
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.register_hook('before_config', before_config_hook)
         conf.register_hook('after_config', after_config_hook)
+        conf.register_hook('configure_new_app', configure_new_app_hook)
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
         assert 'HI!' in app.get('/test')
         assert 'before_config' in visited_hooks
         assert 'after_config' in visited_hooks
+        assert 'configure_new_app' in visited_hooks
 
     def test_controller_hooks_with_value(self):
         # Reset milestone so that registered hooks

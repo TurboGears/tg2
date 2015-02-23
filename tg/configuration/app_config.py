@@ -1214,6 +1214,9 @@ class AppConfig(Bunch):
             self._setup_controller_wrappers()
 
             app = TGApp()
+
+            tg.hooks.notify('configure_new_app', args=(app,), context_config=config)
+
             if wrap_app:
                 app = wrap_app(app)
 
