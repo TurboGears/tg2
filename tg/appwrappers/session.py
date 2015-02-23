@@ -17,8 +17,6 @@ class SessionApplicationWrapper(ApplicationWrapper):
 
     Supported options which can be provided by config are:
         - ``session.enabled``: Whenever sessions are enabled or not.
-        - ``session.tg_avoid_touch``: Whenever TurboGears should leave the session untouched
-          when it reads it to gather the favourite user language from session.
         - Beaker Options prefixed with ``session.``, see
           https://beaker.readthedocs.org/en/latest/configuration.html#session-options
 
@@ -44,9 +42,6 @@ class SessionApplicationWrapper(ApplicationWrapper):
         coerce_session_params(self.options)
 
         self.enabled = asbool(self.options.pop('enabled', True))
-
-        # i18n should touch session or not
-        config['i18n.no_session_touch'] = asbool(self.options.get('tg_avoid_touch', False))
 
         log.debug('Sessions enabled: %s -> %s',
                   self.enabled, self.options)

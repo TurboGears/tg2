@@ -117,7 +117,7 @@ class TestI18NStack(object):
     def setup(self):
         conf = AppConfig(minimal=True, root_controller=i18nRootController())
         conf['paths']['root'] = 'tests'
-        conf['i18n_enabled'] = True
+        conf['i18n.enabled'] = True
         conf['session.enabled'] = True
         conf['lang'] = None
         conf['beaker.session.key'] = 'tg_test_session'

@@ -188,13 +188,15 @@ class SessionTouchController(TGController):
 class TestSessionTouch(TestWSGIController):
     def test_prova(self):
         app = make_app(SessionTouchController, config_options={
-            'session.tg_avoid_touch': False
+            'i18n.no_session_touch': False,
+            'i18n.enabled': True
         })
         assert 'ACCESSED' in app.get('/session_get')
 
     def test_avoid_touch(self):
         app = make_app(SessionTouchController, config_options={
-            'session.tg_avoid_touch': True
+            'i18n.no_session_touch': True,
+            'i18n.enabled': True
         })
         assert 'NOTOUCH' in app.get('/session_get')
 

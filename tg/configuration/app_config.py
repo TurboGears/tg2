@@ -27,6 +27,7 @@ from tg.renderers.jinja import JinjaRenderer
 from tg.renderers.mako import MakoRenderer
 from tg.renderers.kajiki import KajikiRenderer
 
+from tg.appwrappers.i18n import I18NApplicationWrapper
 from tg.appwrappers.caching import CacheApplicationWrapper
 from tg.appwrappers.session import SessionApplicationWrapper
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
@@ -205,7 +206,7 @@ class AppConfig(Bunch):
 
         self['session.enabled'] = not minimal
         self['cache.enabled'] = not minimal
-        self.i18n_enabled = not minimal
+        self['i18n.enabled'] = not minimal
         self.serve_static = not minimal
 
         # Support Custom Error pages
@@ -244,6 +245,7 @@ class AppConfig(Bunch):
         self.register_rendering_engine(JinjaRenderer)
         self.register_rendering_engine(KajikiRenderer)
 
+        self.register_wrapper(I18NApplicationWrapper, after=True)
         self.register_wrapper(SessionApplicationWrapper, after=True)
         self.register_wrapper(CacheApplicationWrapper, after=True)
         self.register_wrapper(MingApplicationWrapper, after=True)
@@ -478,7 +480,7 @@ class AppConfig(Bunch):
         if conf['paths']['root']:
             self.localedir = os.path.join(conf['paths']['root'], 'i18n')
         else:
-            self.i18n_enabled = False
+            self['i18n.enabled'] = False
 
         if not conf['paths']['static_files']:
             self.serve_static = False

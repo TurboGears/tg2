@@ -18,7 +18,6 @@ class which provides the ordinary TurboGears mechanism.
 import tg, sys
 from webob.exc import HTTPException
 from tg._compat import unicode_text
-from tg.i18n import setup_i18n
 from tg.decorators import cached_property
 from crank.dispatchstate import DispatchState
 from tg.request_local import WebObResponse
@@ -98,9 +97,6 @@ class CoreDispatcher(object):
         """
         py_request = context.request
         py_config = context.config
-
-        if py_config.get('i18n_enabled', True):
-            setup_i18n(context)
 
         state, params = self._get_dispatchable(context, py_request.quoted_path_info)
         func, controller, remainder = state.method, state.controller, state.remainder

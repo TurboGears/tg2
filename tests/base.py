@@ -3,6 +3,7 @@
 import os, shutil
 from unittest import TestCase
 from tg.appwrappers.caching import CacheApplicationWrapper
+from tg.appwrappers.i18n import I18NApplicationWrapper
 from tg.appwrappers.session import SessionApplicationWrapper
 
 try:
@@ -45,6 +46,7 @@ def make_app(controller_klass=None, environ=None, config_options=None):
 
     config = default_config.copy()
     config['application_wrappers'] = [
+        I18NApplicationWrapper,
         CacheApplicationWrapper,
         SessionApplicationWrapper
     ]

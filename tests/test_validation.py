@@ -322,7 +322,9 @@ class TestTGController(TestWSGIController):
             'package': tests,
         })
 
-        self.app = make_app(BasicTGController)
+        self.app = make_app(BasicTGController, config_options={
+            'i18n.enabled': True
+        })
 
     def test_basic_validation_and_jsonification(self):
         """Ensure you can pass in a dictionary of validators"""

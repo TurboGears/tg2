@@ -2,6 +2,7 @@ import copy
 import logging, os
 import gettext as _gettext
 from gettext import NullTranslations, GNUTranslations
+import warnings
 import tg
 from tg.util import lazify
 from tg._compat import PY3, string_type
@@ -245,41 +246,9 @@ def sanitize_language_code(lang):
     return lang
 
 
-def setup_i18n(tgl=None):
-    """Set languages from the request header and the session.
-
-    The session language(s) take priority over the request languages.
-
-    Automatically called by tg controllers to setup i18n.
-    Should only be manually called if you override controllers function.
-
-    """
-    if not tgl: #pragma: no cover
-        tgl = tg.request_local.context._current_obj()
-
-    session_ = tgl.session
-    if session_:
-        session_existed = session_.accessed()
-        # If session is available, we try to see if there are languages set
-        languages = session_.get(tgl.config.get('lang_session_key', 'tg_lang'))
-        if not session_existed and tgl.config.get('i18n.no_session_touch'):
-            session_.__dict__['_sess'] = None
-
-        if languages:
-            if isinstance(languages, string_type):
-                languages = [languages]
-        else:
-            languages = []
-    else: #pragma: no cover
-        languages = []
-
-    languages.extend(map(sanitize_language_code, tgl.request.languages))
-    set_temporary_lang(languages, tgl=tgl)
-
-
-def set_temporary_lang(languages, tgl=None):
-    """Set the current language(s) used for translations without touching
-    the session language.
+def set_request_lang(languages, tgl=None):
+    """Set the current request language(s) used for translations
+    without touching the session language.
 
     languages should be a string or a list of strings.
     First lang will be used as main lang, others as fallbacks.
@@ -308,6 +277,12 @@ def set_temporary_lang(languages, tgl=None):
         pass
 
 
+def set_temporary_lang(*args, **kwargs):
+    warnings.warn("i18n.set_temporary_lang has been deprecated in favor of"
+                  "i18n.set_request_lang and will be removed.", DeprecationWarning)
+    return set_request_lang(*args, **kwargs)
+
+
 def set_lang(languages, **kwargs):
     """Set the current language(s) used for translations
     in current call and session.
@@ -318,7 +293,7 @@ def set_lang(languages, **kwargs):
     """
     tgl = tg.request_local.context._current_obj()
 
-    set_temporary_lang(languages, tgl)
+    set_request_lang(languages, tgl)
 
     if tgl.session:
         tgl.session[tgl.config.get('lang_session_key', 'tg_lang')] = languages
@@ -377,7 +352,8 @@ def _formencode_gettext(value):
 
 
 __all__ = [
-    "setup_i18n", "set_lang", "get_lang", "add_fallback", "set_temporary_lang",
+    "set_lang", "get_lang", "add_fallback",
+    "set_request_lang", "set_temporary_lang",
     "ugettext", "lazy_ugettext", "ungettext", "lazy_ungettext"
 ]
 
