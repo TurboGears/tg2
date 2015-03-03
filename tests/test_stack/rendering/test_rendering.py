@@ -436,10 +436,11 @@ def test_mako_renderer():
     assert "<p>This is the mako index page</p>" in resp, resp
 
 def test_mako_renderer_compiled():
-    tg.config['templating.mako.compiled_templates_dir'] = '_tg_tests_mako_compiled/dest'
-    app = setup_noDB()
+    app = setup_noDB(extra={
+        'templating.mako.compiled_templates_dir': '_tg_tests_mako_compiled/dest'
+    })
+
     resp = app.get('/mako_index')
-    tg.config.pop('templating.mako.compiled_templates_dir')
     assert "<p>This is the mako index page</p>" in resp, resp
 
     assert os.path.exists('_tg_tests_mako_compiled')

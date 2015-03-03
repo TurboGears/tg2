@@ -15,6 +15,10 @@ class I18NApplicationWrapper(ApplicationWrapper):
 
     Supported options which can be provided by config are:
         - ``i18n.enabled``: Whenever language detection is enabled or not.
+        - ``i18n.lang``: Fallback language for the application, works both when language
+          detection is enabled or disabled. If this is set and language detection is
+          dislabled, the application will consider that all gettext wrapped strings must
+          be translated to this language.
         - ``i18n.lang_session_key``: Session key from which to read the saved language
           (``tg_lang`` by default).
         - ``i18n.no_session_touch``: Avoid causing a session save when reading it to retrieve the
@@ -28,7 +32,8 @@ class I18NApplicationWrapper(ApplicationWrapper):
         options = {
             'enabled': False,
             'lang_session_key': 'tg_lang',
-            'no_session_touch': False
+            'no_session_touch': False,
+            'lang': None
         }
         options.update(coerce_config(config, 'i18n.',  {
             'enabled': asbool,

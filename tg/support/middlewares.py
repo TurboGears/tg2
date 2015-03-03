@@ -101,7 +101,7 @@ class SeekableRequestBodyMiddleware(object):
             for chunk in data:
                 yield chunk
         finally:
-            if hasattr(data, 'close'):
+            if hasattr(data, 'close'):  # pragma: no cover
                 data.close()
 
     def __call__(self, environ, start_response):

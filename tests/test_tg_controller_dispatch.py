@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
+from nose.tools import raises
 
 from tests.test_validation import validators
 
@@ -552,7 +553,9 @@ class TestWSGIAppController(TestWSGIController):
                         del environ['CONTENT_LENGTH']
                     return validator(demo_app)(environ, start_response)
                 super(TestedWSGIAppController, self).__init__(test_app)
-        self.app = make_app(TestedWSGIAppController)
+        self.app = make_app(TestedWSGIAppController, config_options={
+            'make_body_seekable': True
+        })
 
     def test_valid_wsgi(self):
         try:
@@ -572,7 +575,9 @@ class TestWSGIAppControllerNotHTML(TestWSGIController):
                                               ('Content-Length', '5')])
                     return [b'HELLO']
                 super(TestedWSGIAppController, self).__init__(test_app)
-        self.app = make_app(TestedWSGIAppController)
+        self.app = make_app(TestedWSGIAppController, config_options={
+            'make_body_seekable': True
+        })
 
     def test_right_wsgi_headers(self):
         r = self.app.get('/some_url')
@@ -583,7 +588,9 @@ class TestWSGIAppControllerNotHTML(TestWSGIController):
 class TestTGController(TestWSGIController):
     def setUp(self, *args, **kargs):
         TestWSGIController.setUp(self, *args, **kargs)
-        self.app = make_app(BasicTGController)
+        self.app = make_app(BasicTGController, config_options={
+            'make_body_seekable': True
+        })
 
     def test_enable_routing_args(self):
         self.app = make_app(BasicTGController, config_options={
@@ -889,3 +896,14 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/sub3/controller_url/true/a/b/c')
         assert resp.text == 'sub3/controller_url', resp.text
 
+
+class TestNestedWSGIAppWithoutSeekable(TestWSGIController):
+    def setUp(self, *args, **kargs):
+        TestWSGIController.setUp(self, *args, **kargs)
+        self.app = make_app(BasicTGController, config_options={
+            'make_body_seekable': False
+        })
+
+    @raises(RuntimeError)
+    def test_missing_body_seekable_trapped(self):
+        self.app.get('/mounted_app')

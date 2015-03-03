@@ -75,10 +75,14 @@ class TestAuthMetadata(TGAuthMetadata):
         return super(TestAuthMetadata, self).get_permissions(identity, userid)
 
 
-def make_app(controller_klass, environ={}, with_errors=False):
+def make_app(controller_klass, environ={}, with_errors=False, config_options=None):
     """Creates a ``TestApp`` instance."""
     # The basic middleware:
-    app = TGApp(config=default_config)
+    conf = default_config.copy()
+    if config_options is not None:
+        conf.update(config_options)
+
+    app = TGApp(config=conf)
     app.controller_classes['root'] = ControllerWrap(controller_klass)
 
     app = FakeRoutes(app)
@@ -244,7 +248,7 @@ class BaseIntegrationTests(TestCase):
             os.makedirs(session_dir)
 
         # Setting TG2 up:
-        self.app = make_app(self.controller, {})
+        self.app = make_app(self.controller, {}, config_options=getattr(self, 'CONFIG_OPTIONS', {}))
 
     def tearDown(self):
         # Removing the session dir:
@@ -565,6 +569,9 @@ class TestProtectedRESTContoller(BaseIntegrationTests):
 
 class TestProtectedWSGIApplication(BaseIntegrationTests):
     """Test case for protected WSGI applications mounted on the controller"""
+    CONFIG_OPTIONS = {
+        'make_body_seekable': True
+    }
 
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'gustavo'}

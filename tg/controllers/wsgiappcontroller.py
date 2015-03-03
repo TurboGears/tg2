@@ -15,9 +15,7 @@ class WSGIAppController(TGController):
     def __init__(self, app, allow_only=None):
         self.app = app
         self.allow_only = allow_only
-        # Signal tg.configuration.maybe_make_body_seekable which is wrapping
-        # The stack to make the body seekable so default() can rewind it.
-        tg.config['make_body_seekable'] = True
+
         # Calling the parent's contructor, to enable controller-wide auth:
         super(WSGIAppController, self).__init__()
 
@@ -30,6 +28,10 @@ class WSGIAppController(TGController):
         WSGI app.
 
         """
+        body_is_seekable = tg.config.get('make_body_seekable', False)
+        if not body_is_seekable:
+            raise RuntimeError('Mounting nested WSGI apps requires make_body_seekable=True option')
+
         # Push into SCRIPT_NAME the path components that have been consumed,
         request = tg.request._current_obj()
         new_req = request.copy()

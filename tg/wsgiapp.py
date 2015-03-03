@@ -36,6 +36,14 @@ class TGApp(object):
         self.config = config = config or tg.config._current_obj()
         self.globals = config.get('tg.app_globals')
         self.package_name = config['package_name']
+        self.lang = config.get('i18n.lang')
+
+        if self.lang is None:
+            backward_compatible_lang = config.get('lang')
+            if backward_compatible_lang:
+                warnings.warn('"lang" option has been renamed to "i18n.lang" and '
+                              'will be removed in next major version.', DeprecationWarning)
+                self.lang = backward_compatible_lang
 
         self.controller_classes = {}
         self.controller_instances = {}
@@ -142,7 +150,7 @@ class TGApp(object):
 
         # Setup the basic global objects
         req = Request(environ)
-        req._fast_setattr('_language', conf['lang'])
+        req._fast_setattr('_language', self.lang)
         req._fast_setattr('_response_type', None)
 
         resp_options = self.resp_options
@@ -153,8 +161,7 @@ class TGApp(object):
         )
 
         # Setup the translator object
-        lang = conf['lang']
-        translator = _get_translator(lang, tg_config=conf)
+        translator = _get_translator(self.lang, tg_config=conf)
 
         if self.strict_tmpl_context:
             tmpl_context = TemplateContext()

@@ -155,18 +155,17 @@ class TestAppConfig:
         # other tests don't suffer - but that's a nasty
         # side-effect. setup for those tests actually needs
         # fixing.
-        self.config.package = self.fake_package
+        self.config['package'] = self.fake_package
         self.config['paths']['root'] = 'test'
         self.config['paths']['controllers'] = 'test.controllers'
+        self.config['paths']['static_files'] = "test"
+        self.config["tg.app_globals"] = Bunch()
+        self.config["use_sqlalchemy"] = False
+        self.config["global_conf"] = Bunch()
+        self.config["render_functions"] = Bunch()
+        self.config['session.secret'] = 'some_secret'
         self.config._init_config({'cache_dir':'/tmp'}, {})
 
-        config['paths']['static_files'] = "test"
-        config["tg.app_globals"] = Bunch()
-        config["use_sqlalchemy"] = False
-        config["global_conf"] = Bunch()
-        config["package"] = "test"
-        config["render_functions"] = Bunch()
-        config['beaker.session.secret'] = 'some_secret'
 
     def teardown(self):
         #This is here to avoid that other tests keep using the forced controller
@@ -744,6 +743,27 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
+        dstore = config['tg.app_globals'].ming_datastore
+        dstore_name = dstore.name
+        # Looks like ming has empty dstore.name when using MIM.
+        assert dstore_name == '', dstore
+
+    def test_setup_ming_persistance_with_url_and_db(self):
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=None)
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf['ming.url'] = 'mim://inmemdb'
+        conf['ming.db'] = 'realinmemdb'
+
+        app = conf.make_wsgi_app()
+        assert app is not None
+
+        dstore = config['tg.app_globals'].ming_datastore
+        dstore_name = dstore.name
+        assert dstore_name == 'realinmemdb', dstore
+
     def test_setup_ming_persistance_advanced_options(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -827,17 +847,18 @@ class TestAppConfig:
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.package = package
         conf.model = package.model
-        conf.auth_backend = 'sqlalchemy'
         conf.use_sqlalchemy = True
+        conf.auth_backend = 'sqlalchemy'
         conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                            'dbsession': None,
                            'user_class': None,
-                           'cookie_secret':'12345'}
+                           'cookie_secret': '12345'}
         conf['sqlalchemy.url'] = 'sqlite://'
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
-        assert 'repoze.who.plugins' in app.get('/test')
+        resp = app.get('/test')
+        assert 'repoze.who.plugins' in resp, resp
 
         self.config.auth_backend = None
 
@@ -875,7 +896,7 @@ class TestAppConfig:
     @raises(TGConfigError)
     def test_missing_secret(self):
         self.config.auth_backend = 'sqlalchemy'
-        config.pop('beaker.session.secret', None)
+        config.pop('session.secret', None)
         self.config.setup_auth()
 
     def test_sessions_enabled(self):
@@ -2082,3 +2103,33 @@ class TestAppConfig:
         app = conf.make_wsgi_app(full_stack=True)
         assert conf.renderers == ['json']
 
+    def test_make_body_seekable(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                request.body_file.seek(0)
+                return 'HELLO'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['make_body_seekable'] = True
+
+        app = conf.make_wsgi_app(full_stack=False)
+        assert app.application.__class__.__name__ == 'SeekableRequestBodyMiddleware', \
+            app.application.__class__
+
+        app = TestApp(app)
+        assert 'HELLO' in app.get('/test')
+
+    def test_make_body_seekable_disabled(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                request.body_file.seek(0)
+                return 'HELLO'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['make_body_seekable'] = False
+
+        app = conf.make_wsgi_app(full_stack=False)
+        app = TestApp(app)
+        assert 'HELLO' in app.get('/test')

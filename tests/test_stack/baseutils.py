@@ -23,7 +23,7 @@ default_config = {
         'rendering_engines_without_vars': set(('json',)),
         'use_legacy_renderers': False,
         'use_sqlalchemy': False,
-        'lang': None
+        'i18n.lang': None
 }
 
 class FakeRoutes(object):

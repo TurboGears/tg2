@@ -53,7 +53,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                 log.exception('Unable to Enable Transaction Manager')
                 self.enabled = False
 
-        log.debug('TransactionManager enabled: %s -> %s attempts',
+        log.debug('TransactionManager enabled: %s -> %s',
                   self.enabled, options)
 
     @property

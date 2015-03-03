@@ -38,7 +38,7 @@ class MingApplicationWrapper(ApplicationWrapper):
                 log.exception('Unable to Enable Ming Application Wrapper')
                 self.enabled = False
 
-        log.debug('MingSessionFlush enabled: %s -> %s attempts',
+        log.debug('MingSessionFlush enabled: %s -> %s',
                   self.enabled, options)
 
     @property

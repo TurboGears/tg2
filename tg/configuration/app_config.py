@@ -8,8 +8,6 @@ from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin, deque
 
-from tg.i18n import ugettext, get_lang
-
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
 from tg.support.registry import RegistryManager
@@ -113,7 +111,7 @@ defaults = {
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
     'tg.pylons_compatible': True,
-    'lang': None
+    'i18n.lang': None
 }
 
 # Push an empty config so all accesses to config at import time have something
@@ -391,10 +389,11 @@ class AppConfig(Bunch):
             self.package_name = None
 
         log.debug("Initializing configuration, package: '%s'", self.package_name)
-        conf = global_conf.copy()
+        conf = deepcopy(defaults)
+        conf.update(deepcopy(global_conf))
         conf.update(app_conf)
         conf.update(dict(app_conf=app_conf, global_conf=global_conf))
-        conf.update(self.pop('environment_load', {}))
+        conf.update(self.get('environment_load', {}))
         conf['paths'] = self.paths
         conf['package_name'] = self.package_name
         conf['debug'] = asbool(conf.get('debug'))
@@ -471,10 +470,11 @@ class AppConfig(Bunch):
             self.use_toscawidgets2 = True
 
         # Load conf dict into the global config object
+        config.clear()
         config.update(conf)
 
-        if 'auto_reload_templates' in config:
-            self.auto_reload_templates = asbool(config['auto_reload_templates'])
+        self.auto_reload_templates = asbool(config.get('auto_reload_templates',
+                                                       self.auto_reload_templates))
 
         config['application_root_module'] = self.get_root_module()
         if conf['paths']['root']:
@@ -686,7 +686,8 @@ class AppConfig(Bunch):
         datastore_options.pop('host', None)
         datastore_options.pop('port', None)
 
-        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''), **datastore_options)
+        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''),
+                                          **datastore_options)
         config['tg.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
 
@@ -767,17 +768,19 @@ class AppConfig(Bunch):
                           "AppConfig.setup_auth instead", DeprecationWarning)
             self.setup_sa_auth_backend()
         elif self.auth_backend in ("ming", "sqlalchemy"):
-            if 'beaker.session.secret' not in config:
-                raise TGConfigError("You must provide a value for 'beaker.session.secret' "
-                                    "If this is a project quickstarted with TG 2.0.2 or earlier "
-                                    "double check that you have base_config['beaker.session.secret'] "
-                                    "= 'mysecretsecret' in your app_cfg.py file.")
+            if 'cookie_secret' not in self.sa_auth and 'session.secret' not in config:
+                raise TGConfigError("You must provide a value for authentication cookies secret. "
+                                    "Make sure that you have one of those options in app_cfg.py: "
+                                    "'sa_auth.cookie_secret' or 'session.secret'")
 
             # The developer must have defined a 'sa_auth' section, because
             # values such as the User, Group or Permission classes must be
             # explicitly defined.
             self.sa_auth.setdefault('form_plugin', None)
-            self.sa_auth.setdefault('cookie_secret', config['beaker.session.secret'])
+            self.sa_auth.setdefault(
+                'cookie_secret',
+                config.get('session.secret', config.get('beaker.session.secret'))
+            )
 
     def _setup_controller_wrappers(self):
         # This trashes away the current config['controller_caller']
@@ -1032,6 +1035,7 @@ class AppConfig(Bunch):
 
         import tw
         from tw.api import make_middleware as tw_middleware
+        from tg.i18n import ugettext
 
         twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
                     'toscawidgets.framework.translator': ugettext,
@@ -1082,6 +1086,7 @@ class AppConfig(Bunch):
         option that is set within your application's ini file.)
         """
         from tw2.core.middleware import Config, TwMiddleware
+        from tg.i18n import ugettext, get_lang
 
         shared_engines = list(set(self.renderers) & set(Config.preferred_rendering_engines))
         if not shared_engines:

@@ -65,7 +65,7 @@ class Request(WebObRequest):
 
     @property
     def language(self):
-        warnings.warn("request.language is now deprecated, use tg.config['lang'] to"
+        warnings.warn("request.language is now deprecated, use tg.config['i18n.lang'] to"
                       "read application fallback language.",
                       DeprecationWarning, stacklevel=2)
         return self._language
