@@ -15,9 +15,9 @@ from tg.configuration import AppConfig, config
 from tg.configuration.app_config import TGConfigError
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
-from tg.configuration.utils import coerce_config
+from tg.configuration.utils import coerce_config, coerce_options
 from tg.configuration import milestones
-from paste.deploy.converters import asint
+from tg.support.converters import asint, asbool
 
 import tg.i18n
 from tg import TGController, expose, response, request, abort
@@ -138,9 +138,20 @@ class TestPylonsConfigWrapper:
         k = self.config.keys()
         assert 'tg.app_globals' in k
 
+
 def test_coerce_config():
-    conf = coerce_config({'ming.connection.max_pool_size':'5'}, 'ming.connection.', {'max_pool_size':asint})
+    opts = {'ming.connection.max_pool_size': '5'}
+    conf = coerce_config(opts, 'ming.connection.', {'max_pool_size':asint})
     assert conf['max_pool_size'] == 5
+    assert opts['ming.connection.max_pool_size'] == '5'
+
+
+def test_coerce_options():
+    opts = {'connection': 'false'}
+    conf = coerce_options(opts, {'connection': asbool})
+    assert conf['connection'] is False
+    assert opts['connection'] == 'false'
+
 
 class TestAppConfig:
     def __init__(self):

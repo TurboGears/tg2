@@ -17,7 +17,7 @@ from tg.request_local import config as reqlocal_config
 import tg
 from tg.util import Bunch, DottedFileNameFinder
 from tg.configuration import milestones
-from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict
+from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict, coerce_options
 
 from tg.renderers.genshi import GenshiRenderer
 from tg.renderers.json import JSONRenderer
@@ -54,7 +54,7 @@ class DispatchingConfigWrapper(DictMixin):
         self.__dict__['config_proxy'] = dict_to_wrap
 
     def __getitem__(self, key):
-        return  self.config_proxy.current_conf()[key]
+        return self.config_proxy.current_conf()[key]
 
     def __setitem__(self, key, value):
         self.config_proxy.current_conf()[key] = value
@@ -179,6 +179,7 @@ class AppConfig(Bunch):
         self.auto_reload_templates = True
         self.auth_backend = None
         self.stand_alone = True
+        self.serve_static = not minimal
 
         self.renderers = []
         self.default_renderer = 'genshi'
@@ -205,7 +206,6 @@ class AppConfig(Bunch):
         self['session.enabled'] = not minimal
         self['cache.enabled'] = not minimal
         self['i18n.enabled'] = not minimal
-        self.serve_static = not minimal
 
         # Support Custom Error pages
         self.status_code_redirect = False  # Use old StatusCodeRedirect middleware
@@ -342,37 +342,6 @@ class AppConfig(Bunch):
             else:
                 log.warn("Unable to register %s for shutdown" % cmd )
 
-    def _configure_application_wrappers(self):
-        # Those are the heads of the dependencies tree
-        DEPENDENCY_HEADS = (False, None, True)
-
-        # Clear in place, this is to avoid desync between self and config
-        self.application_wrappers[:] = []
-
-        registered_wrappers = self.application_wrappers_dependencies.copy()
-        visit_queue = deque(DEPENDENCY_HEADS)
-        while visit_queue:
-            current = visit_queue.popleft()
-            if current not in DEPENDENCY_HEADS:
-                self.application_wrappers.append(current)
-
-            dependant_wrappers = registered_wrappers.pop(current, [])
-            visit_queue.extendleft(reversed(dependant_wrappers))
-
-    def _configure_package_paths(self):
-        root = os.path.dirname(os.path.abspath(self.package.__file__))
-        # The default paths:
-        paths = Bunch(
-            root=root,
-            controllers=os.path.join(root, 'controllers'),
-            static_files=os.path.join(root, 'public'),
-            templates=[os.path.join(root, 'templates')]
-        )
-        # If the user defined custom paths, then use them instead of the
-        # default ones:
-        paths.update(self.paths)
-        self.paths = paths
-
     def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
 
@@ -389,22 +358,33 @@ class AppConfig(Bunch):
             self.package_name = None
 
         log.debug("Initializing configuration, package: '%s'", self.package_name)
+
+        self._configure_package_paths()
+        self._configure_renderers()
+        self._configure_error_pages()
+        self._configure_ming()
+        self._configure_transaction_manager()
+        self._configure_mimetypes()
+
+        if self.prefer_toscawidgets2:
+            self.use_toscawidgets = False
+            self.use_toscawidgets2 = True
+
         conf = deepcopy(defaults)
+        conf.update(self)
         conf.update(deepcopy(global_conf))
         conf.update(app_conf)
         conf.update(dict(app_conf=app_conf, global_conf=global_conf))
-        conf.update(self.get('environment_load', {}))
-        conf['paths'] = self.paths
-        conf['package_name'] = self.package_name
-        conf['debug'] = asbool(conf.get('debug'))
 
-        # Ensure all the keys from defaults are present, load them if not
-        for key, val in deepcopy(defaults).items():
-            conf.setdefault(key, val)
-
-        # Ensure all paths are set, load default ones otherwise
-        for key, val in defaults['paths'].items():
-            conf['paths'].setdefault(key, val)
+        # Coerce some options that are bool
+        conf.update(coerce_options(
+            conf,
+            {
+                'debug': asbool,
+                'serve_static': asbool,
+                'auto_reload_templates': asbool
+            }
+        ))
 
         # Load the errorware configuration from the Paste configuration file
         # These all have defaults, and emails are only sent if configured and
@@ -461,47 +441,35 @@ class AppConfig(Bunch):
 
         # Copy in some defaults
         if 'cache_dir' in conf:
-            conf.setdefault('beaker.session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
-            conf.setdefault('beaker.cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
+            conf.setdefault('session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
+            conf.setdefault('cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
         conf['tg.cache_dir'] = conf.pop('cache_dir', conf['app_conf'].get('cache_dir'))
 
-        if self.prefer_toscawidgets2:
-            self.use_toscawidgets = False
-            self.use_toscawidgets2 = True
+        if not conf['paths']['static_files']:
+            conf['serve_static'] = False
+
+        conf['application_root_module'] = self.get_root_module()
+        if conf['paths']['root']:
+            conf['localedir'] = os.path.join(conf['paths']['root'], 'i18n')
+        else:
+            conf['i18n.enabled'] = False
+
+        # See http://trac.turbogears.org/ticket/2247
+        if conf['debug']:
+            conf['tg.strict_tmpl_context'] = True
+        else:
+            conf['tg.strict_tmpl_context'] = False
+
+        self.after_init_config(conf)
 
         # Load conf dict into the global config object
-        config.clear()
-        config.update(conf)
-
-        self.auto_reload_templates = asbool(config.get('auto_reload_templates',
-                                                       self.auto_reload_templates))
-
-        config['application_root_module'] = self.get_root_module()
-        if conf['paths']['root']:
-            self.localedir = os.path.join(conf['paths']['root'], 'i18n')
-        else:
-            self['i18n.enabled'] = False
-
-        if not conf['paths']['static_files']:
-            self.serve_static = False
-
-        self._configure_renderers()
-        self._configure_error_pages()
-        self._configure_ming()
-        self._configure_transaction_manager()
-
-        config.update(self)
-
-        #see http://trac.turbogears.org/ticket/2247
-        if asbool(config['debug']):
-            config['tg.strict_tmpl_context'] = True
-        else:
-            config['tg.strict_tmpl_context'] = False
-
-        self.after_init_config()
-        self._configure_mimetypes()
+        app_config = config._current_obj()
+        if self.stand_alone is True:
+            app_config.clear()
+        app_config.update(conf)
 
         milestones.config_ready.reach()
+        return app_config
 
     def _configure_renderers(self):
         """Provides default configurations for renderers"""
@@ -555,7 +523,50 @@ class AppConfig(Bunch):
                 log.debug('Disabling Transaction Manager as SQLAlchemy is not available')
                 self.use_transaction_manager = False
 
-    def after_init_config(self):
+    def _configure_application_wrappers(self):
+        # Those are the heads of the dependencies tree
+        DEPENDENCY_HEADS = (False, None, True)
+
+        # Clear in place, this is to avoid desync between self and config
+        self.application_wrappers[:] = []
+
+        registered_wrappers = self.application_wrappers_dependencies.copy()
+        visit_queue = deque(DEPENDENCY_HEADS)
+        while visit_queue:
+            current = visit_queue.popleft()
+            if current not in DEPENDENCY_HEADS:
+                self.application_wrappers.append(current)
+
+            dependant_wrappers = registered_wrappers.pop(current, [])
+            visit_queue.extendleft(reversed(dependant_wrappers))
+
+    def _configure_package_paths(self):
+        try:
+            self.package
+        except AttributeError:
+            # if we don't have a specified package, don't try
+            # helpers from the package expect the user to specify them.
+            paths = Bunch()
+        else:
+            root = os.path.dirname(os.path.abspath(self.package.__file__))
+            paths = Bunch(
+                root=root,
+                controllers=os.path.join(root, 'controllers'),
+                static_files=os.path.join(root, 'public'),
+                templates=[os.path.join(root, 'templates')]
+            )
+
+        # If the user defined custom paths, then use them instead of the
+        # default ones:
+        paths.update(self.paths)
+
+        # Ensure all paths are set, load default ones otherwise
+        for key, val in defaults['paths'].items():
+            paths.setdefault(key, val)
+
+        self.paths = paths
+
+    def after_init_config(self, conf):
         """
         Override this method to set up configuration variables at the application
         level.  This method will be called after your configuration object has
@@ -838,18 +849,7 @@ class AppConfig(Bunch):
             global_conf = Bunch(global_conf)
             app_conf = Bunch(app_conf)
 
-            try:
-                app_package = self.package
-            except AttributeError:
-                #if we don't have a specified package, don't try
-                #to detect paths and helpers from the package.
-                #Expect the user to specify them.
-                app_package = None
-
-            if app_package:
-                self._configure_package_paths()
-
-            self._init_config(global_conf, app_conf)
+            app_config = self._init_config(global_conf, app_conf)
 
             #Registers functions to be called at startup and shutdown
             #from self.call_on_startup and shutdown respectively.
@@ -857,7 +857,13 @@ class AppConfig(Bunch):
 
             self.setup_routes()
 
-            if app_package:
+            try:
+                self.package
+            except AttributeError:
+                # if we don't have a specified package, don't try
+                # helpers from the package expect the user to specify them.
+                log.debug('Helpers not configured due to missing application package')
+            else:
                 self.setup_helpers_and_globals()
 
             self.setup_auth()
@@ -867,6 +873,8 @@ class AppConfig(Bunch):
             # Trigger milestone here so that it gets triggered even when
             # websetup (setup-app command) is performed.
             milestones.environment_loaded.reach()
+
+            return app_config
 
         return load_environment
 
@@ -1106,7 +1114,7 @@ class AppConfig(Bunch):
                                    preferred_rendering_engines=tw2_engines,
                                    translator=ugettext,
                                    get_lang=lambda: get_lang(all=False),
-                                   auto_reload_templates=self.auto_reload_templates,
+                                   auto_reload_templates=config['auto_reload_templates'],
                                    controller_prefix='/tw2/controllers/',
                                    res_prefix='/tw2/resources/',
                                    debug=config['debug'],
@@ -1208,8 +1216,9 @@ class AppConfig(Bunch):
                 global_conf = {}
 
             # Configure the Application environment
+            app_config = None
             if load_environment:
-                load_environment(global_conf, app_conf)
+                app_config = load_environment(global_conf, app_conf)
 
             # trigger the environment_loaded milestone again, so that
             # when load_environment is not provided the attached actions gets performed anyway.
@@ -1218,7 +1227,7 @@ class AppConfig(Bunch):
             # Apply controller wrappers to controller caller
             self._setup_controller_wrappers()
 
-            app = TGApp()
+            app = TGApp(app_config)
 
             tg.hooks.notify('configure_new_app', args=(app,), context_config=config)
 
@@ -1275,14 +1284,9 @@ class AppConfig(Bunch):
             # can preserve context in case of exceptions
             app = self.add_debugger_middleware(global_conf, app)
 
-            # if the user has set the value in app_config, don't pull it from the ini
-            forced_serve_static = config.get('serve_static')
-            if forced_serve_static is not None:
-                self.serve_static = asbool(forced_serve_static)
-
             # Static files (if running in production, and Apache or another
             # web server is serving static files)
-            if self.serve_static:
+            if config['serve_static']:
                 app = self.add_static_file_middleware(app)
 
             app = tg.hooks.notify_with_value('after_config', app, context_config=config)

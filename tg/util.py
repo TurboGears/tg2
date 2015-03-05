@@ -12,7 +12,7 @@ class Bunch(dict):
     """A dictionary that provides attribute-style access."""
 
     def __getitem__(self, key):
-        return  dict.__getitem__(self, key)
+        return dict.__getitem__(self, key)
 
     def __getattr__(self, name):
         try:

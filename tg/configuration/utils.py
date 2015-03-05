@@ -4,18 +4,41 @@ from .milestones import config_ready
 class TGConfigError(Exception):pass
 
 
+def coerce_options(options, converters):
+    """Convert some configuration options to expected types.
+
+    conf.update(coerce_options(conf, {
+        'debug': asbool,
+        'serve_static': asbool,
+        'auto_reload_templates': asbool
+    }))
+    """
+    converted_options = {}
+    for option, converter in converters.items():
+        if option in options:
+            converted_options[option] = converter(options[option])
+    return converted_options
+
+
 def coerce_config(configuration, prefix, converters):
-    """Convert configuration values to expected types."""
+    """Extracts a set of options with a common prefix and converts them.
+
+    To extract all options starting with ``trace_errors.`` from
+    the ``conf`` dictionary and conver them::
+
+        trace_errors_config = coerce_config(conf, 'trace_errors.', {
+            'smtp_use_tls': asbool,
+            'dump_request_size': asint,
+            'dump_request': asbool,
+            'dump_local_frames': asbool,
+            'dump_local_frames_count': asint
+        })
+    """
 
     options = dict((key[len(prefix):], configuration[key])
                     for key in configuration if key.startswith(prefix))
-
-    for option, converter in converters.items():
-        if option in options:
-            options[option] = converter(options[option])
-
+    options.update(coerce_options(options, converters))
     return options
-
 
 def get_partial_dict(prefix, dictionary, container_type=dict):
     """Given a dictionary and a prefix, return a Bunch, with just items
