@@ -1,5 +1,19 @@
 = Change Log =
 
+== 2.3.5 (**March X, 2015**) ==
+
+* Quickstart now provides .scaffold files for ``gearbox scaffold`` command.
+* Quickstart login form now keeps username when login fails
+* Configuration process cleanups, now .ini options overwrite AppConfig
+* Various configuration options have been grouped under a common namespace (i18n.*, session.*, tm.*, errorpage.*)
+* New ``configure_new_app`` hook that guarantees to always receive the unwrapped TGApp
+* i18n, caching, session, transaction manager, ming and error pages are now application wrappers for speedups and better integration
+* application wrappers now have a clear interface provided by ApplicationWrapper ABC
+* Work-around for Genshi broken on Py3.4
+* Improved support for connecting to a MongoDB ReplicaSet
+* request.path is no longer cached, so application wrappers can change it and redirect the request
+* Let /_test_vars work even when debug is False when in test mode
+
 == 2.3.4 (**October 2, 2014**) ==
 
 * Support for customizing Flash template
