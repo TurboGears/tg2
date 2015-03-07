@@ -465,7 +465,7 @@ class AppConfig(Bunch):
         # Load conf dict into the global config object
         try:
             reqlocal_config.pop_process_config()
-        except IndexError:
+        except IndexError:  # pragma: no cover
             log.warn('No global config in place, at least defaults should have been here')
         finally:
             reqlocal_config.push_process_config(conf)

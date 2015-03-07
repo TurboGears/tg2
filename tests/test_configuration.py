@@ -1864,6 +1864,32 @@ class TestAppConfig:
         resp = app.get('/test', status=500)
         assert 'ERROR!!!' in resp, resp
 
+    def test_errorpage_reraises_exceptions(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                raise Exception('Crash!')
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['debug'] = False
+        conf['errorpage.handle_exceptions'] = False
+        app = conf.make_wsgi_app(full_stack=False)
+        app = TestApp(app)
+
+        try:
+            resp = app.get('/test', status=500)
+        except Exception as e:
+            assert 'Crash!' in str(e)
+        else:
+            assert False, 'Should have raised Crash! exception'
+
     def test_old_custom_500_document(self):
         class ErrorController(TGController):
             @expose()
@@ -2163,3 +2189,17 @@ class TestAppConfig:
         app = conf.make_wsgi_app(full_stack=False)
         app = TestApp(app)
         assert 'HELLO' in app.get('/test')
+
+    def test_debug_middleware(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                raise Exception('Crash!')
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        app = conf.make_wsgi_app(global_conf={'debug': True}, full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500)
+        assert 'Exception: Crash! // Backlash' in resp, resp
