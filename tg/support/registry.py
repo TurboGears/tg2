@@ -100,6 +100,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         try:
             popped = self.____local__.objects.pop()
             popped_obj = popped[0]
+
             if obj and popped_obj is not obj:
                 raise AssertionError(
                     'The object popped (%s) is not the same as the object '
@@ -196,8 +197,8 @@ class Registry(object):
             stacked._pop_object(myreglist[stacked_id][1])
             del myreglist[stacked_id]
 
-        #Avoid leaking memory on successive request when preserving objects
-        if self.enable_preservation and _getboolattr(stacked, '_is_preserved'):
+        # Avoid leaking memory on successive request when preserving objects
+        if _getboolattr(stacked, '_is_preserved'):
             stacked._pop_object()
 
         stacked._push_object(obj)
