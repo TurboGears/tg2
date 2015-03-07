@@ -1645,13 +1645,28 @@ class TestAppConfig:
         assert '/sub' in app.get('/sub/test')
 
     def test_application_test_vars(self):
-        conf = AppConfig(minimal=True, root_controller=None)
+        class RootController(TGController):
+            pass
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
         conf.package = PackageWithModel()
-        app = conf.make_wsgi_app(global_conf={'debug': True})
+        app = conf.make_wsgi_app()
         app = TestApp(app)
 
         assert 'DONE' in app.get('/_test_vars')
         assert request.path == '/_test_vars'
+
+        # This should trash away the preserved registry to avoid
+        # leaking memory.
+        app.get('/', status=404)
+
+        try:
+            request.path
+        except TypeError:
+            # TypeError means the request has been properly removed
+            pass
+        else:
+            assert False, 'There should have been no requests in place...'
 
     def test_application_empty_controller(self):
         class RootController(object):
@@ -1660,11 +1675,15 @@ class TestAppConfig:
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.package = PackageWithModel()
-        app = conf.make_wsgi_app(global_conf={'debug':True})
+        app = conf.make_wsgi_app()
         app = TestApp(app)
 
-        r = app.get('/something', status=500)
-        assert 'No content returned by controller' in r
+        try:
+            r = app.get('/something')
+        except Exception as e:
+            assert 'No content returned by controller' in str(e)
+        else:
+            assert False, 'Should have raised "No content returned by controller"'
 
     def test_application_test_mode_detection(self):
         class FakeRegistry(object):

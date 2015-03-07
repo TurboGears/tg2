@@ -463,13 +463,15 @@ class AppConfig(Bunch):
         self.after_init_config(conf)
 
         # Load conf dict into the global config object
-        app_config = config._current_obj()
-        if self.stand_alone is True:
-            app_config.clear()
-        app_config.update(conf)
+        try:
+            reqlocal_config.pop_process_config()
+        except IndexError:
+            log.warn('No global config in place, at least defaults should have been here')
+        finally:
+            reqlocal_config.push_process_config(conf)
 
         milestones.config_ready.reach()
-        return app_config
+        return conf
 
     def _configure_renderers(self):
         """Provides default configurations for renderers"""

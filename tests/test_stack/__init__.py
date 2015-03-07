@@ -29,6 +29,7 @@ class TestConfig(AppConfig):
         self.use_legacy_renderer = False
         self.use_dotted_templatenames = False
         self.serve_static = False
+        self['errorpage.enabled'] = False
 
         root = os.path.dirname(os.path.dirname(tests.__file__))
         test_base_path = os.path.join(root,'tests', 'test_stack',)
@@ -54,7 +55,7 @@ class TestConfig(AppConfig):
 
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:
-        deployment_config = {'debug': 'true',
+        deployment_config = {'debug': 'false',
                              'error_email_from': 'paste@localhost',
                              'smtp_server': 'localhost'}
 
@@ -65,7 +66,7 @@ def app_from_config(base_config, deployment_config=None, reset_milestones=True):
 
     env_loader = base_config.make_load_environment()
     app_maker = base_config.setup_tg_wsgi_app(env_loader)
-    app = TestApp(app_maker(deployment_config, full_stack=True))
+    app = TestApp(app_maker(deployment_config, full_stack=False))
     return app
 
 
