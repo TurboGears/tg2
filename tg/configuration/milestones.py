@@ -50,15 +50,17 @@ class _ConfigMilestoneTracker(object):
         method multiple times should lead to nothing.
 
         """
-        self._reached = True
-
         log.debug('%s milestone reached', self.name)
-        while True:
-            try:
-                __, action = self._actions.popitem()
-                action()
-            except KeyError:
-                break
+
+        try:
+            while True:
+                try:
+                    __, action = self._actions.popitem()
+                    action()
+                except KeyError:
+                    break
+        finally:
+            self._reached = True
 
     def _reset(self):
         """This is just for testing purposes"""

@@ -2,6 +2,7 @@
 from nose.tools import raises
 import os, tg
 from tests.test_stack import TestConfig, app_from_config
+from tg.configuration.hooks import _TGGlobalHooksNamespace
 from tg.decorators import Decoration
 from tg.configuration import milestones
 
@@ -14,6 +15,11 @@ from tg.util import Bunch
 class TestHooks(object):
     def setUp(self):
         milestones._reset_all()
+        tg.hooks = _TGGlobalHooksNamespace()
+
+    def tearDown(self):
+        milestones._reset_all()
+        tg.hooks = _TGGlobalHooksNamespace()
 
     def test_hooks_syswide(self):
         base_config = TestConfig(folder = 'dispatch',

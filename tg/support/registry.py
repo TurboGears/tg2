@@ -15,10 +15,13 @@ import threading as threadinglocal
 
 __all__ = ['StackedObjectProxy', 'RegistryManager']
 
+
 def _getboolattr(obj, attrname):
     try:
         return object.__getattribute__(obj, attrname)
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
+        # This is here for compatibility with other middlewares that use
+        # environ['paste.registry'] to register global objects.
         return None
 
 

@@ -7,6 +7,7 @@ from tg.configuration import milestones
 #tg.configuration.reqlocal_config.push_process_config({})
 
 from tests.test_stack import TestConfig, app_from_config
+from tg.configuration.hooks import _TGGlobalHooksNamespace
 from tg.util import Bunch
 from tg._compat import PY3, im_func
 from tg.renderers.genshi import GenshiRenderer
@@ -633,6 +634,8 @@ def test_variable_provider():
     assert 'inject_this_var' in resp
 
 def test_render_hooks():
+    old_hooks, tg.hooks = tg.hooks, _TGGlobalHooksNamespace()
+
     calls = []
     def render_call_hook(*args, **kw):
         calls.append(1)
@@ -652,7 +655,10 @@ def test_render_hooks():
     app = app_from_config(base_config, reset_milestones=False)
     app.get('/')
 
-    assert len(calls) == 2
+    try:
+        assert len(calls) == 2
+    finally:
+        tg.hooks = old_hooks
 
 class TestTemplateCaching(object):
     def setUp(self):

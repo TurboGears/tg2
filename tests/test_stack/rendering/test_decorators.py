@@ -28,7 +28,7 @@ class TestTGController(object):
     def test_simple_jsonification(self):
         resp = self.app.get('/j/json')
         expected = {"a": "hello world", "b": True}
-        assert json.dumps(expected) in str(resp.body)
+        assert expected == resp.json_body
 
     def test_multi_dispatch_json(self):
         resp = self.app.get('/j/xml_or_json', headers={'accept':'application/json'})

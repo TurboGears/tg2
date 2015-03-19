@@ -22,7 +22,6 @@ from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
                            _FormEncodeValidator, TGValidationError)
 
 from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
-from tg.configuration.hooks import hooks
 from functools import partial
 
 strip_string = operator.methodcaller('strip')
@@ -79,6 +78,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             #compatibility with old code that didn't pass request locals explicitly
             context = tg.request.environ['tg.locals']
 
+        hooks = tg.hooks
         context_config = tg.config._current_obj()
         self._initialize_validation_context(context)
 

@@ -198,8 +198,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     kwargs['cache_expire'] = caching_options.get('expire')
     kwargs['cache_type'] = caching_options.get('type')
 
-    for func in config.get('hooks', {}).get('before_render_call', []):
-        func(template_engine, template_name, template_vars, kwargs)
+    tg.hooks.notify('before_render_call', (template_engine, template_name, template_vars, kwargs))
 
     tg_vars = template_vars
 
@@ -211,9 +210,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
 
     kwargs['result'] = render_function(template_name, tg_vars, **kwargs)
 
-    for func in config.get('hooks', {}).get('after_render_call', []):
-        func(template_engine, template_name, template_vars, kwargs)
-
+    tg.hooks.notify('after_render_call', (template_engine, template_name, template_vars, kwargs))
     return kwargs['result']
 
 

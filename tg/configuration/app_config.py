@@ -1,6 +1,5 @@
 """Configuration Helpers for TurboGears 2"""
 
-import atexit
 import os
 import logging
 import warnings
@@ -221,14 +220,6 @@ class AppConfig(Bunch):
         self.application_wrappers_dependencies = {False: [],
                                                   None: [],
                                                   True: []}
-        self.hooks = dict(before_validate=[],
-                          before_call=[],
-                          before_render=[],
-                          after_render=[],
-                          before_render_call=[],
-                          after_render_call=[],
-                          before_config=[],
-                          after_config=[])
 
         #override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
@@ -263,12 +254,54 @@ class AppConfig(Bunch):
     def register_hook(self, hook_name, func):
         warnings.warn("AppConfig.register_hook is deprecated, "
                       "please use tg.hooks.register and "
-                      "tg.hooks.wrap_controller instead", DeprecationWarning)
+                      "AppConfig.register_controller_wrapper instead", DeprecationWarning)
 
         if hook_name == 'controller_wrapper':
             tg.hooks.wrap_controller(func)
         else:
             tg.hooks.register(hook_name, func)
+
+    def register_controller_wrapper(self, wrapper, controller=None):
+        """Registers a TurboGears controller wrapper.
+
+        Controller Wrappers are much like a **decorator** applied to
+        every controller.
+        They receive :class:`tg.configuration.AppConfig` instance
+        as an argument and the next handler in chain and are expected
+        to return a new handler that performs whatever it requires
+        and then calls the next handler.
+
+        A simple example for a controller wrapper is a simple logging wrapper::
+
+            def controller_wrapper(app_config, caller):
+                def call(*args, **kw):
+                    try:
+                        print 'Before handler!'
+                        return caller(*args, **kw)
+                    finally:
+                        print 'After Handler!'
+                return call
+
+            base_config.register_controller_wrapper(controller_wrapper)
+
+        It is also possible to register wrappers for a specific controller::
+
+            base_config.register_controller_wrapper(controller_wrapper, controller=RootController.index)
+        """
+        if milestones.environment_loaded.reached:
+            log.warning('Controller Wrapper %s registered after environment loaded'
+                        'milestone has been reached, the wrapper will be used only'
+                        'for future TGApp instances.', wrapper)
+
+        log.debug("Registering %s controller wrapper for controller: %s",
+                  wrapper, controller or 'ALL')
+
+        if controller is None:
+            self.controller_wrappers.append(wrapper)
+        else:
+            from tg.decorators import Decoration
+            deco = Decoration.get_decoration(controller)
+            deco._register_controller_wrapper(wrapper)
 
     def register_wrapper(self, wrapper, after=None):
         """Registers a TurboGears application wrapper.
@@ -325,22 +358,6 @@ class AppConfig(Bunch):
             self.rendering_engines_options[engine] = options
             if factory.with_tg_vars is False:
                 self.rendering_engines_without_vars.add(engine)
-
-    def _setup_startup_and_shutdown(self):
-        for cmd in self.call_on_startup:
-            if callable(cmd):
-                try:
-                    cmd()
-                except Exception as error:
-                    log.exception("Error registering %s at startup: %s" % (cmd, error ))
-            else:
-                log.warn("Unable to register %s for startup" % cmd )
-
-        for cmd in self.call_on_shutdown:
-            if callable(cmd):
-                atexit.register(cmd)
-            else:
-                log.warn("Unable to register %s for shutdown" % cmd )
 
     def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
@@ -460,8 +477,6 @@ class AppConfig(Bunch):
         else:
             conf['tg.strict_tmpl_context'] = False
 
-        self.after_init_config(conf)
-
         # Load conf dict into the global config object
         try:
             reqlocal_config.pop_process_config()
@@ -469,6 +484,8 @@ class AppConfig(Bunch):
             log.warn('No global config in place, at least defaults should have been here')
         finally:
             reqlocal_config.push_process_config(conf)
+
+        self.after_init_config(conf)
 
         milestones.config_ready.reach()
         return conf
@@ -852,10 +869,8 @@ class AppConfig(Bunch):
             app_conf = Bunch(app_conf)
 
             app_config = self._init_config(global_conf, app_conf)
-
-            #Registers functions to be called at startup and shutdown
-            #from self.call_on_startup and shutdown respectively.
-            self._setup_startup_and_shutdown()
+            tg.hooks.notify('initialized_config', args=(self, app_config))
+            tg.hooks.notify('startup', trap_exceptions=True)
 
             self.setup_routes()
 
