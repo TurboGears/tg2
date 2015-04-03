@@ -32,8 +32,9 @@ class HooksNamespace(object):
         try:
             return func(*args, **kwargs)
         except:
-            log.exception('Exception while handling %s -> %s', hook_name, func)
-            if trap_exceptions is False:
+            if trap_exceptions is True:
+                log.exception('Trapped Exception while handling %s -> %s', hook_name, func)
+            else:
                 raise
 
     def register(self, hook_name, func, controller=None):
