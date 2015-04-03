@@ -65,7 +65,7 @@ def test_genshi_nameconstant():
 
     # This checks genshi gets monkeypatched to fix it on Py34 if option is provided
     GenshiRenderer.create(Bunch({
-        'genshi.name_constant_patch': True,
+        'templating.genshi.name_constant_patch': True,
         'use_dotted_templatenames': False,
         'auto_reload_templates': False,
         'paths': Bunch({'templates': '/tmp'})

@@ -66,7 +66,7 @@ class GenshiRenderer(RendererFactory):
             return None
 
         # Patch for Genshi on Python3.4
-        if asbool(config.get('genshi.name_constant_patch', False)):
+        if asbool(config.get('templating.genshi.name_constant_patch', False)):
             from genshi.template.astutil import ASTCodeGenerator
             if not hasattr(ASTCodeGenerator, 'visit_NameConstant'):
                 def _visit_NameConstant(self, node):
