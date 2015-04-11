@@ -7,11 +7,14 @@ class TGConfigError(Exception):pass
 def coerce_options(options, converters):
     """Convert some configuration options to expected types.
 
-    conf.update(coerce_options(conf, {
-        'debug': asbool,
-        'serve_static': asbool,
-        'auto_reload_templates': asbool
-    }))
+    To replace given options with the converted values
+    in a dictionary you might do::
+
+        conf.update(coerce_options(conf, {
+            'debug': asbool,
+            'serve_static': asbool,
+            'auto_reload_templates': asbool
+        }))
     """
     converted_options = {}
     for option, converter in converters.items():
