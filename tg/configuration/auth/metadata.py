@@ -1,6 +1,6 @@
 from zope.interface import implementer
 from repoze.who.interfaces import IMetadataProvider, IAuthenticator
-
+from repoze.who.api import Identity
 
 class TGAuthMetadata(object):
     """
@@ -48,7 +48,7 @@ class _AuthMetadataProvider(object):
         # Adding the groups and permissions to the repoze.what
         # credentials for repoze.what compatibility:
         if 'repoze.what.credentials' not in environ:
-            environ['repoze.what.credentials'] = {}
+            environ['repoze.what.credentials'] = Identity()
         environ['repoze.what.credentials'].update(identity)
         environ['repoze.what.credentials']['repoze.what.userid'] = userid
 
