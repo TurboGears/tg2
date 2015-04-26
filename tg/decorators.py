@@ -185,9 +185,11 @@ class Decoration(object):
         else:
             self.default_engine = None
 
-        # this is a work-around to make text/html prominent in respect
-        # to other common choices when they have the same weight for
-        # paste.util.mimeparse.best_match.
+        # This is a hack to make text/html prominent in respect to other common choices
+        # when they have the same weight for webob.acceptparse.Accept.best_match().
+        # It uses the fact that the most common content types are all alphabetically
+        # precedent to text/html, and so sorting engine keys alphabetically reversed
+        # should make text/html the first choice when no other better choices are available.
         self.engines_keys = sorted(self.engines, reverse=True)
 
     def register_custom_template_engine(self, custom_format,
@@ -891,7 +893,7 @@ class with_engine(object):
     """
     Decorator to force usage of a specific database engine
     in TurboGears SQLAlchemy BalancedSession.
-    
+
     :param engine_name: 'master' or the name of one of the slaves, if is ``None``
              it will not force any specific engine.
     :param master_params: A dictionary or GET parameters that when present will force
@@ -938,11 +940,11 @@ class cached(object):
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
         NoDefault - Uses function name and all request parameters as the key (default)
-        
+
         None - No variable key, uses only function name as key
-        
+
         string - Use function name and only "key" parameter
-        
+
         list - Use function name and all parameters listed
     ``expire``
         Time in seconds before cache expires, or the string "never".
