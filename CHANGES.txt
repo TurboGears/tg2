@@ -1,7 +1,8 @@
 = Change Log =
 
-== 2.3.5 (**March X, 2015**) ==
+== 2.3.5 (**Aprile 28, 2015**) ==
 
+* request.identity is not unprintable for security reasons.
 * Hooks now support different separated namespaces to avoid collisions with third party apps
 * Quickstart now has support for MongoDB based projects on Python3
 * Quickstart now provides .scaffold files for ``gearbox scaffold`` command.
