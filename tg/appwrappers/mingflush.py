@@ -14,7 +14,7 @@ class MingApplicationWrapper(ApplicationWrapper):
 
     Supported options which can be provided by config are:
 
-        - ``tm.autoflush``: Whenever to flush session at end of request if no exceptions happened.
+        - ``ming.autoflush``: Whenever to flush session at end of request if no exceptions happened.
 
     """
     def __init__(self, handler, config):
