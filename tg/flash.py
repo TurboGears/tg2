@@ -65,7 +65,8 @@ class TGFlash(GlobalConfigurable):
 
     CONFIG_NAMESPACE = 'flash.'
     CONFIG_OPTIONS = {'template': converters.astemplate,
-                      'js_template': converters.astemplate}
+                      'js_template': converters.astemplate,
+                      'allow_html': converters.asbool}
 
     def __init__(self, **options):
         self.configure(**options)
@@ -73,7 +74,8 @@ class TGFlash(GlobalConfigurable):
     def configure(self, cookie_name="webflash", default_status="ok",
                   template=DEFAULT_FLASH_TEMPLATE,
                   js_call='webflash.render()',
-                  js_template=DEFAULT_JSFLASH_TEMPLATE):
+                  js_template=DEFAULT_JSFLASH_TEMPLATE,
+                  allow_html=False):
         """Flash messages can be configured through :class:`.AppConfig` (``app_cfg.base_config``)
         using the following options:
 
@@ -82,6 +84,7 @@ class TGFlash(GlobalConfigurable):
         - ``flash.template`` -> :class:`string.Template` instance used as the flash template when
           rendered from server side, will receive ``$container_id``, ``$message`` and ``$status``
           variables.
+        - ``flash.allow_html`` -> Turns on/off escaping in flash messages, by default HTML is not allowed.
         - ``flash.js_call`` -> javascript code which will be run when displaying the flash
           from javascript. Default is ``webflash.render()``, you can use ``webflash.payload()``
           to retrieve the message and show it with your favourite library.
@@ -98,6 +101,7 @@ class TGFlash(GlobalConfigurable):
         self.static_template = template
         self.js_call = js_call
         self.js_template = js_template
+        self.allow_html = allow_html
 
     def __call__(self, message, status=None, **extra_payload):
         """Registers a flash message for display on current or next request."""
@@ -121,6 +125,12 @@ class TGFlash(GlobalConfigurable):
     def _prepare_payload(self, **data):
         return url_quote(json.dumps(data))
 
+    def _get_message(self, payload):
+        msg = payload.get('message','')
+        if self.allow_html is False:
+            msg = escape(msg)
+        return msg
+
     def render(self, container_id, use_js=True):
         """Render the flash message inside template or provide Javascript support for them.
 
@@ -137,7 +147,7 @@ class TGFlash(GlobalConfigurable):
         payload = self.pop_payload()
         if not payload:
             return ''
-        payload['message'] = escape(payload.get('message',''))
+        payload['message'] = self._get_message(payload)
         payload['container_id'] = container_id
         return self.static_template.substitute(payload)
 

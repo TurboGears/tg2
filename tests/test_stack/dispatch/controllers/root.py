@@ -123,13 +123,13 @@ class RootController(TGController):
 
     @expose()
     def flash_redirect(self):
-        tg.flash("Wow, flash!")
+        tg.flash("Wow, <br/>flash!")
         tg.redirect("/flash_after_redirect")
 
     @expose()
     def flash_render(self, using_js=False, with_message=True):
         if asbool(with_message):
-            tg.flash('JS Flash')
+            tg.flash('JS <br/>Flash')
 
         return tg.flash.render('flash', asbool(using_js))
 

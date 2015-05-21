@@ -11,13 +11,17 @@ from nose import SkipTest
 from tg._compat import PY3, u_
 import json
 
-def setup_noDB():
-    base_config = TestConfig(folder = 'dispatch',
-                             values = {'use_sqlalchemy': False,
-                                       'use_toscawidgets': False,
-                                       'use_toscawidgets2': False,
-                                       'ignore_parameters': ["ignore", "ignore_me"]
-                             })
+def setup_noDB(html_flash=False):
+    config = {'use_sqlalchemy': False,
+              'use_toscawidgets': False,
+              'use_toscawidgets2': False,
+              'ignore_parameters': ["ignore", "ignore_me"]}
+
+    if html_flash:
+        config['flash.allow_html'] = True
+
+    base_config = TestConfig(folder='dispatch',
+                             values=config)
     return app_from_config(base_config)
 
 
@@ -110,7 +114,7 @@ def test_redirect_to_list_of_strings():
 
 def test_flash_redirect():
     resp = app.get('/flash_redirect').follow()
-    assert 'Wow, flash!' in resp, resp
+    assert 'Wow, <br/>flash!' in resp, resp
 
 def test_bigflash_redirect():
     try:
@@ -141,7 +145,12 @@ def test_flash_javascript():
 
 def test_flash_render_plain():
     resp = app.get('/flash_render')
-    assert 'JS Flash' in resp
+    assert 'JS &lt;br/&gt;Flash' in resp, resp
+
+def test_flash_render_plain_with_html():
+    app = setup_noDB(html_flash=True)
+    resp = app.get('/flash_render')
+    assert 'JS <br/>Flash' in resp, resp
 
 def test_flash_render_no_message():
     resp = app.get('/flash_render?with_message=False')
