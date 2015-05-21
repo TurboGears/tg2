@@ -16,6 +16,7 @@ except ImportError: #pragma: no cover
     class _FormEncodeSchema(object):
         """FormEncode Schema"""
 
+
 def _navigate_tw2form_children(w):
     if getattr(w, 'compound_key', None):
         # If we have a compound_key it's a leaf widget with form values
@@ -29,6 +30,7 @@ def _navigate_tw2form_children(w):
         for c in getattr(w, 'children', []):
             for cc in _navigate_tw2form_children(c):
                 yield cc
+
 
 class TGValidationError(Exception):
     """Invalid data was encountered during validation.
