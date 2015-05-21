@@ -1,6 +1,5 @@
 from zope.interface import implementer
-from repoze.who.interfaces import IMetadataProvider, IAuthenticator
-from repoze.who.api import Identity
+from repoze.who.interfaces import IAuthenticator
 
 
 class TGAuthMetadata(object):

@@ -52,16 +52,11 @@ class IdentityApplicationWrapper(ApplicationWrapper):
         userid = identity['repoze.who.userid']
         if userid is not None:
             # Finding the user, groups and permissions:
-            identity_user = identity.get('user')
-            if identity_user is None:
-                identity['user'] = identity_user = self.tgmdprovider.get_user(identity, userid)
+            identity['user'] = identity_user = self.tgmdprovider.get_user(identity, userid)
 
             if identity_user:
-                if not identity.get('groups'):
-                    identity['groups'] = self.tgmdprovider.get_groups(identity, userid)
-
-                if not identity.get('permissions'):
-                    identity['permissions'] = self.tgmdprovider.get_permissions(identity, userid)
+                identity['groups'] = self.tgmdprovider.get_groups(identity, userid)
+                identity['permissions'] = self.tgmdprovider.get_permissions(identity, userid)
             else:
                 identity['groups'] = identity['permissions'] = []
 
