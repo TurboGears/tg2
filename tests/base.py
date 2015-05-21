@@ -3,7 +3,9 @@
 import os, shutil
 from unittest import TestCase
 from tg.appwrappers.caching import CacheApplicationWrapper
+from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.i18n import I18NApplicationWrapper
+from tg.appwrappers.identity import IdentityApplicationWrapper
 from tg.appwrappers.session import SessionApplicationWrapper
 
 try:
@@ -36,7 +38,7 @@ def setup_session_dir():
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
-def make_app(controller_klass=None, environ=None, config_options=None):
+def make_app(controller_klass=None, environ=None, config_options=None, with_errors=False):
     """Creates a `TestApp` instance."""
     if controller_klass is None:
         controller_klass = TGController
@@ -47,9 +49,16 @@ def make_app(controller_klass=None, environ=None, config_options=None):
     config = default_config.copy()
     config['application_wrappers'] = [
         I18NApplicationWrapper,
+        IdentityApplicationWrapper,
         CacheApplicationWrapper,
         SessionApplicationWrapper
     ]
+
+    if with_errors:
+        config['errorpage.enabled'] = True
+        config['errorpage.status_codes'] = [403, 404]
+        config['application_wrappers'].append(ErrorPageApplicationWrapper)
+
     config['session.enabled'] = True
     config['session.data_dir'] = session_dir
     config['cache.enabled'] = True

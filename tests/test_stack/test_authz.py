@@ -29,6 +29,7 @@ from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCod
 from tg.decorators import Decoration
 
 from .baseutils import ControllerWrap, FakeRoutes, default_config
+from ..base import make_app as base_make_app
 
 from tg.configuration.auth import setup_auth, TGAuthMetadata
 from tg.predicates import is_user, not_anonymous, in_group, has_permission
@@ -77,30 +78,24 @@ class TestAuthMetadata(TGAuthMetadata):
 
 def make_app(controller_klass, environ={}, with_errors=False, config_options=None):
     """Creates a ``TestApp`` instance."""
-    # The basic middleware:
-    conf = default_config.copy()
-    if config_options is not None:
-        conf.update(config_options)
+    authmetadata = TestAuthMetadata()
 
-    app = TGApp(config=conf)
-    app.controller_classes['root'] = ControllerWrap(controller_klass)
+    config_options = config_options or {}
+    config_options.setdefault('sa_auth', {})
 
-    app = FakeRoutes(app)
-    
-    if with_errors:
-        app = ErrorHandler(app, {}, debug=False)
-        app = StatusCodeRedirect(app, [403, 404, 500])
-    app = RegistryManager(app)
-    app = SessionMiddleware(app, {}, data_dir=session_dir)
-    app = CacheMiddleware(app, {}, data_dir=os.path.join(data_dir, 'cache'))
+    sa_auth = config_options['sa_auth']
+    sa_auth.update({
+        'authmetadata': authmetadata
+    })
+
+    app = base_make_app(controller_klass, environ, config_options, with_errors).app
 
     # Setting repoze.who up:
     from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
     identifiers = [('cookie', cookie)]
 
-    app = setup_auth(app, TestAuthMetadata(),
-                     identifiers=identifiers, skip_authentication=True,
+    app = setup_auth(app, identifiers=identifiers, skip_authentication=True,
                      authenticators=[], challengers=[])
 
     # As setup_auth with skip_authentication sets empty authenticators always
@@ -618,5 +613,23 @@ class TestLoggedErrorTGController(BaseIntegrationTests):
     def test_logged_error(self):
         resp = self.app.get('/missing_page_for_sure', extra_environ={'REMOTE_USER': 'gustavo'}, expect_errors=True)
         assert 'gustavo' in resp 
-        
+
+
+class TestDiscardingIdentityWhenUserNone(BaseIntegrationTests):
+    CONFIG_OPTIONS = {
+        'identity.allow_missing_user': False
+    }
+
+    def test_authz_custom_allow_only(self):
+        resp = self.app.get('/custom_allow', extra_environ={}, status=401)
+
+    def test_user_is_discarded_when_metadata_is_none(self):
+        environ = {'REMOTE_USER': 'developer'}
+        resp = self.app.get('/commit', extra_environ=environ, status=401)
+
+    def test_user_is_kept_when_metadata_available(self):
+        environ = {'REMOTE_USER': 'developer:managers:commit'}
+        resp = self.app.get('/force_commit', extra_environ=environ, status=200)
+        self.assertEqual("you can commit", resp.body.decode('utf-8'))
+
 #}

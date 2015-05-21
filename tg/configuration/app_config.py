@@ -6,6 +6,7 @@ import warnings
 from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin, deque
+from tg.appwrappers.identity import IdentityApplicationWrapper
 
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
@@ -235,6 +236,7 @@ class AppConfig(Bunch):
         self.register_rendering_engine(KajikiRenderer)
 
         self.register_wrapper(I18NApplicationWrapper, after=True)
+        self.register_wrapper(IdentityApplicationWrapper, after=True)
         self.register_wrapper(SessionApplicationWrapper, after=True)
         self.register_wrapper(CacheApplicationWrapper, after=True)
         self.register_wrapper(MingApplicationWrapper, after=True)
@@ -951,7 +953,11 @@ class AppConfig(Bunch):
                                 "you must define it in app_cfg.py or set "
                                 "sa_auth.cookie_secret in development.ini")
 
-        if 'authmetadata' not in auth_args: #pragma: no cover
+        if 'authmetadata' not in auth_args:  # pragma: no cover
+            warnings.warn("Authentication configured without authmetadata, "
+                          "this is not supported anymore and will be removed in future versions",
+                          DeprecationWarning)
+
             # authmetadata not provided, fallback to old authentication setup
             if self.auth_backend == "sqlalchemy":
                 from repoze.what.plugins.quickstart import setup_sql_auth
@@ -960,6 +966,9 @@ class AppConfig(Bunch):
                 from tgming import setup_ming_auth
                 app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
         else:
+            # Removing authmetadata as is not used by repoze.who:
+            tgauthmetadata = auth_args.pop('authmetadata', None)
+
             try:
                 pos = auth_args['authenticators'].index(('default', None))
             except KeyError:
@@ -971,9 +980,9 @@ class AppConfig(Bunch):
                 pos = -1
 
             if pos is None or pos >= 0:
-                if getattr(auth_args['authmetadata'], 'authenticate', None) is not None:
+                if getattr(tgauthmetadata, 'authenticate', None) is not None:
                     from tg.configuration.auth import create_default_authenticator
-                    auth_args, tgauth = create_default_authenticator(**auth_args)
+                    auth_args, tgauth = create_default_authenticator(tgauthmetadata, **auth_args)
                     authenticator = ('tgappauth', tgauth)
                 elif self.auth_backend == "sqlalchemy":
                     from tg.configuration.sqla.auth import create_default_authenticator

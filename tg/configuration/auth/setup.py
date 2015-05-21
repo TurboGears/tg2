@@ -13,8 +13,6 @@ from repoze.who.classifiers import default_challenge_decider, default_request_cl
 from repoze.who.config import _LEVELS
 from webob.exc import HTTPUnauthorized
 
-from tg.configuration.auth.metadata import _AuthMetadataProvider
-
 log = logging.getLogger(__name__)
 
 @implementer(IIdentifier, IAuthenticator, IChallenger)
@@ -100,14 +98,13 @@ def turbogears_challenge_decider(environ, status, headers):
     return default_challenge_decider(environ, status, headers)
 
 
-def setup_auth(app, authmetadata,
-              form_plugin=None, form_identifies=True,
-              cookie_secret='secret', cookie_name='authtkt',
-              login_url='/login', login_handler='/login_handler',
-              post_login_url=None, logout_handler='/logout_handler',
-              post_logout_url=None, login_counter_name=None,
-              cookie_timeout=None, cookie_reissue_time=None,
-              **who_args):
+def setup_auth(app, form_plugin=None, form_identifies=True,
+               cookie_secret='secret', cookie_name='authtkt',
+               login_url='/login', login_handler='/login_handler',
+               post_login_url=None, logout_handler='/logout_handler',
+               post_logout_url=None, login_counter_name=None,
+               cookie_timeout=None, cookie_reissue_time=None,
+               **who_args):
     """
     Sets :mod:`repoze.who` up with the provided authenticators and
     options to create FriendlyFormPlugin/FastFormPlugin.
@@ -167,13 +164,9 @@ def setup_auth(app, authmetadata,
         log_level = _LEVELS[log_level.lower()]
     who_args['log_level'] = log_level
 
-    # Setting up the metadata provider for the user informations
+    # Setting up the metadata provider for the user information
     if 'mdproviders' not in who_args:
         who_args['mdproviders'] = []
-
-    if authmetadata:
-        authmd = _AuthMetadataProvider(authmetadata)
-        who_args['mdproviders'].append(('authmd', authmd))
 
     # Set up default classifier
     if 'classifier' not in who_args:
