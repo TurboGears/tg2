@@ -12,7 +12,7 @@ import copy
 import warnings
 import time
 from functools import partial
-from webob.exc import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
+from .exceptions import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
 from tg.support import NoDefault
 from tg.support.paginate import Page
 from tg.configuration import config
@@ -26,10 +26,12 @@ from tg.caching import beaker_cache, cached_property, _cached_call
 from tg.predicates import NotAuthorizedError
 from tg._compat import default_im_func, unicode_text
 from webob.acceptparse import Accept
+from .validation import _ValidationIntent
 from tg.configuration import milestones
 import tg
 
 import logging
+
 log = logging.getLogger(__name__)
 
 
@@ -54,7 +56,7 @@ class Decoration(object):
         self.default_engine = None
         self.custom_engines = {}
         self.render_custom_format = None
-        self.validation = None
+        self.validations = []
         self.inherit = False
         self.requirements = []
         self.hooks = dict(before_validate=[],
@@ -112,6 +114,15 @@ class Decoration(object):
     def exposed(self):
         return bool(self.engines) or bool(self.custom_engines)
 
+    @property
+    def validation(self):
+        warnings.warn("Decoration.validation is deprecated, "
+                      "please use 'validations' instead", DeprecationWarning)
+        try:
+            return self.validations[0]
+        except IndexError:
+            return None
+
     def merge(self, deco):
         # This merges already registered template engines
         self.engines = dict(tuple(deco.engines.items()) + tuple(self.engines.items()))
@@ -127,8 +138,8 @@ class Decoration(object):
         for hook_name, hooks in deco.hooks.items():
             self.hooks[hook_name] = hooks + self.hooks[hook_name]
 
-        if not self.validation:
-            self.validation = deco.validation
+        # Inherit al validators registered on parent.
+        self.validations = deco.validations + self.validations
 
     def run_hooks(self, tgl, hook, *l, **kw):
         warnings.warn("Decoration.run_hooks is deprecated, "
@@ -297,6 +308,9 @@ class Decoration(object):
         except TypeError:
             self.controller_caller = _DeprecatedControllerWrapper(wrapper, tg.config,
                                                                   self.controller_caller)
+
+    def _register_validation(self, validation):
+        self.validations.insert(0, validation)
 
 
 class _hook_decorator(object):
@@ -564,7 +578,7 @@ def override_template(view, template):
         override_mapping.setdefault(default_im_func(view), {}).update({content_type: tmpl})
 
 
-class validate(object):
+class validate(_ValidationIntent):
     """Registers which validators ought to be applied.
 
     If you want to validate the contents of your form,
@@ -587,16 +601,11 @@ class validate(object):
 
     """
     def __init__(self, validators=None, error_handler=None, form=None):
-        self.validators = None
-        if form:
-            self.validators = form
-        if validators:
-            self.validators = validators
-        self.error_handler = error_handler
+        super(validate, self).__init__(validators or form, error_handler)
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
-        deco.validation = self
+        deco._register_validation(self)
         return func
 
 

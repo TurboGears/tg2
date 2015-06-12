@@ -16,7 +16,7 @@ from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.validation import TGValidationError, validation_errors
+from tg.validation import TGValidationError, validation_errors, _ValidationStatus
 
 from formencode import validators, Schema
 
@@ -60,8 +60,8 @@ def setup():
 def teardown():
     teardown_session_dir()
 
-class controller_based_validate(validate):
 
+class controller_based_validate(validate):
     def __init__(self, error_handler=None, *args, **kw):
         self.error_handler = error_handler
         self.needs_controller = True
@@ -78,6 +78,11 @@ class ColonValidator(validators.FancyValidator):
 
 class ColonLessGenericValidator(object):
     def validate(self, value, state=None):
+        raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
+
+class ThrowAwayValidationIntentValidator(object):
+    def validate(self, value, state=None):
+        tg.request.validation.intent = None
         raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
 
 def error_handler_function(controller_instance, uid, num):
@@ -182,7 +187,7 @@ class BasicTGController(TGController):
         return 'passed validation'
 
     @expose()
-    @validate({'param':tw2c.IntValidator()})
+    @validate({'param': tw2c.IntValidator()})
     def tw2_dict_validation(self, **kwargs):
         return str(tg.request.validation['errors'])
 
@@ -264,6 +269,14 @@ class BasicTGController(TGController):
 
     @expose()
     @validate({'uid': validators.Int()},
+              error_handler=ErrorHandlerCallable())
+    @validate({'num': validators.Int()},
+              error_handler=abort(412, error_handler=True))
+    def validate_multi(self, uid, num):
+        return str(uid+num)
+
+    @expose()
+    @validate({'uid': validators.Int()},
               error_handler=abort(412, error_handler=True))
     def abort_error_handler(self):
         return 'HUH'
@@ -276,13 +289,26 @@ class BasicTGController(TGController):
 
     @expose()
     def validate_json_errors_complex_types(self, date):
-        tg.request.validation['values'] = {'date': datetime.datetime.utcnow()}
+        tg.request.validation.values = {'date': datetime.datetime.utcnow()}
         return validation_errors_response()
 
     @expose()
     @before_call(lambda remainder, params: params.setdefault('num', 5))
     def hooked_error_handler(self, uid, num):
         return 'UID: %s, NUM: %s' % (uid, num)
+
+    @expose()
+    @validate(ThrowAwayValidationIntentValidator(),
+              error_handler=abort(412, error_handler=True))
+    def throw_away_intent(self, uid):
+        if tg.request.validation.exception:
+            return 'ERROR'
+        return 'UHU?'
+
+    @expose()
+    @validate(error_handler=hooked_error_handler)
+    def passthrough_validation(self, uid):
+        return str(uid)
 
     @expose()
     @validate({'uid': validators.Int()},
@@ -515,6 +541,19 @@ class TestTGController(TestWSGIController):
                                                     'num': 'NaN'})
         assert resp.text == 'UID: 2', resp
 
+    def test_validate_multi(self):
+        resp = self.app.post('/validate_multi', {'uid': 'NaN', 'num': 2})
+        assert resp.text == 'UID: NaN', resp
+
+        resp = self.app.post('/validate_multi', {'uid': 2, 'num': 'NaN'}, status=412)
+        assert resp.status.startswith('412')
+
+        resp = self.app.post('/validate_multi', {'uid': 2, 'num': 2})
+        assert resp.text == '4', resp
+
+        resp = self.app.post('/validate_multi', {'uid': 'NaN', 'num': 'NaN'})
+        assert resp.text == 'UID: NaN', resp
+
     def test_validate_hooked(self):
         resp = self.app.post('/validate_hooked', {'uid': 'NaN'})
         assert resp.text == 'UID: NaN, NUM: 5X', resp
@@ -538,3 +577,34 @@ class TestTGController(TestWSGIController):
                              status=412)
         assert resp.json['values']['date'] == '2014-01-01', resp
 
+    def test_throw_way_validation_intent(self):
+        # This should actually never happen.
+        # It requires the validator to mess up with TG internals, it's just to provide full coverage.
+        resp = self.app.post('/throw_away_intent', {'uid': 5})
+        assert resp.text == 'ERROR', resp
+
+    def test_passthrough_validation(self):
+        # This should actually never happen.
+        # It requires the validator to mess up with TG internals, it's just to provide full coverage.
+        resp = self.app.post('/passthrough_validation', {'uid': 5})
+        assert resp.text == '5', resp
+
+    def test_ValidationStatus_asdict(self):
+        vs = _ValidationStatus()
+        assert vs['errors'] is vs.errors
+        assert vs['values'] is vs.values
+        assert vs['error_handler'] is vs.error_handler
+
+        try:
+            vs['this_does_not_exists']
+        except KeyError:
+            pass
+        else:
+            assert False, 'Should have raised KeyError'
+
+    def test_backward_compatibility_decorator(self):
+        deco = Decoration.get_decoration(BasicTGController.two_validators)
+        assert list(deco.validation.validators.keys()) == ["a", "someemail"], deco.validation.validators
+
+        deco = Decoration.get_decoration(BasicTGController.tw2form_error_handler)
+        assert deco.validation is None, deco.validation

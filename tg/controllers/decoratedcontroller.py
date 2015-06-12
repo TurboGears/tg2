@@ -6,6 +6,7 @@ decorators to effect a rendered page.
 """
 
 import inspect, operator
+import warnings
 import tg
 from tg.controllers.util import abort
 from tg.predicates import NotAuthorizedError, not_anonymous
@@ -16,10 +17,9 @@ from crank.util import (get_params_with_argspec,
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
-from tg.util import Bunch
-from tg.validation import (_navigate_tw2form_children, _FormEncodeSchema,
+from tg.validation import (_navigate_tw2form_children,
                            _Tw2ValidationError, validation_errors,
-                           _FormEncodeValidator, TGValidationError)
+                           TGValidationError, _ValidationStatus)
 
 from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
 from functools import partial
@@ -80,7 +80,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         hooks = tg.hooks
         context_config = tg.config._current_obj()
-        self._initialize_validation_context(context)
+        context.request._fast_setattr('validation', _ValidationStatus())
 
         #This is necessary to prevent spurious Content Type header which would
         #cause problems to paste.response.replace_header calls and cause
@@ -101,8 +101,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             validate_params = get_params_with_argspec(controller, params, remainder)
 
             # Validate user input
-            params = self._perform_validate(controller, validate_params)
-            context.request.validation['values'] = params
+            params = self._perform_validate(controller, validate_params, context)
+            context.request.validation.values = params
 
             params, remainder = remove_argspec_params_from_params(controller, params, remainder)
             bound_controller_callable = controller
@@ -131,7 +131,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return response['response']
 
     @classmethod
-    def _perform_validate(cls, controller, params):
+    def _perform_validate(cls, controller, params, context=None):
         """Run validation for the controller with the given parameters.
 
         Validation is stored on the "validation" attribute of the controller's
@@ -152,69 +152,24 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         be FormEncode Invalid objects.
 
         """
+        if context is None:  # pragma: no cover
+            warnings.warn("Calling DecoratedController._perform_validate without a Context is now deprecated."
+                          " Please provide the context argument when calling it.",
+                          DeprecationWarning)
+            context = tg.request.environ['tg.locals']
 
-        validation = getattr(controller.decoration, 'validation', None)
-
-        if validation is None:
+        validations = controller.decoration.validations
+        if not validations:
             return params
 
-        # An object used by FormEncode to get translator function
-        formencode_state = type('state', (), {'_': staticmethod(tg.i18n._formencode_gettext)})
+        req = context.request
+        validation_status = req.validation
 
-        #Initialize new_params -- if it never gets updated just return params
-        new_params = {}
-
-        # The validator may be a dictionary, a FormEncode Schema object, or any
-        # object with a "validate" method.
-        if isinstance(validation.validators, dict):
-            # TG developers can pass in a dict of param names and FormEncode
-            # validators.  They are applied one by one and builds up a new set
-            # of validated params.
-
-            errors = {}
-            for field, validator in validation.validators.items():
-                try:
-                    if isinstance(validator, _FormEncodeValidator):
-                        new_params[field] = validator.to_python(params.get(field),
-                                                                formencode_state)
-                    else:
-                        new_params[field] = validator.to_python(params.get(field))
-                # catch individual validation errors into the errors dictionary
-                except validation_errors as inv:
-                    errors[field] = inv
-
-            # Parameters that don't have validators are returned verbatim
-            for param, param_value in params.items():
-                if not param in new_params:
-                    new_params[param] = param_value
-
-            # If there are errors, create a compound validation error based on
-            # the errors dictionary, and raise it as an exception
-            if errors:
-                raise TGValidationError(TGValidationError.make_compound_message(errors),
-                                        value=params,
-                                        error_dict=errors)
-
-        elif isinstance(validation.validators, _FormEncodeSchema):
-            # A FormEncode Schema object - to_python converts the incoming
-            # parameters to sanitized Python values
-            new_params = validation.validators.to_python(params, formencode_state)
-
-        elif (hasattr(validation.validators, 'validate')
-              and getattr(validation, 'needs_controller', False)):
-            # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(
-                controller, params, formencode_state)
-
-        elif hasattr(validation.validators, 'validate'):
-            # An object with a "validate" method - call it with the parameters
-            new_params = validation.validators.validate(params, formencode_state)
-
-        # Theoretically this should not happen...
-        # if new_params is None:
-        #     return params
-
-        return new_params
+        validated_params = params
+        for validation_intent in validations:
+            validation_status.intent = validation_intent
+            validated_params = validation_intent.check(controller, validated_params)
+        return validated_params
 
     def _render_response(self, tgl, controller, response):
         """
@@ -299,22 +254,22 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         req = context.request
 
         validation_status = req.validation
-        validation_status['exception'] = exception
+        validation_status.exception = exception
 
         if isinstance(exception, _Tw2ValidationError):
-            #Fetch all the children and grandchildren of a widget
+            # Fetch all the children and grandchildren of a widget
             widget = exception.widget
             widget_children = _navigate_tw2form_children(widget.child)
 
             errors = dict((child.compound_key, child.error_msg) for child in widget_children)
-            validation_status['errors'] = errors
-            validation_status['values'] = widget.child.value
+            validation_status.errors = errors
+            validation_status.values = widget.child.value
         elif isinstance(exception, TGValidationError):
-            validation_status['errors'] = exception.error_dict
-            validation_status['values'] = exception.value
+            validation_status.errors = exception.error_dict
+            validation_status.values = exception.value
         else:
             # Most Invalid objects come back with a list of errors in the format:
-            #"fieldname1: error\nfieldname2: error"
+            # "fieldname1: error\nfieldname2: error"
             error_list = exception.__str__().split('\n')
             for error in error_list:
                 field_value = list(map(strip_string, error.split(':', 1)))
@@ -322,20 +277,18 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                 #if the error has no field associated with it,
                 #return the error as a global form error
                 if len(field_value) == 1:
-                    validation_status['errors']['_the_form'] = field_value[0]
+                    validation_status.errors['_the_form'] = field_value[0]
                     continue
 
-                validation_status['errors'][field_value[0]] = field_value[1]
+                validation_status.errors[field_value[0]] = field_value[1]
 
-            validation_status['values'] = getattr(exception, 'value', {})
+            validation_status.values = getattr(exception, 'value', {})
 
-        deco = controller.decoration
-
-        error_handler = deco.validation.error_handler
+        # Get the error handler associated to the current validation status.
+        error_handler = validation_status.error_handler
         if error_handler is None:
             error_handler = default_im_func(controller)
 
-        validation_status['error_handler'] = error_handler
         return im_self(controller), error_handler
 
     @classmethod
@@ -346,19 +299,16 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         this is not used by TurboGears itself and is mostly provided
         for backward compatibility.
         """
-        if tgl is None: #pragma: no cover
-            #compatibility with old code that didn't pass request locals explicitly
+        warnings.warn("DecoratedController._handle_validation_errors is deprecated and will be removed",
+                      DeprecationWarning)
+
+        if tgl is None:  # pragma: no cover
+            # compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
 
         obj, error_handler = cls._process_validation_errors(controller, remainder, params,
                                                             exception, tgl)
         return error_handler, error_handler(obj, *remainder, **dict(params))
-
-    def _initialize_validation_context(self, context):
-        context.request.validation = Bunch(errors={},
-                                           values={},
-                                           exception=None,
-                                           error_handler=None)
 
     def _check_security(self):
         requirement = getattr(self, 'allow_only', None)
