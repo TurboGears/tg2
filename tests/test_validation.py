@@ -604,7 +604,9 @@ class TestTGController(TestWSGIController):
 
     def test_backward_compatibility_decorator(self):
         deco = Decoration.get_decoration(BasicTGController.two_validators)
-        assert list(deco.validation.validators.keys()) == ["a", "someemail"], deco.validation.validators
+
+        validated_params = sorted(list(deco.validation.validators.keys()))
+        assert validated_params == ["a", "someemail"], validated_params
 
         deco = Decoration.get_decoration(BasicTGController.tw2form_error_handler)
         assert deco.validation is None, deco.validation
