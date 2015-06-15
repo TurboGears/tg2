@@ -1,6 +1,6 @@
 """Utilities"""
-from pkg_resources import resource_filename, resource_stream
-import tempfile, sys, os
+from pkg_resources import resource_filename, resource_stream, get_default_cache
+import sys, os
 import warnings
 from functools import update_wrapper
 from tg.configuration.utils import get_partial_dict
@@ -84,11 +84,13 @@ class DottedFileNameFinder(object):
                 except NotImplementedError as e:
                     if not hasattr(self, '__temp_dir'):
                         if getattr(sys, 'frozen', False):
-                            self.__temp_dir = os.path.join(tempfile.gettempdir(), os.path.basename(sys.executable))
+                            executable = sys.executable
                         else:
-                            self.__temp_dir = os.path.join(tempfile.gettempdir(), os.path.basename(sys.argv[0]))
+                            executable = sys.arv[0]
+                        executable = os.path.abspath(executable).replace(':', '')
+                        self.__temp_dir = os.path.join(get_default_cache(), executable)
                         if not os.path.isdir(self.__temp_dir):
-                            os.mkdir(self.__temp_dir)
+                            os.makedirs(self.__temp_dir)
                     rd = resource_stream(package, basename)
                     result = os.path.join(self.__temp_dir, basename)
                     open(result, 'wb').write(rd.read())
