@@ -83,16 +83,14 @@ class DottedFileNameFinder(object):
                     raise DottedFileLocatorError(str(e) +". Perhaps you have forgotten an __init__.py in that folder.")
                 except NotImplementedError as e:
                     if not hasattr(self, '__temp_dir'):
-                        if getattr(sys, 'frozen', False):
-                            executable = sys.executable
-                        else:
-                            executable = sys.arv[0]
-                        executable = os.path.abspath(executable).replace(':', '')
+                        executable = sys.executable if getattr(sys, 'frozen', False) else sys.arv[0]
+                        #only on windows substitute \\ to - to avoid long pathnames and preserve the structure
+                        executable = os.path.abspath(executable).replace(':', '').replace('\\', '-')
                         self.__temp_dir = os.path.join(get_default_cache(), executable)
-                        if not os.path.isdir(self.__temp_dir):
-                            os.makedirs(self.__temp_dir)
+                    result = os.path.join(self.__temp_dir, package, basename)
+                    if not os.path.isdir(os.path.dirname(result)):
+                        os.makedirs(os.path.dirname(result))
                     rd = resource_stream(package, basename)
-                    result = os.path.join(self.__temp_dir, basename)
                     open(result, 'wb').write(rd.read())
                     rd.close()
             else:
