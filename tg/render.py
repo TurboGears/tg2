@@ -70,6 +70,11 @@ def _get_tg_vars():
     except (AttributeError, ImportError):
         h = Bunch()
 
+    try:
+        validation = req.validation
+    except AttributeError:
+        validation = {}
+
     # TODO: Implement user_agent and other missing features.
     tg_vars = Bunch(
         config=tg.config,
@@ -80,8 +85,8 @@ def _get_tg_vars():
         identity = req.environ.get('repoze.who.identity'),
         session = session,
         locale = req.plain_languages,
-        errors = req.validation['errors'],
-        inputs = req.validation['values'],
+        errors = validation and validation.errors,
+        inputs = validation and validation.values,
         request = req,
         auth_stack_enabled = 'repoze.who.plugins' in req.environ,
         predicates = predicates)
