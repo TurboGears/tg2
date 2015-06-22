@@ -1,2 +1,2 @@
-Have a look at http://turbogears.org/en/resources
+Have a look at http://turbogears.org/current-status.html
 for how to contribute to the TurboGears project.
