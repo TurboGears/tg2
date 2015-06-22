@@ -1,32 +1,8 @@
-"""Utilities"""
 from pkg_resources import resource_filename
-import warnings
-from functools import update_wrapper
-from tg.configuration.utils import get_partial_dict
 
 
-class DottedFileLocatorError(Exception): pass
-
-
-class Bunch(dict):
-    """A dictionary that provides attribute-style access."""
-
-    def __getitem__(self, key):
-        return dict.__getitem__(self, key)
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            return get_partial_dict(name, self, Bunch)
-
-    __setattr__ = dict.__setitem__
-
-    def __delattr__(self, name):
-        try:
-            del self[name]
-        except KeyError:
-            raise AttributeError(name)
+class DottedFileLocatorError(Exception):
+    pass
 
 
 class DottedFileNameFinder(object):
@@ -100,56 +76,3 @@ class DottedFileNameFinder(object):
         """
         finder = cls()
         return finder.get_dotted_filename(name, extension)
-
-
-def no_warn(f, *args, **kwargs):
-    """Decorator that suppresses warnings inside the decorated function"""
-    def _f(*args, **kwargs):
-        warnings.simplefilter("ignore")
-        f(*args, **kwargs)
-        warnings.resetwarnings()
-    return update_wrapper(_f, f)
-
-
-class LazyString(object):
-    """Behaves like a string, but no instance is created until the string is actually used.
-
-    Takes a function which should be a string factory and a set of arguments to pass
-    to the factory. Whenever the string is accessed or manipulated the factory is called
-    to create the actual string. This is used mostly by lazy internationalization.
-
-    """
-    def __init__(self, func, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-
-    def eval(self):
-        return self.func(*self.args, **self.kwargs)
-
-    def __unicode__(self):
-        return unicode(self.eval())
-
-    def __str__(self):
-        return str(self.eval())
-
-    def __mod__(self, other):
-        return self.eval() % other
-
-    def __getattr__(self, attr):
-        return getattr(self.eval(), attr)
-
-
-def lazify(func):
-    """Decorator to return a lazy-evaluated version of the original
-
-    Applying decorator to a function it will create a :class:`.LazyString`
-    with the decorated function as factory.
-
-    """
-    def newfunc(*args, **kwargs):
-        return LazyString(func, *args, **kwargs)
-    newfunc.__name__ = 'lazy_%s' % func.__name__
-    newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
-        (func.__name__, func.__doc__)
-    return newfunc
