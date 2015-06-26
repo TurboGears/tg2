@@ -97,6 +97,6 @@ def parse_datetime(value):
         if valuetz[0] == '-':
             offset = -offset
         valuetz = get_fixed_timezone(offset)
-    kw = {k: int(v) for k, v in kw.items() if v is not None}
+    kw = dict((k, int(v)) for k, v in kw.items() if v is not None)
     kw['tzinfo'] = valuetz
     return datetime(**kw)
