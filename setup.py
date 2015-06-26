@@ -26,11 +26,11 @@ test_requirements = ['coverage',
                     'sqlalchemy',
                     'raven < 4.1.0',
                     'formencode>=1.3.0a1',
-                    'tw2.forms'
-                    ]
+                    'tw2.forms',
+                    'Beaker']
 
 if py_version == (3, 2):
-    #jinja2 2.7 is incompatible with Python 3.2
+    # jinja2 2.7 is incompatible with Python 3.2
     test_requirements.append('jinja2 < 2.7')
 else:
     test_requirements.append('jinja2')
@@ -46,12 +46,11 @@ if py_version[0] == 2:
 install_requires=[
     'WebOb >= 1.2',
     'crank >= 0.7.2, < 0.8',
-    'Beaker',
     'repoze.lru'
 ]
 
 if py_version == (3, 2):
-    #markupsafe 0.16 is incompatible with Python 3.2
+    # markupsafe 0.16 is incompatible with Python 3.2
     install_requires.append('MarkupSafe < 0.16')
 else:
     install_requires.append('MarkupSafe')
