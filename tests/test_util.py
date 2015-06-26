@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime, timedelta
 
 import tg
 from tg.util import *
@@ -6,6 +7,9 @@ from tg.configuration.utils import get_partial_dict
 from nose.tools import eq_, raises
 import os
 from tg.controllers.util import *
+from tg.util.dates import get_fixed_timezone, utctz, parse_datetime
+from tg.util.files import safe_filename
+from tg.util.html import script_json_encode
 from tg.wsgiapp import TemplateContext, AttribSafeTemplateContext
 
 import tg._compat
@@ -131,3 +135,102 @@ def test_tmpl_context_long_entry():
     c = TemplateContext()
     c.something = '3'*300
     assert len(str(c)) < 300
+
+
+
+class TestDatesUtils(object):
+    def test_get_fixed_timezone_seconds(self):
+        delta = get_fixed_timezone(0.5).utcoffset(None)
+        assert delta.total_seconds() == 0
+
+    def test_get_fixed_timezone_minutes(self):
+        delta = get_fixed_timezone(1).utcoffset(None)
+        assert delta.total_seconds() == 60
+
+    def test_get_fixed_timezone_hours(self):
+        delta = get_fixed_timezone(60).utcoffset(None)
+        assert delta.total_seconds() == 3600
+
+    def test_get_fixed_timezone_seconds_td(self):
+        delta = get_fixed_timezone(timedelta(seconds=30)).utcoffset(None)
+        assert delta.total_seconds() == 0
+
+    def test_get_fixed_timezone_minutes_td(self):
+        delta = get_fixed_timezone(timedelta(minutes=1)).utcoffset(None)
+        assert delta.total_seconds() == 60
+
+    def test_get_fixed_timezone_hours_td(self):
+        delta = get_fixed_timezone(timedelta(hours=1)).utcoffset(None)
+        assert delta.total_seconds() == 3600
+
+    def test_get_fixed_timezone_usage(self):
+        utcnow = datetime.utcnow()
+
+        uktz = get_fixed_timezone(60)
+        uknow = (utcnow + timedelta(hours=1)).replace(tzinfo=uktz)
+
+        naiveuk = uknow.astimezone(utctz).replace(tzinfo=None)
+        assert utcnow == naiveuk, (utcnow, naiveuk)
+
+    def test_get_fixed_timezone_name(self):
+        uktz = get_fixed_timezone(60)
+        uktz_name = uktz.tzname(None)
+        assert uktz_name == '+0100', uktz_name
+        assert repr(uktz) == '<+0100>', repr(uktz)
+
+        assert utctz.tzname(None) == 'UTC', utctz.tzname(None)
+        assert repr(utctz) == '<UTC>', repr(utctz)
+
+    def test_get_fixed_timezone_unknowndst(self):
+        uktz = get_fixed_timezone(60)
+        assert uktz.dst(None).total_seconds() == 0
+
+    def test_parse_datetime_tz(self):
+        dt = parse_datetime('1997-07-16T19:20:30.45+01:00')
+        assert dt.tzname() == '+0100', dt
+
+        expected_dt = datetime(1997, 7, 16, 19, 20, 30, 450000)
+        naive_dt = dt.replace(tzinfo=None)
+        assert naive_dt == expected_dt, naive_dt
+
+    def test_parse_datetime_utc(self):
+        dt = parse_datetime('1997-07-16T19:20:30.45Z')
+        assert dt.tzname() == 'UTC', dt
+
+        expected_dt = datetime(1997, 7, 16, 19, 20, 30, 450000).replace(tzinfo=utctz)
+        assert dt == expected_dt, dt
+
+    def test_parse_datetime_negativetz(self):
+        dt = parse_datetime('1997-07-16T19:20:30.45-01:00')
+        assert dt.tzname() == '-0100', dt
+
+        expected_dt = datetime(1997, 7, 16, 19, 20, 30, 450000)
+        naive_dt = dt.replace(tzinfo=None)
+        assert naive_dt == expected_dt, naive_dt
+
+    @raises(ValueError)
+    def test_parse_datetime_invalid_format(self):
+        parse_datetime('1997@07@16T19:20:30.45+01:00')
+
+
+class TestHtmlUtils(object):
+    def test_script_json_encode(self):
+        rv = script_json_encode('</script>')
+        assert rv == u_('"\\u003c/script\\u003e"')
+        rv = script_json_encode("<\0/script>")
+        assert rv == '"\\u003c\\u0000/script\\u003e"'
+        rv = script_json_encode("<!--<script>")
+        assert rv == '"\\u003c!--\\u003cscript\\u003e"'
+        rv = script_json_encode("&")
+        assert rv == '"\\u0026"'
+        rv = script_json_encode("\'")
+        assert rv == '"\\u0027"'
+        rv = "<a ng-data='%s'></a>" % script_json_encode({'x': ["foo", "bar", "baz'"]})
+        assert rv == '<a ng-data=\'{"x": ["foo", "bar", "baz\\u0027"]}\'></a>'
+
+
+class TestFilesUtils(object):
+    def test_safe_filename(self):
+        assert safe_filename('My cool movie.mov') == 'My_cool_movie.mov'
+        assert safe_filename('../../../etc/passwd') == 'etc_passwd'
+        assert safe_filename(u_('i contain cool ümläuts.txt')) == 'i_contain_cool_umlauts.txt'

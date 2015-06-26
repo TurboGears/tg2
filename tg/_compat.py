@@ -7,6 +7,8 @@ else: # pragma: no cover
 
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info[0] == 2
+
 
 if PY3: # pragma: no cover
     string_type = str

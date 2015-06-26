@@ -1,4 +1,7 @@
+import os
+import re
 from pkg_resources import resource_filename
+from .._compat import unicode_text, PY2
 
 
 class DottedFileLocatorError(Exception):
@@ -76,3 +79,49 @@ class DottedFileNameFinder(object):
         """
         finder = cls()
         return finder.get_dotted_filename(name, extension)
+
+
+_FILENAME_ASCII_STRIP_RE = re.compile(r'[^A-Za-z0-9_.-]')
+_WINDOWS_DEVICE_FILES = ('CON', 'AUX', 'COM1', 'COM2', 'COM3', 'COM4', 'LPT1',
+                         'LPT2', 'LPT3', 'PRN', 'NUL')
+
+def safe_filename(filename):
+    """Escapes a filename to ensure is valid and secure.
+
+    Filename can then safely be stored on a regular file system and passed
+    to :func:`os.path.join`.  The filename returned is an ASCII only string
+    for maximum portability::
+
+        >>> safe_filename("My cool movie.mov")
+        'My_cool_movie.mov'
+        >>> safe_filename("../../../etc/passwd")
+        'etc_passwd'
+        >>> safe_filename(u'i contain cool \xfcml\xe4uts.txt')
+        'i_contain_cool_umlauts.txt'
+
+    The function might return an empty filename.  .
+    """
+    if isinstance(filename, unicode_text):
+        from unicodedata import normalize
+        filename = normalize('NFKD', filename).encode('ascii', 'ignore')
+        if not PY2:  # pragma: no cover
+            filename = filename.decode('ascii')
+
+    for sep in os.path.sep, os.path.altsep:
+        if sep:
+            filename = filename.replace(sep, ' ')
+
+    filename = str(_FILENAME_ASCII_STRIP_RE.sub(
+        '',
+        '_'.join(filename.split())
+    )).strip('._')
+
+    # on nt a couple of special files are present in each folder.  We
+    # have to ensure that the target file is not such a filename.  In
+    # this case we prepend an underline
+    if os.name == 'nt' and filename:  # pragma: no cover
+        filebasename = filename.split('.')[0]
+        if filebasename.upper() in _WINDOWS_DEVICE_FILES:
+            filename = '_' + filename
+
+    return filename
