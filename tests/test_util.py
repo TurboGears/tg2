@@ -141,27 +141,27 @@ def test_tmpl_context_long_entry():
 class TestDatesUtils(object):
     def test_get_fixed_timezone_seconds(self):
         delta = get_fixed_timezone(0.5).utcoffset(None)
-        assert delta.total_seconds() == 0
+        assert delta.seconds == 0
 
     def test_get_fixed_timezone_minutes(self):
         delta = get_fixed_timezone(1).utcoffset(None)
-        assert delta.total_seconds() == 60
+        assert delta.seconds == 60
 
     def test_get_fixed_timezone_hours(self):
         delta = get_fixed_timezone(60).utcoffset(None)
-        assert delta.total_seconds() == 3600
+        assert delta.seconds == 3600
 
     def test_get_fixed_timezone_seconds_td(self):
         delta = get_fixed_timezone(timedelta(seconds=30)).utcoffset(None)
-        assert delta.total_seconds() == 0
+        assert delta.seconds == 0
 
     def test_get_fixed_timezone_minutes_td(self):
         delta = get_fixed_timezone(timedelta(minutes=1)).utcoffset(None)
-        assert delta.total_seconds() == 60
+        assert delta.seconds == 60
 
     def test_get_fixed_timezone_hours_td(self):
         delta = get_fixed_timezone(timedelta(hours=1)).utcoffset(None)
-        assert delta.total_seconds() == 3600
+        assert delta.seconds == 3600
 
     def test_get_fixed_timezone_usage(self):
         utcnow = datetime.utcnow()
@@ -183,7 +183,7 @@ class TestDatesUtils(object):
 
     def test_get_fixed_timezone_unknowndst(self):
         uktz = get_fixed_timezone(60)
-        assert uktz.dst(None).total_seconds() == 0
+        assert uktz.dst(None).seconds == 0
 
     def test_parse_datetime_tz(self):
         dt = parse_datetime('1997-07-16T19:20:30.45+01:00')
