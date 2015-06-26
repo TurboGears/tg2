@@ -17,7 +17,7 @@ class _UTCTZ(tzinfo):
     """
 
     def __repr__(self):
-        return "<{}>".format(self.tzname(None))
+        return "<{0}>".format(self.tzname(None))
 
     def utcoffset(self, dt):
         return TIMEDELTA_ZERO
@@ -45,7 +45,7 @@ class _FixedOffsetTZ(tzinfo):
             self.__name = name
 
     def __repr__(self):
-        return "<{}>".format(self.tzname(None))
+        return "<{0}>".format(self.tzname(None))
 
     def utcoffset(self, dt):
         return self.__offset
