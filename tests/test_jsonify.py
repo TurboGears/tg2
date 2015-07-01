@@ -5,6 +5,8 @@ from nose.tools import raises
 from nose import SkipTest
 from webob.multidict import MultiDict
 import json
+from tg.util import LazyString
+
 
 class Foo(object):
     def __init__(self, bar):
@@ -120,6 +122,11 @@ def test_json_encode_lazy_url():
     url = lurl('/test')
     encoded = jsonify.encode({'url': url})
     assert encoded == '{"url": "/test"}', encoded
+
+def test_json_encode_lazy_string():
+    text = LazyString(lambda: 'TEST_STRING')
+    encoded = jsonify.encode({'text': text})
+    assert encoded == '{"text": "TEST_STRING"}', encoded
 
 def test_json_encode_generators():
     encoded = jsonify.encode({'values': (v for v in [1, 2, 3])})

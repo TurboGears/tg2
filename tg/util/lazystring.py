@@ -26,6 +26,9 @@ class LazyString(object):
     def __getattr__(self, attr):
         return getattr(self.eval(), attr)
 
+    def __json__(self):
+        return str(self)
+
 
 def lazify(func):
     """Decorator to return a lazy-evaluated version of the original
