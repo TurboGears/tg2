@@ -1,5 +1,5 @@
 import warnings
-from .i18n import _formencode_gettext
+from .i18n import _formencode_gettext, lazy_ugettext
 
 try:
     from tw2.core import ValidationError as _Tw2ValidationError
@@ -149,6 +149,43 @@ class TGValidationError(Exception):
         return '\n'.join("%s: %s" % errorinfo for errorinfo in error_dict.items())
 
     def __str__(self):
-        return self.msg
+        return str(self.msg)
+
+
+class Convert(object):
+    """Applies a conversion function as a validator.
+
+    This is meant to implement simple validation mechanism.
+
+    Any callable can be used for ``func`` as far as it accepts an argument and
+    returns the converted object. In case of exceptions the validation
+    is considered failed and the ``msg`` parameter is displayed as
+    an error.
+
+    A ``default`` value can be provided for values that are missing
+    (evaluate to false) which will be used in place of the missing value.
+
+    Example::
+
+        @expose()
+        @validate({
+            'num': Converter(int, 'Must be a number')
+        }, error_handler=insert_number)
+        def post_pow2(self, num):
+            return str(num*num)
+    """
+    def __init__(self, func, msg=lazy_ugettext('Invalid'), default=None):
+        self._func = func
+        self._msg = msg
+        self._default = default
+
+    def to_python(self, value, state=None):
+        value = value or self._default
+
+        try:
+            return self._func(value)
+        except:
+            raise TGValidationError(self._msg, value)
+
 
 validation_errors = (_Tw2ValidationError, _FormEncodeValidationError, TGValidationError)

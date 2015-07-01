@@ -6,7 +6,7 @@ from crank.util import get_params_with_argspec
 
 import tg
 import tests
-from json import loads, dumps
+from json import loads
 import datetime
 
 from tg.controllers import TGController, DecoratedController, abort
@@ -16,8 +16,8 @@ from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.validation import TGValidationError, validation_errors, _ValidationStatus
-
+from tg.validation import TGValidationError, validation_errors, _ValidationStatus, Convert
+from tg.i18n import lazy_ugettext as l_
 from formencode import validators, Schema
 
 import tw2.core as tw2c
@@ -177,9 +177,9 @@ class BasicTGController(TGController):
         kwargs['errors'] = tg.request.validation['errors']
         return dict(kwargs)
 
-    @expose()
+    @expose('json')
     def tw2form_error_handler(self, **kwargs):
-        return dumps(dict(errors=tg.request.validation['errors']))
+        return dict(errors=tg.request.validation['errors'])
 
     @expose('json:')
     @validate(form=movie_form, error_handler=tw2form_error_handler)
@@ -187,9 +187,16 @@ class BasicTGController(TGController):
         return 'passed validation'
 
     @expose()
-    @validate({'param': tw2c.IntValidator()})
+    @validate({'param': tw2c.IntValidator()},
+              error_handler=validation_errors_response)
     def tw2_dict_validation(self, **kwargs):
-        return str(tg.request.validation['errors'])
+        return 'NO_ERROR'
+
+    @expose()
+    @validate({'param': validators.Int()},
+              error_handler=validation_errors_response)
+    def formencode_dict_validation(self, **kwargs):
+        return 'NO_ERROR'
 
     @expose('text/plain')
     @validate(form=FormWithFieldSet, error_handler=tw2form_error_handler)
@@ -340,6 +347,21 @@ class BasicTGController(TGController):
         return output
 
 
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, l_('This must be a number'))
+    }, error_handler=validation_errors_response)
+    def post_pow2(self, num=-1):
+        return str(num*num)
+
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, l_('This must be a number'), default=0)
+    }, error_handler=validation_errors_response)
+    def post_pow2_opt(self, num=-1):
+        return str(num*num)
+
+
 class TestTGController(TestWSGIController):
     def setUp(self):
         TestWSGIController.setUp(self)
@@ -458,10 +480,17 @@ class TestTGController(TestWSGIController):
 
     def test_tw2dict_validation(self):
         resp = self.app.post('/tw2_dict_validation', {'param': "7"})
-        assert '{}' in str(resp.body)
+        assert 'NO_ERROR' in str(resp.body)
 
-        resp = self.app.post('/tw2_dict_validation', {'param': "hello"})
+        resp = self.app.post('/tw2_dict_validation', {'param': "hello"}, status=412)
         assert 'Must be an integer' in str(resp.body)
+
+    def test_formencode_dict_validation(self):
+        resp = self.app.post('/formencode_dict_validation', {'param': "7"})
+        assert 'NO_ERROR' in str(resp.body), resp
+
+        resp = self.app.post('/formencode_dict_validation', {'param': "hello"}, status=412)
+        assert 'Please enter an integer value' in str(resp.body), resp
 
     def test_form_validation_translation(self):
         if PY3: raise SkipTest()
@@ -610,3 +639,31 @@ class TestTGController(TestWSGIController):
 
         deco = Decoration.get_decoration(BasicTGController.tw2form_error_handler)
         assert deco.validation is None, deco.validation
+
+    def test_convert_validation(self):
+        resp = self.app.post('/post_pow2', {'num': '5'})
+        assert resp.text == '25', resp
+
+    def test_convert_validation_fail(self):
+        resp = self.app.post('/post_pow2', {'num': 'HELLO'}, status=412)
+        assert 'This must be a number' in resp.text, resp
+
+    def test_convert_validation_missing(self):
+        resp = self.app.post('/post_pow2', {'num': ''}, status=412)
+        assert 'This must be a number' in resp.text, resp
+
+        resp = self.app.post('/post_pow2', status=412)
+        assert 'This must be a number' in resp.text, resp
+
+    def test_convert_validation_optional(self):
+        resp = self.app.post('/post_pow2_opt', {'num': 'HELLO'}, status=412)
+        assert 'This must be a number' in resp.text, resp
+
+        resp = self.app.post('/post_pow2_opt', {'num': '5'})
+        assert resp.text == '25', resp
+
+        resp = self.app.post('/post_pow2_opt', {'num': ''})
+        assert resp.text == '0', resp
+
+        resp = self.app.post('/post_pow2_opt')
+        assert resp.text == '0', resp
