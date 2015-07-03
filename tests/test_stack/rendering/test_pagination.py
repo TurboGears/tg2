@@ -4,6 +4,8 @@ from tests.test_stack import TestConfig, app_from_config
 from tg.support.paginate import Page
 from tg.controllers.util import _urlencode
 from tg import json_encode
+from tg.util.webtest import test_context
+
 
 def setup_noDB():
     base_config = TestConfig(folder='rendering',
@@ -168,26 +170,29 @@ class TestPage(object):
         assert sec[-1] == 9, sec
 
     def test_navigator_one_page(self):
-        p = Page(range(10), items_per_page=10, page=10)
-        assert p.pager() == ''
+        with test_context(None, '/'):
+            p = Page(range(10), items_per_page=10, page=10)
+            assert p.pager() == ''
 
     def test_navigator_middle_page(self):
-        p = Page(range(100), items_per_page=10, page=5)
-        pager = p.pager()
+        with test_context(None, '/'):
+            p = Page(range(100), items_per_page=10, page=5)
+            pager = p.pager()
 
-        assert '?page=1' in pager
-        assert '?page=4' in pager
-        assert '?page=6' in pager
-        assert '?page=10' in pager
+            assert '?page=1' in pager
+            assert '?page=4' in pager
+            assert '?page=6' in pager
+            assert '?page=10' in pager
 
     def test_navigator_ajax(self):
-        p = Page(range(100), items_per_page=10, page=5)
-        pager = p.pager(onclick='goto($page)')
+        with test_context(None, '/'):
+            p = Page(range(100), items_per_page=10, page=5)
+            pager = p.pager(onclick='goto($page)')
 
-        assert 'goto(1)' in pager
-        assert 'goto(4)' in pager
-        assert 'goto(6)' in pager
-        assert 'goto(10)' in pager
+            assert 'goto(1)' in pager
+            assert 'goto(4)' in pager
+            assert 'goto(6)' in pager
+            assert 'goto(10)' in pager
 
 
 try:

@@ -22,7 +22,7 @@ from tg.support.converters import asint, asbool
 
 import tg.i18n
 from tg import TGController, expose, response, request, abort
-from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from tests.base import setup_session_dir, teardown_session_dir
 from webtest import TestApp
 from tg.renderers.base import RendererFactory
 

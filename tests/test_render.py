@@ -6,7 +6,7 @@ from nose import SkipTest
 
 import tg
 from tg.render import MissingRendererError
-from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir, create_request
+from tests.base import setup_session_dir, teardown_session_dir
 
 from tg.configuration import AppConfig
 from mako.exceptions import TemplateLookupException

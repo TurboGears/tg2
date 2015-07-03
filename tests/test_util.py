@@ -10,6 +10,7 @@ from tg.controllers.util import *
 from tg.util.dates import get_fixed_timezone, utctz, parse_datetime
 from tg.util.files import safe_filename
 from tg.util.html import script_json_encode
+from tg.util.webtest import test_context
 from tg.wsgiapp import TemplateContext, AttribSafeTemplateContext
 
 import tg._compat
@@ -41,41 +42,50 @@ def test_compat_im_class():
     assert tg._compat.im_class(o.method) == FakeClass
     assert tg._compat.im_class(func) == None
 
-def test_url_unicode():
-    res = url('.', {'p1':u_('v1')})
-    assert res == '.?p1=v1'
 
-def test_url_unicode_nonascii():
-    res = url('.', {'p1':u_('àèìòù')})
-    assert res == '.?p1=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
+class TestUrlMethod(object):
+    def test_url_unicode(self):
+        with test_context(None, '/'):
+            res = url('.', {'p1':u_('v1')})
+            assert res == '.?p1=v1'
 
-def test_url_nonstring():
-    res = url('.', {'p1':1})
-    assert res == '.?p1=1'
+    def test_url_unicode_nonascii(self):
+        with test_context(None, '/'):
+            res = url('.', {'p1':u_('àèìòù')})
+            assert res == '.?p1=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
 
-def test_url_object():
-    class Object(object):
-        def __str__(self):
-            return 'aeiou'
+    def test_url_nonstring(self):
+        with test_context(None, '/'):
+            res = url('.', {'p1':1})
+            assert res == '.?p1=1'
 
-    res = url('.', {'p1':Object()})
-    assert res == '.?p1=aeiou'
+    def test_url_object(self):
+        class Object(object):
+            def __str__(self):
+                return 'aeiou'
 
-def test_url_object_unicodeerror():
-    class Object(object):
-        def __str__(self):
-            return u_('àèìòù')
+        with test_context(None, '/'):
+            res = url('.', {'p1': Object()})
+            assert res == '.?p1=aeiou'
 
-    res = url('.', {'p1':Object()})
-    assert res == '.?p1=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
+    def test_url_object_unicodeerror(self):
+        class Object(object):
+            def __str__(self):
+                return u_('àèìòù')
 
-def test_url_object_exception():
-    class SubException(Exception):
-        def __str__(self):
-            return u_('àèìòù')
+        with test_context(None, '/'):
+            res = url('.', {'p1': Object()})
+            assert res == '.?p1=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
 
-    res = url('.', {'p1':SubException('a', 'b', 'c')})
-    assert res == '.?p1=a+b+c', res
+    def test_url_object_exception(self):
+        class SubException(Exception):
+            def __str__(self):
+                return u_('àèìòù')
+
+        with test_context(None, '/'):
+            res = url('.', {'p1': SubException('a', 'b', 'c')})
+            assert res == '.?p1=a+b+c', res
+
 
 class TestBunch(object):
     def test_add_entry(self):
@@ -93,6 +103,7 @@ class TestBunch(object):
     def test_del_entry_fail(self):
         d = Bunch()
         del d.not_existing
+
 
 class TestDottedNameFinder(object):
     @raises(DottedFileLocatorError)
@@ -234,3 +245,44 @@ class TestFilesUtils(object):
         assert safe_filename('My cool movie.mov') == 'My_cool_movie.mov'
         assert safe_filename('../../../etc/passwd') == 'etc_passwd'
         assert safe_filename(u_('i contain cool ümläuts.txt')) == 'i_contain_cool_umlauts.txt'
+
+
+class TestWebTestUtilities(object):
+    def test_test_context(self):
+        with test_context(None):
+            test_url = url('/test')
+            assert test_url == '/test', test_url
+
+        try:
+            url('/test')
+        except:
+            pass
+        else:
+            assert False, 'Should have raised exception...'
+
+    def test_test_context_broken_app(self):
+        from webtest import TestApp
+        from tg import AppConfig
+
+        app = TestApp(AppConfig(
+            minimal=True,
+            root_controller=None
+        ).make_wsgi_app())
+
+        try:
+            with test_context(app):
+                raise RuntimeError('This is an error')
+        except RuntimeError:
+            pass
+        else:
+            assert False, 'Should have raised RuntimeError...'
+
+        try:
+            with test_context(app):
+                pass
+        except AttributeError:
+            # as app is not configured, it raises an attribute error
+            # when looking up for root controller.
+            pass
+        else:
+            assert False, 'Should have raised AttributeError...'

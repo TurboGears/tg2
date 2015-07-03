@@ -862,7 +862,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/sub/get_controller_state')
         assert '/sub' in resp
 
-    def test_response_type(self):
+    def test_response_type_json(self):
         resp = self.app.get('/get_response_type.json')
         assert 'json' in resp
 

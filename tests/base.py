@@ -74,37 +74,6 @@ def make_app(controller_klass=None, environ=None, config_options=None, with_erro
     app = RegistryManager(app)
     return TestApp(app)
 
-def create_request(path, environ=None):
-    """Helper used in test cases to quickly setup a request obj.
-
-    ``path``
-        The path will become PATH_INFO
-    ``environ``
-        Additional environment
-
-    Returns an instance of the `webob.Request` object.
-    """
-    # setup the environ
-    if environ is None:
-        environ = {}
-
-    # create a "blank" WebOb Request object
-    # using TG Request which is a webob Request plus
-    # some compatibility methods
-    req = request_local.Request.blank(path, environ)
-
-    # setup a Registry
-    reg = environ.setdefault('paste.registry', Registry())
-    reg.prepare()
-
-    # Setup turbogears context with request, url and tmpl_context
-    tgl = RequestLocals()
-    tgl.tmpl_context = TemplateContext()
-    tgl.request = req
-
-    request_local.context._push_object(tgl)
-
-    return req
 
 class TestWSGIController(TestCase):
     def setUp(self):

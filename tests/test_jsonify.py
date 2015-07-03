@@ -6,6 +6,7 @@ from nose import SkipTest
 from webob.multidict import MultiDict
 import json
 from tg.util import LazyString
+from tg.util.webtest import test_context
 
 
 class Foo(object):
@@ -119,9 +120,10 @@ def test_multidict():
     assert encoded == '{"md": {"v": 1}}', encoded
 
 def test_json_encode_lazy_url():
-    url = lurl('/test')
-    encoded = jsonify.encode({'url': url})
-    assert encoded == '{"url": "/test"}', encoded
+    with test_context(None, '/'):
+        url = lurl('/test')
+        encoded = jsonify.encode({'url': url})
+        assert encoded == '{"url": "/test"}', encoded
 
 def test_json_encode_lazy_string():
     text = LazyString(lambda: 'TEST_STRING')
