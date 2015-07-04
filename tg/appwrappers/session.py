@@ -1,9 +1,13 @@
 import logging
 import warnings
-from beaker.session import Session, SessionObject
-from beaker.util import coerce_session_params
 from ..support.converters import asbool
 from .base import ApplicationWrapper
+
+try:
+    from beaker.session import Session, SessionObject
+except ImportError:  # pragma: no cover
+    SessionObject = None
+
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +28,11 @@ class SessionApplicationWrapper(ApplicationWrapper):
     def __init__(self, handler, config):
         super(SessionApplicationWrapper, self).__init__(handler, config)
 
+        if SessionObject is None:  # pragma: no cover
+            log.debug('Beaker not available, session disabled')
+            self.enabled = False
+            return
+
         # Load up the default params
         self.options = dict(invalidate_corrupt=True, type=None,
                             data_dir=None, key='beaker.session.id',
@@ -39,6 +48,7 @@ class SessionApplicationWrapper(ApplicationWrapper):
                 self.options[key[8:]] = val
 
         # Coerce and validate session params
+        from beaker.util import coerce_session_params
         coerce_session_params(self.options)
 
         self.enabled = asbool(self.options.pop('enabled', True))

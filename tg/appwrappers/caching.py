@@ -1,8 +1,12 @@
 import logging
-from beaker.cache import CacheManager
-from beaker.util import parse_cache_config_options
 from ..support.converters import asbool
 from .base import ApplicationWrapper
+
+try:
+    from beaker.cache import CacheManager
+except ImportError:  # pragma: no cover
+    CacheManager = None
+
 
 log = logging.getLogger(__name__)
 
@@ -23,9 +27,15 @@ class CacheApplicationWrapper(ApplicationWrapper):
     def __init__(self, handler, config):
         super(CacheApplicationWrapper, self).__init__(handler, config)
 
-        self.options = parse_cache_config_options(config)
-        self.cache_manager = CacheManager(**self.options)
+        if CacheManager is None:  # pragma: no cover
+            self.enabled = False
+            log.debug('Beaker not available, caching disabled')
+            return
 
+        from beaker.util import parse_cache_config_options
+        self.options = parse_cache_config_options(config)
+
+        self.cache_manager = CacheManager(**self.options)
         self.enabled = asbool(self.options.pop('enabled', True))
 
         log.debug('Caching enabled: %s -> %s',

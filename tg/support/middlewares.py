@@ -80,8 +80,13 @@ class StatusCodeRedirect(object):
         start_response(status, headers, exc_info)
         return app_iter
 
-from beaker.middleware import CacheMiddleware as BeakerCacheMiddleware
-from beaker.middleware import SessionMiddleware as BeakerSessionMiddleware
+try:
+    from beaker.middleware import CacheMiddleware as BeakerCacheMiddleware
+    from beaker.middleware import SessionMiddleware as BeakerSessionMiddleware
+except ImportError:  # pragma: no cover
+    # beaker not available
+    BeakerCacheMiddleware = object
+    BeakerSessionMiddleware = object
 
 
 class SessionMiddleware(BeakerSessionMiddleware):
@@ -161,5 +166,5 @@ class MingSessionRemoverMiddleware(object):
 
 from .statics import StaticsMiddleware
 
-__all__ = ['StatusCodeRedirect', 'CacheMiddleware', 'SessionMiddleware', 'StaticsMiddleware',
-           'SeekableRequestBodyMiddleware', 'DBSessionRemoverMiddleware']
+__all__ = ['StaticsMiddleware', 'SeekableRequestBodyMiddleware',
+           'DBSessionRemoverMiddleware', 'MingSessionRemoverMiddleware']

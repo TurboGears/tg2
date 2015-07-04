@@ -1024,14 +1024,18 @@ class AppConfig(Bunch):
             warnings.warn('SessionMiddleware is deprecated and will be removed soon, '
                           'please consider using SessionApplicationWrapper instead.',
                           DeprecationWarning)
-            from tg.support.middlewares import SessionMiddleware
+            from tg.support.middlewares import SessionMiddleware, BeakerSessionMiddleware
+            if BeakerSessionMiddleware is object:  # pragma: no cover
+                raise ImportError('Beaker not installed')
             app = SessionMiddleware(app, config)
 
         if getattr(self, 'use_cache_middleware', False):
             warnings.warn('CacheMiddleware is deprecated and will be removed soon, '
                           'please consider using CacheApplicationWrapper instead.',
                           DeprecationWarning)
-            from tg.support.middlewares import CacheMiddleware
+            from tg.support.middlewares import CacheMiddleware, BeakerCacheMiddleware
+            if BeakerCacheMiddleware is object:  # pragma: no cover
+                raise ImportError('Beaker not installed')
             app = CacheMiddleware(app, config)
 
         return app
