@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from ..request_local import request, Response
+from ..request_local import request, Response, config, context
 
 
 class test_context(object):
@@ -44,13 +44,11 @@ class test_context(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
-            self._app.get('/', expect_errors=True)
-        except:
-            if exc_type is None:
-                # We only raise the exception if there wasn't one
-                # raised by the with body as during testing we probably
-                # care more about the error generated in the with than
-                # the error during reset of _test_vars.
-                raise
+            config._pop_object()
+        except AssertionError:
+            pass
 
-
+        try:
+            context._pop_object()
+        except AssertionError:
+            pass

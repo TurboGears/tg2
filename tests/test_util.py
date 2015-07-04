@@ -262,7 +262,8 @@ class TestWebTestUtilities(object):
 
     def test_test_context_broken_app(self):
         from webtest import TestApp
-        from tg import AppConfig
+        from tg import AppConfig, config
+        from tg.request_local import context
 
         app = TestApp(AppConfig(
             minimal=True,
@@ -277,12 +278,12 @@ class TestWebTestUtilities(object):
         else:
             assert False, 'Should have raised RuntimeError...'
 
-        try:
-            with test_context(app):
-                pass
-        except AttributeError:
-            # as app is not configured, it raises an attribute error
-            # when looking up for root controller.
-            pass
-        else:
-            assert False, 'Should have raised AttributeError...'
+        with test_context(app):
+            config._pop_object()
+        # Check that context got cleaned up even though config caused an exception
+        assert not context._object_stack()
+
+        with test_context(app):
+            context._pop_object()
+        # Check that config got cleaned up even though context caused an exception
+        assert not config._object_stack()
