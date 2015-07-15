@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
-from nose.tools import raises
-import os
 from tests.test_stack import TestConfig, app_from_config
-from webtest import TestApp
-from tg.jsonify import JsonEncodeError
 from tg.util import no_warn
-
-from nose.tools import eq_
-from nose import SkipTest
-from tg._compat import PY3, u_
-import json
+from tg._compat import u_
 
 def setup_noDB(html_flash=False):
     config = {'use_sqlalchemy': False,

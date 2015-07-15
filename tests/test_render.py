@@ -2,7 +2,6 @@
 Testing for TG2 Configuration
 """
 from nose.tools import raises
-from nose import SkipTest
 
 import tg
 from tg.render import MissingRendererError

@@ -27,7 +27,9 @@ test_requirements = ['coverage',
                     'raven < 4.1.0',
                     'formencode>=1.3.0a1',
                     'tw2.forms',
-                    'Beaker']
+                    'Beaker',
+                    'Kajiki >= 0.4.4',
+                    'routes']
 
 if py_version == (3, 2):
     # jinja2 2.7 is incompatible with Python 3.2
@@ -36,10 +38,13 @@ else:
     test_requirements.append('jinja2')
 
 
+if py_version != (3, 2):
+    # Ming is not compatible with Python3.2
+    test_requirements.append('ming > 0.5.0')
+
+
 if py_version[0] == 2:
     test_requirements.extend(['TurboKid >= 1.0.4',
-                              'Kajiki >= 0.2.2',
-                              'routes',
                               'tgming',
                               'tw.forms'])
 

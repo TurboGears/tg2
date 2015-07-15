@@ -15,11 +15,9 @@ class TestConfig(AppConfig):
         if values is None:
             values = {}
         AppConfig.__init__(self)
-        #First we setup some base values that we know will work
-        self.renderers = ['genshi', 'mako', 'jinja','json', 'jsonp']
-        if not PY3:
-            self.renderers.extend(['kajiki'])
 
+        # First we setup some base values that we know will work
+        self.renderers = ['genshi', 'mako', 'jinja','json', 'jsonp', 'kajiki']
         self.render_functions = tg.util.Bunch()
         self.package = tests.test_stack
         self.default_renderer = 'genshi'

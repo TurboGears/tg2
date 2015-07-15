@@ -5,10 +5,6 @@ from tests.test_stack import TestConfig, app_from_config
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 from tg.decorators import Decoration
 from tg.configuration import milestones
-
-from nose.tools import eq_
-from nose import SkipTest
-from tg._compat import PY3, u_
 from tg.util import Bunch
 
 

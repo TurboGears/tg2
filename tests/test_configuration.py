@@ -212,8 +212,6 @@ class TestAppConfig:
         config.pop('tg.root_controller')
 
     def test_enable_routes(self):
-        if PY3: raise SkipTest()
-
         conf = AppConfig(minimal=True)
         conf.enable_routes = True
         app = conf.make_wsgi_app()

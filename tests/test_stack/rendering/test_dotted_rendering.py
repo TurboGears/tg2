@@ -55,7 +55,6 @@ def test_default_chameleon_genshi_renderer():
     assert "TurboGears" in resp, resp
 
 def test_default_kajiki_renderer():
-    if PY3: raise SkipTest()
     if '__pypy__' in sys.builtin_module_names: raise SkipTest()
 
     app = setup_noDB()

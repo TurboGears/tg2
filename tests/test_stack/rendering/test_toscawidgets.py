@@ -34,8 +34,6 @@ def test_basic_form_rendering():
         assert expected_field in resp, resp
 
 def test_tw2_form_rendering():
-    if PY3: raise SkipTest()
-
     app = setup_noDB(prefer_tw2=True)
     resp = app.get('/tw2form')
     assert "form" in resp
