@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+import os
 
 from tg.render import cached_template
 from markupsafe import Markup
 from .base import RendererFactory
+from ..configuration.utils import coerce_config
+from ..support.converters import asbool, aslist
 
 try:
     import kajiki
@@ -26,11 +29,17 @@ class KajikiRenderer(RendererFactory):
         if kajiki is None:  # pragma: no cover
             return None
 
+        options = coerce_config(config, 'templating.kajiki.', {
+            'force_mode': str,
+            'template_extension': str,
+            'autoescape_text': asbool,
+            'xml_autoblocks': aslist
+        })
+
         loader = KajikiTemplateLoader(config.paths.templates[0],
                                       dotted_finder=app_globals.dotted_filename_finder,
-                                      force_mode='xml',
                                       reload=config.auto_reload_templates,
-                                      template_extension='.xml')
+                                      **options)
         return {'kajiki': cls(loader)}
 
     def __init__(self, loader):
@@ -62,7 +71,7 @@ class KajikiTemplateLoader(FileLoader):
     Solves also the issue of not supporting relative paths when using
     py:extends in Kaijiki
     """
-    def __init__(self, base, dotted_finder, reload=True, force_mode=None, **kwargs):
+    def __init__(self, base, dotted_finder, reload=True, force_mode='xml', **kwargs):
         self.dotted_finder = dotted_finder
         self.template_extension = kwargs.pop('template_extension', '.xml')
 
@@ -73,4 +82,8 @@ class KajikiTemplateLoader(FileLoader):
             finder = self.dotted_finder
             filename = finder.get_dotted_filename(template_name=filename,
                                                   template_extension=self.template_extension)
+
+            if not os.path.exists(filename):
+                raise IOError('Template %s not found' % filename)
+
         return super(KajikiTemplateLoader, self)._filename(filename)
