@@ -184,8 +184,14 @@ class Decoration(object):
             return
 
         content_type = content_type or '*/*'
-        if content_type in self.engines and engine != default_renderer:
-            #Avoid overwriting the default renderer when there is already a template registered
+
+        try:
+            current_content_type_engine = self.engines[content_type][0]
+        except (KeyError, IndexError):
+            current_content_type_engine = None
+
+        if current_content_type_engine is not None and engine != default_renderer:
+            # Avoid overwriting the default renderer when there is already a template registered
             return
 
         self.engines[content_type] = (engine, template, exclude_names, render_params or {})
