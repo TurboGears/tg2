@@ -4,11 +4,13 @@ Testing for TG2 Configuration
 from nose.tools import raises
 
 import tg
-from tg.render import MissingRendererError
+from tg.render import MissingRendererError, _get_tg_vars
 from tests.base import setup_session_dir, teardown_session_dir
 
 from tg.configuration import AppConfig
 from mako.exceptions import TemplateLookupException
+from tg.util.webtest import test_context
+
 
 def setup():
     setup_session_dir()
@@ -148,3 +150,8 @@ class TestMakoLookup(object):
         finally:
             os.stat = old_stat
 
+    def test_fallback_validation_context_in_templates(self):
+        with test_context(None, '/'):
+            vars = _get_tg_vars()
+            assert vars.tg.errors == {}, vars.tg
+            assert vars.tg.inputs == {}, vars.tg
