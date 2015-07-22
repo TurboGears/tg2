@@ -288,6 +288,10 @@ class RootController(TGController):
     def kajiki_index_dotted(self):
         return {}
 
+    @expose('kajiki:tests.test_stack.rendering.templates.missing')
+    def kajiki_missing_template(self):
+        return {}
+
     @expose('genshi:tests.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}

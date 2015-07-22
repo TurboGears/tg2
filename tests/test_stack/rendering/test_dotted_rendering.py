@@ -128,3 +128,12 @@ def test_mako_inheritance():
     assert "inherited mako page" in resp, resp
     assert "Inside parent template" in resp, resp
 
+def test_kajiki_missing_template():
+    app = setup_noDB()
+
+    try:
+        resp = app.get('/kajiki_missing_template')
+    except IOError as e:
+        assert 'missing.xml not found' in str(e)
+    else:
+        assert False, 'Should have raised IOError'

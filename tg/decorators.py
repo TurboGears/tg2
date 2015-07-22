@@ -196,7 +196,7 @@ class Decoration(object):
 
         self.engines[content_type] = (engine, template, exclude_names, render_params or {})
 
-        #Avoid engine lookup if we have only one engine registered
+        # Avoid engine lookup if we have only one engine registered
         if len(self.engines) == 1:
             self.default_engine = content_type
         else:
