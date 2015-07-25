@@ -34,7 +34,8 @@ class KajikiRenderer(RendererFactory):
             'force_mode': str,
             'template_extension': str,
             'autoescape_text': asbool,
-            'xml_autoblocks': aslist
+            'xml_autoblocks': aslist,
+            'cdata_scripts': asbool
         })
 
         # This is official way to switch gettext function in kajiki
