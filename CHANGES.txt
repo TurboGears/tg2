@@ -1,8 +1,29 @@
 = Change Log =
 
-== 2.3.5 (**Aprile 28, 2015**) ==
+== 2.3.6 (**July 26, 2015**) ==
 
-* request.identity is not unprintable for security reasons.
+* Multiple @validate decorators can now be applied on same method.
+* Identity Metadata provisioning (TGAuthMetadata) is now performed by an application wrapper so that it can rely on caching and other features
+* Beaker is now optional and should be a dependency of the application, if it is not installed Session and Caching AppWrappers get disabled.
+* All new quickstarted projects now expose Beaker and Babel as dependencies.
+* tg.util.webtest.test_context now available for unit testing of features that depend from a TurboGears context ( http://turbogears.readthedocs.org/en/development/reference/classes.html#tg.util.webtest.test_context )
+* tg.validation.Convert utility function for simple validation that doesn't rely on formencode or tw2 ( http://turbogears.readthedocs.org/en/development/reference/classes.html#tg.validation.Convert )
+* Lazy strings are now supported by JSONEncoder, useful for i18n in JSON responses
+* tg.util.dates module provides utilities when working with dates ( http://turbogears.readthedocs.org/en/development/reference/classes.html#tg.util.dates.get_fixed_timezone )
+* tg.util.files module provides utilities when working with files and paths ( http://turbogears.readthedocs.org/en/development/reference/classes.html#tg.util.files.DottedFileNameFinder )
+* flash.allow_html option permits to disable HTML escaping in flash messages ( http://turbogears.readthedocs.org/en/development/reference/classes.html#tg.flash.TGFlash.configure )
+* LazyString now supports all underlying string instance methods
+* Kajiki templates now properly supports i18n
+* Kajiki templates can now have a custom extension by using the templating.kajiki.template_extension option
+* Kajiki templates can now disable automatic CDATA blocks using the templating.kajiki.cdata_scripts option
+* Kajiki templates can now use autoblocks features using the templating.kajiki.xml_autoblocks option
+* @expose can now replace an existing exposition for same content_type if old one was with no engine specified.
+* Additional tests are now run against PY3 due to more libraries being available
+* All new quickstarted projects now use WebHelpers2 package if available on system.
+
+== 2.3.5 (**April 28, 2015**) ==
+
+* request.identity is now unprintable for security reasons.
 * Hooks now support different separated namespaces to avoid collisions with third party apps
 * Quickstart now has support for MongoDB based projects on Python3
 * Quickstart now provides .scaffold files for ``gearbox scaffold`` command.
