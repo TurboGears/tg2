@@ -6,6 +6,7 @@ from markupsafe import Markup
 from .base import RendererFactory
 from ..configuration.utils import coerce_config
 from ..support.converters import asbool, aslist
+from ..i18n import ugettext
 
 try:
     import kajiki
@@ -35,6 +36,11 @@ class KajikiRenderer(RendererFactory):
             'autoescape_text': asbool,
             'xml_autoblocks': aslist
         })
+
+        # This is official way to switch gettext function in kajiki
+        # as documented in http://pythonhosted.org/Kajiki/i18n.html
+        from kajiki import i18n
+        i18n.gettext = ugettext
 
         loader = KajikiTemplateLoader(config.paths.templates[0],
                                       dotted_finder=app_globals.dotted_filename_finder,

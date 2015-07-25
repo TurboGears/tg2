@@ -292,6 +292,15 @@ class RootController(TGController):
     def kajiki_missing_template(self):
         return {}
 
+    @expose('kajiki:tests.test_stack.rendering.templates.kajiki_i18n')
+    def kajiki_i18n(self):
+        return {}
+
+    @expose('kajiki:tests.test_stack.rendering.templates.kajiki_i18n')
+    def kajiki_i18n_de(self):
+        i18n.set_temporary_lang("de")
+        return {}
+
     @expose('genshi:tests.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}

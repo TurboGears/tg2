@@ -62,6 +62,26 @@ def test_default_kajiki_renderer():
     assert "Welcome" in resp, resp
     assert "TurboGears" in resp, resp
 
+def test_kajiki_i18n():
+    app = setup_noDB()
+    resp = app.get('/kajiki_i18n')
+    assert u_("Your application is now running") in resp
+
+def test_kajiki_i18n_de():
+    app = setup_noDB()
+    resp = app.get('/kajiki_i18n_de')
+    assert u_("Ihre Anwendung läuft jetzt einwandfrei") in resp
+
+def test_kajiki_missing_template():
+    app = setup_noDB()
+
+    try:
+        resp = app.get('/kajiki_missing_template')
+    except IOError as e:
+        assert 'missing.xml not found' in str(e)
+    else:
+        assert False, 'Should have raised IOError'
+
 def test_jinja_dotted():
     app = setup_noDB()
     resp = app.get('/jinja_dotted')
@@ -127,13 +147,3 @@ def test_mako_inheritance():
     resp = app.get('/mako_inherits_dotted')
     assert "inherited mako page" in resp, resp
     assert "Inside parent template" in resp, resp
-
-def test_kajiki_missing_template():
-    app = setup_noDB()
-
-    try:
-        resp = app.get('/kajiki_missing_template')
-    except IOError as e:
-        assert 'missing.xml not found' in str(e)
-    else:
-        assert False, 'Should have raised IOError'
