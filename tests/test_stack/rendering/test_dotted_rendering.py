@@ -55,8 +55,6 @@ def test_default_chameleon_genshi_renderer():
     assert "TurboGears" in resp, resp
 
 def test_default_kajiki_renderer():
-    if '__pypy__' in sys.builtin_module_names: raise SkipTest()
-
     app = setup_noDB()
     resp = app.get('/kajiki_index_dotted')
     assert "Welcome" in resp, resp
