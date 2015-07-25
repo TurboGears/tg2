@@ -1,5 +1,5 @@
 """TurboGears project related information"""
-version = "2.3.5"
+version = "2.3.6"
 description = "Next generation TurboGears"
 long_description="""
 TurboGears brings together a best of breed python tools
@@ -26,6 +26,6 @@ The latest development version is available in the
 url="http://www.turbogears.org/"
 author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen, Alessandro Molina, and the TurboGears community"
 email = "mark.ramm@gmail.com, alberto@toscat.net, m.pedersen@icelus.org, amol@turbogears.org"
-copyright = """Copyright 2005-2014 Kevin Dangoor,
+copyright = """Copyright 2005-2015 Kevin Dangoor,
 Alberto Valverde, Mark Ramm, Christopher Perkins and contributors"""
 license = "MIT"
