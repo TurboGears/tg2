@@ -22,7 +22,7 @@ from tg import tmpl_context, request, response
 from tg.util import Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
-from tg.caching import beaker_cache, cached_property, _cached_call
+from tg.caching import beaker_cache, cached_property, _cached_call, create_cache_key
 from tg.predicates import NotAuthorizedError
 from tg._compat import default_im_func, unicode_text
 from webob.acceptparse import Accept
@@ -947,14 +947,18 @@ class with_engine(object):
 
 
 class cached(object):
-    """
-    Decorator to cache the controller, if you also want to cache
-    template remember to return ``tg_cache`` option from the controller.
+    """Decorator to cache the controller.
+
+     The namespace and cache key used to cache the controller are availble
+     as ``request.caching.namespace`` and ``request.caching.key``.
+     This only caches the controller, not the template, validation or the hooks associated
+     to the controller. If you also want to cache template remember to return
+     ``tg_cache`` option with the same cache key from the controller.
 
     The following parameters are accepted:
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
-        NoDefault - Uses function name and all request parameters as the key (default)
+        NoDefault - Uses function name and parameters (excluding *args) as the key (default)
 
         None - No variable key, uses only function name as key
 
@@ -1004,8 +1008,9 @@ class cached(object):
                 starttime = None
 
             def cached_call_controller(controller, remainder, params):
+                req = request._current_obj()
                 if self.key:
-                    key_dict = request.args_params
+                    key_dict = req.args_params
                     if self.key != NoDefault:
                         if isinstance(self.key, (list, tuple)):
                             key_dict = dict((k, key_dict[k]) for k in key_dict)
@@ -1014,12 +1019,16 @@ class cached(object):
                 else:
                     key_dict = {}
 
+                namespace, cache_key = create_cache_key(func, key_dict, req.controller_state.controller)
+                req._fast_setattr('caching', Bunch(namespace=namespace,
+                                                   key=cache_key))
+
                 return _cached_call(next_caller, (controller, remainder, params), {},
-                                    key_func=func, key_dict=key_dict,
+                                    namespace, cache_key,
                                     expire=self.expire, type=self.type,
                                     starttime=starttime, cache_headers=self.cache_headers,
                                     cache_response=self.cache_response,
-                                    cache_extra_args=self.beaker_options)
+                                    cache_extra_args=self.beaker_options,)
 
             return cached_call_controller
 

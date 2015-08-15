@@ -297,15 +297,22 @@ class CachedController(TGController):
         CachedController.CALL_COUNT += 1
         return 'Counter=%s' % CachedController.CALL_COUNT
 
-    def invalidate_on_startup(self):
-        CachedController.CALL_COUNT += 1
-        return 'Counter=%s' % CachedController.CALL_COUNT
-
     @expose()
     @cached(invalidate_on_startup=True)
     def invalidate_on_startup(self):
         CachedController.CALL_COUNT += 1
         return 'Counter=%s' % CachedController.CALL_COUNT
+
+    @expose()
+    def clear_cache(self):
+        curcache = tg.cache.get_cache('tests.test_caching.CachedController')
+        curcache.clear()
+        return ''
+
+    @expose()
+    @cached()
+    def req_cache_key(self, arg=None):
+        return '%s ~ %s' % (tg.request.caching.namespace, tg.request.caching.cache_key)
 
 
 class BeakerCacheController(TGController):  # For backward compatibility
@@ -348,10 +355,6 @@ class BeakerCacheController(TGController):  # For backward compatibility
         BeakerCacheController.CALL_COUNT += 1
         return 'Counter=%s' % BeakerCacheController.CALL_COUNT
 
-    def invalidate_on_startup(self):
-        BeakerCacheController.CALL_COUNT += 1
-        return 'Counter=%s' % BeakerCacheController.CALL_COUNT
-
     @expose()
     @beaker_cache(invalidate_on_startup=True)
     def invalidate_on_startup(self):
@@ -365,6 +368,10 @@ class TestCacheTouch(TestWSGIController):
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(self.CACHED_CONTROLLER)
+
+    def setUp(self):
+        super(TestCacheTouch, self).setUp()
+        self.app.get('/clear_cache')
 
     def test_none_key(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0
@@ -393,10 +400,14 @@ class TestCacheTouch(TestWSGIController):
     def test_specified_cache_key(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0
 
-        r = self.app.get('/specified_cache_key?arg=x')
+        r = self.app.get('/specified_cache_key?arg=0')
         assert 'Counter=1' in r
         r = self.app.get('/specified_cache_key?arg=x')
-        assert 'Counter=1' in r
+        assert 'Counter=2' in r
+        r = self.app.get('/specified_cache_key?arg=x')
+        assert 'Counter=2' in r
+        r = self.app.get('/specified_cache_key/x')
+        assert 'Counter=2' in r
 
     def test_specified_cache_key_args(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0
@@ -407,6 +418,8 @@ class TestCacheTouch(TestWSGIController):
         assert 'Counter=1' in r
         r = self.app.get('/specified_cache_key_args?arg1=x&arg2=z')
         assert 'Counter=2' in r
+        r = self.app.get('/specified_cache_key_args/x/y')
+        assert 'Counter=1' in r
 
     def test_cache_with_args(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0
@@ -415,6 +428,8 @@ class TestCacheTouch(TestWSGIController):
         assert 'Counter=1' in r, r
         r = self.app.get('/cache_with_args?arg=x')
         assert 'Counter=1' in r, r
+        r = self.app.get('/cache_with_args/x')
+        assert 'Counter=1' in r
 
     def test_different_cache_key(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0
@@ -423,6 +438,14 @@ class TestCacheTouch(TestWSGIController):
         assert 'Counter=1' in r
         r = self.app.get('/specified_cache_key?arg=y')
         assert 'Counter=2' in r
+        r = self.app.get('/specified_cache_key/z')
+        assert 'Counter=3' in r
+
+    def test_request_caching_info(self):
+        r = self.app.get('/req_cache_key')
+        assert 'tests.test_caching.CachedController ~ req_cache_key' in r
+        r = self.app.get('/req_cache_key?arg=5')
+        assert 'tests.test_caching.CachedController ~ req_cache_key arg=5' in r
 
     def test_cache_key_instance_method(self):
         class Something(object):

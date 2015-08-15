@@ -48,7 +48,7 @@ class cached_property(object):
             return self._get_value(obj)
 
 
-def _cached_call(func, args, kwargs, key_func, key_dict,
+def _cached_call(func, args, kwargs, namespace, cache_key,
                  expire="never", type=None, starttime=None,
                  cache_headers=('content-type', 'content-length'),
                  cache_response=True, cache_extra_args=None):
@@ -97,11 +97,6 @@ def _cached_call(func, args, kwargs, key_func, key_dict,
         return func(*args, **kwargs)
 
     cache_extra_args = cache_extra_args or {}
-
-    self = None
-    if args:
-        self = args[0]
-    namespace, cache_key = create_cache_key(key_func, key_dict, self)
 
     if type:
         cache_extra_args['type'] = type
@@ -203,7 +198,12 @@ def beaker_cache(key="cache_default", expire="never", type=None,
             else:
                 key_dict = None
 
-            return _cached_call(func, args, kwargs, func, key_dict,
+            self = None
+            if args:
+                self = args[0]
+            namespace, cache_key = create_cache_key(func, key_dict, self)
+
+            return _cached_call(func, args, kwargs, namespace, cache_key,
                                 expire, type, starttime,
                                 cache_headers, cache_response,
                                 b_kwargs)
