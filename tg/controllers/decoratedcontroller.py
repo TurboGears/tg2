@@ -82,9 +82,9 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         context_config = tg.config._current_obj()
         context.request._fast_setattr('validation', _ValidationStatus())
 
-        #This is necessary to prevent spurious Content Type header which would
-        #cause problems to paste.response.replace_header calls and cause
-        #responses wihout content type to get out with a wrong content type
+        # This is necessary to prevent spurious Content Type header which would
+        # cause problems to paste.response.replace_header calls and cause
+        # responses without content type to get out with a wrong content type
         resp_headers = context.response.headers
         if not resp_headers.get('Content-Type'):
             resp_headers.pop('Content-Type', None)
@@ -99,6 +99,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         try:
             validate_params = get_params_with_argspec(controller, params, remainder)
+            context.request.args_params = validate_params  # Update args_params with positional args
 
             # Validate user input
             params = self._perform_validate(controller, validate_params, context)
