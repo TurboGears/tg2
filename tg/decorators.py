@@ -1028,7 +1028,7 @@ class cached(object):
                                     expire=self.expire, type=self.type,
                                     starttime=starttime, cache_headers=self.cache_headers,
                                     cache_response=self.cache_response,
-                                    cache_extra_args=self.beaker_options,)
+                                    cache_extra_args=self.beaker_options)
 
             return cached_call_controller
 
