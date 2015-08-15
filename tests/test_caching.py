@@ -312,7 +312,7 @@ class CachedController(TGController):
     @expose()
     @cached()
     def req_cache_key(self, arg=None):
-        return '%s ~ %s' % (tg.request.caching.namespace, tg.request.caching.cache_key)
+        return '%s ~ %s' % (tg.request.caching.namespace, tg.request.caching.key)
 
 
 class BeakerCacheController(TGController):  # For backward compatibility
