@@ -2,7 +2,6 @@ import logging
 import sys
 from ..configuration.utils import coerce_config
 from ..support.converters import asbool, aslist, asint
-from ..request_local import Response
 from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)
@@ -70,9 +69,7 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
                   environ['PATH_INFO'], status_code)
         if status_code in self.handle_status_codes:
             environ['tg.original_request'] = context.request.copy()
-            environ['tg.original_response'] = Response(status=resp.status,
-                                                       headerlist=resp.headerlist[:],
-                                                       app_iter=resp.app_iter)
+            environ['tg.original_response'] = resp
 
             environ['PATH_INFO'] = self.handle_error_path
             log.debug('ErrorPageApplicationWrapper serving %s:%s',
