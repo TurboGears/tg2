@@ -76,7 +76,7 @@ class TestAuthMetadata(TGAuthMetadata):
         return super(TestAuthMetadata, self).get_permissions(identity, userid)
 
 
-def make_app(controller_klass, environ={}, with_errors=False, config_options=None):
+def make_app(controller_klass, environ=None, with_errors=False, config_options=None):
     """Creates a ``TestApp`` instance."""
     authmetadata = TestAuthMetadata()
 
@@ -88,7 +88,7 @@ def make_app(controller_klass, environ={}, with_errors=False, config_options=Non
         'authmetadata': authmetadata
     })
 
-    app = base_make_app(controller_klass, environ, config_options, with_errors).app
+    app = base_make_app(controller_klass, environ or {}, config_options, with_errors).app
 
     # Setting repoze.who up:
     from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin

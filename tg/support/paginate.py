@@ -136,9 +136,7 @@ class Page(object):
               show_if_single_page=False, separator=' ', onclick=None,
               symbol_first='<<', symbol_last='>>',
               symbol_previous='<', symbol_next='>',
-              link_attr={'class':'pager_link'},
-              curpage_attr={'class':'pager_curpage'},
-              dotdot_attr={'class':'pager_dotdot'},
+              link_attr=None, curpage_attr=None, dotdot_attr=None,
               page_link_template='<a%s>%s</a>',
               page_plain_template='<span%s>%s</span>',
               **kwargs):
@@ -310,6 +308,15 @@ class Page(object):
 
         Additional keyword arguments are used as arguments in the links.
         """
+        if link_attr is None:
+            link_attr = {'class': 'pager_link'}
+
+        if curpage_attr is None:
+            curpage_attr = {'class': 'pager_curpage'}
+
+        if dotdot_attr is None:
+            dotdot_attr = {'class': 'pager_dotdot'}
+
         self.curpage_attr = curpage_attr
         self.separator = separator
         self.pager_kwargs = kwargs

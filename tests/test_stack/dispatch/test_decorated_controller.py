@@ -180,6 +180,10 @@ class TestDecorators(object):
         resp = self.app.get('/onmaster')
         assert 'mainslave' in resp
 
+    def test_with_engine_without_params(self):
+        resp = self.app.get('/onmaster_without_params?first=1&second=1')
+        assert 'mainslave' in resp
+
     def test_with_engine_nopop(self):
         resp = self.app.get('/onmaster?second=1')
         assert 'master' in resp

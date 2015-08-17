@@ -233,6 +233,11 @@ class RootController(TGController):
         return 'HI'
 
     @expose()
+    @with_engine('mainslave')
+    def onmaster_without_params(self, **kw):
+        return '%s-%s' % (tg.request._tg_force_sqla_engine, kw)
+
+    @expose()
     @with_engine('mainslave', master_params=['first'])
     def onmaster_withlist(self, **kw):
         return '%s-%s' % (tg.request._tg_force_sqla_engine, kw)

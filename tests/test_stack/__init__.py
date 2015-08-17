@@ -32,13 +32,14 @@ class TestConfig(AppConfig):
         root = os.path.dirname(os.path.dirname(tests.__file__))
         test_base_path = os.path.join(root,'tests', 'test_stack',)
         test_config_path = os.path.join(test_base_path, folder)
-        self.paths=tg.util.Bunch(
-                    root=test_base_path,
-                    controllers=os.path.join(test_config_path, 'controllers'),
-                    static_files=os.path.join(test_config_path, 'public'),
-                    templates=[os.path.join(test_config_path, 'templates')],
-                    i18n=os.path.join(test_config_path, 'i18n')
-                    )
+        self.paths = tg.util.Bunch(
+            root=test_base_path,
+            controllers=os.path.join(test_config_path, 'controllers'),
+            static_files=os.path.join(test_config_path, 'public'),
+            templates=[os.path.join(test_config_path, 'templates')],
+            i18n=os.path.join(test_config_path, 'i18n')
+        )
+
         # then we override those values with what was passed in
         for key, value in values.items():
             setattr(self, key, value)

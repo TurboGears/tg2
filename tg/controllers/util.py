@@ -5,6 +5,7 @@ URL definition and browser redirection are defined here.
 
 """
 import re
+import warnings
 from webob.exc import status_map
 
 import tg
@@ -153,7 +154,7 @@ def lurl(base_url=None, params=None):
     return LazyUrl(base_url, params)
 
 
-def redirect(base_url='/', params={}, redirect_with=HTTPFound, **kwargs):
+def redirect(base_url='/', params=None, redirect_with=HTTPFound, **kwargs):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -165,7 +166,12 @@ def redirect(base_url='/', params={}, redirect_with=HTTPFound, **kwargs):
     second request.
     """
 
+    if params is None:
+        params = {}
+
     if kwargs:
+        warnings.warn('passing URL parameters by name is deprecated, please use params argument',
+                      DeprecationWarning)
         params = params.copy()
         params.update(kwargs)
 

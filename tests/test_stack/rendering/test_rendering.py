@@ -21,7 +21,7 @@ try:
 except ImportError:
     ChameleonGenshiRenderer = None
 
-def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, extra={},
+def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, extra=None,
                extra_init=None):
     base_config = TestConfig(folder='rendering', values={
         'use_sqlalchemy': False,
@@ -44,7 +44,7 @@ def setup_noDB(genshi_doctype=None, genshi_method=None, genshi_encoding=None, ex
     if genshi_encoding:
         deployment_config['templating.genshi.encoding'] = genshi_encoding
 
-    deployment_config.update(extra)
+    deployment_config.update(extra or {})
 
     if extra_init is not None:
         extra_init(base_config)

@@ -914,18 +914,21 @@ class with_engine(object):
     :param master_params: A dictionary or GET parameters that when present will force
              usage of the master node. The keys of the dictionary will be the
              name of the parameters to look for, while the values must be whenever
-             to pop the paramter from the parameters passed to the controller (True/False).
+             to pop the parameter from the parameters passed to the controller (True/False).
              If `master_params` is a list then it is converted to a dictionary where
              the keys are the entries of the list and the value is always True.
     """
 
-    def __init__(self, engine_name=None, master_params={}):
+    def __init__(self, engine_name=None, master_params=None):
         self.engine_name = engine_name
 
+        if master_params is None:
+            master_params = {}
+
         if not hasattr(master_params, 'keys'):
-            self.master_params = dict((p, True) for p in master_params)
-        else:
-            self.master_params = master_params
+            master_params = dict((p, True) for p in master_params)
+
+        self.master_params = master_params
 
     def before_validate(self, remainder, params):
         force_request_engine(self.engine_name)
