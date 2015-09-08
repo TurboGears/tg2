@@ -194,7 +194,7 @@ class Decoration(object):
             # Avoid overwriting the default renderer when there is already a template registered
             return
 
-        self.engines[content_type] = (engine, template, exclude_names, render_params or {})
+        self.engines[content_type] = (engine, template, exclude_names or [], render_params or {})
 
         # Avoid engine lookup if we have only one engine registered
         if len(self.engines) == 1:
