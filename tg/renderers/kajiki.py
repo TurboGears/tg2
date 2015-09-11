@@ -25,8 +25,8 @@ class KajikiRenderer(RendererFactory):
     """
     Configuration Options available as ``templating.kajiki.*``:
 
-        - ``templating.kajiki.force_mode`` -> Kajiki Rendering Mode (html, html5, xhtml). Default ``xhtml``.
-        - ``templating.kajiki.template_extension`` -> Kajiki Templates extension, default ``.xml``
+        - ``templating.kajiki.force_mode`` -> Kajiki Rendering Mode (html, html5, xml). Default ``html5``.
+        - ``templating.kajiki.template_extension`` -> Kajiki Templates extension, default ``.xhtml``
         - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
         - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
     """
@@ -62,12 +62,11 @@ class KajikiRenderer(RendererFactory):
         self.loader = loader
 
     def __call__(self, template_name, template_vars, cache_key=None,
-                 cache_type=None, cache_expire=None, method='xhtml'):
+                 cache_type=None, cache_expire=None):
         """Render a template with Kajiki
 
         Accepts the cache options ``cache_key``, ``cache_type``, and
-        ``cache_expire`` in addition to method which are passed to Kajiki's
-        render function.
+        ``cache_expire``.
 
         """
         # Create a render callable for the cache function
@@ -78,8 +77,7 @@ class KajikiRenderer(RendererFactory):
 
         return cached_template(template_name, render_template,
                                cache_key=cache_key, cache_type=cache_type,
-                               cache_expire=cache_expire,
-                               ns_options=('method'), method=method)
+                               cache_expire=cache_expire)
 
 
 class KajikiTemplateLoader(FileLoader):
@@ -87,9 +85,9 @@ class KajikiTemplateLoader(FileLoader):
     Solves also the issue of not supporting relative paths when using
     py:extends in Kaijiki
     """
-    def __init__(self, base, dotted_finder, reload=True, force_mode='xml', **kwargs):
+    def __init__(self, base, dotted_finder, reload=True, force_mode='html5', **kwargs):
         self.dotted_finder = dotted_finder
-        self.template_extension = kwargs.pop('template_extension', '.xml')
+        self.template_extension = kwargs.pop('template_extension', '.xhtml')
 
         super(KajikiTemplateLoader, self).__init__(base, reload, force_mode, **kwargs)
 

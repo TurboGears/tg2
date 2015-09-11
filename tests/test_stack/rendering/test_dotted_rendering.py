@@ -76,7 +76,7 @@ def test_kajiki_missing_template():
     try:
         resp = app.get('/kajiki_missing_template')
     except IOError as e:
-        assert 'missing.xml not found' in str(e)
+        assert 'missing.xhtml not found' in str(e)
     else:
         assert False, 'Should have raised IOError'
 
