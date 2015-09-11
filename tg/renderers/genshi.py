@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from markupsafe import Markup
+from tg.configuration.utils import coerce_config
 from tg.support.converters import asint, asbool
 from tg.i18n import ugettext
 from tg.render import cached_template
@@ -24,7 +25,17 @@ __all__ = ['GenshiRenderer']
 
 
 class GenshiRenderer(RendererFactory):
-    """Singleton that can be called as the Genshi render function."""
+    """
+    Configuration Options available as ``templating.genshi.*``:
+
+        - ``templating.genshi.name_constant_patch`` -> Enable/Disable patch for Python3.4 compatibility.
+        - ``templating.genshi.max_cache_size`` -> Maximum number of templates to keep cached, by default 30.
+        - ``templating.genshi.method`` -> Genshi rendering method (html or xhtml).
+    """
+    CONFIG_OPTIONS = {
+        'max_cache_size': asint,
+        'name_constant_patch': asbool
+    }
     engines = {'genshi': {'content_type': 'text/html'}}
 
     doctypes_for_methods = {
@@ -65,8 +76,10 @@ class GenshiRenderer(RendererFactory):
             # Genshi not available
             return None
 
+        options = coerce_config(config, 'templating.genshi.', cls.CONFIG_OPTIONS)
+
         # Patch for Genshi on Python3.4
-        if asbool(config.get('templating.genshi.name_constant_patch', False)):
+        if options.get('name_constant_patch', False):
             from genshi.template.astutil import ASTCodeGenerator
             if not hasattr(ASTCodeGenerator, 'visit_NameConstant'):
                 def _visit_NameConstant(self, node):
@@ -88,7 +101,8 @@ class GenshiRenderer(RendererFactory):
             template_loader_args = {}
 
         loader = TemplateLoader(search_path=config.paths.templates,
-                                max_cache_size=asint(config.get('genshi.max_cache_size', 30)),
+                                max_cache_size=options.get('max_cache_size',
+                                                           asint(config.get('genshi.max_cache_size', 30))),
                                 auto_reload=config.auto_reload_templates,
                                 callback=cls.on_template_loaded,
                                 **template_loader_args)

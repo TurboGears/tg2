@@ -952,7 +952,7 @@ class with_engine(object):
 class cached(object):
     """Decorator to cache the controller.
 
-     The namespace and cache key used to cache the controller are availble
+     The namespace and cache key used to cache the controller are available
      as ``request.caching.namespace`` and ``request.caching.key``.
      This only caches the controller, not the template, validation or the hooks associated
      to the controller. If you also want to cache template remember to return
@@ -961,7 +961,7 @@ class cached(object):
     The following parameters are accepted:
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
-        NoDefault - Uses function name and parameters (excluding *args) as the key (default)
+        NoDefault - Uses function name and parameters (excluding \*args) as the key (default)
 
         None - No variable key, uses only function name as key
 

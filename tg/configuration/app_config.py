@@ -161,7 +161,61 @@ class AppConfig(Bunch):
     This is the place to configure custom routes, transaction handling,
     error handling, etc.
 
+    Configuration Options provided:
+
+        - ``debug`` -> Enables / Disables debug mode. **Can be set from .ini file**
+        - ``serve_static`` -> Enable / Disable serving static files. **Can be set from .ini file**
+        - ``use_dotted_templatenames`` -> Use template names as packages in @expose instead of file paths.
+          This is usually the default unless TG is started in Minimal Mode. **Can be set from .ini file**
+        - ``registry_streaming`` -> Enable streaming of responses, this is enabled by default.
+          **Can be set from .ini file**
+        - ``paths`` -> Dictionary of directories where templates, static files and controllers are found::
+
+            {
+                'controllers': 'my/path/to/controlllers',
+                'static_files': 'my/path/to/files',
+                'templates': ['list/of/paths/to/templates']
+            )
+        - ``use_toscawidgets`` -> Enable ToscaWidgets1, this is deprecated.
+        - ``use_toscawidgets2`` -> Enable ToscaWidgets2
+        - ``prefer_toscawidgets2`` -> When both TW2 and TW1 are enabled prefer TW2. **Can be set from .ini file**
+        - ``custom_tw2_config`` -> Dictionary of configuration options for TW2, refer to
+          :class:`.tw2.core.middleware.Config` for available options.
+        - ``auth_backend`` -> Authentication Backend, can be ``None``, ``sqlalchemy`` or ``ming``.
+        - ``sa_auth`` -> Simple Authentication configuration dictionary.
+          This is a Dictionary that contains the configuration options for ``repoze.who``,
+          see :ref:`authentication` for available options. Basic options include:
+
+            - ``cookie_secret`` -> Secret phrase used to verify auth cookies.
+            - ``authmetadata`` -> Authentication and User Metadata Provider for TurboGears
+            - ``post_login_url`` -> Redirect users here after login
+            - ``post_logout_url`` -> Redirect users here when they logout
+        - ``tg.app_globals`` -> Application Globals, by default build from ``package.lib.app_globals``.
+        - ``package`` -> Application Package, this is used to configure paths as being inside a python
+          package. Which enables serving templates, controllers, app globals and so on from the package itself.
+          *This is required when using Models and database as those are always retrieved from ``package.model``*.
+        - ``renderers`` -> List of enabled renderers names.
+        - ``default_renderer`` -> When not specified, use this renderer for templates.
+        - ``auto_reload_templates`` -> Automatically reload templates when modified (disable this on production
+          for a performance gain). **Can be set from .ini file**
+        - ``use_ming`` -> Enable/Disable Ming as Models storage.
+        - ``ming.url`` -> Url of the MongoDB database
+        - ``ming.db`` -> If Database is not provided in ``ming.url`` it can be specified here.
+        - ``ming.connection.*`` -> Options to configure the ming connection,
+          refer to :func:`ming.datastore.create_datastore` for available options.
+        - ``use_sqlalchemy`` -> Enable/Disable Ming as Models storage.
+        - ``sqlalchemy.url`` -> Url of the SQLAlchemy database. Refer to :ref:`sqla_master_slave` for
+          configuring master-slave urls.
     """
+    CONFIG_OPTIONS = {
+        'debug': asbool,
+        'serve_static': asbool,
+        'auto_reload_templates': asbool,
+        'use_dotted_templatenames': asbool,
+        'registry_streaming': asbool,
+        'use_toscawidgets2': asbool,
+        'prefer_toscawidgets2': asbool
+    }
 
     def __init__(self, minimal=False, root_controller=None):
         """Creates some configuration defaults"""
@@ -175,10 +229,9 @@ class AppConfig(Bunch):
         # And also very often...
         self.sa_auth = Bunch()
 
-        #Set individual defaults
+        # Set individual defaults
         self.auto_reload_templates = True
         self.auth_backend = None
-        self.stand_alone = True
         self.serve_static = not minimal
 
         self.renderers = []
@@ -398,11 +451,7 @@ class AppConfig(Bunch):
         # Coerce some options that are bool
         conf.update(coerce_options(
             conf,
-            {
-                'debug': asbool,
-                'serve_static': asbool,
-                'auto_reload_templates': asbool
-            }
+            self.CONFIG_OPTIONS
         ))
 
         # Load the errorware configuration from the Paste configuration file
@@ -722,6 +771,12 @@ class AppConfig(Bunch):
                                           **datastore_options)
         config['tg.app_globals'].ming_datastore = datastore
         self.package.model.init_model(datastore)
+
+        if not hasattr(self, 'DBSession'):
+            # If the user hasn't specified a session, assume
+            # he/she uses the default DBSession in model
+            model = getattr(self, 'model', self.package.model)
+            self.DBSession = model.DBSession
 
     def setup_sqlalchemy(self):
         """Setup SQLAlchemy database engine.
@@ -1154,6 +1209,7 @@ class AppConfig(Bunch):
                                         'jinja':['jinja', 'jinja2'],
                                         'kajiki':['kajiki', 'xml']
                                    })
+
         default_tw2_config.update(self.custom_tw2_config)
         app = TwMiddleware(app, **default_tw2_config)
         return app

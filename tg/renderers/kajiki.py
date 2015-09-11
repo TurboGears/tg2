@@ -22,6 +22,21 @@ __all__ = ['KajikiRenderer']
 
 
 class KajikiRenderer(RendererFactory):
+    """
+    Configuration Options available as ``templating.kajiki.*``:
+
+        - ``templating.kajiki.force_mode`` -> Kajiki Rendering Mode (html, html5, xhtml). Default ``xhtml``.
+        - ``templating.kajiki.template_extension`` -> Kajiki Templates extension, default ``.xml``
+        - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
+        - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
+    """
+    CONFIG_OPTIONS = {
+        'force_mode': str,
+        'template_extension': str,
+        'autoescape_text': asbool,
+        'xml_autoblocks': aslist,
+        'cdata_scripts': asbool
+    }
     engines = {'kajiki': {'content_type': 'text/html'}}
 
     @classmethod
@@ -30,13 +45,7 @@ class KajikiRenderer(RendererFactory):
         if kajiki is None:  # pragma: no cover
             return None
 
-        options = coerce_config(config, 'templating.kajiki.', {
-            'force_mode': str,
-            'template_extension': str,
-            'autoescape_text': asbool,
-            'xml_autoblocks': aslist,
-            'cdata_scripts': asbool
-        })
+        options = coerce_config(config, 'templating.kajiki.', cls.CONFIG_OPTIONS)
 
         # This is official way to switch gettext function in kajiki
         # as documented in http://pythonhosted.org/Kajiki/i18n.html

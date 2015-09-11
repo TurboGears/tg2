@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import logging
 import stat
+from tg.configuration.utils import coerce_config
 
 try:
     import threading
@@ -30,6 +31,16 @@ log = logging.getLogger(__name__)
 
 
 class MakoRenderer(RendererFactory):
+    """
+    Configuration Options available as ``templating.mako.*``:
+
+        - ``templating.mako.compiled_templates_dir`` -> Where to store mako precompiled templates.
+          By default templates are only stored in memory and not on disk.
+    """
+    #: Configuration Options that can be set as ``templating.mako.*``.
+    CONFIG_OPTIONS = {
+        'compiled_templates_dir': str
+    }
     engines = {'mako': {'content_type': 'text/html'}}
 
     @classmethod
@@ -42,9 +53,11 @@ class MakoRenderer(RendererFactory):
 
         use_dotted_templatenames = config.get('use_dotted_templatenames', True)
 
+        options = coerce_config(config, 'templating.mako.', cls.CONFIG_OPTIONS)
+
         # If no dotted names support was required we will just setup
         # a file system based template lookup mechanism.
-        compiled_dir = config.get('templating.mako.compiled_templates_dir', None)
+        compiled_dir = options.get('compiled_templates_dir', None)
 
         if not compiled_dir or compiled_dir.lower() in ('none', 'false'):
             # Cache compiled templates in-memory

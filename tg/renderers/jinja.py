@@ -23,6 +23,10 @@ __all__ = ['JinjaRenderer']
 
 
 class JinjaRenderer(RendererFactory):
+    """
+    Currently Jinja2 support uses a bunch of options from the AppConfig
+    and doesn't provide its own namespace.
+    """
     engines = {'jinja': {'content_type': 'text/html'}}
 
     @classmethod
