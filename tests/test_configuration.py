@@ -2002,8 +2002,8 @@ class TestAppConfig:
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.prefer_toscawidgets2 = True
-        conf.renderers = ['kajiki']
-        conf.default_renderer = 'kajiki'
+        conf.renderers = ['json']
+        conf.default_renderer = 'json'
 
         try:
             app = conf.make_wsgi_app(full_stack=True)
