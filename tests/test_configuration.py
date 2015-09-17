@@ -1960,8 +1960,8 @@ class TestAppConfig:
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.prefer_toscawidgets2 = True
-        conf.renderers = ['kajiki', 'genshi']
-        conf.default_renderer = 'kajiki'
+        conf.renderers = ['json', 'genshi']
+        conf.default_renderer = 'json'
 
         app = conf.make_wsgi_app(full_stack=True)
         app = TestApp(app)
