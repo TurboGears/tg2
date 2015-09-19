@@ -190,10 +190,12 @@ class AppConfig(Bunch):
             - ``authmetadata`` -> Authentication and User Metadata Provider for TurboGears
             - ``post_login_url`` -> Redirect users here after login
             - ``post_logout_url`` -> Redirect users here when they logout
-        - ``tg.app_globals`` -> Application Globals, by default build from ``package.lib.app_globals``.
         - ``package`` -> Application Package, this is used to configure paths as being inside a python
+        - ``app_globals`` -> Application Globals class, by default build from ``package.lib.app_globals``.
           package. Which enables serving templates, controllers, app globals and so on from the package itself.
-          *This is required when using Models and database as those are always retrieved from ``package.model``*.
+        - ``helpers`` -> Template Helpers, by default ``package.lib.helpers`` is used.
+        - ``model`` -> The models module (or object) where all the models, DBSession and init_models method are
+           available. By default ``package.model`` is used.
         - ``renderers`` -> List of enabled renderers names.
         - ``default_renderer`` -> When not specified, use this renderer for templates.
         - ``auto_reload_templates`` -> Automatically reload templates when modified (disable this on production
@@ -224,7 +226,8 @@ class AppConfig(Bunch):
         self.paths = Bunch()
 
         # Provide a default app_globals for single file applications
-        self['tg.app_globals'] = Bunch({'dotted_filename_finder':DottedFileNameFinder()})
+        self.app_globals = None
+        self.helpers = None
 
         # And also very often...
         self.sa_auth = Bunch()
@@ -703,22 +706,34 @@ class AppConfig(Bunch):
     def setup_helpers_and_globals(self):
         """Add helpers and globals objects to the config.
 
-        Override this method to customize the way that ``app_globals``
-        and ``helpers`` are setup.
-
+        Override this method to customize the way that ``app_globals`` and ``helpers``
+        are setup.
         """
 
-        try:
-            g = self.package.lib.app_globals.Globals()
-        except AttributeError:
-            log.warn('Application has a package but no lib.app_globals.Globals class is available.')
-            return
+        gclass = getattr(self, 'app_globals', None)
+        if gclass is None:
+            try:
+                g = self.package.lib.app_globals.Globals()
+            except AttributeError:
+                log.warn('app_globals not provided and lib.app_globals.Globals class is not available.')
+                g = Bunch()
+        else:
+            g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
         config['tg.app_globals'] = g
 
         if config.get('tg.pylons_compatible', True):
             config['pylons.app_globals'] = g
+
+        h = getattr(self, 'helpers', None)
+        if h is None:
+            try:
+                h = self.package.lib.helpers
+            except AttributeError:
+                log.warn('helpers not provided and lib.helpers is not available.')
+                h = Bunch()
+        config['helpers'] = h
 
     def setup_persistence(self):
         """Override this method to define how your application configures it's persistence model.
@@ -770,12 +785,13 @@ class AppConfig(Bunch):
         datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''),
                                           **datastore_options)
         config['tg.app_globals'].ming_datastore = datastore
-        self.package.model.init_model(datastore)
+
+        model = getattr(self, 'model', self.package.model)
+        model.init_model(datastore)
 
         if not hasattr(self, 'DBSession'):
             # If the user hasn't specified a session, assume
             # he/she uses the default DBSession in model
-            model = getattr(self, 'model', self.package.model)
             self.DBSession = model.DBSession
 
     def setup_sqlalchemy(self):
@@ -837,12 +853,13 @@ class AppConfig(Bunch):
 
         # Pass the engine to initmodel, to be able to introspect tables
         config['tg.app_globals'].sa_engine = engine
-        self.package.model.init_model(engine)
+
+        model = getattr(self, 'model', self.package.model)
+        model.init_model(engine)
 
         if not hasattr(self, 'DBSession'):
             # If the user hasn't specified a scoped_session, assume
             # he/she uses the default DBSession in model
-            model = getattr(self, 'model', self.package.model)
             self.DBSession = model.DBSession
 
     def setup_auth(self):
@@ -930,16 +947,7 @@ class AppConfig(Bunch):
             tg.hooks.notify('startup', trap_exceptions=True)
 
             self.setup_routes()
-
-            try:
-                self.package
-            except AttributeError:
-                # if we don't have a specified package, don't try
-                # helpers from the package expect the user to specify them.
-                log.debug('Helpers not configured due to missing application package')
-            else:
-                self.setup_helpers_and_globals()
-
+            self.setup_helpers_and_globals()
             self.setup_auth()
             self._setup_renderers()
             self.setup_persistence()

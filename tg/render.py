@@ -64,11 +64,7 @@ def _get_tg_vars():
     translator = tgl.translator
     response = tgl.response
     session = tgl.session
-
-    try:
-        h = conf['package'].lib.helpers
-    except (AttributeError, ImportError):
-        h = Bunch()
+    helpers = conf['helpers']
 
     try:
         validation = req.validation
@@ -101,8 +97,8 @@ def _get_tg_vars():
         g=app_globals,
         session=session,
         url=tg.url,
-        helpers=h,
-        h=h,
+        helpers=helpers,
+        h=helpers,
         tg=tg_vars,
         translator=translator,
         ungettext=tg.i18n.ungettext,

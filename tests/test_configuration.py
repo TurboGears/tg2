@@ -13,7 +13,7 @@ from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
-from tg.configuration.app_config import TGConfigError
+from tg.configuration.app_config import TGConfigError, defaults as app_config_defaults
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
 from tg.configuration.utils import coerce_config, coerce_options
@@ -2131,3 +2131,37 @@ class TestAppConfig:
 
         resp = app.get('/test', status=500)
         assert 'Exception: Crash! // Backlash' in resp, resp
+
+    def test_make_app_with_custom_appglobals(self):
+        class RootController(TGController):
+            @expose('')
+            def test(self, *args, **kwargs):
+                return tg.app_globals.TEXT
+
+        class FakeGlobals(Bunch):
+            def __init__(self):
+                super(FakeGlobals, self).__init__()
+                self['TEXT'] = 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.app_globals = FakeGlobals
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
+
+    def test_make_app_with_custom_helpers(self):
+        class RootController(TGController):
+            @expose('')
+            def test(self, *args, **kwargs):
+                return config['helpers'].get_text()
+
+        class FakeHelpers(Bunch):
+            @classmethod
+            def get_text(cls):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.helpers = FakeHelpers()
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')

@@ -44,11 +44,6 @@ class TestConfig(AppConfig):
         for key, value in values.items():
             setattr(self, key, value)
 
-    def setup_helpers_and_globals(self):
-        tg.config['tg.app_globals'] = self.globals
-        g = tg.config['tg.app_globals']
-        g.dotted_filename_finder = DottedFileNameFinder()
-
     def add_debugger_middleware(self, global_conf, app):
         return app
 
