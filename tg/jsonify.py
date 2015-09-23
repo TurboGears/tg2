@@ -122,6 +122,10 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         elif isinstance(obj, decimal.Decimal):
             return float(obj)
         elif is_saobject(obj):
+            if sqlalchemy.inspect(obj).detached:
+                raise JsonEncodeError(
+                        "SQLAlchemy instance '%r' must be attached "
+                        "to a session." % obj)
             props = {}
             for key in obj.__dict__:
                 if not key.startswith('_sa_'):
