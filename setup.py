@@ -13,8 +13,7 @@ if py_version < (2, 6):
 if py_version[0] == 3 and py_version < (3, 2):
     raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.2')
 
-test_requirements = ['coverage',
-                    'nose',
+test_requirements = ['nose',
                     'zope.sqlalchemy >= 0.4',
                     'repoze.who',
                     'repoze.who.plugins.sa >= 1.0.1',
@@ -34,8 +33,11 @@ test_requirements = ['coverage',
 if py_version == (3, 2):
     # jinja2 2.7 is incompatible with Python 3.2
     test_requirements.append('jinja2 < 2.7')
+    # coverage 4.0 is incompatible with Python 3.2
+    test_requirements.append('coverage < 4.0')
 else:
     test_requirements.append('jinja2')
+    test_requirements.append('coverage')
 
 
 if py_version != (3, 2):
