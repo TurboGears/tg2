@@ -1,4 +1,4 @@
-from nose.tools import raises
+from nose.tools import assert_raises
 from tg import jsonify
 import json
 
@@ -102,3 +102,10 @@ else:
         result = json.loads(encoded)
         assert result == expected, encoded
 
+    def test_detached_saobj():
+        s = create_session()
+        t = s.query(Test1).get(1)
+        # ensure it can be serialized now
+        jsonify.encode(t)
+        s.expunge(t)
+        assert_raises(jsonify.JsonEncodeError, lambda: jsonify.encode(t))
