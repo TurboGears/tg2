@@ -62,6 +62,7 @@ class DottedFileNameFinder(object):
             else:
                 result = template_name
 
+            result = os.path.abspath(result)
             self.__cache[template_name] = result
 
             return result

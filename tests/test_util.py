@@ -111,10 +111,16 @@ class TestDottedNameFinder(object):
         DottedFileNameFinder().get_dotted_filename('this.is.not.a.python.package')
 
     def test_local_file(self):
-        assert DottedFileNameFinder().get_dotted_filename('this_should_be_my_template') == 'this_should_be_my_template'
+        abspath = os.path.abspath('this_should_be_my_template')
+        assert DottedFileNameFinder().get_dotted_filename('this_should_be_my_template') == abspath
 
     def test_local_file_utility_method(self):
-        assert DottedFileNameFinder.lookup('this_should_be_my_template') == 'this_should_be_my_template'
+        abspath = os.path.abspath('this_should_be_my_template')
+        assert DottedFileNameFinder.lookup('this_should_be_my_template') == abspath
+
+    def test_local_file_returns_absolute_path(self):
+        assert os.path.isabs(DottedFileNameFinder.lookup('this_should_be_my_template'))
+
 
 class TestLazyString(object):
     def test_lazy_string_to_str(self):
