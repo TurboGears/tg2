@@ -65,7 +65,7 @@ def get_partial_dict(prefix, dictionary, container_type=dict):
     if new_dict:
         return new_dict
     else:
-        raise AttributeError
+        raise AttributeError(prefix)
 
 
 class GlobalConfigurable(object):
