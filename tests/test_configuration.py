@@ -5,6 +5,10 @@ from nose import SkipTest
 from nose.tools import eq_, raises
 import atexit, sys, os
 from datetime import datetime
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
+from ming import Session
+from ming.orm import ThreadLocalORMSession
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
@@ -210,6 +214,79 @@ class TestAppConfig:
 
         #This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller')
+
+    def test_minimal_app_with_sqlalchemy(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        DBSession = scoped_session(sessionmaker(autoflush=True, autocommit=False))
+        def init_model(engine):
+            DBSession.configure(bind=engine)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        conf['use_sqlalchemy'] = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        conf['model'] = Bunch(DBSession=DBSession,
+                              init_model=init_model)
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
+
+    @raises(TGConfigError)
+    def test_sqlalchemy_without_models(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['use_sqlalchemy'] = True
+        conf['sqlalchemy.url'] = 'sqlite://'
+        app = conf.make_wsgi_app()
+
+    def test_minimal_app_with_ming(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        mainsession = Session()
+        DBSession = ThreadLocalORMSession(mainsession)
+
+        def init_model(engine):
+            mainsession.bind = engine
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        conf['use_ming'] = True
+        conf['ming.url'] = 'mim://'
+        conf['model'] = Bunch(init_model=init_model, DBSession=DBSession)
+
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
+
+    @raises(TGConfigError)
+    def test_ming_without_models(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+
+                return 'HI!'
+
+        DBSession = scoped_session(sessionmaker(autoflush=True, autocommit=False))
+        def init_model(engine):
+            DBSession.configure(bind=engine)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        conf['use_ming'] = True
+        conf['ming.url'] = 'mim://'
+        app = conf.make_wsgi_app()
 
     def test_enable_routes(self):
         conf = AppConfig(minimal=True)

@@ -786,7 +786,15 @@ class AppConfig(Bunch):
                                           **datastore_options)
         config['tg.app_globals'].ming_datastore = datastore
 
-        model = getattr(self, 'model', self.package.model)
+        try:
+            package_models = self.package.model
+        except AttributeError:
+            package_models = None
+
+        model = getattr(self, 'model', package_models)
+        if model is None:
+            raise TGConfigError('Ming enabled, but no models provided')
+
         model.init_model(datastore)
 
         if not hasattr(self, 'DBSession'):
@@ -854,7 +862,15 @@ class AppConfig(Bunch):
         # Pass the engine to initmodel, to be able to introspect tables
         config['tg.app_globals'].sa_engine = engine
 
-        model = getattr(self, 'model', self.package.model)
+        try:
+            package_models = self.package.model
+        except AttributeError:
+            package_models = None
+
+        model = getattr(self, 'model', package_models)
+        if model is None:
+            raise TGConfigError('SQLAlchemy enabled, but no models provided')
+
         model.init_model(engine)
 
         if not hasattr(self, 'DBSession'):
