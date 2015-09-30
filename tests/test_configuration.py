@@ -187,9 +187,9 @@ class TestAppConfig:
 
     def test_get_root(self):
         current_root_module = self.config['paths']['root']
-        assert self.config.get_root_module() == 'tests.controllers.root', self.config.get_root_module()
+        assert self.config._get_root_module() == 'tests.controllers.root', self.config._get_root_module()
         self.config['paths']['root'] = None
-        assert self.config.get_root_module() == None, self.config.get_root_module()
+        assert self.config._get_root_module() == None, self.config._get_root_module()
         self.config['paths']['root'] = current_root_module
 
     def test_lang_can_be_changed_by_ini(self):

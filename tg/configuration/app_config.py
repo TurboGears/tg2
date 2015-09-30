@@ -299,7 +299,7 @@ class AppConfig(Bunch):
         self.register_wrapper(TransactionApplicationWrapper, after=True)
         self.register_wrapper(ErrorPageApplicationWrapper, after=True)
 
-    def get_root_module(self):
+    def _get_root_module(self):
         root_module_path = self.paths['root']
         if not root_module_path:
             return None
@@ -519,7 +519,7 @@ class AppConfig(Bunch):
         if not conf['paths']['static_files']:
             conf['serve_static'] = False
 
-        conf['application_root_module'] = self.get_root_module()
+        conf['application_root_module'] = self._get_root_module()
         if conf['paths']['root']:
             conf['localedir'] = os.path.join(conf['paths']['root'], 'i18n')
         else:
