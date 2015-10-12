@@ -10,37 +10,11 @@ from tg.support.converters import asbool
 from webob.multidict import MultiDict
 from tg._compat import string_type
 from tg.configuration.utils import GlobalConfigurable
+from tg.util.sqlalchemy import dictify as dictify_sqla, is_saobject, is_query_result, is_query_row
+from tg.util.ming import dictify as dictify_ming, is_mingobject, is_objectid
+
 import logging
-
 log = logging.getLogger(__name__)
-
-
-class NotExistingImport:
-    pass
-
-try:
-    import sqlalchemy
-    from sqlalchemy.engine import ResultProxy, RowProxy
-except ImportError: #pragma: no cover
-    ResultProxy=NotExistingImport
-    RowProxy=NotExistingImport
-
-try:
-    from bson import ObjectId
-except ImportError: #pragma: no cover
-    ObjectId=NotExistingImport
-
-try:
-    import ming
-    import ming.odm
-except ImportError: #pragma: no cover
-    ming=NotExistingImport
-
-def is_saobject(obj):
-    return hasattr(obj, '_sa_class_manager')
-
-def is_mingobject(obj):
-    return hasattr(obj, '__ming__')
 
 
 class JsonEncodeError(Exception):
@@ -122,28 +96,14 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         elif isinstance(obj, decimal.Decimal):
             return float(obj)
         elif is_saobject(obj):
-            if sqlalchemy.inspect(obj).detached:
-                raise JsonEncodeError(
-                        "SQLAlchemy instance '%r' must be attached "
-                        "to a session." % obj)
-            props = {}
-            for key in obj.__dict__:
-                if not key.startswith('_sa_'):
-                    props[key] = getattr(obj, key)
-            return props
-        elif is_mingobject(obj) and ming is not NotExistingImport:
-            prop_names = [prop.name for prop in ming.odm.mapper(obj).properties
-                          if isinstance(prop, ming.odm.property.FieldProperty)]
-
-            props = {}
-            for key in prop_names:
-                props[key] = getattr(obj, key)
-            return props
-        elif isinstance(obj, ResultProxy):
+            return dictify_sqla(obj)
+        elif is_mingobject(obj):
+            return dictify_ming(obj)
+        elif is_query_result(obj):
             return dict(rows=list(obj), count=obj.rowcount)
-        elif isinstance(obj, RowProxy):
+        elif is_query_row(obj):
             return dict(rows=dict(obj), count=1)
-        elif isinstance(obj, ObjectId):
+        elif is_objectid(obj):
             return str(obj)
         elif isinstance(obj, MultiDict):
             return obj.mixed()
@@ -171,7 +131,7 @@ def encode(obj, encoder=None, iterencode=False):
     try:
         value = obj['test']
     except TypeError:
-        if not hasattr(obj, '__json__') and not is_saobject(obj):
+        if not hasattr(obj, '__json__') and not is_saobject(obj) and not is_mingobject(obj):
             raise JsonEncodeError('Your Encoded object must be dict-like.')
     except:
         pass

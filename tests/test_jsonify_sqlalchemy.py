@@ -108,4 +108,4 @@ else:
         # ensure it can be serialized now
         jsonify.encode(t)
         s.expunge(t)
-        assert_raises(jsonify.JsonEncodeError, lambda: jsonify.encode(t))
+        assert_raises(ValueError, lambda: jsonify.encode(t))
