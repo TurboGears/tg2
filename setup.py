@@ -52,7 +52,7 @@ if py_version[0] == 2:
 
 install_requires=[
     'WebOb >= 1.2',
-    'crank >= 0.7.2, < 0.8',
+    'crank >= 0.7.3, < 0.8',
     'repoze.lru'
 ]
 
