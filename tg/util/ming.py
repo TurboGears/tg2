@@ -18,6 +18,7 @@ def is_objectid(value):
 
 
 def is_mingobject(obj):
+    """Checks if the provided object is a Ming model instance"""
     return ming is not None and hasattr(obj, '__ming__')
 
 
