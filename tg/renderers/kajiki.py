@@ -29,13 +29,15 @@ class KajikiRenderer(RendererFactory):
         - ``templating.kajiki.template_extension`` -> Kajiki Templates extension, default ``.xhtml``
         - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
         - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
+        - ``templating.kajiki.html_optional_tags`` -> Allow unclosed html, head and body tags.
     """
     CONFIG_OPTIONS = {
         'force_mode': str,
         'template_extension': str,
         'autoescape_text': asbool,
         'xml_autoblocks': aslist,
-        'cdata_scripts': asbool
+        'cdata_scripts': asbool,
+        'html_optional_tags': asbool,
     }
     engines = {'kajiki': {'content_type': 'text/html'}}
 
@@ -46,6 +48,14 @@ class KajikiRenderer(RendererFactory):
             return None
 
         options = coerce_config(config, 'templating.kajiki.', cls.CONFIG_OPTIONS)
+        if not options.get('html_optional_tags', False):
+            # Kajiki by default doesn't close BODY and HEAD tags, but this behaviour
+            # breaks TW2 resources that get injected at the end of head or body.
+            # So by default we force Kajiki to close those tags.
+            from kajiki import html_utils
+            html_utils.HTML_OPTIONAL_END_TAGS.discard('html')
+            html_utils.HTML_OPTIONAL_END_TAGS.discard('head')
+            html_utils.HTML_OPTIONAL_END_TAGS.discard('body')
 
         # This is official way to switch gettext function in kajiki
         # as documented in http://pythonhosted.org/Kajiki/i18n.html
