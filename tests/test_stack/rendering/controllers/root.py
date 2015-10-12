@@ -168,31 +168,31 @@ class RootController(TGController):
     def paginated_text(self):
         return '''Some Text'''
 
-    @expose('genshi:genshi_paginated.html')
+    @expose('kajiki:kajiki_paginated.xhtml')
     @expose('json')
     @paginate('testdata', max_items_per_page=20)
     def paginated(self, n):
         return dict(testdata=range(int(n)))
 
-    @expose('genshi:genshi_paginated.html')
+    @expose('kajiki:kajiki_paginated.xhtml')
     @paginate('testdata')
     def paginate_with_params(self, n):
         url_params = dict(param1='hi', param2='man')
         return dict(testdata=range(int(n)), url_params=url_params)
 
-    @expose('genshi:genshi_paginated.html')
+    @expose('kajiki:kajiki_paginated.xhtml')
     @paginate('testdata')
     @validate(dict(n=IntValidator()))
     def paginated_validated(self, n):
         return dict(testdata=range(n))
 
-    @expose('genshi:genshi_paginated.html')
+    @expose('kajiki:kajiki_paginated.xhtml')
     @validate(dict(n=IntValidator()))
     @paginate('testdata')
     def validated_paginated(self, n):
         return dict(testdata=range(n))
 
-    @expose('genshi:genshi_paginated.html')
+    @expose('kajiki:kajiki_paginated.xhtml')
     @paginate('testdata', use_prefix=True)
     @paginate('testdata2', use_prefix=True)
     def multiple_paginators(self, n):
