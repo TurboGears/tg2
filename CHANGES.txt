@@ -1,5 +1,30 @@
 = Change Log =
 
+== 2.3.7 (**October 13, 2015**) ==
+
+* Documentation of configuration options has been greatly improved and most of them are now explicitly documented.
+* It's now far easier to configure Helpers, App Globals and Database in Minimal mode
+* Newly quickstarted projects now provide a scaffold (gearbox scaffold) for Ming models
+* Some improvements to @cached, inside the controller the caching namespace and key are now available as request.caching
+* Kajiki templates by default now provide .xhtml extension
+* Kajiki rendering mode is now switched to html5 by default.
+* Kajiki templates are now properly added to newly quickstarted kajiki projects
+* Fixed database cleanup in Test Units when using Ming
+* tg.util now provides tg.util.sqlalchemy and tg.util.ming with utilities to convert models to dictionaries for quick forms initialization.
+* Kajiki now provides html_optional_tags option which by default forces Kajiki to close html, head and body tags.
+* Easier configuration of database and models in minimal mode
+* Fixed i18n message extraction in newly quickstarted projects when not using Genshi
+* get_partial_dict now reports the element name when it raises an AttributeError
+* DottedFileNameFinder returns absolute path always, copes with some odd python envs
+* Raise error when encoding detached SA instance to JSON
+* AppGlobals and Helpers can now be configured even without using a package
+* ToscaWidgets2 support for Kajiki is now enabled
+* Ensure that exclude_names is always an iterable for registered templates
+* When rendering ErrorController, reuse the existing response so that users can access custom attributes instead of creating a new one
+* request.args_params will now contain both request params and positional dispatch arguments (excluding *args). This ensures that @cached uses all params to generate the cache key not only the GET and POST params
+* AppConfig.get_root_module is now marked as an internal method and has been renamed accordingly
+* Crank (TG routing system) has experimental support for Python 3.6
+
 == 2.3.6 (**July 26, 2015**) ==
 
 * Multiple @validate decorators can now be applied on same method.
