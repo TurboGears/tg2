@@ -1231,7 +1231,7 @@ class AppConfig(Bunch):
                                         'mako': ['mak', 'mako'],
                                         'genshi': ['genshi', 'html'],
                                         'jinja':['jinja', 'jinja2'],
-                                        'kajiki':['kajiki', 'xml']
+                                        'kajiki':['kajiki', 'xhtml', 'xml']
                                    })
 
         default_tw2_config.update(self.custom_tw2_config)
