@@ -23,6 +23,9 @@ class LazyString(object):
     def __mod__(self, other):
         return self.eval() % other
 
+    def __iter__(self):
+        return iter(self.eval())
+
     def __getattr__(self, attr):
         return getattr(self.eval(), attr)
 
