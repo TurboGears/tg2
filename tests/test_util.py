@@ -136,6 +136,16 @@ class TestLazyString(object):
         lf = l.format('HI')
         assert lf == 'HI', lf
 
+    def test_lazy_string_with_genshi(self):
+        # See https://github.com/TurboGears/tg2/pull/68
+        from genshi.template.markup import MarkupTemplate
+        markup = """<b xmlns:py="http://genshi.edgewall.org/">${foo}</b>"""
+        template = MarkupTemplate(markup)
+        stream = template.generate(foo=LazyString(lambda: "bar"))
+        output = str(stream)  # Contains only ascii char, so it should cast fine on both py2 and py3
+        assert output == '<b>bar</b>', output
+
+
 class TestAttribSafeContextObj(object):
     def setup(self):
         self.c = AttribSafeTemplateContext()
