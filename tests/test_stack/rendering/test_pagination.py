@@ -285,7 +285,7 @@ class TestPageMing(object):
         if ming is None:
             raise SkipTest('Ming not available...')
 
-        cls.basic_session = Session(create_datastore('mim:///'))
+        cls.basic_session = Session(create_datastore('mim:///testdb'))
         cls.s = ODMSession(cls.basic_session)
 
         class Author(MappedClass):
