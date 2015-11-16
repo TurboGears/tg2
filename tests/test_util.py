@@ -4,13 +4,15 @@ from datetime import datetime, timedelta
 import tg
 from tg.util import *
 from tg.configuration.utils import get_partial_dict
-from nose.tools import eq_, raises
+from nose.tools import eq_, raises, assert_raises
 import os
 from tg.controllers.util import *
 from tg.util.dates import get_fixed_timezone, utctz, parse_datetime
 from tg.util.files import safe_filename
 from tg.util.html import script_json_encode
+from tg.util.misc import unless
 from tg.util.webtest import test_context
+from tg.validation import Convert, TGValidationError
 from tg.wsgiapp import TemplateContext, AttribSafeTemplateContext
 
 import tg._compat
@@ -308,3 +310,44 @@ class TestWebTestUtilities(object):
             context._pop_object()
         # Check that config got cleaned up even though context caused an exception
         assert not config._object_stack()
+
+
+class TestMiscUtils(object):
+    def test_unless(self):
+        not5 = unless(lambda x: x % 5, 0)
+        assert not5(6) == 1
+
+        assert_raises(ValueError, not5, 10)
+
+    def test_unless_sqla(self):
+        from sqlalchemy import (MetaData, Table, Column, Integer, String)
+        from sqlalchemy.orm import create_session, mapper
+
+        metadata = MetaData('sqlite:///:memory:')
+        testtable = Table('test1', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('val', String(8)))
+        metadata.create_all()
+
+        class Test(object):
+            pass
+        mapper(Test, testtable)
+
+        testtable.insert().execute({'id': 1, 'val': 'bob'})
+        testtable.insert().execute({'id': 2, 'val': 'bobby'})
+        testtable.insert().execute({'id': 3, 'val': 'alberto'})
+
+        sess = create_session()
+        getunless = unless(sess.query(Test).get)
+
+        x = getunless(1)
+        assert x.val == 'bob', x
+
+        x = getunless(2)
+        assert x.val == 'bobby', x
+
+        assert_raises(ValueError, getunless, 5)
+        assert_raises(TGValidationError, Convert(getunless).to_python, '5')
+
+        x = Convert(getunless).to_python('1')
+        assert x.val == 'bob', x
