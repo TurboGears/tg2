@@ -86,6 +86,11 @@ class TestUrlMethod(object):
             res = url('.', {'p1': SubException('a', 'b', 'c')})
             assert res == '.?p1=a+b+c', res
 
+    def test_url_https(self):
+        with test_context(None, '/index'):
+            res = url('/users', qualified=True, scheme='https')
+            assert res == 'https://localhost/users', res
+
 
 class TestBunch(object):
     def test_add_entry(self):

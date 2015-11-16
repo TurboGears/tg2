@@ -71,12 +71,15 @@ def _build_url(environ, base_url='/', params=None):
     return base_url
 
 
-def url(base_url='/', params=None, qualified=False):
+def url(base_url='/', params=None, qualified=False, scheme=None):
     """Generate an absolute URL that's specific to this application.
 
     The URL function takes a string (base_url) and, appends the
     SCRIPT_NAME and adds parameters for all of the
     parameters passed into the params dict.
+
+    ``scheme`` can be passed in case of a ``qualified`` url to
+    create an url with the given scheme.
 
     """
     if not isinstance(base_url, string_type) and hasattr(base_url, '__iter__'):
@@ -86,6 +89,8 @@ def url(base_url='/', params=None, qualified=False):
     base_url = _build_url(req.environ, base_url, params)
     if qualified:
         base_url = req.host_url + base_url
+        if scheme is not None:
+            base_url = scheme + base_url[len(req.scheme):]
 
     return base_url
 
@@ -96,15 +101,16 @@ class LazyUrl(object):
     only when you try to display it as a string.
     """
 
-    def __init__(self, base_url, params=None):
+    def __init__(self, base_url, params=None, **kwargs):
         self.base_url = base_url
         self.params = params
+        self.kwargs = kwargs
         self._decoded = None
 
     @property
     def _id(self):
         if self._decoded == None:
-            self._decoded = url(self.base_url, params=self.params)
+            self._decoded = url(self.base_url, params=self.params, **self.kwargs)
         return self._decoded
 
     @property
@@ -139,7 +145,7 @@ class LazyUrl(object):
         return str(self)
 
 
-def lurl(base_url=None, params=None):
+def lurl(base_url=None, params=None, **kwargs):
     """
     Like tg.url but is lazily evaluated.
 
@@ -151,10 +157,10 @@ def lurl(base_url=None, params=None):
     this demands the url resolution to when it is
     displayed for the first time.
     """
-    return LazyUrl(base_url, params)
+    return LazyUrl(base_url, params, **kwargs)
 
 
-def redirect(base_url='/', params=None, redirect_with=HTTPFound, **kwargs):
+def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None, **kwargs):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -175,7 +181,7 @@ def redirect(base_url='/', params=None, redirect_with=HTTPFound, **kwargs):
         params = params.copy()
         params.update(kwargs)
 
-    new_url = url(base_url, params=params)
+    new_url = url(base_url, params=params, scheme=scheme)
     raise redirect_with(location=new_url)
 
 
