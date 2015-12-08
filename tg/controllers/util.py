@@ -138,8 +138,8 @@ class LazyUrl(object):
     def startswith(self, *args, **kw):
         return self._id.startswith(*args, **kw)
 
-    def format(self, other):
-        return self._id.format(other)
+    def format(self, *args, **kwargs):
+        return self._id.format(*args, **kwargs)
 
     def __json__(self):
         return str(self)
