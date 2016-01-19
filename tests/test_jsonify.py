@@ -33,11 +33,23 @@ def test_list():
     encoded = jsonify.encode(d)
     assert encoded == '["a", 1, "b", 2]'
 
+def test_list_allowed_iter():
+    lists_encoder = jsonify.JSONEncoder(allow_lists=True)
+    d = ['a', 1, 'b', 2]
+    encoded = jsonify.encode(d, lists_encoder)
+    assert encoded == '["a", 1, "b", 2]'
+
 @raises(jsonify.JsonEncodeError)
 def test_list_iter():
     d = list(range(3))
     encoded = jsonify.encode_iter(d)
     assert ''.join(jsonify.encode_iter(d)) == jsonify.encode(d)
+
+def test_list_allowed_iter():
+    lists_encoder = jsonify.JSONEncoder(allow_lists=True)
+    d = list(range(3))
+    encoded = jsonify.encode_iter(d, lists_encoder)
+    assert ''.join(encoded) == '[0, 1, 2]'
 
 def test_dictionary():
     d = {'a': 1, 'b': 2}

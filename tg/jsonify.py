@@ -39,7 +39,8 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
 
     """
     CONFIG_NAMESPACE = 'json.'
-    CONFIG_OPTIONS = {'isodates': asbool}
+    CONFIG_OPTIONS = {'isodates': asbool,
+                      'allow_lists': asbool}
 
     def __init__(self, **kwargs):
         self._registered_types_map = {}
@@ -48,16 +49,20 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         kwargs = self.configure(**kwargs)
         super(JSONEncoder, self).__init__(**kwargs)
 
-    def configure(self, isodates=False, custom_encoders=None, **kwargs):
+    def configure(self, isodates=False, custom_encoders=None, allow_lists=False, **kwargs):
         """JSON encoder can be configured through :class:`.AppConfig` (``app_cfg.base_config``)
         using the following options:
 
         - ``json.isodates`` -> encode dates using ISO8601 format
         - ``json.custom_encoders`` -> List of tuples ``(type, encode_func)`` to register
           custom encoders for specific types.
+        - ``json.allow_lists`` -> Allows lists to be encoded, this is usually disabled for
+          security reasons due to JSON hijacking. See http://stackoverflow.com/questions/16289894
+          for additional details.
 
         """
         self._isodates = isodates
+        self._allow_lists = allow_lists
         if custom_encoders is not None:
             for type_, encoder in custom_encoders.items():
                 self.register_custom_encoder(type_, encoder)
@@ -128,13 +133,14 @@ def encode(obj, encoder=None, iterencode=False):
     if isinstance(obj, string_type):
         return encode_func(obj)
 
-    try:
-        value = obj['test']
-    except TypeError:
-        if not hasattr(obj, '__json__') and not is_saobject(obj) and not is_mingobject(obj):
-            raise JsonEncodeError('Your Encoded object must be dict-like.')
-    except:
-        pass
+    if encoder._allow_lists is False:
+        try:
+            value = obj['test']
+        except TypeError:
+            if not hasattr(obj, '__json__') and not is_saobject(obj) and not is_mingobject(obj):
+                raise JsonEncodeError('Your Encoded object must be dict-like.')
+        except:
+            pass
 
     return encode_func(obj)
 
