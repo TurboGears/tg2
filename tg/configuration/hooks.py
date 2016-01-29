@@ -157,7 +157,7 @@ class _ApplicationHookRegistration(object):
         if self.hook_name == 'controller_wrapper':
             warnings.warn('controller wrappers should be registered on '
                           'AppConfig using AppConfig.register_controller_wrapper',
-                          DeprecationWarning)
+                          DeprecationWarning, stacklevel=3)
 
             config = tg_config._current_obj()
             config['controller_wrappers'].append(self.func)
@@ -179,7 +179,7 @@ class _ControllerHookRegistration(object):
         if self.hook_name == 'controller_wrapper':
             warnings.warn('controller wrappers should be registered on '
                           'AppConfig using AppConfig.register_controller_wrapper',
-                          DeprecationWarning)
+                          DeprecationWarning, stacklevel=3)
 
             deco = Decoration.get_decoration(self.controller)
             deco._register_controller_wrapper(self.func)

@@ -134,7 +134,7 @@ class _DeprecatedControllerWrapper(object):
                       "as parameter when called instead of receiving it as"
                       "a constructor parameter, please refer to the documentation"
                       "to update your controller wrappers",
-                      DeprecationWarning, stacklevel=2)
+                      DeprecationWarning, stacklevel=3)
 
         def _adapted_next_wrapper(controller, remainder, params):
             return next_wrapper(tg.config._current_obj(),
