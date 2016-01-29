@@ -525,12 +525,6 @@ class AppConfig(Bunch):
         else:
             conf['i18n.enabled'] = False
 
-        # See http://trac.turbogears.org/ticket/2247
-        if conf['debug']:
-            conf['tg.strict_tmpl_context'] = True
-        else:
-            conf['tg.strict_tmpl_context'] = False
-
         # Load conf dict into the global config object
         try:
             reqlocal_config.pop_process_config()
