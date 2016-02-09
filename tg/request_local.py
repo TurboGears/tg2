@@ -48,6 +48,13 @@ class Request(WebObRequest):
 
     @cached_property
     def controller_state(self):
+        warnings.warn("request.controller_state is now deprecated, please use"
+                      "request.dispatch_state to access DispatchState for current request.",
+                      DeprecationWarning, stacklevel=2)
+        return self._controller_state
+
+    @cached_property
+    def dispatch_state(self):
         return self._controller_state
 
     @cached_property
