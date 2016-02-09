@@ -51,8 +51,7 @@ class CoreDispatcher(object):
         enable_request_extensions = not conf.get('disable_request_extensions', False)
         dispatch_path_translator = conf.get('dispatch_path_translator', True)
 
-        params = req.args_params
-        state = DispatchState(weakref.proxy(req), self, params, url_path.split('/'),
+        state = DispatchState(weakref.proxy(req), self, req.args_params, url_path.split('/'),
                               conf.get('ignore_parameters', []),
                               strip_extension=enable_request_extensions,
                               path_translator=dispatch_path_translator)
@@ -77,12 +76,12 @@ class CoreDispatcher(object):
         req._fast_setattr('_controller_state', state)
 
         if conf.get('enable_routing_args', False):
-            state.routing_args.update(params)
+            state.routing_args.update(req.args_params)
             if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
                 state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder,
                                                              state.routing_args)
 
-        return state, params
+        return state
 
     def _enter_controller(self, state, remainder):
         if hasattr(state.controller, '_visit'):
@@ -98,15 +97,16 @@ class CoreDispatcher(object):
         py_request = context.request
         py_config = context.config
 
-        state, params = self._get_dispatchable(context, py_request.quoted_path_info)
-        func, controller, remainder = state.method, state.controller, state.remainder
+        state = self._get_dispatchable(context, py_request.quoted_path_info)
+        controller, action = state.controller, state.method
+        params, remainder = state.params, state.remainder
 
         if hasattr(controller, '_before'):
             controller._before(*remainder, **params)
 
         self._setup_wsgi_script_name(state.path, remainder, params)
 
-        r = self._call(func, params, remainder=remainder, context=context)
+        r = self._call(action, params, remainder=remainder, context=context)
 
         if hasattr(controller, '_after'):
             controller._after(*remainder, **params)
