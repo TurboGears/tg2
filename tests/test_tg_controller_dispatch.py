@@ -147,6 +147,10 @@ class SubController(object):
     def get_controller_state(self):
         return '/'.join([p[0] for p in tg.request.controller_state.controller_path])
 
+    @expose()
+    def get_dispatch_state(self):
+        return '/'.join([p[0] for p in tg.request.dispatch_state.controller_path])
+
 class SubController3(object):
     @expose()
     def get_all(self):
@@ -859,8 +863,10 @@ class TestTGController(TestWSGIController):
         assert "('a', 'b', {})" in resp.body.decode('utf-8'), resp
 
     def test_controller_state(self):
-        resp = self.app.get('/sub/get_controller_state')
+        resp_deprecated = self.app.get('/sub/get_controller_state')
+        resp = self.app.get('/sub/get_dispatch_state')
         assert '/sub' in resp
+        assert resp_deprecated.text == resp.text
 
     def test_response_type_json(self):
         resp = self.app.get('/get_response_type.json')

@@ -55,7 +55,6 @@ class CoreDispatcher(object):
                               conf.get('ignore_parameters', []),
                               strip_extension=enable_request_extensions,
                               path_translator=dispatch_path_translator)
-        url_path = state.path  # Get back url_path as crank performs some cleaning
 
         if enable_request_extensions:
             try:
@@ -70,16 +69,16 @@ class CoreDispatcher(object):
                 req._fast_setattr('_response_type', mime_type)
             req._fast_setattr('_response_ext', ext)
 
-        state = state.controller._dispatch(state, url_path)
+        state = state.resolve()
 
-        #save the controller state for possible use within the controller methods
+        # Save the dispatch state for possible use within the controller methods
         req._fast_setattr('_controller_state', state)
 
         if conf.get('enable_routing_args', False):
-            state.routing_args.update(req.args_params)
-            if hasattr(state.dispatcher, '_setup_wsgiorg_routing_args'):
-                state.dispatcher._setup_wsgiorg_routing_args(url_path, state.remainder,
-                                                             state.routing_args)
+            state.routing_args.update(state.params)
+            if hasattr(state.root_dispatcher, '_setup_wsgiorg_routing_args'):
+                state.root_dispatcher._setup_wsgiorg_routing_args(state.path, state.remainder,
+                                                                  state.routing_args)
 
         return state
 
@@ -95,7 +94,6 @@ class CoreDispatcher(object):
         execution.
         """
         py_request = context.request
-        py_config = context.config
 
         state = self._get_dispatchable(context, py_request.quoted_path_info)
         controller, action = state.controller, state.method
