@@ -37,7 +37,7 @@ class CoreDispatcher(object):
     _use_lax_params = True
     _use_index_fallback = False
 
-    def _get_dispatchable(self, thread_locals, url_path):
+    def _get_dispatchable(self, context, url_path):
         """
         Returns a tuple (controller, remainder, params)
 
@@ -45,8 +45,8 @@ class CoreDispatcher(object):
           url
             url as string
         """
-        req = thread_locals.request
-        conf = thread_locals.config
+        req = context.request
+        conf = context.config
         
         enable_request_extensions = not conf.get('disable_request_extensions', False)
         dispatch_path_translator = conf.get('dispatch_path_translator', True)
