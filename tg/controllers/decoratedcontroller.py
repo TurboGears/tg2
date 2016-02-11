@@ -11,8 +11,7 @@ import tg
 from tg.controllers.util import abort
 from tg.predicates import NotAuthorizedError, not_anonymous
 
-from crank.util import (get_params_with_argspec,
-                        remove_argspec_params_from_params)
+from crank.util import get_params_with_argspec, flatten_arguments
 
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
@@ -97,21 +96,20 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         hooks.notify('before_validate', args=(remainder, params),
                      controller=controller, context_config=context_config)
 
+        validate_params = get_params_with_argspec(controller, params, remainder)
+        context.request.args_params = validate_params  # Update args_params with positional args
+
         try:
-            validate_params = get_params_with_argspec(controller, params, remainder)
-            context.request.args_params = validate_params  # Update args_params with positional args
-
-            # Validate user input
             params = self._perform_validate(controller, validate_params, context)
-            context.request.validation.values = params
-
-            params, remainder = remove_argspec_params_from_params(controller, params, remainder)
-            bound_controller_callable = controller
         except validation_errors as inv:
             instance, controller = self._process_validation_errors(controller,
                                                                    remainder, params,
                                                                    inv, context=context)
             bound_controller_callable = partial(controller, instance)
+        else:
+            bound_controller_callable = controller
+            context.request.validation.values = params
+            remainder, params = flatten_arguments(controller, params, remainder)
 
         hooks.notify('before_call', args=(remainder, params),
                      controller=controller, context_config=context_config)
