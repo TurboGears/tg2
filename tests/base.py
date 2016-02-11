@@ -25,7 +25,7 @@ from tg.configuration import milestones
 from tg.wsgiapp import TemplateContext, TGApp, RequestLocals
 from tg.controllers import TGController
 
-from .test_stack.baseutils import ControllerWrap, FakeRoutes, default_config
+from .test_stack.baseutils import ControllerWrap, default_config
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
@@ -70,7 +70,6 @@ def make_app(controller_klass=None, environ=None, config_options=None, with_erro
     app = TGApp(config=config)
     app.controller_classes['root'] = ControllerWrap(controller_klass)
 
-    app = FakeRoutes(app)
     app = RegistryManager(app)
     return TestApp(app)
 
@@ -103,8 +102,6 @@ class TestWSGIController(TestCase):
 
     def get_response(self, **kargs):
         url = kargs.pop('_url', '/')
-        self.environ['tg.routes_dict'].update(kargs)
-
         return self.app.get(url, extra_environ=self.environ)
 
     def post_response(self, **kargs):

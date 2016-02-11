@@ -111,14 +111,6 @@ class CoreDispatcher(object):
 
         return r
 
-    def routes_placeholder(self, url='/', start_response=None, **kwargs): #pragma: no cover
-        """Routes placeholder.
-
-        This function does not do anything.  It is a placeholder that allows
-        Routes to accept this controller as a target for its routing.
-        """
-        pass
-
     def __call__(self, environ, context):
         py_response = context.response
 

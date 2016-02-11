@@ -51,7 +51,6 @@ class TGApp(object):
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
         self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
-        self.enable_routes = self.config.get('enable_routes', False)
 
         self.resp_options = config.get('tg.response_options',
                                        dict(content_type='text/html',
@@ -98,10 +97,6 @@ class TGApp(object):
             pylons.translator = request_local.translator
             pylons.response = request_local.response
             pylons.tmpl_context = request_local.tmpl_context
-
-            if self.enable_routes:
-                environ['pylons.routes_dict'] = environ['tg.routes_dict']
-                pylons.url = request_local.url
         except ImportError:
             pass
 
@@ -118,7 +113,7 @@ class TGApp(object):
             start_response('200 OK', [('Content-type', 'text/plain')])
             return ['DONE'.encode('utf-8')]
 
-        controller = self.resolve(environ, context)
+        controller = self.get_controller_instance('root')
         response = self.wrapped_dispatch(controller, environ, context)
 
         if testmode is True:
@@ -180,10 +175,6 @@ class TGApp(object):
         locals.session = environ.get('beaker.session')  # Usually None, unless middleware in place
         locals.cache = environ.get('beaker.cache')  # Usually None, unless middleware in place
 
-        if self.enable_routes: #pragma: no cover
-            url = environ.get('routes.url')
-            locals.url = url
-
         environ['tg.locals'] = locals
 
         # Register Global objects
@@ -203,27 +194,6 @@ class TGApp(object):
             testenv['cache'] = locals.cache
 
         return testing, locals, registry
-
-    def resolve(self, environ, context):
-        """Uses dispatching information found in
-        ``environ['wsgiorg.routing_args']`` to retrieve a controller
-        name and return the controller instance from the appropriate
-        controller module.
-
-        Override this to change how the controller name is found and
-        returned.
-
-        """
-        if self.enable_routes: #pragma: no cover
-            match = environ['wsgiorg.routing_args'][1]
-            environ['tg.routes_dict'] = match
-            controller = match.get('controller')
-            if not controller:
-                return None
-        else:
-            controller = 'root'
-
-        return self.get_controller_instance(controller)
 
     def class_name_from_module_name(self, module_name):
         words = module_name.replace('-', '_').split('_')

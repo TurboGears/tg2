@@ -158,8 +158,8 @@ class AppConfig(Bunch):
     overridden by users who wish to have finer grained control over
     the setup of the WSGI environment in which their application is run.
 
-    This is the place to configure custom routes, transaction handling,
-    error handling, etc.
+    This is the place to configure your application, database,
+    transaction handling, error handling, etc.
 
     Configuration Options provided:
 
@@ -244,7 +244,6 @@ class AppConfig(Bunch):
         self.rendering_engines_without_vars = set()
         self.rendering_engines_options = {}
 
-        self.enable_routes = False
         self.enable_routing_args = False
         self.disable_request_extensions = minimal
 
@@ -651,52 +650,6 @@ class AppConfig(Bunch):
 
         """
 
-    def setup_routes(self):
-        """Setup the default TG2 routes
-
-        Override this and setup your own routes maps if you want to use
-        custom routes.
-
-        It is recommended that you keep the existing application routing in
-        tact, and just add new connections to the mapper above the routes_placeholder
-        connection.  Lets say you want to add a tg controller SamplesController,
-        inside the controllers/samples.py file of your application.  You would
-        augment the app_cfg.py in the following way::
-
-            from routes import Mapper
-            from tg.configuration import AppConfig
-
-            class MyAppConfig(AppConfig):
-                def setup_routes(self):
-                    map = Mapper(directory=config['paths']['controllers'],
-                                always_scan=config['debug'])
-
-                    # Add a Samples route
-                    map.connect('/samples/', controller='samples', action=index)
-
-                    # Setup a default route for the root of object dispatch
-                    map.connect('*url', controller='root', action='routes_placeholder')
-
-                    config['routes.map'] = map
-
-
-            base_config = MyAppConfig()
-
-        """
-        if not self.enable_routes:
-            return None
-
-        from routes import Mapper
-
-        map = Mapper(directory=config['paths']['controllers'],
-                     always_scan=config['debug'])
-
-        # Setup a default route for the root of object dispatch
-        map.connect('*url', controller='root', action='routes_placeholder')
-
-        config['routes.map'] = map
-        return map
-
     def setup_helpers_and_globals(self):
         """Add helpers and globals objects to the config.
 
@@ -956,7 +909,6 @@ class AppConfig(Bunch):
             tg.hooks.notify('initialized_config', args=(self, app_config))
             tg.hooks.notify('startup', trap_exceptions=True)
 
-            self.setup_routes()
             self.setup_helpers_and_globals()
             self.setup_auth()
             self._setup_renderers()
@@ -1082,17 +1034,11 @@ class AppConfig(Bunch):
         return app
 
     def add_core_middleware(self, app):
-        """Add support for routes dispatch, sessions, and caching middlewares
+        """Add support for sessions, and caching middlewares
 
         Those are all deprecated middlewares and will be removed in future TurboGears
         versions as they have been replaced by other tools.
         """
-        if self.enable_routes:
-            warnings.warn("Internal routes support will be deprecated soon, please "
-                          "consider using tgext.routes instead", DeprecationWarning)
-            from routes.middleware import RoutesMiddleware
-            app = RoutesMiddleware(app, config['routes.map'])
-
         if getattr(self, 'use_session_middleware', False):
             warnings.warn('SessionMiddleware is deprecated and will be removed soon, '
                           'please consider using SessionApplicationWrapper instead.',

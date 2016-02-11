@@ -14,8 +14,7 @@ class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
 
     This controller can be used as a baseclass for anything in the
     object dispatch tree, but it MUST be used in the Root controller
-    and any controller which you intend to do object dispatch from
-    using Routes.
+    and any controller which you intend to do object dispatch.
 
     This controller has a few reserved method names which provide special functionality.
 

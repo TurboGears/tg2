@@ -26,15 +26,6 @@ default_config = {
         'i18n.lang': None
 }
 
-class FakeRoutes(object):
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        environ['wsgiorg.routing_args'] = [None, {'controller':'root'}]
-        environ['routes.url'] = None
-        return self.app(environ, start_response)
-
 
 class ControllerWrap(object):
     def __init__(self, controller):

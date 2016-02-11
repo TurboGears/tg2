@@ -288,17 +288,6 @@ class TestAppConfig:
         conf['ming.url'] = 'mim://'
         app = conf.make_wsgi_app()
 
-    def test_enable_routes(self):
-        conf = AppConfig(minimal=True)
-        conf.enable_routes = True
-        app = conf.make_wsgi_app()
-
-        a = TGApp()
-        assert a.enable_routes == True
-
-        config.pop('routes.map')
-        config.pop('enable_routes')
-
     def test_create(self):
         pass
 

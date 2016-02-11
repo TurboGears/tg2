@@ -20,15 +20,13 @@ test_requirements = ['nose',
                     'Genshi >= 0.5.1',
                     'Mako',
                     'WebTest < 2.0',
-                    'routes',
                     'backlash >= 0.0.7',
                     'sqlalchemy',
                     'raven < 4.1.0',
                     'formencode>=1.3.0a1',
                     'tw2.forms',
                     'Beaker',
-                    'Kajiki >= 0.4.4',
-                    'routes']
+                    'Kajiki >= 0.4.4']
 
 if py_version == (3, 2):
     # jinja2 2.7 is incompatible with Python 3.2

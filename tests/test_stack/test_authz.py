@@ -28,7 +28,7 @@ from tg.wsgiapp import TGApp
 from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 from tg.decorators import Decoration
 
-from .baseutils import ControllerWrap, FakeRoutes, default_config
+from .baseutils import ControllerWrap, default_config
 from ..base import make_app as base_make_app
 
 from tg.configuration.auth import setup_auth, TGAuthMetadata
