@@ -650,17 +650,17 @@ class AppConfig(Bunch):
 
         """
 
-    def setup_helpers_and_globals(self, app_config):
+    def setup_helpers_and_globals(self, conf):
         """Add helpers and globals objects to the config.
 
         Override this method to customize the way that ``app_globals`` and ``helpers``
         are setup.
         """
 
-        gclass = app_config.pop('app_globals', None)
+        gclass = conf.pop('app_globals', None)
         if gclass is None:
             try:
-                g = app_config['package'].lib.app_globals.Globals()
+                g = conf['package'].lib.app_globals.Globals()
             except AttributeError:
                 log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
                 g = Bunch()
@@ -668,19 +668,19 @@ class AppConfig(Bunch):
             g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
-        app_config['tg.app_globals'] = g
+        conf['tg.app_globals'] = g
 
-        if config.get('tg.pylons_compatible', True):
-            config['pylons.app_globals'] = g
+        if conf.get('tg.pylons_compatible', True):
+            conf['pylons.app_globals'] = g
 
-        h = app_config.get('helpers', None)
+        h = conf.get('helpers', None)
         if h is None:
             try:
-                h = app_config['package'].lib.helpers
+                h = conf['package'].lib.helpers
             except AttributeError:
                 log.warn('helpers not provided and lib.helpers is not available.')
                 h = Bunch()
-        config['helpers'] = h
+        conf['helpers'] = h
 
     def setup_persistence(self):
         """Override this method to define how your application configures it's persistence model.
