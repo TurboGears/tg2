@@ -650,33 +650,33 @@ class AppConfig(Bunch):
 
         """
 
-    def setup_helpers_and_globals(self):
+    def setup_helpers_and_globals(self, app_config):
         """Add helpers and globals objects to the config.
 
         Override this method to customize the way that ``app_globals`` and ``helpers``
         are setup.
         """
 
-        gclass = getattr(self, 'app_globals', None)
+        gclass = app_config.pop('app_globals', None)
         if gclass is None:
             try:
-                g = self.package.lib.app_globals.Globals()
+                g = app_config['package'].lib.app_globals.Globals()
             except AttributeError:
-                log.warn('app_globals not provided and lib.app_globals.Globals class is not available.')
+                log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
                 g = Bunch()
         else:
             g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
-        config['tg.app_globals'] = g
+        app_config['tg.app_globals'] = g
 
         if config.get('tg.pylons_compatible', True):
             config['pylons.app_globals'] = g
 
-        h = getattr(self, 'helpers', None)
+        h = app_config.get('helpers', None)
         if h is None:
             try:
-                h = self.package.lib.helpers
+                h = app_config['package'].lib.helpers
             except AttributeError:
                 log.warn('helpers not provided and lib.helpers is not available.')
                 h = Bunch()
@@ -909,7 +909,7 @@ class AppConfig(Bunch):
             tg.hooks.notify('initialized_config', args=(self, app_config))
             tg.hooks.notify('startup', trap_exceptions=True)
 
-            self.setup_helpers_and_globals()
+            self.setup_helpers_and_globals(app_config)
             self.setup_auth()
             self._setup_renderers()
             self.setup_persistence()

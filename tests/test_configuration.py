@@ -292,7 +292,7 @@ class TestAppConfig:
         pass
 
     def test_setup_helpers_and_globals(self):
-        self.config.setup_helpers_and_globals()
+        self.config.setup_helpers_and_globals(self.config._init_config({}, {}))
 
     def test_setup_sa_auth_backend(self):
         class ConfigWithSetupAuthBackend(self.config.__class__):
