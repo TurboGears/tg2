@@ -606,6 +606,14 @@ class TestTGController(TestWSGIController):
         assert 'b' in str(r)
         assert 'c' in str(r)
 
+    def test_unexpected_arguments_are_discarded(self):
+        r = self.app.get('/hello/YourName/silly?unexpected=1&more=1')
+        assert 'Hello YourName' in r, r
+
+    def test_named_arguments_override_positional(self):
+        r = self.app.get('/hello/YourName/silly?name=You&more=1')
+        assert 'Hello You' in r, r
+
     def test_response_without_charset(self):
         r = self.app.get('/index_unicode')
         assert 'Hello World' in r, r
