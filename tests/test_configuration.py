@@ -629,55 +629,36 @@ class TestAppConfig:
         assert conf.use_transaction_manager is False
 
     def test_setup_sqla_persistance(self):
-        config['sqlalchemy.url'] = 'sqlite://'
+        self.config['sqlalchemy.url'] = 'sqlite://'
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence()
-
-        self.config.use_sqlalchemy = False
+        self.config.setup_persistence(self.config._init_config({}, {}))
 
     def test_setup_sqla_balanced(self):
-        config['sqlalchemy.master.url'] = 'sqlite://'
-        config['sqlalchemy.slaves.slave1.url'] = 'sqlite://'
+        self.config['sqlalchemy.master.url'] = 'sqlite://'
+        self.config['sqlalchemy.slaves.slave1.url'] = 'sqlite://'
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence()
-
-        self.config.use_sqlalchemy = False
-        config.pop('sqlalchemy.master.url')
-        config.pop('sqlalchemy.slaves.slave1.url')
+        self.config.setup_persistence(self.config._init_config({}, {}))
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_prevent_slave_named_master(self):
-        config['sqlalchemy.master.url'] = 'sqlite://'
-        config['sqlalchemy.slaves.master.url'] = 'sqlite://'
+        self.config['sqlalchemy.master.url'] = 'sqlite://'
+        self.config['sqlalchemy.slaves.master.url'] = 'sqlite://'
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        try:
-            self.config.setup_persistence()
-        except:
-            raise
-        finally:
-            self.config.use_sqlalchemy = False
-            config.pop('sqlalchemy.master.url')
-            config.pop('sqlalchemy.slaves.master.url')
+        self.config.setup_persistence(self.config._init_config({}, {}))
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_no_slaves(self):
-        config['sqlalchemy.master.url'] = 'sqlite://'
+        self.config['sqlalchemy.master.url'] = 'sqlite://'
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        try:
-            self.config.setup_persistence()
-        except:
-            raise
-        finally:
-            self.config.use_sqlalchemy = False
-            config.pop('sqlalchemy.master.url')
+        self.config.setup_persistence(self.config._init_config({}, {}))
 
     def test_setup_ming_persistance(self):
         class RootController(TGController):

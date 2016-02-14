@@ -683,7 +683,7 @@ class AppConfig(Bunch):
                 h = Bunch()
         conf['helpers'] = h
 
-    def setup_persistence(self):
+    def setup_persistence(self, conf):
         """Override this method to define how your application configures it's persistence model.
            the default is to setup sqlalchemy from the cofiguration file, but you might choose
            to set up a persistence system other than sqlalchemy, or add an additional persistence
@@ -695,12 +695,12 @@ class AppConfig(Bunch):
                     session = Session.by_name('main')
                     session.bind = self.ming_ds
         """
-        if self.use_sqlalchemy:
-            self.setup_sqlalchemy()
-        elif self.use_ming:
-            self.setup_ming()
+        if conf['use_sqlalchemy']:
+            self._setup_sqlalchemy(conf)
+        if conf['use_ming']:
+            self._setup_ming(conf)
 
-    def setup_ming(self):
+    def _setup_ming(self, conf):
         """Setup MongoDB database engine using Ming"""
         try:
             from ming import create_datastore
@@ -718,39 +718,43 @@ class AppConfig(Bunch):
             from pymongo.read_preferences import ReadPreference
             return getattr(ReadPreference, value)
 
-        datastore_options = coerce_config(config, 'ming.connection.', {'max_pool_size':asint,
-                                                                       'network_timeout':asint,
-                                                                       'tz_aware':asbool,
-                                                                       'safe':asbool,
-                                                                       'journal':asbool,
-                                                                       'wtimeout':asint,
-                                                                       'fsync':asbool,
-                                                                       'ssl':asbool,
-                                                                       'read_preference':mongo_read_pref})
+        datastore_options = coerce_config(conf, 'ming.connection.', {'max_pool_size':asint,
+                                                                     'network_timeout':asint,
+                                                                     'tz_aware':asbool,
+                                                                     'safe':asbool,
+                                                                     'journal':asbool,
+                                                                     'wtimeout':asint,
+                                                                     'fsync':asbool,
+                                                                     'ssl':asbool,
+                                                                     'read_preference':mongo_read_pref})
         datastore_options.pop('host', None)
         datastore_options.pop('port', None)
 
-        datastore = create_ming_datastore(config['ming.url'], config.get('ming.db', ''),
+        datastore = create_ming_datastore(conf['ming.url'],
+                                          conf.get('ming.db', ''),
                                           **datastore_options)
-        config['tg.app_globals'].ming_datastore = datastore
+        conf['tg.app_globals'].ming_datastore = datastore
 
         try:
-            package_models = self.package.model
+            package_models = conf['package'].model
         except AttributeError:
             package_models = None
 
-        model = getattr(self, 'model', package_models)
+        model = conf.get('model', package_models)
         if model is None:
             raise TGConfigError('Ming enabled, but no models provided')
 
         model.init_model(datastore)
 
-        if not hasattr(self, 'DBSession'):
-            # If the user hasn't specified a session, assume
+        if 'DBSession' not in conf:
+            # If the user hasn't specified a default session, assume
             # he/she uses the default DBSession in model
-            self.DBSession = model.DBSession
+            conf['DBSession'] = model.DBSession
 
-    def setup_sqlalchemy(self):
+        if 'MingSession' not in conf:
+            conf['MingSession'] = model.DBSession
+
+    def _setup_sqlalchemy(self, conf):
         """Setup SQLAlchemy database engine.
 
         The most common reason for modifying this method is to add
@@ -784,47 +788,50 @@ class AppConfig(Bunch):
         """
         from sqlalchemy import engine_from_config
 
-        balanced_master = config.get('sqlalchemy.master.url')
+        balanced_master = conf.get('sqlalchemy.master.url')
         if not balanced_master:
-            engine = engine_from_config(config, 'sqlalchemy.')
+            engine = engine_from_config(conf, 'sqlalchemy.')
         else:
-            engine = engine_from_config(config, 'sqlalchemy.master.')
-            config['balanced_engines'] = {'master':engine,
+            engine = engine_from_config(conf, 'sqlalchemy.master.')
+            conf['balanced_engines'] = {'master':engine,
                                           'slaves':{},
                                           'all':{'master':engine}}
 
-            all_engines = config['balanced_engines']['all']
-            slaves = config['balanced_engines']['slaves']
-            for entry in config.keys():
+            all_engines = conf['balanced_engines']['all']
+            slaves = conf['balanced_engines']['slaves']
+            for entry in conf.keys():
                 if entry.startswith('sqlalchemy.slaves.'):
                     slave_path = entry.split('.')
                     slave_name = slave_path[2]
                     if slave_name == 'master':
                         raise TGConfigError('A slave node cannot be named master')
                     slave_config = '.'.join(slave_path[:3])
-                    all_engines[slave_name] = slaves[slave_name] = engine_from_config(config, slave_config+'.')
+                    all_engines[slave_name] = slaves[slave_name] = engine_from_config(conf, slave_config+'.')
 
-            if not config['balanced_engines']['slaves']:
+            if not conf['balanced_engines']['slaves']:
                 raise TGConfigError('When running in balanced mode your must specify at least a slave node')
 
         # Pass the engine to initmodel, to be able to introspect tables
-        config['tg.app_globals'].sa_engine = engine
+        conf['tg.app_globals'].sa_engine = engine
 
         try:
-            package_models = self.package.model
+            package_models = conf['package'].model
         except AttributeError:
             package_models = None
 
-        model = getattr(self, 'model', package_models)
+        model = conf.get('model', package_models)
         if model is None:
             raise TGConfigError('SQLAlchemy enabled, but no models provided')
 
         model.init_model(engine)
 
-        if not hasattr(self, 'DBSession'):
-            # If the user hasn't specified a scoped_session, assume
+        if 'DBSession' not in conf:
+            # If the user hasn't specified a default session, assume
             # he/she uses the default DBSession in model
-            self.DBSession = model.DBSession
+            conf['DBSession'] = model.DBSession
+
+        if 'SQLASession' not in conf:
+            conf['SQLASession'] = model.DBSession
 
     def setup_auth(self):
         """
@@ -913,7 +920,7 @@ class AppConfig(Bunch):
             self.setup_helpers_and_globals(app_config)
             self.setup_auth()
             self._setup_renderers()
-            self.setup_persistence()
+            self.setup_persistence(app_config)
 
             # Trigger milestone here so that it gets triggered even when
             # websetup (setup-app command) is performed.
@@ -1214,14 +1221,14 @@ class AppConfig(Bunch):
         from ming.odm import ThreadLocalODMSession
         return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
-    def add_sqlalchemy_middleware(self, app):
+    def add_sqlalchemy_middleware(self, app, conf):
         """Set up middleware that cleans up the sqlalchemy session.
 
         The default behavior of TG 2 is to clean up the session on every
         request.  Only override this method if you know what you are doing!
 
         """
-        return DBSessionRemoverMiddleware(self.DBSession, app)
+        return DBSessionRemoverMiddleware(conf['DBSession'], app)
 
     def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
@@ -1313,8 +1320,8 @@ class AppConfig(Bunch):
             # from here on the response is a generator
             # so any middleware that relies on the response to be
             # a string needs to be applied before this point.
-            if self.use_sqlalchemy:
-                app = self.add_sqlalchemy_middleware(app)
+            if app_config['use_sqlalchemy']:
+                app = self.add_sqlalchemy_middleware(app, app_config)
 
             if self.use_ming:
                 app = self.add_ming_middleware(app)
