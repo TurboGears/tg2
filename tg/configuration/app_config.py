@@ -651,10 +651,11 @@ class AppConfig(Bunch):
         """
 
     def setup_helpers_and_globals(self, conf):
-        """Add helpers and globals objects to the config.
+        """Add helpers and globals objects to the ``conf``.
 
         Override this method to customize the way that ``app_globals`` and ``helpers``
-        are setup.
+        are setup. TurboGears expects them to be available in ``conf`` dictionary
+        as ``tg.app_globals`` and ``helpers``.
         """
 
         gclass = conf.pop('app_globals', None)
