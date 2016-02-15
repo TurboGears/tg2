@@ -1,6 +1,6 @@
-import os
+import os, sys
 import re
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename, resource_stream, get_default_cache
 from .._compat import unicode_text, PY2
 
 
@@ -28,7 +28,7 @@ class DottedFileNameFinder(object):
 
         Given a string containing the file/template name passed to the @expose
         decorator we will return a resource useable as a filename even
-        if the file is in fact inside a zipped egg.
+        if the file is in fact inside a zipped egg or in a frozen library.
 
         The actual implementation is a revamp of the Genshi buffet support
         plugin, but could be used with any kind a file inside a python package.
@@ -59,6 +59,18 @@ class DottedFileNameFinder(object):
                     result = resource_filename(package, basename)
                 except ImportError as e:
                     raise DottedFileLocatorError(str(e) +". Perhaps you have forgotten an __init__.py in that folder.")
+                except NotImplementedError as e:
+                    if not hasattr(self, '__temp_dir'):
+                        executable = sys.executable if getattr(sys, 'frozen', False) else sys.argv[0]
+                        #only on windows substitute \\ to - to avoid long pathnames and preserve the structure
+                        executable = os.path.abspath(executable).replace(':', '').replace('\\', '-')
+                        self.__temp_dir = os.path.join(get_default_cache(), executable)
+                    result = os.path.join(self.__temp_dir, package, basename)
+                    if not os.path.isdir(os.path.dirname(result)):
+                        os.makedirs(os.path.dirname(result))
+                    rd = resource_stream(package, basename)
+                    open(result, 'wb').write(rd.read())
+                    rd.close()
             else:
                 result = template_name
 
