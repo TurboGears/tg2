@@ -814,13 +814,8 @@ class TestAppConfig:
         app = base_config.make_wsgi_app()
         assert app is not None
 
-        assert config['MingSession'], config
         assert config['tg.app_globals'].ming_datastore, config['tg.app_globals']
-
-        assert config['SQLASession'], config
         assert config['tg.app_globals'].sa_engine, config['tg.app_globals']
-
-        assert config['DBSession'] is config['SQLASession'], config
 
     def test_setup_ming_persistance_with_url_and_db(self):
         package = PackageWithModel()

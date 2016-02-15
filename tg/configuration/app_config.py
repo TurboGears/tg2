@@ -757,9 +757,6 @@ class AppConfig(Bunch):
             # he/she uses the default DBSession in model
             conf['DBSession'] = model.DBSession
 
-        if 'MingSession' not in conf:
-            conf['MingSession'] = model.DBSession
-
     def _setup_sqlalchemy(self, conf):
         """Setup SQLAlchemy database engine.
 
@@ -835,9 +832,6 @@ class AppConfig(Bunch):
             # If the user hasn't specified a default session, assume
             # he/she uses the default DBSession in model
             conf['DBSession'] = model.DBSession
-
-        if 'SQLASession' not in conf:
-            conf['SQLASession'] = model.DBSession
 
     def _setup_auth(self, conf):
         """
