@@ -292,7 +292,17 @@ class TestAppConfig:
         pass
 
     def test_setup_helpers_and_globals(self):
-        self.config.setup_helpers_and_globals(self.config._init_config({}, {}))
+        self.config._setup_helpers_and_globals(self.config._init_config({}, {}))
+
+    def test_setup_helpers_and_globals_custom_backward_compatible(self):
+        def custom_helpers(*args):
+            from tg import config
+            config['helpers'] = 'YES!'
+
+        self.config.setup_helpers_and_globals = custom_helpers
+        conf = self.config._init_config({}, {})
+        self.config._setup_helpers_and_globals(conf)
+        assert conf['helpers'] == 'YES!', conf
 
     def test_setup_sa_auth_backend(self):
         class ConfigWithSetupAuthBackend(self.config.__class__):
@@ -302,7 +312,19 @@ class TestAppConfig:
                 self.called.append(True)
 
         conf = ConfigWithSetupAuthBackend()
-        conf.setup_auth()
+        conf._setup_auth(conf._init_config({}, {}))
+
+        assert len(ConfigWithSetupAuthBackend.called) >= 1
+
+    def test_setup_sa_auth_custom_backward_compatible(self):
+        class ConfigWithSetupAuthBackend(self.config.__class__):
+            called = []
+
+            def setup_auth(self):
+                self.called.append(True)
+
+        conf = ConfigWithSetupAuthBackend()
+        conf._setup_auth(conf._init_config({}, {}))
 
         assert len(ConfigWithSetupAuthBackend.called) >= 1
 
@@ -628,12 +650,24 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert conf.use_transaction_manager is False
 
+    def test_setup_persistence_custom_backward_compatible(self):
+        self.config.package = PackageWithModel()
+
+        def custom_persistence(*args):
+            from tg import config
+            config['gotcha'] = 'YES!'
+
+        self.config.setup_persistence = custom_persistence
+        conf = self.config._init_config({}, {})
+        self.config._setup_persistence(conf)
+        assert conf['gotcha'] == 'YES!', conf
+
     def test_setup_sqla_persistance(self):
         self.config['sqlalchemy.url'] = 'sqlite://'
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence(self.config._init_config({}, {}))
+        self.config._setup_persistence(self.config._init_config({}, {}))
 
     def test_setup_sqla_balanced(self):
         self.config['sqlalchemy.master.url'] = 'sqlite://'
@@ -641,7 +675,7 @@ class TestAppConfig:
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence(self.config._init_config({}, {}))
+        self.config._setup_persistence(self.config._init_config({}, {}))
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_prevent_slave_named_master(self):
@@ -650,7 +684,7 @@ class TestAppConfig:
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence(self.config._init_config({}, {}))
+        self.config._setup_persistence(self.config._init_config({}, {}))
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_no_slaves(self):
@@ -658,7 +692,7 @@ class TestAppConfig:
         self.config.use_sqlalchemy = True
 
         self.config.package = PackageWithModel()
-        self.config.setup_persistence(self.config._init_config({}, {}))
+        self.config._setup_persistence(self.config._init_config({}, {}))
 
     def test_setup_ming_persistance(self):
         class RootController(TGController):
@@ -767,6 +801,27 @@ class TestAppConfig:
         # Looks like ming has empty dstore.name when using MIM.
         assert dstore_name == '', dstore
 
+    def test_setup_sqla_and_ming_both(self):
+        package = PackageWithModel()
+        base_config = AppConfig(minimal=True, root_controller=None)
+        base_config.package = package
+        base_config.model = package.model
+        base_config.use_ming = True
+        base_config['ming.url'] = 'mim://inmemdb'
+        base_config.use_sqlalchemy = True
+        base_config['sqlalchemy.url'] = 'sqlite://'
+
+        app = base_config.make_wsgi_app()
+        assert app is not None
+
+        assert config['MingSession'], config
+        assert config['tg.app_globals'].ming_datastore, config['tg.app_globals']
+
+        assert config['SQLASession'], config
+        assert config['tg.app_globals'].sa_engine, config['tg.app_globals']
+
+        assert config['DBSession'] is config['SQLASession'], config
+
     def test_setup_ming_persistance_with_url_and_db(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -848,7 +903,7 @@ class TestAppConfig:
         self.config.sa_auth.cookie_secret = 'dummy'
         self.config.sa_auth.password_encryption_method = 'sha'
 
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, None)
 
     def test_add_static_file_middleware(self):
@@ -884,7 +939,7 @@ class TestAppConfig:
     def test_setup_ming_auth(self):
         self.config.auth_backend = 'ming'
 
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         assert 'sa_auth' in config
 
         self.config.auth_backend = None
@@ -917,8 +972,8 @@ class TestAppConfig:
     @raises(TGConfigError)
     def test_missing_secret(self):
         self.config.auth_backend = 'sqlalchemy'
-        config.pop('session.secret', None)
-        self.config.setup_auth()
+        self.config.pop('session.secret', None)
+        self.config._setup_auth(self.config._init_config({}, {}))
 
     def test_sessions_enabled(self):
         class RootController(TGController):
@@ -1011,7 +1066,7 @@ class TestAppConfig:
     def test_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = []
-        self.config._setup_controller_wrappers()
+        self.config._setup_controller_wrappers(self.config._init_config({}, {}))
         assert config['controller_caller'] == orig_caller
 
         def controller_wrapper(caller):
@@ -1021,13 +1076,13 @@ class TestAppConfig:
 
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = [controller_wrapper]
-        self.config._setup_controller_wrappers()
+        self.config._setup_controller_wrappers(self.config._init_config({}, {}))
         assert config['controller_caller'].__name__ == controller_wrapper(orig_caller).__name__
 
     def test_backward_compatible_controler_wrapper_setup(self):
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = []
-        self.config._setup_controller_wrappers()
+        self.config._setup_controller_wrappers(self.config._init_config({}, {}))
         assert config['controller_caller'] == orig_caller
 
         def controller_wrapper(app_config, caller):
@@ -1037,7 +1092,7 @@ class TestAppConfig:
 
         orig_caller = self.config.controller_caller
         self.config.controller_wrappers = [controller_wrapper]
-        self.config._setup_controller_wrappers()
+        self.config._setup_controller_wrappers(self.config._init_config({}, {}))
 
         deprecated_wrapper = config['controller_caller'].wrapper
         assert deprecated_wrapper.__name__ == controller_wrapper(self.config, orig_caller).__name__
@@ -1294,7 +1349,7 @@ class TestAppConfig:
         renderers = self.config.renderers
         self.config.renderers = ['unknwon']
         try:
-            self.config._setup_renderers()
+            self.config._setup_renderers(self.config._init_config({}, {}))
         except TGConfigError:
             self.config.renderers = renderers
         else:
@@ -1303,7 +1358,7 @@ class TestAppConfig:
     @raises(TGConfigError)
     def test_cookie_secret_required(self):
         self.config.sa_auth = {}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, False)
 
     def test_sqla_auth_middleware(self):
@@ -1315,7 +1370,7 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1335,7 +1390,7 @@ class TestAppConfig:
                                   'translations': {'user_name':'SomethingElse'},
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1365,7 +1420,7 @@ class TestAppConfig:
                                   'authenticators':UncopiableList([('superfirst', None),
                                                                    ('default', None)])}
 
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1387,7 +1442,7 @@ class TestAppConfig:
 
         #In this case we can just test it doesn't crash
         #as the sa_auth dict doesn't have an authenticators key to check for
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         self.config['sa_auth'] = {}
@@ -1482,7 +1537,7 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1501,7 +1556,7 @@ class TestAppConfig:
         self.config.auth_backend = None
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'cookie_secret':'12345'}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1519,7 +1574,7 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
@@ -1538,7 +1593,7 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':[('default', None)]}
-        self.config.setup_auth()
+        self.config._setup_auth(self.config._init_config({}, {}))
         self.config.add_auth_middleware(None, True)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]

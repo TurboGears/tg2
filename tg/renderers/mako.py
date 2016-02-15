@@ -87,20 +87,20 @@ class MakoRenderer(RendererFactory):
             mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from markupsafe import escape_silent as escape'],
-                package_name=config.package_name,
+                package_name=config['package_name'],
                 dotted_finder=dotted_finder,
                 module_directory=compiled_dir,
                 default_filters=['escape'],
-                auto_reload_templates=config.auto_reload_templates)
+                auto_reload_templates=config['auto_reload_templates'])
 
         else:
             mako_lookup = TemplateLookup(
-                directories=config.paths['templates'],
+                directories=config['paths']['templates'],
                 module_directory=compiled_dir,
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from markupsafe import escape_silent as escape'],
                 default_filters=['escape'],
-                filesystem_checks=config.auto_reload_templates)
+                filesystem_checks=config['auto_reload_templates'])
 
         return {'mako': cls(dotted_finder, mako_lookup, use_dotted_templatenames)}
 

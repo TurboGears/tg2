@@ -650,13 +650,16 @@ class AppConfig(Bunch):
 
         """
 
-    def setup_helpers_and_globals(self, conf):
+    def _setup_helpers_and_globals(self, conf):
         """Add helpers and globals objects to the ``conf``.
 
         Override this method to customize the way that ``app_globals`` and ``helpers``
         are setup. TurboGears expects them to be available in ``conf`` dictionary
         as ``tg.app_globals`` and ``helpers``.
         """
+
+        if hasattr(self, 'setup_helpers_and_globals'):
+            return self.setup_helpers_and_globals()
 
         gclass = conf.pop('app_globals', None)
         if gclass is None:
@@ -683,7 +686,7 @@ class AppConfig(Bunch):
                 h = Bunch()
         conf['helpers'] = h
 
-    def setup_persistence(self, conf):
+    def _setup_persistence(self, conf):
         """Override this method to define how your application configures it's persistence model.
            the default is to setup sqlalchemy from the cofiguration file, but you might choose
            to set up a persistence system other than sqlalchemy, or add an additional persistence
@@ -695,6 +698,9 @@ class AppConfig(Bunch):
                     session = Session.by_name('main')
                     session.bind = self.ming_ds
         """
+        if hasattr(self, 'setup_persistence'):
+            return self.setup_persistence()
+
         if conf['use_sqlalchemy']:
             self._setup_sqlalchemy(conf)
         if conf['use_ming']:
@@ -833,7 +839,7 @@ class AppConfig(Bunch):
         if 'SQLASession' not in conf:
             conf['SQLASession'] = model.DBSession
 
-    def setup_auth(self):
+    def _setup_auth(self, conf):
         """
         Override this method to define how you would like the authentication options
         to be setup for your application.
@@ -841,9 +847,14 @@ class AppConfig(Bunch):
         if hasattr(self, 'setup_sa_auth_backend'):
             warnings.warn("setup_sa_auth_backend is deprecated, please override"
                           "AppConfig.setup_auth instead", DeprecationWarning)
-            self.setup_sa_auth_backend()
-        elif self.auth_backend in ("ming", "sqlalchemy"):
-            if 'cookie_secret' not in self.sa_auth and 'session.secret' not in config:
+            return self.setup_sa_auth_backend()
+
+        if hasattr(self, 'setup_auth'):
+            return self.setup_auth()
+
+        if conf['auth_backend'] in ("ming", "sqlalchemy"):
+            sa_auth_conf = conf['sa_auth']
+            if 'cookie_secret' not in sa_auth_conf and 'session.secret' not in conf:
                 raise TGConfigError("You must provide a value for authentication cookies secret. "
                                     "Make sure that you have one of those options in app_cfg.py: "
                                     "'sa_auth.cookie_secret' or 'session.secret'")
@@ -851,28 +862,31 @@ class AppConfig(Bunch):
             # The developer must have defined a 'sa_auth' section, because
             # values such as the User, Group or Permission classes must be
             # explicitly defined.
-            self.sa_auth.setdefault('form_plugin', None)
-            self.sa_auth.setdefault(
+            sa_auth_conf.setdefault('form_plugin', None)
+            sa_auth_conf.setdefault(
                 'cookie_secret',
-                config.get('session.secret', config.get('beaker.session.secret'))
+                conf.get('session.secret', conf.get('beaker.session.secret'))
             )
 
-    def _setup_controller_wrappers(self):
+    def _setup_controller_wrappers(self, conf):
         # This trashes away the current config['controller_caller']
         # so that the call is idempotent.
         base_controller_caller = call_controller
 
         controller_caller = base_controller_caller
-        for wrapper in self.get('controller_wrappers', []):
+        for wrapper in conf.get('controller_wrappers', []):
             try:
                 controller_caller = wrapper(controller_caller)
             except TypeError:
-                controller_caller = _DeprecatedControllerWrapper(wrapper, self, controller_caller)
+                controller_caller = _DeprecatedControllerWrapper(wrapper, conf, controller_caller)
 
-        config['controller_caller'] = controller_caller
+        conf['controller_caller'] = controller_caller
 
-    def _setup_renderers(self):
-        for renderer in self.renderers[:]:
+    def _setup_renderers(self, conf):
+        renderers = conf['renderers']
+        rendering_engines = conf['rendering_engines']
+
+        for renderer in renderers[:]:
             setup = getattr(self, 'setup_%s_renderer'%renderer, None)
             if setup is not None:
                 # Backward compatible old-way of configuring rendering engines
@@ -884,17 +898,18 @@ class AppConfig(Bunch):
                 success = setup()
                 if success is False:
                     log.error('Failed to initialize %s template engine, removing it...' % renderer)
-                    self.renderers.remove(renderer)
-            elif renderer in self.rendering_engines:
-                rendering_engine = self.rendering_engines[renderer]
-                engines = rendering_engine.create(config, config['tg.app_globals'])
+                    renderers.remove(renderer)
+            elif renderer in rendering_engines:
+                rendering_engine = rendering_engines[renderer]
+                engines = rendering_engine.create(conf, conf['tg.app_globals'])
                 if engines is None:
                     log.error('Failed to initialize %s template engine, removing it...' % renderer)
-                    self.renderers.remove(renderer)
+                    renderers.remove(renderer)
                 else:
-                    self.render_functions.update(engines)
+                    conf['render_functions'].update(engines)
             else:
-                raise TGConfigError('This configuration object does not support the %s renderer' % renderer)
+                raise TGConfigError('This configuration object does '
+                                    'not support the %s renderer' % renderer)
 
         milestones.renderers_ready.reach()
 
@@ -917,10 +932,10 @@ class AppConfig(Bunch):
             tg.hooks.notify('initialized_config', args=(self, app_config))
             tg.hooks.notify('startup', trap_exceptions=True)
 
-            self.setup_helpers_and_globals(app_config)
-            self.setup_auth()
-            self._setup_renderers()
-            self.setup_persistence(app_config)
+            self._setup_helpers_and_globals(app_config)
+            self._setup_auth(app_config)
+            self._setup_renderers(app_config)
+            self._setup_persistence(app_config)
 
             # Trigger milestone here so that it gets triggered even when
             # websetup (setup-app command) is performed.
@@ -1221,14 +1236,14 @@ class AppConfig(Bunch):
         from ming.odm import ThreadLocalODMSession
         return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
-    def add_sqlalchemy_middleware(self, app, conf):
+    def add_sqlalchemy_middleware(self, app):
         """Set up middleware that cleans up the sqlalchemy session.
 
         The default behavior of TG 2 is to clean up the session on every
         request.  Only override this method if you know what you are doing!
 
         """
-        return DBSessionRemoverMiddleware(conf['DBSession'], app)
+        return DBSessionRemoverMiddleware(config['DBSession'], app)
 
     def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
@@ -1283,7 +1298,7 @@ class AppConfig(Bunch):
             milestones.environment_loaded.reach()
 
             # Apply controller wrappers to controller caller
-            self._setup_controller_wrappers()
+            self._setup_controller_wrappers(app_config)
 
             app = TGApp(app_config)
 
@@ -1321,7 +1336,7 @@ class AppConfig(Bunch):
             # so any middleware that relies on the response to be
             # a string needs to be applied before this point.
             if app_config['use_sqlalchemy']:
-                app = self.add_sqlalchemy_middleware(app, app_config)
+                app = self.add_sqlalchemy_middleware(app)
 
             if self.use_ming:
                 app = self.add_ming_middleware(app)

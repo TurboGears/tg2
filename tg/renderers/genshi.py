@@ -100,10 +100,12 @@ class GenshiRenderer(RendererFactory):
             TemplateLoader = GenshiTemplateLoader
             template_loader_args = {}
 
-        loader = TemplateLoader(search_path=config.paths.templates,
-                                max_cache_size=options.get('max_cache_size',
-                                                           asint(config.get('genshi.max_cache_size', 30))),
-                                auto_reload=config.auto_reload_templates,
+        loader = TemplateLoader(search_path=config['paths'].templates,
+                                max_cache_size=options.get(
+                                    'max_cache_size',
+                                    asint(config.get('genshi.max_cache_size', 30))
+                                ),
+                                auto_reload=config['auto_reload_templates'],
                                 callback=cls.on_template_loaded,
                                 **template_loader_args)
 

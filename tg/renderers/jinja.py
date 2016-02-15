@@ -43,28 +43,28 @@ class JinjaRenderer(RendererFactory):
             template_loader_args = {}
 
         if not 'jinja_extensions' in config:
-            config.jinja_extensions = []
+            config['jinja_extensions'] = []
 
         # Add i18n extension by default
-        if not "jinja2.ext.i18n" in config.jinja_extensions:
-            config.jinja_extensions.append("jinja2.ext.i18n")
+        if not "jinja2.ext.i18n" in config['jinja_extensions']:
+            config['jinja_extensions'].append("jinja2.ext.i18n")
 
         if not 'jinja_filters' in config:
-            config.jinja_filters = {}
+            config['jinja_filters'] = {}
 
         loader = ChoiceLoader(
-            [TemplateLoader(path, **template_loader_args) for path in config.paths['templates']])
+            [TemplateLoader(path, **template_loader_args) for path in config['paths']['templates']])
 
         jinja2_env = Environment(loader=loader, autoescape=True,
-                                 auto_reload=config.auto_reload_templates,
-                                 extensions=config.jinja_extensions)
+                                 auto_reload=config['auto_reload_templates'],
+                                 extensions=config['jinja_extensions'])
 
         # Try to load custom filters module under app_package.lib.templatetools
         try:
-            if not config.package_name:
+            if not config['package_name']:
                 raise AttributeError()
 
-            filter_package = config.package_name + ".lib.templatetools"
+            filter_package = config['package_name'] + ".lib.templatetools"
             autoload_lib = __import__(filter_package, {}, {}, ['jinja_filters'])
             try:
                 autoload_filters = dict(
@@ -81,7 +81,7 @@ class JinjaRenderer(RendererFactory):
 
         # Add jinja filters
         filters = dict(FILTERS, **autoload_filters)
-        filters.update(config.jinja_filters)
+        filters.update(config['jinja_filters'])
         jinja2_env.filters = filters
 
         # Jinja's unable to request c's attributes without strict_c

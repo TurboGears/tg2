@@ -62,9 +62,9 @@ class KajikiRenderer(RendererFactory):
         from kajiki import i18n
         i18n.gettext = ugettext
 
-        loader = KajikiTemplateLoader(config.paths.templates[0],
+        loader = KajikiTemplateLoader(config['paths'].templates[0],
                                       dotted_finder=app_globals.dotted_filename_finder,
-                                      reload=config.auto_reload_templates,
+                                      reload=config['auto_reload_templates'],
                                       **options)
         return {'kajiki': cls(loader)}
 
