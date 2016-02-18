@@ -383,7 +383,7 @@ class TestAppConfig:
         # The transaction manager wrapper should not have been enabled.
         tgapp = TGApp()
         wrapper = tgapp.wrapped_dispatch
-        while wrapper != tgapp.dispatch:
+        while wrapper != tgapp._dispatch:
             assert not isinstance(wrapper, TransactionApplicationWrapper)
             wrapper = wrapper.next_handler
 
@@ -715,7 +715,7 @@ class TestAppConfig:
             tgapp = tgapp.app
 
         ming_handler = tgapp.wrapped_dispatch
-        while ming_handler != tgapp.dispatch:
+        while ming_handler != tgapp._dispatch:
             if isinstance(ming_handler, MingApplicationWrapper):
                 break
             ming_handler = ming_handler.next_handler
@@ -759,7 +759,7 @@ class TestAppConfig:
             tgapp = tgapp.app
 
         ming_handler = tgapp.wrapped_dispatch
-        while ming_handler != tgapp.dispatch:
+        while ming_handler != tgapp._dispatch:
             if isinstance(ming_handler, MingApplicationWrapper):
                 break
             ming_handler = ming_handler.next_handler
@@ -1716,11 +1716,11 @@ class TestAppConfig:
                 pass
 
         a = TGApp()
-        testmode, __, __ = a.setup_app_env({'paste.registry':FakeRegistry()})
+        testmode, __, __ = a._setup_app_env({'paste.registry':FakeRegistry()})
         assert testmode is False
 
-        testmode, __, __ = a.setup_app_env({'paste.registry':FakeRegistry(),
-                                            'paste.testing_variables':{}})
+        testmode, __, __ = a._setup_app_env({'paste.registry':FakeRegistry(),
+                                             'paste.testing_variables':{}})
         assert testmode is True
 
     def test_application_no_controller_hijacking(self):

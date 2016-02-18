@@ -60,7 +60,7 @@ class TGApp(object):
                                                      'Content-Type': None,
                                                      'Content-Length': '0'}))
 
-        self.wrapped_dispatch = self.dispatch
+        self.wrapped_dispatch = self._dispatch
         for wrapper in self.config.get('application_wrappers', []):
             try:
                 app_wrapper = wrapper(self.wrapped_dispatch, self.config)
@@ -101,10 +101,11 @@ class TGApp(object):
             pass
 
     def __call__(self, environ, start_response):
+        """Serve a WSGI Request"""
         # Hide outer middlewares when crash inside application itself
         __traceback_hide__ = 'before'
 
-        testmode, context, registry = self.setup_app_env(environ)
+        testmode, context, registry = self._setup_app_env(environ)
 
         # Expose a path that simply registers the globals and preserves them
         # without doing much else
@@ -113,7 +114,7 @@ class TGApp(object):
             start_response('200 OK', [('Content-type', 'text/plain')])
             return ['DONE'.encode('utf-8')]
 
-        controller = self.get_controller_instance('root')
+        controller = self._get_controller_instance('root')
         response = self.wrapped_dispatch(controller, environ, context)
 
         if testmode is True:
@@ -133,7 +134,7 @@ class TGApp(object):
             if has_pylons and 'pylons.pylons' in environ: #pragma: no cover
                 del environ['pylons.pylons']
 
-    def setup_app_env(self, environ):
+    def _setup_app_env(self, environ):
         """Setup Request, Response and TurboGears context objects.
 
         Is also in charge of pushing TurboGears context into the
@@ -229,7 +230,7 @@ class TGApp(object):
         class_name = cls.class_name_from_module_name(module_name) + 'Controller'
         return getattr(sys.modules[full_module_name], class_name)
 
-    def find_controller(self, controller):
+    def _find_controller(self, controller):
         """Locates a controller for this TGApp."""
         # Check to see if we've cached the class instance for this name
         if controller in self.controller_classes:
@@ -240,12 +241,12 @@ class TGApp(object):
         self.controller_classes[controller] = mycontroller
         return mycontroller
 
-    def get_controller_instance(self, controller):
+    def _get_controller_instance(self, controller):
         # Check to see if we've cached the instance for this name
         try:
             return self.controller_instances[controller]
         except KeyError:
-            mycontroller = self.find_controller(controller)
+            mycontroller = self._find_controller(controller)
 
             # If it's a class, instantiate it
             if hasattr(mycontroller, '__bases__'):
@@ -254,11 +255,9 @@ class TGApp(object):
             self.controller_instances[controller] = mycontroller
             return mycontroller
 
-    def dispatch(self, controller, environ, context):
+    def _dispatch(self, controller, environ, context):
         """Dispatches to a controller, the controller itself is expected
         to implement the routing system.
-
-        Override this to change how requests are dispatched to controllers.
         """
         if not controller:
             return HTTPNotFound()
