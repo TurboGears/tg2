@@ -2262,3 +2262,17 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
+
+    def test_make_app_without_load_environment(self):
+        class RootController(TGController):
+            @expose()
+            def test(self, *args, **kwargs):
+                return 'Helpers: %s' % tg.config.get('helpers')
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        cfg = conf._init_config({}, {})  # Manually call init_config otherwise no tg.config is pushed.
+        app = conf.setup_tg_wsgi_app(load_environment=None)()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert resp.text == 'Helpers: None', resp

@@ -1288,9 +1288,12 @@ class AppConfig(Bunch):
             else:
                 app_config = tg.config._current_obj()
 
-            # trigger the environment_loaded milestone again, so that
-            # when load_environment is not provided the attached actions gets performed anyway.
-            milestones.environment_loaded.reach()
+                # In case load_environment was not performed we manually trigger all
+                # the milestones to ensure that events related to configuration milestones
+                # are performed in any case.
+                milestones.config_ready.reach()
+                milestones.renderers_ready.reach()
+                milestones.environment_loaded.reach()
 
             # Apply controller wrappers to controller caller
             self._setup_controller_wrappers(app_config)
