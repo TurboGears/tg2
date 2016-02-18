@@ -23,6 +23,7 @@ from crank.dispatchstate import DispatchState
 from tg.request_local import WebObResponse
 import mimetypes as default_mimetypes
 import weakref
+from ..wsgiapp import TGApp
 
 
 def dispatched_controller():
@@ -167,5 +168,6 @@ class CoreDispatcher(object):
         if 'tg.root_controller' in tg.config:
             root_controller = tg.config['tg.root_controller']
         else:
-            root_controller = sys.modules[tg.config['application_root_module']].RootController
+            root_controller = TGApp.lookup_controller(tg.config, 'root')
+
         return find_url(root_controller, self, [('/', root_controller)])

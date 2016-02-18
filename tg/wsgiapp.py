@@ -81,7 +81,7 @@ class TGApp(object):
         if 'tg.root_controller' in self.config:
             self.controller_instances['root'] = self.config['tg.root_controller']
 
-    def setup_pylons_compatibility(self, environ, controller): #pragma: no cover
+    def _setup_pylons_compatibility(self, environ, controller): #pragma: no cover
         """Updates environ to be backward compatible with Pylons"""
         try:
             environ['pylons.controller'] = controller
@@ -195,11 +195,13 @@ class TGApp(object):
 
         return testing, locals, registry
 
-    def class_name_from_module_name(self, module_name):
+    @classmethod
+    def class_name_from_module_name(cls, module_name):
         words = module_name.replace('-', '_').split('_')
         return ''.join(w.title() for w in words)
 
-    def find_controller(self, controller):
+    @classmethod
+    def lookup_controller(cls, config, controller):
         """Locates a controller by attempting to import it then grab
         the SomeController instance from the imported module.
 
@@ -207,28 +209,33 @@ class TGApp(object):
         the URL has been resolved.
 
         """
-        # Check to see if we've cached the class instance for this name
-        if controller in self.controller_classes:
-            return self.controller_classes[controller]
+        root_module_path = config['paths']['root']
+        base_controller_path = config['paths']['controllers']
 
-        root_module_path = self.config['paths']['root']
-        base_controller_path = self.config['paths']['controllers']
-
-        #remove the part of the path we expect to be the root part (plus one '/')
+        # remove the part of the path we expect to be the root part (plus one '/')
         assert base_controller_path.startswith(root_module_path)
         controller_path = base_controller_path[len(root_module_path)+1:]
 
-        #attach the package
-        full_module_name = '.'.join([self.package_name] +
-            controller_path.split(os.sep) + controller.split('/'))
+        # attach the package
+        full_module_name = '.'.join([config['package_name']] +
+                                    controller_path.split(os.sep) +
+                                    controller.split('/'))
 
         # Hide the traceback here if the import fails (bad syntax and such)
         __traceback_hide__ = 'before_and_this'
 
         __import__(full_module_name)
         module_name = controller.split('/')[-1]
-        class_name = self.class_name_from_module_name(module_name) + 'Controller'
-        mycontroller = getattr(sys.modules[full_module_name], class_name)
+        class_name = cls.class_name_from_module_name(module_name) + 'Controller'
+        return getattr(sys.modules[full_module_name], class_name)
+
+    def find_controller(self, controller):
+        """Locates a controller for this TGApp."""
+        # Check to see if we've cached the class instance for this name
+        if controller in self.controller_classes:
+            return self.controller_classes[controller]
+
+        mycontroller = self.lookup_controller(self.config, controller)
 
         self.controller_classes[controller] = mycontroller
         return mycontroller
@@ -256,9 +263,9 @@ class TGApp(object):
         if not controller:
             return HTTPNotFound()
 
-        #Setup pylons compatibility before calling controller
-        if has_pylons and self.pylons_compatible: #pragma: no cover
-            self.setup_pylons_compatibility(environ, controller)
+        # Setup pylons compatibility before calling controller
+        if has_pylons and self.pylons_compatible:  # pragma: no cover
+            self._setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to accept WSGI Environ and TG Context
         # and return a Response object.
