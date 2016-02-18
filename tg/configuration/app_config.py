@@ -1283,9 +1283,10 @@ class AppConfig(Bunch):
                 global_conf = {}
 
             # Configure the Application environment
-            app_config = None
             if load_environment:
                 app_config = load_environment(global_conf, app_conf)
+            else:
+                app_config = tg.config._current_obj()
 
             # trigger the environment_loaded milestone again, so that
             # when load_environment is not provided the attached actions gets performed anyway.
