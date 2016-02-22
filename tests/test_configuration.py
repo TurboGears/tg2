@@ -196,6 +196,13 @@ class TestAppConfig:
         milestones._reset_all()
         tg.hooks = _TGGlobalHooksNamespace()  # Reset hooks
 
+    def test_reqlocal_configuration_dictionary(self):
+        self.config['RANDOM_VALUE'] = 5
+        conf = self.config._init_config({}, {})
+
+        assert config['RANDOM_VALUE'] == 5
+        assert len(config) == len(conf)
+
     def test_get_root(self):
         current_root_module = self.config['paths']['root']
         assert self.config._get_root_module() == 'tests.controllers.root', self.config._get_root_module()
