@@ -205,9 +205,12 @@ class AppConfig(Bunch):
         - ``ming.db`` -> If Database is not provided in ``ming.url`` it can be specified here.
         - ``ming.connection.*`` -> Options to configure the ming connection,
           refer to :func:`ming.datastore.create_datastore` for available options.
-        - ``use_sqlalchemy`` -> Enable/Disable Ming as Models storage.
+        - ``use_sqlalchemy`` -> Enable/Disable SQLalchemy as Models storage.
         - ``sqlalchemy.url`` -> Url of the SQLAlchemy database. Refer to :ref:`sqla_master_slave` for
           configuring master-slave urls.
+        - ``use_transaction_manager`` -> Whenever the transaction manager should be enabled for
+          SQLAlchemy session. This has no impact on Ming session, but might be required by third
+          party extensions even when you are not using SQLAlchemy.
     """
     CONFIG_OPTIONS = {
         'debug': asbool,

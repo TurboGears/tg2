@@ -209,6 +209,11 @@ class TGApp(object):
         Override this to change how the controller object is found once
         the URL has been resolved.
 
+        :param dict config: The configuration options for the application,
+         usually this will be ``tg.config``.
+        :param str controller: The controller name, this will be the name
+         of the python module containing the controller.
+
         """
         root_module_path = config['paths']['root']
         base_controller_path = config['paths']['controllers']
@@ -230,8 +235,15 @@ class TGApp(object):
         class_name = cls.class_name_from_module_name(module_name) + 'Controller'
         return getattr(sys.modules[full_module_name], class_name)
 
-    def _find_controller(self, controller):
-        """Locates a controller for this TGApp."""
+    def find_controller(self, controller):
+        """Locates a controller for this TGApp.
+
+        This is the same af :meth:`.lookup_controller` but will reuse
+        configuration of the application and will cache results.
+
+        :param str controller: The controller name, this will be the name
+         of the python module containing the controller.
+        """
         # Check to see if we've cached the class instance for this name
         if controller in self.controller_classes:
             return self.controller_classes[controller]
@@ -246,7 +258,7 @@ class TGApp(object):
         try:
             return self.controller_instances[controller]
         except KeyError:
-            mycontroller = self._find_controller(controller)
+            mycontroller = self.find_controller(controller)
 
             # If it's a class, instantiate it
             if hasattr(mycontroller, '__bases__'):
