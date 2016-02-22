@@ -1282,7 +1282,7 @@ class AppConfig(Bunch):
                 app = self._add_error_middleware(app_config, app)
 
             # Establish the registry for this application
-            app = RegistryManager(app, streaming=config.get('registry_streaming', True),
+            app = RegistryManager(app, streaming=asbool(app_config.get('registry_streaming', True)),
                                   preserve_exceptions=asbool(app_config.get('debug')))
 
             # Place the debuggers after the registry so that we
