@@ -750,7 +750,11 @@ class AppConfig(Bunch):
         if model is None:
             raise TGConfigError('Ming enabled, but no models provided')
 
-        model.init_model(datastore)
+        ming_session = model.init_model(datastore)
+        if ming_session is not None:
+            # If init_model returns a specific session, keep it around
+            # as the MongoDB Session.
+            conf['MingSession'] = ming_session
 
         if 'DBSession' not in conf:
             # If the user hasn't specified a default session, assume
@@ -826,7 +830,11 @@ class AppConfig(Bunch):
         if model is None:
             raise TGConfigError('SQLAlchemy enabled, but no models provided')
 
-        model.init_model(engine)
+        sqla_session = model.init_model(engine)
+        if sqla_session is not None:
+            # If init_model returns a specific session, keep it around
+            # as the SQLAlchemy Session.
+            conf['SQLASession'] = sqla_session
 
         if 'DBSession' not in conf:
             # If the user hasn't specified a default session, assume

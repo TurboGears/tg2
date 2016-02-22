@@ -7,6 +7,7 @@ import atexit, sys, os
 from datetime import datetime
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 from tg.configuration.hooks import _TGGlobalHooksNamespace
@@ -40,6 +41,7 @@ def teardown():
     milestones._reset_all()
     teardown_session_dir()
 
+
 class PackageWithModel:
     __name__ = 'tests'
     __file__ = __file__
@@ -53,15 +55,20 @@ class PackageWithModel:
             def remove(self):
                 self.DBSESSION_REMOVED=True
 
-        @classmethod
-        def init_model(package, engine):
-            pass
+        def init_model(self, engine):
+            if isinstance(engine, Engine):
+                # SQLA
+                return self.DBSession
+            else:
+                # Ming
+                return dict(ming=True)
 
     class lib:
         class app_globals:
             class Globals:
                 pass
 PackageWithModel.__name__ = 'tests'
+
 
 class UncopiableList(list):
     """
@@ -814,8 +821,13 @@ class TestAppConfig:
         app = base_config.make_wsgi_app()
         assert app is not None
 
+        assert config['MingSession'], config
         assert config['tg.app_globals'].ming_datastore, config['tg.app_globals']
+
+        assert config['SQLASession'], config
         assert config['tg.app_globals'].sa_engine, config['tg.app_globals']
+
+        assert config['DBSession'] is config['SQLASession'], config
 
     def test_setup_ming_persistance_with_url_and_db(self):
         package = PackageWithModel()
