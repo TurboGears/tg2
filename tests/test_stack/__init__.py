@@ -44,7 +44,7 @@ class TestConfig(AppConfig):
         for key, value in values.items():
             setattr(self, key, value)
 
-    def add_debugger_middleware(self, global_conf, app):
+    def _add_debugger_middleware(self, app_config, app):
         return app
 
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):

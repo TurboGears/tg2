@@ -302,14 +302,12 @@ class TestAppConfig:
         self.config._setup_helpers_and_globals(self.config._init_config({}, {}))
 
     def test_setup_helpers_and_globals_custom_backward_compatible(self):
-        def custom_helpers(*args):
-            from tg import config
-            config['helpers'] = 'YES!'
+        def custom_helpers(conf):
+            conf['helpers'] = 'YES!'
 
-        self.config.setup_helpers_and_globals = custom_helpers
-        conf = self.config._init_config({}, {})
-        self.config._setup_helpers_and_globals(conf)
-        assert conf['helpers'] == 'YES!', conf
+        object.__setattr__(self.config, '_setup_helpers_and_globals', custom_helpers)
+        conf = self.config.make_load_environment()({}, {})
+        assert conf['helpers'] == 'YES!', conf.get('helpers')
 
     def test_setup_sa_auth_backend(self):
         class ConfigWithSetupAuthBackend(self.config.__class__):
@@ -327,7 +325,7 @@ class TestAppConfig:
         class ConfigWithSetupAuthBackend(self.config.__class__):
             called = []
 
-            def setup_auth(self):
+            def _setup_auth(self, app_config):
                 self.called.append(True)
 
         conf = ConfigWithSetupAuthBackend()
@@ -365,7 +363,7 @@ class TestAppConfig:
 
     def test_custom_transaction_manager(self):
         class CustomAppConfig(AppConfig):
-            def add_tm_middleware(self, app):
+            def _add_tm_middleware(self, config, app):
                 self.did_perform_custom_tm = True
                 return app
 
@@ -660,13 +658,11 @@ class TestAppConfig:
     def test_setup_persistence_custom_backward_compatible(self):
         self.config.package = PackageWithModel()
 
-        def custom_persistence(*args):
-            from tg import config
-            config['gotcha'] = 'YES!'
+        def custom_persistence(conf):
+            conf['gotcha'] = 'YES!'
 
-        self.config.setup_persistence = custom_persistence
-        conf = self.config._init_config({}, {})
-        self.config._setup_persistence(conf)
+        object.__setattr__(self.config, '_setup_persistence', custom_persistence)
+        conf = self.config.make_load_environment()({}, {})
         assert conf['gotcha'] == 'YES!', conf
 
     def test_setup_sqla_persistance(self):
@@ -910,11 +906,12 @@ class TestAppConfig:
         self.config.sa_auth.cookie_secret = 'dummy'
         self.config.sa_auth.password_encryption_method = 'sha'
 
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, None)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
     def test_add_static_file_middleware(self):
-        self.config.add_static_file_middleware(None)
+        self.config._add_static_file_middleware(self.config._init_config({}, {}), None)
 
     def test_setup_sqla_auth(self):
         if PY3: raise SkipTest()
@@ -1365,22 +1362,25 @@ class TestAppConfig:
     @raises(TGConfigError)
     def test_cookie_secret_required(self):
         self.config.sa_auth = {}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, False)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
     def test_sqla_auth_middleware(self):
         if PY3: raise SkipTest()
 
         self.config.auth_backend = 'sqlalchemy'
+        self.config.skip_authentication = True
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'dbsession': None,
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in cfg['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
         assert 'sqlauth' in authenticators
 
@@ -1397,8 +1397,9 @@ class TestAppConfig:
                                   'translations': {'user_name':'SomethingElse'},
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
@@ -1427,8 +1428,9 @@ class TestAppConfig:
                                   'authenticators':UncopiableList([('superfirst', None),
                                                                    ('default', None)])}
 
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert authenticators[1] == 'superfirst'
@@ -1449,8 +1451,9 @@ class TestAppConfig:
 
         #In this case we can just test it doesn't crash
         #as the sa_auth dict doesn't have an authenticators key to check for
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
@@ -1544,8 +1547,9 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
@@ -1563,8 +1567,9 @@ class TestAppConfig:
         self.config.auth_backend = None
         self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
                                   'cookie_secret':'12345'}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
@@ -1581,8 +1586,9 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':UncopiableList([('default', None)])}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert 'cookie' in authenticators
@@ -1600,8 +1606,9 @@ class TestAppConfig:
                                   'user_class':None,
                                   'cookie_secret':'12345',
                                   'authenticators':[('default', None)]}
-        self.config._setup_auth(self.config._init_config({}, {}))
-        self.config.add_auth_middleware(None, True)
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
 
         authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
         assert len(authenticators) == 1
@@ -1631,7 +1638,7 @@ class TestAppConfig:
 
         tw.api.make_middleware = fake_make_middleware
         config['toscawidgets.framework.resource_variant'] = 'min'
-        self.config.add_tosca_middleware(None)
+        self.config._add_tosca_middleware(config, None)
         config.pop('toscawidgets.framework.resource_variant', None)
 
     def test_error_middleware_disabled_with_optimize(self):

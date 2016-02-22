@@ -208,9 +208,6 @@ class AppConfig(Bunch):
         - ``use_sqlalchemy`` -> Enable/Disable SQLalchemy as Models storage.
         - ``sqlalchemy.url`` -> Url of the SQLAlchemy database. Refer to :ref:`sqla_master_slave` for
           configuring master-slave urls.
-        - ``use_transaction_manager`` -> Whenever the transaction manager should be enabled for
-          SQLAlchemy session. This has no impact on Ming session, but might be required by third
-          party extensions even when you are not using SQLAlchemy.
     """
     CONFIG_OPTIONS = {
         'debug': asbool,
@@ -660,10 +657,6 @@ class AppConfig(Bunch):
         are setup. TurboGears expects them to be available in ``conf`` dictionary
         as ``tg.app_globals`` and ``helpers``.
         """
-
-        if hasattr(self, 'setup_helpers_and_globals'):
-            return self.setup_helpers_and_globals()
-
         gclass = conf.pop('app_globals', None)
         if gclass is None:
             try:
@@ -690,20 +683,7 @@ class AppConfig(Bunch):
         conf['helpers'] = h
 
     def _setup_persistence(self, conf):
-        """Override this method to define how your application configures it's persistence model.
-           the default is to setup sqlalchemy from the cofiguration file, but you might choose
-           to set up a persistence system other than sqlalchemy, or add an additional persistence
-           layer.  Here is how you would go about setting up a ming (mongo) persistence layer::
-
-            class MingAppConfig(AppConfig):
-                def setup_persistence(self):
-                    self.ming_ds = DataStore(config['mongo.url'])
-                    session = Session.by_name('main')
-                    session.bind = self.ming_ds
-        """
-        if hasattr(self, 'setup_persistence'):
-            return self.setup_persistence()
-
+        """Configures application persistence model"""
         if conf['use_sqlalchemy']:
             self._setup_sqlalchemy(conf)
         if conf['use_ming']:
@@ -804,8 +784,8 @@ class AppConfig(Bunch):
         else:
             engine = engine_from_config(conf, 'sqlalchemy.master.')
             conf['balanced_engines'] = {'master':engine,
-                                          'slaves':{},
-                                          'all':{'master':engine}}
+                                        'slaves':{},
+                                        'all':{'master':engine}}
 
             all_engines = conf['balanced_engines']['all']
             slaves = conf['balanced_engines']['slaves']
@@ -851,11 +831,8 @@ class AppConfig(Bunch):
         """
         if hasattr(self, 'setup_sa_auth_backend'):
             warnings.warn("setup_sa_auth_backend is deprecated, please override"
-                          "AppConfig.setup_auth instead", DeprecationWarning)
+                          "AppConfig._setup_auth instead", DeprecationWarning)
             return self.setup_sa_auth_backend()
-
-        if hasattr(self, 'setup_auth'):
-            return self.setup_auth()
 
         if conf['auth_backend'] in ("ming", "sqlalchemy"):
             sa_auth_conf = conf['sa_auth']
@@ -950,52 +927,46 @@ class AppConfig(Bunch):
 
         return load_environment
 
-    def add_error_middleware(self, global_conf, app):
+    def _add_error_middleware(self, app_config, app):
         """Add middleware which handles errors and exceptions."""
         from tg.error import ErrorReporter
-        app = ErrorReporter(app, global_conf, **config['tg.errorware'])
+        app = ErrorReporter(app, app_config, **app_config['tg.errorware'])
 
-        if self.status_code_redirect is True:
+        if app_config['status_code_redirect'] is True:
             warnings.warn("Support for StatusCodeRedirect is deprecated and "
                           "will be removed in next major release", DeprecationWarning)
 
-            if self.handle_error_page:
+            if app_config['handle_error_page']:
                 from tg.support.middlewares import StatusCodeRedirect
                 # Display error documents for self.handle_status_codes status codes (and
                 # 500 when debug is disabled)
-                if asbool(config['debug']):
-                    app = StatusCodeRedirect(app, self.handle_status_codes)
-                else:
-                    app = StatusCodeRedirect(app, self.handle_status_codes + [500])
-
+                handled_status_codes = app_config['handle_status_codes']
+                if not asbool(app_config['debug']):
+                    handled_status_codes += [500]
+                app = StatusCodeRedirect(app, handled_status_codes)
 
         return app
 
-    def add_slowreqs_middleware(self, global_conf, app):
+    def _add_slowreqs_middleware(self, app_config, app):
         from tg.error import SlowReqsReporter
-        return SlowReqsReporter(app, global_conf, **config['tg.slowreqs'])
+        return SlowReqsReporter(app, app_config, **app_config['tg.slowreqs'])
 
-    def add_debugger_middleware(self, global_conf, app):
+    def _add_debugger_middleware(self, app_config, app):
         from tg.error import ErrorHandler
-        return ErrorHandler(app, global_conf)
+        return ErrorHandler(app, app_config)
 
-    def add_auth_middleware(self, app, skip_authentication):
+    def _add_auth_middleware(self, app_config, app):
         """
         Configure authentication and authorization.
-
-        :param app: The TG2 application.
-        :param skip_authentication: Should authentication be skipped if
-            explicitly requested? (used by repoze.who-testutil)
-        :type skip_authentication: bool
-
         """
         # Start with the current configured authentication options.
         # Depending on the auth backend a new auth_args dictionary
         # can replace this one later on.
-        auth_args = copy(self.sa_auth)
+        skip_authentication = asbool(app_config.get('skip_authentication', False))
+        auth_args = copy(app_config['sa_auth'])
 
         # Configuring auth logging:
-        if 'log_stream' not in self.sa_auth:
+        if 'log_stream' not in auth_args:
             auth_args['log_stream'] = logging.getLogger('auth')
 
         # Removing keywords not used by repoze.who:
@@ -1061,156 +1032,104 @@ class AppConfig(Bunch):
 
         return app
 
-    def add_core_middleware(self, app):
+    def _add_core_middleware(self, conf, app):
         """Add support for sessions, and caching middlewares
 
         Those are all deprecated middlewares and will be removed in future TurboGears
         versions as they have been replaced by other tools.
         """
-        if getattr(self, 'use_session_middleware', False):
+        if conf.get('use_session_middleware', False):
             warnings.warn('SessionMiddleware is deprecated and will be removed soon, '
                           'please consider using SessionApplicationWrapper instead.',
                           DeprecationWarning)
             from tg.support.middlewares import SessionMiddleware, BeakerSessionMiddleware
             if BeakerSessionMiddleware is object:  # pragma: no cover
                 raise ImportError('Beaker not installed')
-            app = SessionMiddleware(app, config)
+            app = SessionMiddleware(app, conf)
 
-        if getattr(self, 'use_cache_middleware', False):
+        if conf.get('use_cache_middleware', False):
             warnings.warn('CacheMiddleware is deprecated and will be removed soon, '
                           'please consider using CacheApplicationWrapper instead.',
                           DeprecationWarning)
             from tg.support.middlewares import CacheMiddleware, BeakerCacheMiddleware
             if BeakerCacheMiddleware is object:  # pragma: no cover
                 raise ImportError('Beaker not installed')
-            app = CacheMiddleware(app, config)
+            app = CacheMiddleware(app, conf)
 
         return app
 
-    def add_tosca_middleware(self, app):
-        """Configure the ToscaWidgets middleware.
-
-        If you would like to override the way the TW middleware works, you might do something like::
-
-            from tg.configuration import AppConfig
-            from tw.api import make_middleware as tw_middleware
-
-            class MyAppConfig(AppConfig):
-
-                def add_tosca2_middleware(self, app):
-
-                    app = tw_middleware(app, {
-                        'toscawidgets.framework.default_view': self.default_renderer,
-                        'toscawidgets.framework.translator': ugettext,
-                        'toscawidgets.middleware.inject_resources': False,
-                        })
-                    return app
-
-            base_config = MyAppConfig()
-
-
-
-        The above example would disable resource injection.
-
-        There is more information about the settings you can change
-        in the ToscaWidgets `middleware. <http://toscawidgets.org/documentation/ToscaWidgets/modules/middleware.html>`
-
-
-        """
-
+    def _add_tosca_middleware(self, conf, app):
+        """Configure the ToscaWidgets middleware"""
         import tw
         from tw.api import make_middleware as tw_middleware
         from tg.i18n import ugettext
 
-        twconfig = {'toscawidgets.framework.default_view': self.default_renderer,
+        twconfig = {'toscawidgets.framework.default_view': conf['default_renderer'],
                     'toscawidgets.framework.translator': ugettext,
                     'toscawidgets.middleware.inject_resources': True,
                     }
-        for k,v in config.items():
+        for k,v in conf.items():
             if k.startswith('toscawidgets.framework.') or k.startswith('toscawidgets.middleware.'):
                 twconfig[k] = v
 
-        if 'toscawidgets.framework.resource_variant' in config:
+        resource_variant = conf.get('toscawidgets.framework.resource_variant')
+        if resource_variant is not None:
             import tw.api
-            tw.api.resources.registry.ACTIVE_VARIANT = config['toscawidgets.framework.resource_variant']
-            #remove it from the middleware madness
+            tw.api.resources.registry.ACTIVE_VARIANT = resource_variant
+            # remove it from the middleware madness
             del twconfig['toscawidgets.framework.resource_variant']
 
         app = tw_middleware(app, twconfig)
 
-        if self.default_renderer in ('genshi','mako'):
-            tw.framework.default_view = self.default_renderer
+        if conf['default_renderer'] in ('genshi','mako'):
+            tw.framework.default_view = conf['default_renderer']
 
         return app
 
-    def add_tosca2_middleware(self, app):
-        """Configure the ToscaWidgets2 middleware.
-
-        If you would like to override the way the TW2 middleware works,
-        you might do change your app_cfg.py to add something like::
-
-            from tg.configuration import AppConfig
-            from tw2.core.middleware import TwMiddleware
-
-            class MyAppConfig(AppConfig):
-
-                def add_tosca2_middleware(self, app):
-
-                    app = TwMiddleware(app,
-                        default_engine=self.default_renderer,
-                        translator=ugettext,
-                        auto_reload_templates = False
-                        )
-
-                    return app
-            base_config = MyAppConfig()
-
-
-
-        The above example would always set the template auto reloading off. (This is normally an
-        option that is set within your application's ini file.)
-        """
+    def _add_tosca2_middleware(self, conf, app):
+        """Configure the ToscaWidgets2 middleware"""
         from tw2.core.middleware import Config, TwMiddleware
         from tg.i18n import ugettext, get_lang
 
-        shared_engines = list(set(self.renderers) & set(Config.preferred_rendering_engines))
+        available_renderers = set(conf['renderers'])
+        shared_engines = list(available_renderers & set(Config.preferred_rendering_engines))
         if not shared_engines:
             raise TGConfigError('None of the configured rendering engines is supported'
                                 'by ToscaWidgets2, unable to configure ToscaWidgets.')
 
-        if self.default_renderer in shared_engines:
-            tw2_engines = [self.default_renderer] + shared_engines
-            tw2_default_engine = self.default_renderer
+        default_renderer = conf['default_renderer']
+        if default_renderer in shared_engines:
+            tw2_engines = [default_renderer] + shared_engines
+            tw2_default_engine = default_renderer
         else:
             # If preferred rendering engine is not available in TW2, fallback to another one
-            # This happens for Kajiki which is not supported by recent TW2 versions.
             tw2_engines = shared_engines
             tw2_default_engine = shared_engines[0]
 
-        default_tw2_config = dict( default_engine=tw2_default_engine,
-                                   preferred_rendering_engines=tw2_engines,
-                                   translator=ugettext,
-                                   get_lang=lambda: get_lang(all=False),
-                                   auto_reload_templates=config['auto_reload_templates'],
-                                   controller_prefix='/tw2/controllers/',
-                                   res_prefix='/tw2/resources/',
-                                   debug=config['debug'],
-                                   rendering_extension_lookup={
-                                        'mako': ['mak', 'mako'],
-                                        'genshi': ['genshi', 'html'],
-                                        'jinja':['jinja', 'jinja2'],
-                                        'kajiki':['kajiki', 'xhtml', 'xml']
-                                   })
+        default_tw2_config = dict(default_engine=tw2_default_engine,
+                                  preferred_rendering_engines=tw2_engines,
+                                  translator=ugettext,
+                                  get_lang=lambda: get_lang(all=False),
+                                  auto_reload_templates=conf['auto_reload_templates'],
+                                  controller_prefix='/tw2/controllers/',
+                                  res_prefix='/tw2/resources/',
+                                  debug=conf['debug'],
+                                  rendering_extension_lookup={
+                                       'mako': ['mak', 'mako'],
+                                       'genshi': ['genshi', 'html'],
+                                       'jinja': ['jinja', 'jinja2'],
+                                       'kajiki': ['kajiki', 'xhtml', 'xml']
+                                  })
 
-        default_tw2_config.update(self.custom_tw2_config)
+        default_tw2_config.update(conf.get('custom_tw2_config', {}))
         app = TwMiddleware(app, **default_tw2_config)
         return app
 
-    def add_static_file_middleware(self, app):
-        app = StaticsMiddleware(app, config['paths']['static_files'])
+    def _add_static_file_middleware(self, conf, app):
+        app = StaticsMiddleware(app, conf['paths']['static_files'])
         return app
 
-    def add_tm_middleware(self, app):
+    def _add_tm_middleware(self, conf, app):
         """Set up the transaction management middleware.
 
         To abort a transaction inside a TG2 app::
@@ -1222,33 +1141,40 @@ class AppConfig(Bunch):
         behavior can be overridden by overriding base_config['tm.commit_veto'].
 
         """
+        warnings.warn("transaction manager middleware has been replaced by "
+                      "TransactionApplicationWrapper", DeprecationWarning, stacklevel=2)
         from tg.support.transaction_manager import TGTransactionManager
 
-        try:
-            # TODO: remove self.commit_veto option in future release
-            # backward compatibility with "commit_veto" option
-            config['tm.commit_veto'] = self.commit_veto
+        # TODO: remove self.commit_veto option in future release
+        # backward compatibility with "commit_veto" option
+        if 'commit_veto' in conf:
+            conf['tm.commit_veto'] = conf['commit_veto']
             warnings.warn("commit_veto option has been replaced by tm.commit_veto",
                           DeprecationWarning, stacklevel=2)
-        except AttributeError:
-            pass
 
-        return TGTransactionManager(app, config)
+        return TGTransactionManager(app, conf)
 
-    def add_ming_middleware(self, app):
+    def _add_ming_middleware(self, conf, app):
         """Set up the ming middleware for the unit of work"""
         from tg.support.middlewares import MingSessionRemoverMiddleware
         from ming.odm import ThreadLocalODMSession
         return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
-    def add_sqlalchemy_middleware(self, app):
+    def _add_sqlalchemy_middleware(self, conf, app):
         """Set up middleware that cleans up the sqlalchemy session.
 
         The default behavior of TG 2 is to clean up the session on every
         request.  Only override this method if you know what you are doing!
 
         """
-        return DBSessionRemoverMiddleware(config['DBSession'], app)
+        dbsession = conf.get('SQLASession')
+        if dbsession is None:
+            dbsession = conf['DBSession']
+        return DBSessionRemoverMiddleware(dbsession, app)
+
+    def _add_seekable_body_middleware(self, conf, app):
+        """Make the request body seekable, so it can be read multiple times."""
+        return SeekableRequestBodyMiddleware(app)
 
     def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
@@ -1311,67 +1237,64 @@ class AppConfig(Bunch):
 
             app = TGApp(app_config)
 
-            tg.hooks.notify('configure_new_app', args=(app,), context_config=config)
+            tg.hooks.notify('configure_new_app', args=(app,))
 
             if wrap_app:
                 app = wrap_app(app)
 
-            app = tg.hooks.notify_with_value('before_config', app, context_config=config)
+            app = tg.hooks.notify_with_value('before_config', app)
 
-            app = self.add_core_middleware(app)
+            app = self._add_core_middleware(app_config, app)
 
-            if self.auth_backend:
-                # Skipping authentication if explicitly requested.
-                # Used by repoze.who-testutil:
-                skip_authentication = app_conf.get('skip_authentication', False)
-                app = self.add_auth_middleware(app, skip_authentication)
+            if app_config.get('auth_backend', False):
+                app = self._add_auth_middleware(app_config, app)
 
-            if getattr(self, 'use_transaction_manager', False):
-                app = self.add_tm_middleware(app)
-
+            if app_config.get('use_transaction_manager', False):
+                app = self._add_tm_middleware(app_config, app)
 
             # TODO: Middlewares before this point should be converted to App Wrappers.
             # They provide some basic TG features like AUTH, Caching and transactions
             # which should be app wrappers to make possible to add wrappers in the
             # stack before or after them.
 
-            if self.use_toscawidgets:
-                app = self.add_tosca_middleware(app)
+            if app_config.get('use_toscawidgets', False):
+                app = self._add_tosca_middleware(app_config, app)
 
-            if self.use_toscawidgets2:
-                app = self.add_tosca2_middleware(app)
+            if app_config.get('use_toscawidgets2', False):
+                app = self._add_tosca2_middleware(app_config, app)
 
-            # from here on the response is a generator
+            # from here on, due to TW2, the response is a generator
             # so any middleware that relies on the response to be
             # a string needs to be applied before this point.
-            if app_config['use_sqlalchemy']:
-                app = self.add_sqlalchemy_middleware(app)
 
-            if self.use_ming:
-                app = self.add_ming_middleware(app)
+            if app_config.get('use_sqlalchemy', False):
+                app = self._add_sqlalchemy_middleware(app_config, app)
 
-            if config.get('make_body_seekable'):
-                app = SeekableRequestBodyMiddleware(app)
+            if app_config.get('use_ming', False):
+                app = self._add_ming_middleware(app_config, app)
+
+            if app_config.get('make_body_seekable', False):
+                app = self._add_seekable_body_middleware(app_config, app)
 
             if asbool(full_stack):
                 # This should never be true for internal nested apps
-                app = self.add_slowreqs_middleware(global_conf, app)
-                app = self.add_error_middleware(global_conf, app)
+                app = self._add_slowreqs_middleware(app_config, app)
+                app = self._add_error_middleware(app_config, app)
 
             # Establish the registry for this application
             app = RegistryManager(app, streaming=config.get('registry_streaming', True),
-                                  preserve_exceptions=asbool(global_conf.get('debug')))
+                                  preserve_exceptions=asbool(app_config.get('debug')))
 
             # Place the debuggers after the registry so that we
             # can preserve context in case of exceptions
-            app = self.add_debugger_middleware(global_conf, app)
+            app = self._add_debugger_middleware(app_config, app)
 
             # Static files (if running in production, and Apache or another
             # web server is serving static files)
-            if config['serve_static']:
-                app = self.add_static_file_middleware(app)
+            if app_config.get('serve_static', False):
+                app = self._add_static_file_middleware(app_config, app)
 
-            app = tg.hooks.notify_with_value('after_config', app, context_config=config)
+            app = tg.hooks.notify_with_value('after_config', app)
 
             return app
 
