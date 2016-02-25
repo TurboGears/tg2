@@ -126,6 +126,9 @@ class DependenciesList(object):
     This powers :meth:`.AppConfig.register_wrapper` and other features in
     TurboGears2, making possible to register the wrappers right after
     other wrappers or at the end of the wrappers chain.
+
+    .. note:: This is highly inefficient as it is only meant to run at configuration time,
+              a new implementation will probably be provided based on heapq in the future.
     """
     #: Those are the heads of the dependencies tree
     #:  - ``False`` means before everything else
@@ -169,7 +172,7 @@ class DependenciesList(object):
             if inspect.isclass(after):
                 after = after.__name__
             else:
-                raise ValueError('after parameter must be a string, a type or a special value')
+                raise ValueError('after parameter must be a string, a class or a special value')
 
         self._inserted_keys.append(key)
         self._dependencies.setdefault(after, []).append((key, entry))
@@ -184,6 +187,26 @@ class DependenciesList(object):
     def values(self):
         """Returns all the inserted values without their key as a generator"""
         return (x[1]for x in self._ordered_elements)
+
+    def replace(self, key, newvalue):
+        """Replaces entry associated to key with a new one.
+
+        :param newvalue: Entry that must replace the previous value.
+        :param str|type key: An identifier of the object being inserted.
+        """
+        if not isinstance(key, str):
+            if inspect.isclass(key):
+                key = key.__name__
+            else:
+                raise ValueError('key parameter must be a string or a class')
+
+        for entries in self._dependencies.values():
+            for idx, value in enumerate(entries):
+                entry_key, entry_value = value
+                if entry_key == key:
+                    entries[idx] = (entry_key, newvalue)
+
+        self._resolve_ordering()
 
     def _resolve_ordering(self):
         ordered_elements = []

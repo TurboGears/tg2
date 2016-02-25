@@ -151,3 +151,43 @@ class TestDependenciesList(object):
         assert dl_values[3] == DLEntry4
         assert dl_values[4] == DLEntry5
 
+    def test_replacing_elements_with_key(self):
+        dl = DependenciesList()
+
+        dl.add(DLEntry2, 'num2')
+        dl.add(DLEntry4, 'num4', after='num3')
+        dl.add(DLEntry3, 'num3')
+        dl.add(DLEntry1, 'num1', after=False)
+        dl.add(DLEntry5, 'num5', after='num3')
+
+        dl.replace('num3', DLEntry1)
+
+        dl_values = list(dl.values())
+        assert dl_values[0] == DLEntry1
+        assert dl_values[1] == DLEntry2
+        assert dl_values[2] == DLEntry1
+        assert dl_values[3] == DLEntry4
+        assert dl_values[4] == DLEntry5
+
+    def test_replacing_elements_with_classes(self):
+        dl = DependenciesList()
+
+        dl.add(DLEntry2)
+        dl.add(DLEntry4, after=DLEntry3)
+        dl.add(DLEntry3)
+        dl.add(DLEntry1, after=False)
+        dl.add(DLEntry5, after=DLEntry3)
+
+        dl.replace(DLEntry3, DLEntry1)
+
+        dl_values = list(dl.values())
+        assert dl_values[0] == DLEntry1
+        assert dl_values[1] == DLEntry2
+        assert dl_values[2] == DLEntry1
+        assert dl_values[3] == DLEntry4
+        assert dl_values[4] == DLEntry5
+
+    @raises(ValueError)
+    def test_replace_key_check(self):
+        dl = DependenciesList()
+        dl.replace(object(), object())
