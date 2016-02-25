@@ -7,6 +7,7 @@ from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.i18n import I18NApplicationWrapper
 from tg.appwrappers.identity import IdentityApplicationWrapper
 from tg.appwrappers.session import SessionApplicationWrapper
+from tg.configuration.utils import DependenciesList
 
 try:
     from xmlrpclib import loads, dumps
@@ -47,17 +48,17 @@ def make_app(controller_klass=None, environ=None, config_options=None, with_erro
     tg.config['rendering_engines_options'] = default_config['rendering_engines_options']
 
     config = default_config.copy()
-    config['application_wrappers'] = [
+    config['application_wrappers'] = DependenciesList(
         I18NApplicationWrapper,
         IdentityApplicationWrapper,
         CacheApplicationWrapper,
         SessionApplicationWrapper
-    ]
+    )
 
     if with_errors:
         config['errorpage.enabled'] = True
         config['errorpage.status_codes'] = [403, 404]
-        config['application_wrappers'].append(ErrorPageApplicationWrapper)
+        config['application_wrappers'].add(ErrorPageApplicationWrapper)
 
     config['session.enabled'] = True
     config['session.data_dir'] = session_dir

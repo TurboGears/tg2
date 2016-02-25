@@ -1328,11 +1328,12 @@ class TestAppConfig:
         conf.register_wrapper(AppWrapper5, after=AppWrapper3)
         milestones.environment_loaded.reach()
 
-        assert conf.application_wrappers[0] == AppWrapper1
-        assert conf.application_wrappers[1] == AppWrapper2
-        assert conf.application_wrappers[2] == AppWrapper3
-        assert conf.application_wrappers[3] == AppWrapper4
-        assert conf.application_wrappers[4] == AppWrapper5
+        app_wrappers = list(conf.application_wrappers.values())
+        assert app_wrappers[0] == AppWrapper1
+        assert app_wrappers[1] == AppWrapper2
+        assert app_wrappers[2] == AppWrapper3
+        assert app_wrappers[3] == AppWrapper4
+        assert app_wrappers[4] == AppWrapper5
 
     def test_wrap_app(self):
         class RootController(TGController):

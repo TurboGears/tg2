@@ -1,3 +1,8 @@
+import inspect
+from collections import deque
+
+import itertools
+
 from .milestones import config_ready
 
 
@@ -113,3 +118,96 @@ class GlobalConfigurable(object):
     def _load_config(self):
         from tg.configuration import config
         self.configure(**coerce_config(config, self.CONFIG_NAMESPACE,  self.CONFIG_OPTIONS))
+
+
+class DependenciesList(object):
+    """Manages a list of entries which might depend one from the other.
+
+    This powers :meth:`.AppConfig.register_wrapper` and other features in
+    TurboGears2, making possible to register the wrappers right after
+    other wrappers or at the end of the wrappers chain.
+    """
+    #: Those are the heads of the dependencies tree
+    #:  - ``False`` means before everything else
+    #:  - ``None`` means in the middle.
+    #:  - ``True`` means after everything else.
+    DEPENDENCY_HEADS = (False, None, True)
+
+    def __init__(self, *entries):
+        self._dependencies = {}
+        self._ordered_elements = []
+        self._inserted_keys = []
+
+        for entry in entries:
+            self.add(entry)
+
+    def add(self, entry, key=None, after=None):
+        """Adds an entry to the dependencies list.
+
+        :param entry: Entry that must be added to the list.
+        :param str|type|None key: An identifier of the object being inserted.
+                                  This is used by later insertions as ``after`` argument
+                                  to specify after which object the new one should be inserted.
+        :param str|type|None|False|True after: After which element this one should be inserted.
+                                               This is the ``key`` of a previously inserted item.
+                                               In case no item with ``key`` has been inserted, the
+                                               entry will be inserted in normal order of insertion.
+                                               Also accepts one of
+                                               :attr:`.DependenciesList.DEPENDENCY_HEADS` as key
+                                               to add entries at begin or end of the list.
+        """
+        if key is None:
+            if inspect.isclass(entry):
+                key = entry.__name__
+            else:
+                # Inserting an object without a key would lead to unexpected ordering.
+                # we cannot use the object class as the key would not be unique across
+                # different instances.
+                raise ValueError('Inserting instances without a key is not allowed')
+
+        if after not in self.DEPENDENCY_HEADS and not isinstance(after, str):
+            if inspect.isclass(after):
+                after = after.__name__
+            else:
+                raise ValueError('after parameter must be a string, a type or a special value')
+
+        self._inserted_keys.append(key)
+        self._dependencies.setdefault(after, []).append((key, entry))
+        self._resolve_ordering()
+
+    def __repr__(self):
+        return '<DependenciesList %s>' % [x[0] for x in self._ordered_elements]
+
+    def __iter__(self):
+        return iter(self._ordered_elements)
+
+    def values(self):
+        """Returns all the inserted values without their key as a generator"""
+        return (x[1]for x in self._ordered_elements)
+
+    def _resolve_ordering(self):
+        ordered_elements = []
+
+        existing_dependencies = set(self._inserted_keys) | set(self.DEPENDENCY_HEADS)
+        dependencies_without_heads = set(self._dependencies.keys()) - set(self.DEPENDENCY_HEADS)
+
+        # All entries that depend on a missing entry are converted
+        # to depend from None so they end up being in the middle.
+        dependencies = {}
+        for dependency in itertools.chain(self.DEPENDENCY_HEADS, dependencies_without_heads):
+            entries = self._dependencies.get(dependency, [])
+            if dependency not in existing_dependencies:
+                dependency = None
+            dependencies.setdefault(dependency, []).extend(entries)
+
+        # Resolve the dependencies and generate the ordered elements.
+        visit_queue = deque((head, head) for head in self.DEPENDENCY_HEADS)
+        while visit_queue:
+            current_key, current_obj = visit_queue.popleft()
+            if current_key not in self.DEPENDENCY_HEADS:
+                ordered_elements.append((current_key, current_obj))
+
+            element_dependencies = dependencies.pop(current_key, [])
+            visit_queue.extendleft(reversed(element_dependencies))
+
+        self._ordered_elements = ordered_elements

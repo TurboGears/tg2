@@ -1,8 +1,7 @@
 import os, sys, logging
 import warnings
+import inspect
 from webob.exc import HTTPNotFound
-
-log = logging.getLogger(__name__)
 
 import tg
 from tg import request_local
@@ -14,6 +13,9 @@ try: #pragma: no cover
     has_pylons = True
 except:
     has_pylons = False
+
+
+log = logging.getLogger(__name__)
 
 
 class RequestLocals(object):
@@ -61,7 +63,7 @@ class TGApp(object):
                                                      'Content-Length': '0'}))
 
         self.wrapped_dispatch = self._dispatch
-        for wrapper in self.config.get('application_wrappers', []):
+        for __, wrapper in self.config.get('application_wrappers', []):
             try:
                 app_wrapper = wrapper(self.wrapped_dispatch, self.config)
                 if getattr(app_wrapper, 'injected', True):
@@ -75,7 +77,7 @@ class TGApp(object):
                     getattr(app_wrapper, 'next_handler', None)
 
             except TypeError:
-                #backward compatibility with wrappers that didn't receive the config
+                # backward compatibility with wrappers that didn't receive the config
                 self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
 
         if 'tg.root_controller' in self.config:
@@ -261,7 +263,7 @@ class TGApp(object):
             mycontroller = self.find_controller(controller)
 
             # If it's a class, instantiate it
-            if hasattr(mycontroller, '__bases__'):
+            if inspect.isclass(mycontroller):
                 mycontroller = mycontroller()
 
             self.controller_instances[controller] = mycontroller

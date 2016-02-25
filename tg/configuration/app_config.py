@@ -17,8 +17,8 @@ from tg.request_local import config as reqlocal_config
 import tg
 from tg.util import Bunch, DottedFileNameFinder
 from tg.configuration import milestones
-from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict, coerce_options
-
+from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict, coerce_options, \
+    DependenciesList
 from tg.renderers.genshi import GenshiRenderer
 from tg.renderers.json import JSONRenderer
 from tg.renderers.jinja import JinjaRenderer
@@ -272,15 +272,12 @@ class AppConfig(Bunch):
         self.call_on_shutdown = []
         self.controller_caller = call_controller
         self.controller_wrappers = []
-        self.application_wrappers = []
-        self.application_wrappers_dependencies = {False: [],
-                                                  None: [],
-                                                  True: []}
+        self.application_wrappers = DependenciesList()
 
-        #override this variable to customize how the tw2 middleware is set up
+        # override this variable to customize how the tw2 middleware is set up
         self.custom_tw2_config = {}
 
-        #This is for minimal mode to set root controller manually
+        # This is for minimal mode to set root controller manually
         if root_controller is not None:
             self['tg.root_controller'] = root_controller
 
@@ -400,8 +397,7 @@ class AppConfig(Bunch):
                         'milestone has been reached, the wrapper will be used only'
                         'for future TGApp instances.', wrapper)
 
-        self.application_wrappers_dependencies.setdefault(after, []).append(wrapper)
-        self._configure_application_wrappers()
+        self.application_wrappers.add(wrapper, after=after)
 
     def register_rendering_engine(self, factory):
         """Registers a rendering engine ``factory``.
@@ -588,23 +584,6 @@ class AppConfig(Bunch):
             if not self.use_sqlalchemy:
                 log.debug('Disabling Transaction Manager as SQLAlchemy is not available')
                 self.use_transaction_manager = False
-
-    def _configure_application_wrappers(self):
-        # Those are the heads of the dependencies tree
-        DEPENDENCY_HEADS = (False, None, True)
-
-        # Clear in place, this is to avoid desync between self and config
-        self.application_wrappers[:] = []
-
-        registered_wrappers = self.application_wrappers_dependencies.copy()
-        visit_queue = deque(DEPENDENCY_HEADS)
-        while visit_queue:
-            current = visit_queue.popleft()
-            if current not in DEPENDENCY_HEADS:
-                self.application_wrappers.append(current)
-
-            dependant_wrappers = registered_wrappers.pop(current, [])
-            visit_queue.extendleft(reversed(dependant_wrappers))
 
     def _configure_package_paths(self):
         try:
