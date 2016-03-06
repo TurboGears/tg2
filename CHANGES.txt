@@ -1,5 +1,33 @@
 = Change Log =
 
+== 2.3.8 (**March 16, 2016**) ==
+
+* Fix auth logger not being configured in Ming quickstart
+* Add minimal quickstart option, to remove example pages in quickstart
+* Serialize sessions as JSON in newly quickstarted projects
+* error messages in newly quickstarted projects are not required to be valid XML anymore.
+* Configuration steps now only read/write options from configuration instead of AppConfig
+* Refactor configuration steps making them internal
+* Allow init_model to return the initialized session to enable both ming and sqlalchemy.
+* Directly expose milestones in main tg namespace
+* Clearly express that TGApp only methods available to users are __call__ and classmethods
+* Provide TGApp.lookup_controller class method to allow to lookup controllers based on a specific configuration
+* All milestones are now properly triggered when load_environment is not provided
+* In case load_environment is False reuse global config as a new one is not created.
+* Remove built-in routes support, this can now be implemented through _dispatch and is provided in tgext.routes
+* Rely on new crank flatten_arguments function, this avoid crashes when controller receives unexpected arguments
+* thread_locals got renamed to context in most locations
+* Dispatch now relies on crank 0.8 resolve api
+* Take params from DispatchState, this allows dispatcher to modify them
+* No longer switch tmpl_context strictness depending on debug/production, that lead to unexpected bugs on production
+* raise stacklevel in warnings to provider a better suited context in warnings.
+* Allow lists in JSON Encoder when explicitly permitted
+* unless utility function, works well coped with Convert validation utility.
+* Support for scheme argument in url, lurl and redirect
+* database name cannot be an empty string in mongodb
+* Make LazyString objects iterable
+
+
 == 2.3.7 (**October 13, 2015**) ==
 
 * Documentation of configuration options has been greatly improved and most of them are now explicitly documented.
