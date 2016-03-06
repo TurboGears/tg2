@@ -16,10 +16,8 @@ built on thousands of lines of code in other libraries. Those libraries had
 already been deployed, used, and tested, and were known to be
 "production ready."
 
-TurboGears2 returns to that philosophy. It is built on Pylons, but it brings
-a best-of-breed approach to Pylons. TurboGears 2 is commited to the following
-Python components and libraries, which are backwards compatable with
-TurboGears 1.1:
+TurboGears 2 is committed to the following Python components and libraries,
+which are backwards compatible with TurboGears 1.1:
 
     * Models: SQLAlchemy
     * Template engines: Genshi
@@ -36,15 +34,11 @@ The zen of TurboGears is::
 Mark Ramm described the relationship between TurboGears and Pylons this way
 "TurboGears 2 is to Pylons as Ubuntu is to Debian."
 
-In other words we're focused on user experience, and creating a novice-friendly
-environment. We ship a smaller subset of components, and thus are better able
+While TurboGears2 is not based on Pylons anymore it's still focused on user experience,
+and creating a novice-friendly environment.
+We ship a smaller subset of components, and thus are better able
 to focus, test, and document things so that new users have the best possible
 experience.
-
-Meanwhile Pylons provides the power and flexibility of the underlying core.
-
-And like Ubuntu, we don't intend to hide that power and flexibility from
-advanced users, but we know that they want things set up to just work too.
 
 Sensible defaults encourage code re-use within TurboGears because
 they make it possible for a group of TurboGears components to share
