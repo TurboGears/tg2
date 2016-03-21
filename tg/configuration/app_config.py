@@ -619,11 +619,10 @@ class AppConfig(Bunch):
         the default setting of tg.strict_tmpl_context ::
 
             from tg.configuration import AppConfig
-            from tg import config
 
             class MyAppConfig(AppConfig):
-                def after_init_config(self):
-                    config['tg.strict_tmpl_context'] = False
+                def after_init_config(self, conf):
+                    conf['tg.strict_tmpl_context'] = False
 
             base_config = MyAppConfig()
 
