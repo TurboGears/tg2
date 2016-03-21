@@ -7,10 +7,10 @@ TurboGears
 .. image:: https://coveralls.io/repos/TurboGears/tg2/badge.png?branch=development 
     :target: https://coveralls.io/r/TurboGears/tg2?branch=development
 
-.. image:: https://pypip.in/v/TurboGears2/badge.png
+.. image:: https://img.shields.io/pypi/v/TurboGears2.svg
    :target: https://pypi.python.org/pypi/TurboGears2
 
-.. image:: https://pypip.in/d/TurboGears2/badge.png
+.. image:: https://img.shields.io/pypi/dm/TurboGears2.svg
    :target: https://pypi.python.org/pypi/TurboGears2
 
 
