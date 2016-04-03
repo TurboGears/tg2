@@ -174,6 +174,9 @@ class DependenciesList(object):
             else:
                 raise ValueError('after parameter must be a string, a class or a special value')
 
+        if key in self._inserted_keys:
+            raise KeyError('Already existing entry for this key')
+
         self._inserted_keys.append(key)
         self._dependencies.setdefault(after, []).append((key, entry))
         self._resolve_ordering()
@@ -207,6 +210,21 @@ class DependenciesList(object):
                     entries[idx] = (entry_key, newvalue)
 
         self._resolve_ordering()
+
+    def get(self, key):
+        if not isinstance(key, str):
+            if inspect.isclass(key):
+                key = key.__name__
+            else:
+                raise ValueError('key parameter must be a string or a class')
+
+        for entries in self._dependencies.values():
+            for idx, value in enumerate(entries):
+                entry_key, entry_value = value
+                if entry_key == key:
+                    return entry_value
+
+        return None
 
     def _resolve_ordering(self):
         ordered_elements = []

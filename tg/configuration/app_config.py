@@ -4,13 +4,12 @@ import os
 import logging
 import warnings
 from copy import copy, deepcopy
-import mimetypes
 from collections import MutableMapping as DictMixin, deque
+
 from tg.appwrappers.identity import IdentityApplicationWrapper
 
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
     DBSessionRemoverMiddleware
-from tg.support.registry import RegistryManager
 from tg.support.converters import asbool, asint, aslist
 from tg.request_local import config as reqlocal_config
 
@@ -104,10 +103,6 @@ class DispatchingConfigWrapper(DictMixin):
 defaults = {
     'debug': False,
     'package': None,
-    'paths': {'root': None,
-              'controllers': None,
-              'templates': ['.'],
-              'static_files': None},
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
     'tg.pylons_compatible': True,
@@ -127,26 +122,97 @@ def call_controller(tg_config, controller, remainder, params):
     return controller(*remainder, **params)
 
 
-class _DeprecatedControllerWrapper(object):
-    def __init__(self, controller_wrapper, config, next_wrapper):
-        # Backward compatible old-way of configuring controller wrappers
-        warnings.warn("Controller wrapper will now accept the configuration"
-                      "as parameter when called instead of receiving it as"
-                      "a constructor parameter, please refer to the documentation"
-                      "to update your controller wrappers",
-                      DeprecationWarning, stacklevel=3)
+class AppConfig(object):
+    def __init__(self, **kwargs):
+        from .configurator import MinimalApplicationConfigurator
+        self._configurator = MinimalApplicationConfigurator()
+        self._configurator.update_blueprint(kwargs)
 
-        def _adapted_next_wrapper(controller, remainder, params):
-            return next_wrapper(tg.config._current_obj(),
-                                controller, remainder, params)
+        def _on_config_ready(_, conf):
+            self.after_init_config(conf)
+        tg.hooks.register('initialized_config', _on_config_ready)
 
-        self.wrapper = controller_wrapper(config, _adapted_next_wrapper)
+        def _startup_hook(*args, **kwargs):
+            tg.hooks.notify('startup', trap_exceptions=True)
+        tg.hooks.register('initialized_config', _startup_hook)
 
-    def __call__(self, config, controller, remainder, params):
-        return self.wrapper(controller, remainder, params)
+        def _before_config_hook(app):
+            return tg.hooks.notify_with_value('before_config', app)
+        tg.hooks.register('before_wsgi_middlewares', _before_config_hook)
+
+        def _after_config_hook(app):
+            return tg.hooks.notify_with_value('after_config', app)
+        tg.hooks.register('after_wsgi_middlewares', _after_config_hook)
+
+    def after_init_config(self, conf):
+        """
+        Override this method to set up configuration variables at the application
+        level.  This method will be called after your configuration object has
+        been initialized on startup.  Here is how you would use it to override
+        the default setting of tg.strict_tmpl_context ::
+
+            from tg import Configurator
+
+            class MyAppConfigurator(Configurator):
+                def after_init_config(self, conf):
+                    conf['tg.strict_tmpl_context'] = False
+
+            base_config = MyAppConfig()
+
+        """
+        pass
+
+    def __setitem__(self, key, value):
+        self._configurator.update_blueprint({key: value})
+
+    def __getitem__(self, item):
+        self._configurator.get_blueprint_value(item)
+
+    def register_application_wrapper(self, wrapper, after=None):
+        self._configurator.register_application_wrapper(wrapper, after)
+
+    def register_engine(self, factory):
+        self._configurator.get('rendering').register_engine(factory)
+
+    def make_load_environment(self):
+        """Return a load_environment function.
+
+        The returned load_environment function can be called to configure
+        the TurboGears runtime environment for this particular application.
+        You can do this dynamically with multiple nested TG applications
+        if necessary.
+
+        """
+        return self._configurator.load_environment
+
+    def setup_tg_wsgi_app(self, load_environment=None):
+        """Create a base TG app, with all the standard middleware.
+
+        ``load_environment``
+            A required callable, which sets up the basic evironment
+            needed for the application.
+        ``setup_vars``
+            A dictionary with all special values necessary for setting up
+            the base wsgi app.
+
+        """
+
+        def make_base_app(global_conf=None, wrap_app=None, **app_conf):
+            # Configure the Application environment
+            init_config = load_environment
+            if init_config is None:
+                init_config = self.make_load_environment()
+
+            return self._configurator.make_app(init_config(global_conf or {}, app_conf),
+                                               wrap_app)
+
+        return make_base_app
+
+    def make_wsgi_app(self, **kwargs):
+        return self._configurator.make_wsgi_app(**kwargs)
 
 
-class AppConfig(Bunch):
+class OldAppConfig(Bunch):
     """Class to store application configuration.
 
     This class should have configuration/setup information
@@ -169,13 +235,6 @@ class AppConfig(Bunch):
           This is usually the default unless TG is started in Minimal Mode. **Can be set from .ini file**
         - ``registry_streaming`` -> Enable streaming of responses, this is enabled by default.
           **Can be set from .ini file**
-        - ``paths`` -> Dictionary of directories where templates, static files and controllers are found::
-
-            {
-                'controllers': 'my/path/to/controlllers',
-                'static_files': 'my/path/to/files',
-                'templates': ['list/of/paths/to/templates']
-            )
         - ``use_toscawidgets`` -> Enable ToscaWidgets1, this is deprecated.
         - ``use_toscawidgets2`` -> Enable ToscaWidgets2
         - ``prefer_toscawidgets2`` -> When both TW2 and TW1 are enabled prefer TW2. **Can be set from .ini file**
@@ -212,16 +271,12 @@ class AppConfig(Bunch):
     CONFIG_OPTIONS = {
         'debug': asbool,
         'serve_static': asbool,
-        'auto_reload_templates': asbool,
-        'use_dotted_templatenames': asbool,
-        'registry_streaming': asbool,
         'use_toscawidgets2': asbool,
         'prefer_toscawidgets2': asbool
     }
 
     def __init__(self, minimal=False, root_controller=None):
         """Creates some configuration defaults"""
-
         # Create a few bunches we know we'll use
         self.paths = Bunch()
 
@@ -233,16 +288,10 @@ class AppConfig(Bunch):
         self.sa_auth = Bunch()
 
         # Set individual defaults
-        self.auto_reload_templates = True
         self.auth_backend = None
         self.serve_static = not minimal
 
-        self.renderers = []
-        self.default_renderer = 'genshi'
-        self.render_functions = Bunch()
-        self.rendering_engines = {}
-        self.rendering_engines_without_vars = set()
-        self.rendering_engines_options = {}
+
 
         self.enable_routing_args = False
         self.disable_request_extensions = minimal
@@ -255,17 +304,10 @@ class AppConfig(Bunch):
         self.use_toscawidgets = not minimal
         self.use_toscawidgets2 = False
         self.prefer_toscawidgets2 = False
-        self.use_dotted_templatenames = not minimal
-        self.registry_streaming = True
 
         self['session.enabled'] = not minimal
         self['cache.enabled'] = not minimal
         self['i18n.enabled'] = not minimal
-
-        # Support Custom Error pages
-        self.status_code_redirect = False  # Use old StatusCodeRedirect middleware
-        self['errorpage.enabled'] = not minimal
-        self['errorpage.status_codes'] = [403, 404]
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -281,11 +323,6 @@ class AppConfig(Bunch):
         if root_controller is not None:
             self['tg.root_controller'] = root_controller
 
-        self.register_rendering_engine(JSONRenderer)
-        self.register_rendering_engine(GenshiRenderer)
-        self.register_rendering_engine(MakoRenderer)
-        self.register_rendering_engine(JinjaRenderer)
-        self.register_rendering_engine(KajikiRenderer)
 
         self.register_wrapper(I18NApplicationWrapper, after=True)
         self.register_wrapper(IdentityApplicationWrapper, after=True)
@@ -293,124 +330,6 @@ class AppConfig(Bunch):
         self.register_wrapper(CacheApplicationWrapper, after=True)
         self.register_wrapper(MingApplicationWrapper, after=True)
         self.register_wrapper(TransactionApplicationWrapper, after=True)
-        self.register_wrapper(ErrorPageApplicationWrapper, after=True)
-
-    def _get_root_module(self):
-        root_module_path = self.paths['root']
-        if not root_module_path:
-            return None
-
-        base_controller_path = self.paths['controllers']
-        controller_path = base_controller_path[len(root_module_path)+1:]
-        root_controller_module = '.'.join([self.package_name] + controller_path.split(os.sep) + ['root'])
-        return root_controller_module
-
-    def register_hook(self, hook_name, func):
-        warnings.warn("AppConfig.register_hook is deprecated, "
-                      "please use tg.hooks.register and "
-                      "AppConfig.register_controller_wrapper instead", DeprecationWarning)
-
-        if hook_name == 'controller_wrapper':
-            tg.hooks.wrap_controller(func)
-        else:
-            tg.hooks.register(hook_name, func)
-
-    def register_controller_wrapper(self, wrapper, controller=None):
-        """Registers a TurboGears controller wrapper.
-
-        Controller Wrappers are much like a **decorator** applied to
-        every controller.
-        They receive :class:`tg.configuration.AppConfig` instance
-        as an argument and the next handler in chain and are expected
-        to return a new handler that performs whatever it requires
-        and then calls the next handler.
-
-        A simple example for a controller wrapper is a simple logging wrapper::
-
-            def controller_wrapper(app_config, caller):
-                def call(*args, **kw):
-                    try:
-                        print 'Before handler!'
-                        return caller(*args, **kw)
-                    finally:
-                        print 'After Handler!'
-                return call
-
-            base_config.register_controller_wrapper(controller_wrapper)
-
-        It is also possible to register wrappers for a specific controller::
-
-            base_config.register_controller_wrapper(controller_wrapper, controller=RootController.index)
-        """
-        if milestones.environment_loaded.reached:
-            log.warning('Controller Wrapper %s registered after environment loaded'
-                        'milestone has been reached, the wrapper will be used only'
-                        'for future TGApp instances.', wrapper)
-
-        log.debug("Registering %s controller wrapper for controller: %s",
-                  wrapper, controller or 'ALL')
-
-        if controller is None:
-            self.controller_wrappers.append(wrapper)
-        else:
-            from tg.decorators import Decoration
-            deco = Decoration.get_decoration(controller)
-            deco._register_controller_wrapper(wrapper)
-
-    def register_wrapper(self, wrapper, after=None):
-        """Registers a TurboGears application wrapper.
-
-        Application wrappers are like WSGI middlewares but
-        are executed in the context of TurboGears and work
-        with abstractions like Request and Respone objects.
-
-        See :class:`tg.appwrappers.base.ApplicationWrapper` for
-        complete definition of application wrappers.
-
-        The ``after`` parameter defines their position into the
-        wrappers chain. The default value ``None`` means they are
-        executed in a middle point, so they run after the TurboGears
-        wrappers like :class:`.ErrorPageApplicationWrapper` which
-        can intercept their response and return an error page.
-
-        Builtin TurboGears wrappers are usually registered with
-        ``after=True`` which means they run furthest away from the
-        application itself and can intercept the response of any
-        other wrapper.
-
-        Providing ``after=False`` means the wrapper will be registered
-        near to the application itself (so wrappers registered at default
-        position and with after=True will be able to see its response).
-
-        ``after`` parameter can also accept an *application wrapper class*.
-        In such case the registered wrapper will be registered right after
-        the specified wrapper and so will be a little further from the
-        application then the specified one (can see the response of the
-        specified one).
-
-        """
-        if milestones.environment_loaded.reached:
-            # Wrappers are consumed by TGApp constructor, and all the hooks available
-            # after the milestone and that could register new wrappers are actually
-            # called after TGApp constructors and so the wrappers wouldn't be applied.
-            log.warning('Application Wrapper %s registered after environment loaded'
-                        'milestone has been reached, the wrapper will be used only'
-                        'for future TGApp instances.', wrapper)
-
-        self.application_wrappers.add(wrapper, after=after)
-
-    def register_rendering_engine(self, factory):
-        """Registers a rendering engine ``factory``.
-
-        Rendering engine factories are :class:`tg.renderers.base.RendererFactory`
-        subclasses in charge of creating a rendering engine.
-
-        """
-        for engine, options in factory.engines.items():
-            self.rendering_engines[engine] = factory
-            self.rendering_engines_options[engine] = options
-            if factory.with_tg_vars is False:
-                self.rendering_engines_without_vars.add(engine)
 
     def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
@@ -420,21 +339,7 @@ class AppConfig(Bunch):
 
         """
         # Load the mimetypes with its default types
-        self.mimetypes = mimetypes.MimeTypes()
 
-        try:
-            self.package_name = self.package.__name__
-        except AttributeError:
-            self.package_name = None
-
-        log.debug("Initializing configuration, package: '%s'", self.package_name)
-
-        self._configure_package_paths()
-        self._configure_renderers()
-        self._configure_error_pages()
-        self._configure_ming()
-        self._configure_transaction_manager()
-        self._configure_mimetypes()
 
         if self.prefer_toscawidgets2:
             self.use_toscawidgets = False
@@ -457,59 +362,10 @@ class AppConfig(Bunch):
         # if this application is running in production mode
         errorware = {}
         errorware['debug'] = conf['debug']
-        if not errorware['debug']:
-            errorware['debug'] = False
 
-            trace_errors_config = coerce_config(conf, 'trace_errors.', {'smtp_use_tls': asbool,
-                                                                        'dump_request_size': asint,
-                                                                        'dump_request': asbool,
-                                                                        'dump_local_frames': asbool,
-                                                                        'dump_local_frames_count': asint})
-            if not trace_errors_config:
-                # backward compatibility
-                warnings.warn("direct usage of error tracing options has been deprecated, "
-                              "please specify them as trace_errors.option_name instad of directly "
-                              "setting option_name. EXAMPLE: trace_errors.error_email", DeprecationWarning)
-
-                trace_errors_config['error_email'] = conf.get('email_to')
-                trace_errors_config['error_log'] = conf.get('error_log', None)
-                trace_errors_config['smtp_server'] = conf.get('smtp_server', 'localhost')
-                trace_errors_config['smtp_use_tls'] = asbool(conf.get('smtp_use_tls', False))
-                trace_errors_config['smtp_username'] = conf.get('smtp_username')
-                trace_errors_config['smtp_password'] = conf.get('smtp_password')
-                trace_errors_config['error_subject_prefix'] = conf.get('error_subject_prefix', 'WebApp Error: ')
-                trace_errors_config['from_address'] = conf.get('from_address', conf.get('error_email_from', 'turbogears@yourapp.com'))
-                trace_errors_config['error_message'] = conf.get('error_message', 'An internal server error occurred')
-            else:
-                # Provide Defaults
-                trace_errors_config.setdefault('error_subject_prefix',
-                                               'WebApp Error: ')
-                trace_errors_config.setdefault('error_message',
-                                               'An internal server error occurred')
-
-            errorware.update(trace_errors_config)
 
         conf['tg.errorware'] = errorware
 
-        slowreqsware = coerce_config(conf, 'trace_slowreqs.', {'smtp_use_tls': asbool,
-                                                               'dump_request_size': asint,
-                                                               'dump_request': asbool,
-                                                               'dump_local_frames': asbool,
-                                                               'dump_local_frames_count': asint,
-                                                               'enable': asbool,
-                                                               'interval': asint,
-                                                               'exclude': aslist})
-        slowreqsware.setdefault('error_subject_prefix', 'Slow Request: ')
-        slowreqsware.setdefault('error_message', 'A request is taking too much time')
-        for erroropt in errorware:
-            slowreqsware.setdefault(erroropt, errorware[erroropt])
-        conf['tg.slowreqs'] = slowreqsware
-
-        # Copy in some defaults
-        if 'cache_dir' in conf:
-            conf.setdefault('session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
-            conf.setdefault('cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
-        conf['tg.cache_dir'] = conf.pop('cache_dir', conf['app_conf'].get('cache_dir'))
 
         if not conf['paths']['static_files']:
             conf['serve_static'] = False
@@ -532,133 +388,6 @@ class AppConfig(Bunch):
 
         milestones.config_ready.reach()
         return conf
-
-    def _configure_renderers(self):
-        """Provides default configurations for renderers"""
-        if not 'json' in self.renderers:
-            self.renderers.append('json')
-
-        if self.default_renderer not in self.renderers:
-            first_renderer = self.renderers[0]
-            log.warn('Default renderer not in renders, automatically switching to %s' % first_renderer)
-            self.default_renderer = first_renderer
-
-    def _configure_mimetypes(self):
-        lookup = {'.json': 'application/json',
-                  '.js': 'application/javascript'}
-        lookup.update(config.get('mimetype_lookup', {}))
-
-        for key, value in lookup.items():
-            self.mimetypes.add_type(value, key)
-
-    def _configure_ming(self):
-        try:
-            autoflush_enabled = self['ming.autoflush']
-        except KeyError:
-            autoflush_enabled = True
-
-        self['ming.autoflush'] = self.use_ming and autoflush_enabled
-
-    def _configure_error_pages(self):
-        if (self.auth_backend is None and 401 not in self['errorpage.status_codes']):
-            # If there's no auth backend configured which traps 401
-            # responses we redirect those responses to a nicely
-            # formatted error page
-            self['errorpage.status_codes'] = list(self['errorpage.status_codes']) + [401]
-
-        if self.status_code_redirect is True:
-            # The codes TG should display an error page for. All other HTTP errors are
-            # sent to the client or left for some middleware above us to handle
-            self.handle_error_page = self['errorpage.enabled']
-            self.handle_status_codes = self['errorpage.status_codes']
-            self['errorpage.enabled'] = False
-
-    def _configure_transaction_manager(self):
-        if getattr(self, 'use_transaction_manager', False):
-            warnings.warn("Transaction Manager middleware has been deprecated, "
-                          "please use the tm.enabled=True option to switch "
-                          "to the transaction application wrapper",
-                          DeprecationWarning, stacklevel=2)
-            self['tm.enabled'] = False
-
-            if not self.use_sqlalchemy:
-                log.debug('Disabling Transaction Manager as SQLAlchemy is not available')
-                self.use_transaction_manager = False
-
-    def _configure_package_paths(self):
-        try:
-            self.package
-        except AttributeError:
-            # if we don't have a specified package, don't try
-            # helpers from the package expect the user to specify them.
-            paths = Bunch()
-        else:
-            root = os.path.dirname(os.path.abspath(self.package.__file__))
-            paths = Bunch(
-                root=root,
-                controllers=os.path.join(root, 'controllers'),
-                static_files=os.path.join(root, 'public'),
-                templates=[os.path.join(root, 'templates')]
-            )
-
-        # If the user defined custom paths, then use them instead of the
-        # default ones:
-        paths.update(self.paths)
-
-        # Ensure all paths are set, load default ones otherwise
-        for key, val in defaults['paths'].items():
-            paths.setdefault(key, val)
-
-        self.paths = paths
-
-    def after_init_config(self, conf):
-        """
-        Override this method to set up configuration variables at the application
-        level.  This method will be called after your configuration object has
-        been initialized on startup.  Here is how you would use it to override
-        the default setting of tg.strict_tmpl_context ::
-
-            from tg.configuration import AppConfig
-
-            class MyAppConfig(AppConfig):
-                def after_init_config(self, conf):
-                    conf['tg.strict_tmpl_context'] = False
-
-            base_config = MyAppConfig()
-
-        """
-
-    def _setup_helpers_and_globals(self, conf):
-        """Add helpers and globals objects to the ``conf``.
-
-        Override this method to customize the way that ``app_globals`` and ``helpers``
-        are setup. TurboGears expects them to be available in ``conf`` dictionary
-        as ``tg.app_globals`` and ``helpers``.
-        """
-        gclass = conf.pop('app_globals', None)
-        if gclass is None:
-            try:
-                g = conf['package'].lib.app_globals.Globals()
-            except AttributeError:
-                log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
-                g = Bunch()
-        else:
-            g = gclass()
-
-        g.dotted_filename_finder = DottedFileNameFinder()
-        conf['tg.app_globals'] = g
-
-        if conf.get('tg.pylons_compatible', True):
-            conf['pylons.app_globals'] = g
-
-        h = conf.get('helpers', None)
-        if h is None:
-            try:
-                h = conf['package'].lib.helpers
-            except AttributeError:
-                log.warn('helpers not provided and lib.helpers is not available.')
-                h = Bunch()
-        conf['helpers'] = h
 
     def _setup_persistence(self, conf):
         """Configures application persistence model"""
@@ -828,50 +557,6 @@ class AppConfig(Bunch):
                 conf.get('session.secret', conf.get('beaker.session.secret'))
             )
 
-    def _setup_controller_wrappers(self, conf):
-        # This trashes away the current config['controller_caller']
-        # so that the call is idempotent.
-        base_controller_caller = call_controller
-
-        controller_caller = base_controller_caller
-        for wrapper in conf.get('controller_wrappers', []):
-            try:
-                controller_caller = wrapper(controller_caller)
-            except TypeError:
-                controller_caller = _DeprecatedControllerWrapper(wrapper, conf, controller_caller)
-
-        conf['controller_caller'] = controller_caller
-
-    def _setup_renderers(self, conf):
-        renderers = conf['renderers']
-        rendering_engines = conf['rendering_engines']
-
-        for renderer in renderers[:]:
-            setup = getattr(self, 'setup_%s_renderer'%renderer, None)
-            if setup is not None:
-                # Backward compatible old-way of configuring rendering engines
-                warnings.warn("Using setup_NAME_renderer to configure rendering engines"
-                              "is now deprecated, please use register_rendering_engine "
-                              "with a tg.renderers.base.RendererFactory subclass instead",
-                              DeprecationWarning, stacklevel=2)
-
-                success = setup()
-                if success is False:
-                    log.error('Failed to initialize %s template engine, removing it...' % renderer)
-                    renderers.remove(renderer)
-            elif renderer in rendering_engines:
-                rendering_engine = rendering_engines[renderer]
-                engines = rendering_engine.create(conf, conf['tg.app_globals'])
-                if engines is None:
-                    log.error('Failed to initialize %s template engine, removing it...' % renderer)
-                    renderers.remove(renderer)
-                else:
-                    conf['render_functions'].update(engines)
-            else:
-                raise TGConfigError('This configuration object does '
-                                    'not support the %s renderer' % renderer)
-
-        milestones.renderers_ready.reach()
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -892,7 +577,6 @@ class AppConfig(Bunch):
             tg.hooks.notify('initialized_config', args=(self, app_config))
             tg.hooks.notify('startup', trap_exceptions=True)
 
-            self._setup_helpers_and_globals(app_config)
             self._setup_auth(app_config)
             self._setup_renderers(app_config)
             self._setup_persistence(app_config)
@@ -1259,9 +943,6 @@ class AppConfig(Bunch):
                 app = self._add_slowreqs_middleware(app_config, app)
                 app = self._add_error_middleware(app_config, app)
 
-            # Establish the registry for this application
-            app = RegistryManager(app, streaming=asbool(app_config.get('registry_streaming', True)),
-                                  preserve_exceptions=asbool(app_config.get('debug')))
 
             # Place the debuggers after the registry so that we
             # can preserve context in case of exceptions

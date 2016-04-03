@@ -9,7 +9,7 @@ import atexit
 import warnings
 from .utils import TGConfigError
 from .milestones import config_ready, renderers_ready, environment_loaded
-from ..decorators import Decoration
+from ..controllers.decoration import Decoration
 from .._compat import default_im_func
 from .app_config import config as tg_config
 
