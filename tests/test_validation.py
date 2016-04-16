@@ -646,18 +646,18 @@ class TestTGController(TestWSGIController):
 
     def test_convert_validation_fail(self):
         resp = self.app.post('/post_pow2', {'num': 'HELLO'}, status=412)
-        assert 'This must be a number' in resp.text, resp
+        assert 'This must be a number' in resp.json['errors']['num']
 
     def test_convert_validation_missing(self):
         resp = self.app.post('/post_pow2', {'num': ''}, status=412)
-        assert 'This must be a number' in resp.text, resp
+        assert 'This must be a number' in resp.json['errors']['num']
 
         resp = self.app.post('/post_pow2', status=412)
-        assert 'This must be a number' in resp.text, resp
+        assert 'This must be a number' in resp.json['errors']['num']
 
     def test_convert_validation_optional(self):
         resp = self.app.post('/post_pow2_opt', {'num': 'HELLO'}, status=412)
-        assert 'This must be a number' in resp.text, resp
+        assert 'This must be a number' in resp.json['errors']['num']
 
         resp = self.app.post('/post_pow2_opt', {'num': '5'})
         assert resp.text == '25', resp
