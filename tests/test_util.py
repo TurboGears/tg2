@@ -128,6 +128,17 @@ class TestDottedNameFinder(object):
     def test_local_file_returns_absolute_path(self):
         assert os.path.isabs(DottedFileNameFinder.lookup('this_should_be_my_template'))
 
+    def test_load_from_zipped_egg(self):
+        import sys
+        eggfile = os.path.join(os.path.dirname(__file__), 'fixtures', 'fakepackage.zip')
+        sys.path.append(eggfile)
+
+        tmplf = DottedFileNameFinder().get_dotted_filename('fakepackage.test_template',
+                                                           template_extension='.xhtml')
+        with open(tmplf) as t:
+            template = t.read()
+            assert template == '<p>Your application is now running</p>', template
+
 
 class TestLazyString(object):
     def test_lazy_string_to_str(self):

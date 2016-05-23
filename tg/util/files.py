@@ -1,5 +1,8 @@
+import contextlib
 import os, sys
 import re
+import uuid
+
 from pkg_resources import resource_filename, resource_stream, get_default_cache
 from .._compat import unicode_text, PY2
 
@@ -58,19 +61,22 @@ class DottedFileNameFinder(object):
                 try:
                     result = resource_filename(package, basename)
                 except ImportError as e:
-                    raise DottedFileLocatorError(str(e) +". Perhaps you have forgotten an __init__.py in that folder.")
-                except NotImplementedError as e:
+                    raise DottedFileLocatorError(
+                        "%s. Perhaps you have forgotten an __init__.py in that folder." % e
+                    )
+                except NotImplementedError:
+                    # Cope with zipped files or py2exe apps
                     if not hasattr(self, '__temp_dir'):
-                        executable = sys.executable if getattr(sys, 'frozen', False) else sys.argv[0]
-                        #only on windows substitute \\ to - to avoid long pathnames and preserve the structure
-                        executable = os.path.abspath(executable).replace(':', '').replace('\\', '-')
-                        self.__temp_dir = os.path.join(get_default_cache(), executable)
+                        self.__temp_dir = os.path.join(get_default_cache(),
+                                                       'tgdf-%s' % uuid.uuid1())
+
                     result = os.path.join(self.__temp_dir, package, basename)
                     if not os.path.isdir(os.path.dirname(result)):
                         os.makedirs(os.path.dirname(result))
-                    rd = resource_stream(package, basename)
-                    open(result, 'wb').write(rd.read())
-                    rd.close()
+
+                    with contextlib.closing(resource_stream(package, basename)) as rd:
+                        with open(result, 'wb') as result_f:
+                            result_f.write(rd.read())
             else:
                 result = template_name
 
