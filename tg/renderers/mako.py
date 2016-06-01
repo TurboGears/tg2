@@ -34,12 +34,14 @@ class MakoRenderer(RendererFactory):
     """
     Configuration Options available as ``templating.mako.*``:
 
+        - ``templating.mako.template_extension`` -> Mako Templates extension, default ``.mak``
         - ``templating.mako.compiled_templates_dir`` -> Where to store mako precompiled templates.
           By default templates are only stored in memory and not on disk.
     """
     #: Configuration Options that can be set as ``templating.mako.*``.
     CONFIG_OPTIONS = {
-        'compiled_templates_dir': str
+        'compiled_templates_dir': str,
+        'template_extension': str
     }
     engines = {'mako': {'content_type': 'text/html'}}
 
@@ -52,6 +54,7 @@ class MakoRenderer(RendererFactory):
             return None
 
         use_dotted_templatenames = config.get('use_dotted_templatenames', True)
+        template_extension = config.get('template_extension', '.mak')
 
         options = coerce_config(config, 'templating.mako.', cls.CONFIG_OPTIONS)
 
@@ -80,20 +83,23 @@ class MakoRenderer(RendererFactory):
                          "o.compiled_templates_dir` configuration option to a "
                          "writable directory." % bad_path)
 
-        dotted_finder = app_globals.dotted_filename_finder
         if use_dotted_templatenames:
             # Support dotted names by injecting a slightly different template
             # lookup system that will return templates from dotted template notation.
+            find_template_file = lambda t: app_globals.dotted_filename_finder.get_dotted_filename(
+                t, template_extension=template_extension
+            )
             mako_lookup = DottedTemplateLookup(
                 input_encoding='utf-8', output_encoding='utf-8',
                 imports=['from markupsafe import escape_silent as escape'],
                 package_name=config['package_name'],
-                dotted_finder=dotted_finder,
+                find_template_file=find_template_file,
                 module_directory=compiled_dir,
                 default_filters=['escape'],
                 auto_reload_templates=config['auto_reload_templates'])
 
         else:
+            find_template_file = lambda t: t
             mako_lookup = TemplateLookup(
                 directories=config['paths']['templates'],
                 module_directory=compiled_dir,
@@ -102,10 +108,10 @@ class MakoRenderer(RendererFactory):
                 default_filters=['escape'],
                 filesystem_checks=config['auto_reload_templates'])
 
-        return {'mako': cls(dotted_finder, mako_lookup, use_dotted_templatenames)}
+        return {'mako': cls(find_template_file, mako_lookup, use_dotted_templatenames)}
 
-    def __init__(self, dotted_finder, mako_lookup, use_dotted_templatenames):
-        self.dotted_finder = dotted_finder
+    def __init__(self, find_template_file, mako_lookup, use_dotted_templatenames):
+        self.find_template_file = find_template_file
         self.loader = mako_lookup
         self.use_dotted_templatenames = use_dotted_templatenames
 
@@ -113,8 +119,7 @@ class MakoRenderer(RendererFactory):
                  cache_key=None, cache_type=None, cache_expire=None):
 
         if self.use_dotted_templatenames:
-            template_name = self.dotted_finder.get_dotted_filename(template_name,
-                                                                   template_extension='.mak')
+            template_name = self.find_template_file(template_name)
 
         # Create a render callable for the cache function
         def render_template():
@@ -148,11 +153,11 @@ class DottedTemplateLookup(object):
 
     def __init__(self, input_encoding, output_encoding,
                  imports, default_filters, package_name,
-                 dotted_finder, module_directory=None,
+                 find_template_file, module_directory=None,
                  auto_reload_templates=False):
 
         self.package_name = package_name
-        self.dotted_finder = dotted_finder
+        self.find_template_file = find_template_file
 
         self.input_encoding = input_encoding
         self.output_encoding = output_encoding
@@ -184,8 +189,7 @@ class DottedTemplateLookup(object):
             # names should be treated as a Python path. Since this
             # method is called by template inheritance we must
             # support dotted names also in the inheritance.
-            result = self.dotted_finder.get_dotted_filename(template_name=uri,
-                                                            template_extension='.mak')
+            result = self.find_template_file(uri)
 
             if not uri in self.template_filenames_cache:
                 # feed our filename cache if needed.
