@@ -36,19 +36,26 @@ class DottedFileNameFinder(object):
         The actual implementation is a revamp of the Genshi buffet support
         plugin, but could be used with any kind a file inside a python package.
 
-        @param template_name: the string representation of the template name
-        as it has been given by the user on his @expose decorator.
-        Basically this will be a string in the form of:
-        "genshi:myapp.templates.somename"
-        @type template_name: string
+        :param template_name: the string representation of the template name
+                              as it has been given by the user on his @expose decorator.
+                              Basically this will be a string in the form of:
+                              `"myapp.templates.somename"`
+        :type template_name: str
 
-        @param template_extension: the extension we excpect the template to have,
-        this MUST be the full extension as returned by the os.path.splitext
-        function. This means it should contain the dot. ie: '.html'
+        :param template_extension: the extension we excpect the template to have,
+                                   this MUST be the full extension as returned by
+                                   the os.path.splitext function.
+                                   This means it should contain the dot. ie: '.html'
+                                   This argument is optional and the default
+                                   value if nothing is provided will be '.html'
+        :type template_extension: str
 
-        This argument is optional and the default value if nothing is provided will
-        be '.html'
-        @type template_extension: string
+        The ``template_name`` parameter also accepts a form with explicit extension
+        ``myapp.templates.somename!xhtml`` that will override the ``template_exstesion``
+        argument and will always use ``.xhtml`` as the extension. This is usually
+        convenient in extensions and libraries that expose a template and want to
+        ensure they work even in the case the application using them has a different
+        extension for templates on the same engine.
         """
         cache_key = template_name
         try:

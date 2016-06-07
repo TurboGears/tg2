@@ -439,7 +439,7 @@ class expose(object):
 
     The last expose decorator example uses the custom_format parameter
     which takes an arbitrary value (in this case 'special_xml').
-    You can then use the`use_custom_format` function within the method
+    You can then use the :meth:`use_custom_format` function within the method
     to decide which of the 'custom_format' registered expose decorators
     to use to render the template.
 
