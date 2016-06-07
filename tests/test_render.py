@@ -60,7 +60,7 @@ class TestMakoLookup(object):
 
     def test_adjust_uri(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         assert mlookup.adjust_uri('this_template_should_pass_unaltered', None) == 'this_template_should_pass_unaltered'
 
@@ -81,7 +81,7 @@ class TestMakoLookup(object):
         t = Template('Hi')
 
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.template_cache['hi_template'] = t
         assert mlookup.get_template('hi_template') is t
 
@@ -91,20 +91,20 @@ class TestMakoLookup(object):
         t = Template('Hi', filename='deleted_template.mak')
 
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.template_cache['deleted_template'] = t
         mlookup.get_template('deleted_template')
 
     @raises(IOError)
     def test_never_existed(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         mlookup.get_template('deleted_template')
 
     def test__check_should_reload_on_cache_expire(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
         t = mlookup.get_template(template_path) #cache the template
@@ -128,7 +128,7 @@ class TestMakoLookup(object):
 
     def test__check_should_not_reload_when_disabled(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.auto_reload = False
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
