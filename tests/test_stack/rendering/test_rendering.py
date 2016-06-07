@@ -633,6 +633,19 @@ def test_variable_provider():
     resp = app.get('/get_tg_vars')
     assert 'inject_this_var' in resp
 
+def test_index_dotted_with_forced_extension():
+    app = setup_noDB()
+    resp = app.get('/index_dotted_with_forced_extension')
+    assert 'Welcome to TurboGears' in resp
+    assert 'NOW: IT WORKS' in resp
+
+    # The purely kajiki version of this template doesn't have NOW,
+    # check it's actually like that otherwise we would pass the previous
+    # check even when it didn't resolve to the genshi template.
+    kresp = app.get('/kajiki_index_dotted')
+    assert 'Welcome to TurboGears' in kresp
+    assert 'NOW: IT WORKS' not in kresp
+
 def test_render_hooks():
     old_hooks, tg.hooks = tg.hooks, _TGGlobalHooksNamespace()
 

@@ -50,16 +50,25 @@ class DottedFileNameFinder(object):
         be '.html'
         @type template_extension: string
         """
+        cache_key = template_name
         try:
-            return self.__cache[template_name]
+            return self.__cache[cache_key]
         except KeyError:
             # the template name was not found in our cache
+            try:
+                # Allow for the package.file!ext syntax
+                template_name, template_extension = template_name.rsplit('!', 1)
+                template_extension = '.' + template_extension
+            except ValueError:
+                pass
+
             divider = template_name.rfind('.')
             if divider >= 0:
                 package = template_name[:divider]
-                basename = template_name[divider + 1:] + template_extension
+                basename = template_name[divider + 1:]
+                resourcename = basename + template_extension
                 try:
-                    result = resource_filename(package, basename)
+                    result = resource_filename(package, resourcename)
                 except ImportError as e:
                     raise DottedFileLocatorError(
                         "%s. Perhaps you have forgotten an __init__.py in that folder." % e
@@ -70,18 +79,18 @@ class DottedFileNameFinder(object):
                         self.__temp_dir = os.path.join(get_default_cache(),
                                                        'tgdf-%s' % uuid.uuid1())
 
-                    result = os.path.join(self.__temp_dir, package, basename)
+                    result = os.path.join(self.__temp_dir, package, resourcename)
                     if not os.path.isdir(os.path.dirname(result)):
                         os.makedirs(os.path.dirname(result))
 
-                    with contextlib.closing(resource_stream(package, basename)) as rd:
+                    with contextlib.closing(resource_stream(package, resourcename)) as rd:
                         with open(result, 'wb') as result_f:
                             result_f.write(rd.read())
             else:
                 result = template_name
 
             result = os.path.abspath(result)
-            self.__cache[template_name] = result
+            self.__cache[cache_key] = result
 
             return result
 

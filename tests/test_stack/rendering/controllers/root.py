@@ -305,6 +305,13 @@ class RootController(TGController):
     def index_dotted(self):
         return {}
 
+    @expose('kajiki:tests.test_stack.rendering.templates.index!html')
+    def index_dotted_with_forced_extension(self):
+        # This explicitly exposes a Genshi template through Kajiki
+        # using the !ext syntax to force correct extension resolution.
+        tmpl_context.now = lambda: 'IT WORKS'
+        return {}
+
     @expose('genshi:tests.test_stack.rendering.templates.genshi_inherits')
     def genshi_inherits_dotted(self):
         return {}
