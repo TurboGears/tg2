@@ -169,7 +169,7 @@ class Convert(object):
 
         @expose()
         @validate({
-            'num': Converter(int, 'Must be a number')
+            'num': Convert(int, 'Must be a number')
         }, error_handler=insert_number)
         def post_pow2(self, num):
             return str(num*num)
