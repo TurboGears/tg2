@@ -72,7 +72,7 @@ class KajikiRenderer(RendererFactory):
         self.loader = loader
 
     def __call__(self, template_name, template_vars, cache_key=None,
-                 cache_type=None, cache_expire=None):
+                 cache_type=None, cache_expire=None, **render_params):
         """Render a template with Kajiki
 
         Accepts the cache options ``cache_key``, ``cache_type``, and
@@ -82,7 +82,7 @@ class KajikiRenderer(RendererFactory):
         # Create a render callable for the cache function
         def render_template():
             # Grab a template reference
-            template = self.loader.load(template_name)
+            template = self.loader.load(template_name, **render_params)
             return Markup(template(template_vars).render())
 
         return cached_template(template_name, render_template,
