@@ -1,5 +1,20 @@
 = Change Log =
 
+== 2.3.9 (**July 24, 2016**) ==
+
+* Kajiki is now the default template engine for easier quickstarting of projects on Python 3.4 and 3.5
+* tgext.debugbar is now installed with devtools
+* When quickstarting a project with Genshi on Python3.4 "name_constant" patch is enabled by default
+* Devtools are now tested against Python 3.4 and 3.5 too
+* Allow running python scripts through 'gearbox tgshell'
+* Support render_params in kajiki
+* Allow forcing file extension using !ext syntax in dotted templates
+* Allow mixing dotted and file notations in mako renderer too
+* Allow custom template file extension for mako templates
+* Make DotteFileNameFinder work with zips too and add test for it
+* Adapted tests for webob that doesn't specify encoding anymore for json
+* Better support pkg_resources for forezen TG apps
+
 == 2.3.8 (**March 16, 2016**) ==
 
 * Fix auth logger not being configured in Ming quickstart
