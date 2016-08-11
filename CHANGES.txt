@@ -1,6 +1,6 @@
 = Change Log =
 
-== 2.3.9 (**July 24, 2016**) ==
+== 2.3.9 (**August 11, 2016**) ==
 
 * Kajiki is now the default template engine for easier quickstarting of projects on Python 3.4 and 3.5
 * tgext.debugbar is now installed with devtools
