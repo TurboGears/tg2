@@ -105,6 +105,9 @@ def _get_tg_vars():
         _=tg.i18n.ugettext,
         N_=tg.i18n.gettext_noop)
 
+    # If there is an identity, push it to the Pylons template context
+    tmpl_context.identity = tg_vars['identity']
+
     # Allow users to provide a callable that defines extra vars to be
     # added to the template namespace
     variable_provider = conf.get('variable_provider', None)

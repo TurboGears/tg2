@@ -752,3 +752,14 @@ class TestJSONRendering(object):
     def test_json_without_isodates(self):
         resp = self.app.get('/get_json_isodates_off')
         assert ' ' in resp.json_body['date'], resp
+
+    def test_json_lists_allowing(self):
+        resp = self.app.get('/get_json_list')
+        assert '[1, 2, 3]' == resp.text
+
+    def test_json_return_list(self):
+        try:
+            resp = self.app.get("/json_return_list")
+            assert False
+        except Exception as e:
+            assert 'Your Encoded object must be dict-like' in str(e), e

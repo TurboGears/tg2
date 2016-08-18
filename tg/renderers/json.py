@@ -1,7 +1,5 @@
 import tg
-from tg.support.converters import asbool
-from tg.configuration.utils import coerce_config
-from tg.jsonify import encode, JSONEncoder, _default_encoder
+from tg.jsonify import encode, JSONEncoder
 from .base import RendererFactory
 from tg.exceptions import HTTPBadRequest
 
@@ -9,6 +7,17 @@ __all__ = ['JSONRenderer']
 
 
 class JSONRenderer(RendererFactory):
+    """
+    JSON rendering can be configured using options supported by :meth:`.JSONEncoder.configure`
+
+    Supported ``render_params``:
+
+    - All supported by :meth:`.JSONEncoder.configure`
+    - ``key`` -> Render a single key of the dictionary returned by controller
+      instead of rendering the dictionary itself.
+    - ``callback_param`` ->  Name of the callback to call in rendered JS for **jsonp**
+
+    """
     engines = {'json': {'content_type': 'application/json'},
                'jsonp': {'content_type': 'application/javascript'}}
     with_tg_vars = False
@@ -31,17 +40,25 @@ class JSONRenderer(RendererFactory):
             return lambda obj: encode(obj, JSONEncoder(**options))
 
     @staticmethod
-    def render_json(template_name, template_vars, **kwargs):
-        encode = JSONRenderer._get_configured_encode(kwargs)
+    def render_json(template_name, template_vars, **render_params):
+        key = render_params.pop('key', None)
+        if key is not None:
+            template_vars = template_vars[key]
+
+        encode = JSONRenderer._get_configured_encode(render_params)
         return encode(template_vars)
 
     @staticmethod
-    def render_jsonp(template_name, template_vars, **kwargs):
-        pname = kwargs.pop('callback_param', 'callback')
+    def render_jsonp(template_name, template_vars, **render_params):
+        key = render_params.pop('key', None)
+        if key is not None:
+            template_vars = template_vars[key]
+
+        pname = render_params.pop('callback_param', 'callback')
         callback = tg.request.GET.get(pname)
         if callback is None:
             raise HTTPBadRequest('JSONP requires a "%s" parameter with callback name' % pname)
 
-        encode = JSONRenderer._get_configured_encode(kwargs)
+        encode = JSONRenderer._get_configured_encode(render_params)
         values = encode(template_vars)
         return '%s(%s);' % (callback, values)

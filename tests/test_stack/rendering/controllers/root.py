@@ -472,6 +472,14 @@ class RootController(TGController):
     def get_json_isodates_off(self, **kwargs):
         return {'date': datetime.datetime.utcnow()}
 
+    @expose('json', render_params={'allow_lists': True, 'key': 'values'})
+    def get_json_list(self, **kwargs):
+        return dict(values=[1, 2, 3])
+
+    @expose('json', render_params={'allow_lists': False, 'key': 'values'})
+    def json_return_list(self):
+        return dict(values=[1,2,3])
+
     @expose('json')
     @decode_params('json')
     def echo_json(self, **kwargs):

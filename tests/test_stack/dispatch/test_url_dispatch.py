@@ -170,14 +170,7 @@ def test_basicurls():
 
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
-    assert "None Received"
-
-def test_json_return_list():
-    try:
-        resp = app.get("/json_return_list")
-        assert False
-    except Exception as e:
-        assert 'You may not expose with JSON a list' in str(e)
+    assert "None recieved" in resp.text, resp.text
 
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")

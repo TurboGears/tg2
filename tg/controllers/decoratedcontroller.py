@@ -191,8 +191,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         req = tgl.request
         resp = tgl.response
 
-        (content_type, engine_name, template_name, exclude_names, render_params
-            ) = controller.decoration.lookup_template_engine(tgl)
+        template_lookup = controller.decoration.lookup_template_engine(tgl)
+        content_type, engine_name, template_name, exclude_names, render_params = template_lookup
 
         result = dict(response=response, content_type=content_type,
                       engine_name=engine_name, template_name=template_name)
@@ -202,17 +202,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
-            if engine_name == 'json' and isinstance(response, list):
-                raise JsonEncodeError(
-                    'You may not expose with JSON a list return value because'
-                    ' it leaves your application open to CSRF attacks.')
             return result
-
-        # Save these objects as locals from the SOP to avoid expensive lookups
-        tmpl_context = tgl.tmpl_context
-
-        # If there is an identity, push it to the Pylons template context
-        tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.

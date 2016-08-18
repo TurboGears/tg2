@@ -30,6 +30,12 @@ class KajikiRenderer(RendererFactory):
         - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
         - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
         - ``templating.kajiki.html_optional_tags`` -> Allow unclosed html, head and body tags.
+
+    Supported ``render_params``:
+
+        - Caching options supported by :func:`.cached_template`
+        - All arguments supported by :func:`kajiki.xml_template.XMLTemplate`
+
     """
     CONFIG_OPTIONS = {
         'force_mode': str,
