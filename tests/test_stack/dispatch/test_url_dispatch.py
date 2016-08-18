@@ -178,6 +178,16 @@ def test_https_redirect():
     assert resp.location.endswith("/test_https?foo=bar&baz=bat")
     resp = app.post("/test_https?foo=bar&baz=bat", status=405)
 
+def test_return_non_string():
+    try:
+        resp = app.get("/return_something")
+        assert False
+    except:
+        # Do not try to be too smart catching all cases
+        # if returned value is not a valid wsgi app_iter
+        # let it crash
+        pass
+
 class TestVisits(object):
     def test_visit_path_sub1(self):
         resp = app.get("/sub/hitme")

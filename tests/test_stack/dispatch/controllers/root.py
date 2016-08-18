@@ -98,6 +98,10 @@ class RootController(TGController):
         return "Main Default Page called for url /%s"%remainder
 
     @expose()
+    def return_something(self):
+        return 5
+
+    @expose()
     def feed(self, feed=None):
         return feed
 
