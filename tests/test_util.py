@@ -273,6 +273,10 @@ class TestHtmlUtils(object):
         rv = "<a ng-data='%s'></a>" % script_json_encode({'x': ["foo", "bar", "baz'"]})
         assert rv == '<a ng-data=\'{"x": ["foo", "bar", "baz\\u0027"]}\'></a>'
 
+    def test_script_json_encode_array(self):
+        rv = "<a ng-data='%s'></a>" % script_json_encode(['1', 2, 5])
+        assert rv == '<a ng-data=\'["1", 2, 5]\'></a>', rv
+
 
 class TestFilesUtils(object):
     def test_safe_filename(self):
