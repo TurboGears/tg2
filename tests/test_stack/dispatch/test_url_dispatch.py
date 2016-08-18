@@ -188,6 +188,14 @@ def test_return_non_string():
         # let it crash
         pass
 
+def test_return_none():
+    resp = app.get('/return_none', status=204)
+    assert 'Content-Type' not in str(resp), resp
+
+def test_return_modified_response():
+    resp = app.get('/return_modified_response', status=201)
+    assert 'Hello World' in resp.text
+
 class TestVisits(object):
     def test_visit_path_sub1(self):
         resp = app.get("/sub/hitme")

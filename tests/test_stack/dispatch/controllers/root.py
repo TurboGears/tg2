@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 import tg
 from tg.controllers import TGController
 from tg.decorators import expose, validate, https, variable_decode, with_trailing_slash, \
@@ -100,6 +102,17 @@ class RootController(TGController):
     @expose()
     def return_something(self):
         return 5
+
+    @expose()
+    def return_none(self):
+        return None
+
+    @expose()
+    def return_modified_response(self):
+        tg.response.status_int = 201
+        tg.response.content_type = 'application/json'
+        tg.response.body = json.dumps({'text': 'Hello World'})
+        return tg.response
 
     @expose()
     def feed(self, feed=None):

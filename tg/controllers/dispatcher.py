@@ -15,7 +15,7 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-import tg, sys
+import tg
 from webob.exc import HTTPException
 from tg._compat import unicode_text
 from tg.decorators import cached_property
@@ -120,7 +120,10 @@ class CoreDispatcher(object):
         except HTTPException as httpe:
             response = httpe
 
-        if isinstance(response, bytes):
+        if response is tg.response or response is py_response:
+            # Controller returned the response itself, so we need to do nothing.
+            pass
+        elif isinstance(response, bytes):
             py_response.body = response
         elif isinstance(response, unicode_text):
             if not py_response.charset:
@@ -136,7 +139,10 @@ class CoreDispatcher(object):
                     response.headers.setdefault(name, value)
             py_response = context.response = response
         elif response is None:
-            pass
+            if py_response.status_int == 200:
+                # Ensure that for missing content we return 'No Content'
+                py_response.content_type = None
+                py_response.status_int = 204
         else:
             py_response.app_iter = response
 
