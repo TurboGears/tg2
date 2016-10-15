@@ -126,8 +126,9 @@ class CoreDispatcher(object):
 
         if response is None:
             # No content
+            py_response.body = b''
             if py_response.status_int == 200:
-                # Ensure that for missing content we return 'No Content'
+                # Ensure that for missing content we return 'No Content', instead of 200 OK
                 py_response.content_type = None
                 py_response.status_int = 204
         elif isinstance(response, bytes):
