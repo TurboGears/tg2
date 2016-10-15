@@ -1,11 +1,11 @@
 """Configuration Helpers for TurboGears 2"""
-
 import os
 import logging
 import warnings
 from copy import copy, deepcopy
 import mimetypes
 from collections import MutableMapping as DictMixin, deque
+from tg._compat import import_module
 from tg.appwrappers.identity import IdentityApplicationWrapper
 
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
@@ -635,15 +635,26 @@ class AppConfig(Bunch):
         are setup. TurboGears expects them to be available in ``conf`` dictionary
         as ``tg.app_globals`` and ``helpers``.
         """
+        # Setup AppGlobals
         gclass = conf.pop('app_globals', None)
         if gclass is None:
             try:
-                g = conf['package'].lib.app_globals.Globals()
+                gclass = conf['package'].lib.app_globals.Globals
             except AttributeError:
-                log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
-                g = Bunch()
-        else:
-            g = gclass()
+                pass
+
+        if gclass is None:
+            try:
+                app_globals_mod = import_module('.lib.app_globals', package=self.package.__name__)
+                gclass = getattr(app_globals_mod, 'Globals')
+            except (ImportError, AttributeError):
+                pass
+
+        if gclass is None:
+            log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
+            gclass = Bunch
+
+        g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
         conf['tg.app_globals'] = g
@@ -651,13 +662,24 @@ class AppConfig(Bunch):
         if conf.get('tg.pylons_compatible', True):
             conf['pylons.app_globals'] = g
 
+        # Setup Helpers
         h = conf.get('helpers', None)
         if h is None:
             try:
                 h = conf['package'].lib.helpers
             except AttributeError:
-                log.warn('helpers not provided and lib.helpers is not available.')
-                h = Bunch()
+                pass
+
+        if h is None:
+            try:
+                h = import_module('.lib.helpers', package=self.package.__name__)
+            except (ImportError, AttributeError):
+                pass
+
+        if h is None:
+            log.warn('helpers not provided and lib.helpers is not available.')
+            h = Bunch()
+
         conf['helpers'] = h
 
     def _setup_persistence(self, conf):

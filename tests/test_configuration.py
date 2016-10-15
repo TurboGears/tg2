@@ -2273,6 +2273,20 @@ class TestAppConfig:
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
 
+    def test_make_app_with_appglobals_submodule(self):
+        class RootController(TGController):
+            @expose('')
+            def test(self, *args, **kwargs):
+                return tg.app_globals.text
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        from .fixtures import package_with_helpers_submodule
+        conf['package'] = package_with_helpers_submodule
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!!' in app.get('/test')
+
     def test_make_app_with_custom_helpers(self):
         class RootController(TGController):
             @expose('')
@@ -2289,6 +2303,20 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
+
+    def test_make_app_with_helpers_submodule(self):
+        class RootController(TGController):
+            @expose('')
+            def test(self, *args, **kwargs):
+                return config['helpers'].get_text()
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+
+        from .fixtures import package_with_helpers_submodule
+        conf['package'] = package_with_helpers_submodule
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+        assert 'HI!!' in app.get('/test')
 
     def test_make_app_without_load_environment(self):
         class RootController(TGController):
