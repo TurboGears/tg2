@@ -370,7 +370,7 @@ class BasicTGController(TGController):
 
     @expose()
     def response_responded(self):
-        tg.response.text = 'Body Response'
+        tg.response.body = b'Body Response'
         tg.response.content_type = 'text/plain'
         return tg.response
 
