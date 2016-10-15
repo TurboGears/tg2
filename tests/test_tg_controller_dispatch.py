@@ -369,6 +369,12 @@ class BasicTGController(TGController):
         return "Main default page called for url /%s" % [str(r) for r in remainder]
 
     @expose()
+    def response_responded(self):
+        tg.response.body = 'Body Response'
+        tg.response.content_type = 'text/plain'
+        return tg.response
+
+    @expose()
     def feed(self, feed=None):
         return feed
 
@@ -909,6 +915,10 @@ class TestTGController(TestWSGIController):
     def test_controller_url_backward_compatibility(self):
         resp = self.app.get('/sub3/controller_url/true/a/b/c')
         assert resp.text == 'sub3/controller_url', resp.text
+
+    def test_responded_response(self):
+        resp = self.app.get('/response_responded')
+        assert resp.text == 'Body Response', resp.text
 
 
 class TestNestedWSGIAppWithoutSeekable(TestWSGIController):

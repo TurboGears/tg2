@@ -122,7 +122,14 @@ class CoreDispatcher(object):
 
         if response is tg.response or response is py_response:
             # Controller returned the response itself, so we need to do nothing.
-            pass
+            return response
+
+        if response is None:
+            # No content
+            if py_response.status_int == 200:
+                # Ensure that for missing content we return 'No Content'
+                py_response.content_type = None
+                py_response.status_int = 204
         elif isinstance(response, bytes):
             py_response.body = response
         elif isinstance(response, unicode_text):
@@ -130,19 +137,17 @@ class CoreDispatcher(object):
                 py_response.charset = 'utf-8'
             py_response.text = response
         elif isinstance(response, WebObResponse):
-            py_response.content_length = response.content_length
+            # Copy eventual headers from tg.response
             for name, value in py_response.headers.items():
                 header_name = name.lower()
+                if header_name in ('content-type', 'content-length'):
+                    # Do not overwrite content related headers in returned response
+                    continue
                 if header_name == 'set-cookie':
                     response.headers.add(name, value)
                 else:
                     response.headers.setdefault(name, value)
             py_response = context.response = response
-        elif response is None:
-            if py_response.status_int == 200:
-                # Ensure that for missing content we return 'No Content'
-                py_response.content_type = None
-                py_response.status_int = 204
         else:
             py_response.app_iter = response
 
