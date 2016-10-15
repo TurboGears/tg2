@@ -735,6 +735,10 @@ class TestJSONRendering(object):
         resp = self.app.get('/get_jsonp', params={'call': 'callme'})
         assert 'callme({"value": 5});' in resp.text, resp
 
+    def test_jsonp_with_key(self):
+        resp = self.app.get('/get_jsonp_with_key', params={'call': 'callme'})
+        assert 'callme({"value": 5});' in resp.text, resp
+
     def test_jsonp_missing_callback(self):
         resp = self.app.get('/get_jsonp', status=400)
         assert 'JSONP requires a "call" parameter with callback name' in resp.text, resp
