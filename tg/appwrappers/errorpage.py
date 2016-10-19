@@ -68,6 +68,10 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
         log.debug('ErrorPageApplicationWrapper response: %s -> %s',
                   environ['PATH_INFO'], status_code)
         if status_code in self.handle_status_codes:
+            if not environ.get('tg.status_code_redirect', True):
+                # status_code_redirect disabled per this request
+                return resp
+
             environ['tg.original_request'] = context.request.copy()
             environ['tg.original_response'] = resp
 
