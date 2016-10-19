@@ -28,6 +28,9 @@ class Request(WebObRequest):
     compatibility with paste.wsgiwrappers.WSGIRequest.
 
     """
+    def _fast_setattr(self, name, value):
+        object.__setattr__(self, name, value)
+
     def languages_best_match(self, fallback=None):
         al = self.accept_language
         try:
@@ -129,11 +132,24 @@ class Request(WebObRequest):
 
     @property
     def quoted_path_info(self):
+        """PATH used for dispatching the request."""
         bpath = webob_bytes_(self.path_info, self.url_encoding)
         return webob_url_quote(bpath, PATH_SAFE)
 
-    def _fast_setattr(self, name, value):
-        object.__setattr__(self, name, value)
+    def disable_error_pages(self):
+        """Disable custom error pages for the current request.
+
+        This will forward your response as is bypassing the :class:`.ErrorPageApplicationWrapper`
+        """
+        self.environ['tg.status_code_redirect'] = False
+
+    def disable_auth_challenger(self):
+        """Disable authentication challenger for current request.
+
+        This will forward your response as is in case of 401 bypassing any
+        repoze.who challenger.
+        """
+        self.environ['tg.skip_auth_challenge'] = True
 
 
 class Response(WebObResponse):
@@ -158,6 +174,7 @@ class Response(WebObResponse):
         sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
         cookie_value = sig + base64.encodestring(pickled)
         self.set_cookie(name, cookie_value, **kwargs)
+
 
 config = DispatchingConfig()
 context = StackedObjectProxy(name="context")

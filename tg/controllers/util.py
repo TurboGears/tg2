@@ -252,7 +252,7 @@ def abort(status_code=None, detail="", headers=None, comment=None,
     def _abortion(*args, **kwargs):
         if passthrough:
             tg.request.environ['tg.status_code_redirect'] = False
-            tg.request.environ['tg.skip_auth_challenge'] = False
+            tg.request.environ['tg.skip_auth_challenge'] = True
         raise exc
 
     if error_handler is False:
