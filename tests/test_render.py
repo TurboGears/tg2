@@ -33,6 +33,16 @@ def test_render_missing_renderer():
 
     tg.render_template({}, 'gensh')
 
+
+def test_render_default():
+    conf = AppConfig(minimal=True)
+    conf.default_renderer = 'json'
+    app = conf.make_wsgi_app()
+
+    res = tg.render_template({'value': 'value'})
+    assert 'value": "value' in res
+
+
 def test_jinja_lookup_nonexisting_template():
     conf = AppConfig(minimal=True)
     conf.use_dotted_templatenames = True
