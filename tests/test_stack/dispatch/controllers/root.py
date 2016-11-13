@@ -111,6 +111,7 @@ class RootController(TGController):
     def return_modified_response(self):
         tg.response.status_int = 201
         tg.response.content_type = 'application/json'
+        tg.response.charset = 'utf-8'
         tg.response.body = json.dumps({'text': 'Hello World'}).encode('utf-8')
         return tg.response
 

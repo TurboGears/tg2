@@ -372,6 +372,7 @@ class BasicTGController(TGController):
     def response_responded(self):
         tg.response.body = b'Body Response'
         tg.response.content_type = 'text/plain'
+        tg.response.charset = 'utf-8'
         return tg.response
 
     @expose()
@@ -514,14 +515,13 @@ class BasicTGController(TGController):
         return str(tg.request._controller_state.routing_args)
 
     @expose('json')
-    @expose('genshi')
-    @expose()
     def get_response_type(self):
         return dict(ctype=tg.request.response_type)
 
     @expose()
     def hello_ext(self, *args):
         return str(tg.request.response_ext)
+
 
 class TestNotFoundController(TestWSGIController):
 

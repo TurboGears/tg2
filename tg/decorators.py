@@ -259,21 +259,17 @@ class Decoration(object):
             if self.default_engine:
                 content_type = self.default_engine
             elif self.engines:
-                if request._response_type and request._response_type in self.engines:
+                if response.content_type is not None:
+                    # Check for overridden content type from the controller call
+                    accept_types = response.content_type
+                elif request._response_type and request._response_type in self.engines:
+                    # Check for content type detected by request extensions
                     accept_types = request._response_type
                 else:
                     accept_types = request.headers.get('accept', '*/*')
                 content_type = Accept(accept_types).best_match(self.engines_keys, self.engines_keys[0])
             else:
                 content_type = 'text/html'
-
-            # check for overridden content type from the controller call
-            try:
-                controller_content_type = response.headers['Content-Type']
-                # make sure we handle content_types like 'text/html; charset=utf-8'
-                content_type = controller_content_type.split(';')[0]
-            except KeyError:
-                pass
 
             # check for overridden templates
             try:
@@ -282,11 +278,6 @@ class Decoration(object):
             except (AttributeError, KeyError):
                 (engine, template, exclude_names, render_params
                     ) = self.engines.get(content_type, (None,) * 4)
-
-        if 'charset' not in content_type and (content_type.startswith('text')
-                or  content_type in ('application/xhtml+xml',
-                        'application/xml', 'application/json')):
-            content_type += '; charset=utf-8'
 
         return content_type, engine, template, exclude_names, render_params
 

@@ -191,14 +191,24 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         req = tgl.request
         resp = tgl.response
 
-        template_lookup = controller.decoration.lookup_template_engine(tgl)
-        content_type, engine_name, template_name, exclude_names, render_params = template_lookup
+        (engine_content_type, engine_name, template_name,
+         exclude_names, render_params) = controller.decoration.lookup_template_engine(tgl)
 
-        result = dict(response=response, content_type=content_type,
+        result = dict(response=response, content_type=engine_content_type,
                       engine_name=engine_name, template_name=template_name)
 
-        if content_type is not None:
-            resp.headers['Content-Type'] = content_type
+        if resp.content_type is None and engine_content_type is not None:
+            # User didn't set a specific content type during controller
+            # and template engine has a suggested one. Use template engine one.
+            resp.headers['Content-Type'] = engine_content_type
+
+            content_type = resp.headers['Content-Type']
+            if 'charset' not in content_type and (
+                        content_type.startswith('text') or content_type in ('application/xhtml+xml',
+                                                                            'application/xml',
+                                                                            'application/json')
+            ):
+                resp.content_type = content_type + '; charset=utf-8'
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
