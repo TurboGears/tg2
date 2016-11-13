@@ -97,7 +97,7 @@ class CoreDispatcher(object):
         py_request = context.request
 
         state = self._get_dispatchable(context, py_request.quoted_path_info)
-        controller, action = state.controller, state.method
+        controller, action = state.controller, state.action
         params, remainder = state.params, state.remainder
 
         if hasattr(controller, '_before'):

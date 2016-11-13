@@ -318,7 +318,7 @@ def validation_errors_response(*args, **kwargs):
     """
     req = request._current_obj()
     errors = dict(((str(key), str(error)) for key, error in req.validation.errors.items()))
-    values = req.validation['values']
+    values = req.validation.values
     try:
         return Response(status=412, json_body={'errors': errors,
                                                'values': values})
