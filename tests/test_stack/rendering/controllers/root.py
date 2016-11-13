@@ -9,6 +9,8 @@ from tg._compat import PY3
 from tg.render import _get_tg_vars, cached_template
 import datetime
 
+from webob.exc import HTTPForbidden
+
 if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
     from tw.api import WidgetsList
@@ -110,15 +112,27 @@ class SubClassingController(SubClassableController):
     def data(self, *args, **kw):
         return super(SubClassingController, self).data(*args, **kw)
 
+
+class ErrorController(TGController):
+    @expose('genshi:index.html')
+    def document(self, *args, **kwargs):
+        return dict()
+
+
 class RootController(TGController):
 
     j = JsonController()
     sub1 = SubClassableController()
     sub2 = SubClassingController()
+    error = ErrorController()
 
     @expose('genshi:index.html')
     def index(self):
         return {}
+
+    @expose('json')
+    def aborted_json(self):
+        raise HTTPForbidden(json_body={'error': 'value'})
 
     @expose('genshi:genshi_doctype.html')
     def auto_doctype(self):

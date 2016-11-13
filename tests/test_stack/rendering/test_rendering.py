@@ -673,6 +673,18 @@ def test_render_hooks():
     finally:
         tg.hooks = old_hooks
 
+
+class TestEngineDetection(object):
+    def setUp(self):
+        self.app = setup_noDB(genshi_doctype='html', extra={
+            'errorpage.enabled': True
+        })
+
+    def test_no_engine_for_content_type(self):
+        resp = self.app.get('/aborted_json', status=403)
+        assert '{"error":"value"}' in resp
+
+
 class TestTemplateCaching(object):
     def setUp(self):
         base_config = TestConfig(folder='rendering', values={
