@@ -684,6 +684,12 @@ class TestEngineDetection(object):
         resp = self.app.get('/aborted_json', status=403)
         assert '{"error":"value"}' in resp
 
+    def test_content_type_provided(self):
+        resp = self.app.get('/according_to_content_type?ctype=text/html')
+        assert '<p>SomeValue' in resp
+        resp = self.app.get('/according_to_content_type?ctype=application/json')
+        assert 'value": "SomeValue' in resp, resp
+
 
 class TestTemplateCaching(object):
     def setUp(self):

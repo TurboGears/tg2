@@ -134,6 +134,12 @@ class RootController(TGController):
     def aborted_json(self):
         raise HTTPForbidden(json_body={'error': 'value'})
 
+    @expose('kajiki:tests.test_stack.rendering.templates.index')
+    @expose('json')
+    def according_to_content_type(self, ctype):
+        tg.response.content_type = ctype
+        return dict(value='SomeValue')
+
     @expose('genshi:genshi_doctype.html')
     def auto_doctype(self):
         return {}
