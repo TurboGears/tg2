@@ -179,20 +179,13 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     """
     config = tg.config._current_obj()
 
-    render_function = None
-    if template_engine is not None:
-        # the engine was defined in the @expose()
-        render_function = config['render_functions'].get(template_engine)
-
-        if render_function is None:
-            # engine was forced in @expose() but is not present in the
-            # engine list, warn developer
-            raise MissingRendererError(template_engine)
-
-    if not render_function:
-        # getting the default renderer, if no engine was defined in @expose()
+    if template_engine is None:
         template_engine = config['default_renderer']
-        render_function = config['render_functions'][template_engine]
+
+    render_function = config['render_functions'].get(template_engine)
+    if render_function is None:
+        # engine is not present in the engine list, warn developer
+        raise MissingRendererError(template_engine)
 
     if not template_vars:
         template_vars = {}
