@@ -104,7 +104,7 @@ class Decoration(object):
     @property
     def requirement(self):  # pragma: no cover
         warnings.warn("Decoration.requirement is deprecated, "
-                      "please use 'requirements' instead", DeprecationWarning)
+                      "please use 'requirements' instead", DeprecationWarning, stacklevel=2)
         try:
             return self.requirements[0]
         except IndexError:
@@ -117,7 +117,7 @@ class Decoration(object):
     @property
     def validation(self):
         warnings.warn("Decoration.validation is deprecated, "
-                      "please use 'validations' instead", DeprecationWarning)
+                      "please use 'validations' instead", DeprecationWarning, stacklevel=2)
         try:
             return self.validations[0]
         except IndexError:
@@ -143,13 +143,13 @@ class Decoration(object):
 
     def run_hooks(self, tgl, hook, *l, **kw):
         warnings.warn("Decoration.run_hooks is deprecated, "
-                      "please use tg.hooks.notify instead", DeprecationWarning)
+                      "please use tg.hooks.notify instead", DeprecationWarning, stacklevel=2)
         tg.hooks.notify(hook, args=l, kwargs=kw,
                         controller=self.controller, context_config=tgl.config)
 
     def register_hook(self, hook_name, func): #pragma: no cover
         warnings.warn("Decoration.register_hook is deprecated, "
-                      "please use tg.hooks.register instead", DeprecationWarning)
+                      "please use tg.hooks.register instead", DeprecationWarning, stacklevel=2)
         tg.hooks.register(hook_name, func, controller=self.controller)
 
     def register_template_engine(self,
@@ -180,7 +180,8 @@ class Decoration(object):
                      'skipping engine availability check', template, engine)
 
         if engine and available_renderers and engine not in available_renderers:
-            log.debug('Registering template %s for engine %s not available. Skipping it', template, engine)
+            log.debug('Registering template %s for engine %s not available. Skipping it',
+                      template, engine)
             return
 
         content_type = content_type or '*/*'

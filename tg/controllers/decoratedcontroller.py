@@ -154,7 +154,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if context is None:  # pragma: no cover
             warnings.warn("Calling DecoratedController._perform_validate without a Context is now deprecated."
                           " Please provide the context argument when calling it.",
-                          DeprecationWarning)
+                          DeprecationWarning, stacklevel=2)
             context = tg.request.environ['tg.locals']
 
         validations = controller.decoration.validations
