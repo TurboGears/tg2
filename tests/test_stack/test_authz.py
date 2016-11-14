@@ -197,6 +197,15 @@ class RootController(TGController):
         return {'key': 'value'}
 
     @expose()
+    def passthrough_abort(self):
+        abort(403, passthrough='json')
+
+    @expose()
+    def passthrough_explicit(self):
+        request.disable_auth_challenger()
+        abort(403)
+
+    @expose()
     @require(in_group('managers'))
     @require(has_permission('commit'))
     def force_commit(self):
@@ -393,6 +402,13 @@ class TestRequire(BaseIntegrationTests):
         resp = self.app.get('/smart_allow/data.json', extra_environ=gooduser, status=200)
         assert resp.status == '200 OK', 'Expected 200, got %s' % (resp.body)
         assert {'key': 'value'} == resp.json, resp.json
+
+    def test_auth_passthrough(self):
+        resp = self.app.get('/passthrough_abort', status=403)
+        assert '"Access was denied to this resource."' in resp, resp
+
+        resp = self.app.get('/passthrough_explicit', status=403)
+        assert 'Access was denied to this resource' in resp, resp
 
 
 class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
