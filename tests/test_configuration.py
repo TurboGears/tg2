@@ -86,6 +86,7 @@ class FakeTransaction:
     def begin(self):
         self.aborted = False
         self.doomed = False
+        return self
 
     def abort(self):
         self.aborted = True
