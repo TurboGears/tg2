@@ -30,6 +30,7 @@ class KajikiRenderer(RendererFactory):
         - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
         - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
         - ``templating.kajiki.html_optional_tags`` -> Allow unclosed html, head and body tags.
+        - ``templating.kajiki.strip_text`` -> Strip leading/trailing spaces from text nodes.
 
     Supported ``render_params``:
 
@@ -44,6 +45,7 @@ class KajikiRenderer(RendererFactory):
         'xml_autoblocks': aslist,
         'cdata_scripts': asbool,
         'html_optional_tags': asbool,
+        'strip_text': asbool
     }
     engines = {'kajiki': {'content_type': 'text/html'}}
 
