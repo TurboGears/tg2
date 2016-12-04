@@ -16,7 +16,7 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
         - ``errorpage.status_codes``: List of HTTP errors that should be trapped.
           By default 403, 404, 500.
         - ``errorpage.content_types``: List of Content-Types for which the custom error
-          page should be displayed. IE: ``["text/html"]. An empty list means all.
+          page should be displayed. IE: ``["text/html"]``. An empty list means all.
           An entry with value ``None`` means no content type provided.
           Default is ``["text/html", None]``.
         - ``errorpage.handle_exceptions``: Whenever exceptions should be trapped and
