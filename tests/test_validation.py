@@ -23,6 +23,7 @@ from formencode import validators, Schema
 import tw2.core as tw2c
 import tw2.forms as tw2f
 
+
 class MovieForm(tw2f.TableForm):
     title = tw2f.TextField(validator=tw2c.Required)
     year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
@@ -346,7 +347,6 @@ class BasicTGController(TGController):
 
         return output
 
-
     @expose(content_type='text/plain')
     @validate({
         'num': Convert(int, l_('This must be a number'))
@@ -360,6 +360,20 @@ class BasicTGController(TGController):
     }, error_handler=validation_errors_response)
     def post_pow2_opt(self, num=-1):
         return str(num*num)
+
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, u_('àèìòù'))
+    }, error_handler=validation_errors_response)
+    def unicode_error_pow(self, num=-1):
+        return str(num*num)
+
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, l_(u_('àèìòù')))
+    }, error_handler=validation_errors_response)
+    def lazy_unicode_error_pow(self, num=-1):
+        return str(num * num)
 
 
 class TestTGController(TestWSGIController):
@@ -667,3 +681,11 @@ class TestTGController(TestWSGIController):
 
         resp = self.app.post('/post_pow2_opt')
         assert resp.text == '0', resp
+
+    def test_validation_errors_unicode(self):
+        resp = self.app.post('/unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
+        assert resp.json['errors']['num'] == u_('àèìòù'), resp.json
+
+    def test_validation_errors_lazy_unicode(self):
+        resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
+        assert resp.json['errors']['num'] == u_('àèìòù'), resp.json

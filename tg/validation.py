@@ -1,4 +1,7 @@
 import warnings
+
+from tg._compat import unicode_text
+
 from .i18n import _formencode_gettext, lazy_ugettext
 
 try:
@@ -146,10 +149,15 @@ class TGValidationError(Exception):
 
     @classmethod
     def make_compound_message(cls, error_dict):
-        return '\n'.join("%s: %s" % errorinfo for errorinfo in error_dict.items())
+        return unicode_text('\n').join(
+            unicode_text("%s: %s") % errorinfo for errorinfo in error_dict.items()
+        )
 
     def __str__(self):
         return str(self.msg)
+
+    def __unicode__(self):
+        return unicode_text(self.msg)
 
 
 class Convert(object):
