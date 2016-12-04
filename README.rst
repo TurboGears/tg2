@@ -13,6 +13,9 @@ TurboGears
 .. image:: https://img.shields.io/pypi/pyversions/TurboGears2.svg
     :target: https://pypi.python.org/pypi/TurboGears2
 
+.. image:: https://img.shields.io/pypi/l/TurboGears2.svg
+    :target: https://pypi.python.org/pypi/TurboGears2
+
 .. image:: https://img.shields.io/twitter/follow/turbogearsorg.svg?style=social&label=Follow
     :target: https://twitter.com/turbogearsorg
 
