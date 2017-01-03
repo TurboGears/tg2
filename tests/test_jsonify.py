@@ -111,6 +111,20 @@ def test_date_iso():
     loaded_date = json.loads(encoded)
     assert len(loaded_date['date'].split('-')) == 3
 
+def test_datetime_time():
+    d = datetime.utcnow().time()
+    encoded = jsonify.encode({'date':d})
+    assert str(d.hour) in encoded, (str(d), encoded)
+
+def test_datetime_time_iso():
+    isodates_encoder = jsonify.JSONEncoder(isodates=True)
+
+    d = datetime.utcnow().time()
+    encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
+
+    isoformat_without_millis = json.dumps({'date': d.isoformat()[:8]})
+    assert isoformat_without_millis == encoded, (isoformat_without_millis, encoded)
+
 def test_decimal():
     d = Decimal('3.14')
     encoded = jsonify.encode({'dec':d})
