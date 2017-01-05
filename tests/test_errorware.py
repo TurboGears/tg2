@@ -18,6 +18,15 @@ class TestErrorReporterConfig(object):
         assert app.__class__.__name__ == self.middleware_name
         assert not app.reporters
 
+    def test_enable_false(self):
+        app = ErrorReporter(simple_app, {}, enable=False)
+        assert app.__class__.__name__ != self.middleware_name
+
+    def test_enable_true(self):
+        app = ErrorReporter(simple_app, {}, enable=True)
+        assert app.__class__.__name__ == self.middleware_name
+        assert not app.reporters
+
     def test_enable_email(self):
         app = ErrorReporter(simple_app, {},
             error_email='user@somedomain.com')

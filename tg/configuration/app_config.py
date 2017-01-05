@@ -460,7 +460,8 @@ class AppConfig(Bunch):
         if not errorware['debug']:
             errorware['debug'] = False
 
-            trace_errors_config = coerce_config(conf, 'trace_errors.', {'smtp_use_tls': asbool,
+            trace_errors_config = coerce_config(conf, 'trace_errors.', {'enable': asbool,
+                                                                        'smtp_use_tls': asbool,
                                                                         'dump_request_size': asint,
                                                                         'dump_request': asbool,
                                                                         'dump_local_frames': asbool,

@@ -48,6 +48,8 @@ def ErrorReporter(app, global_conf, **errorware):
 
     The available options for **EMail** reporter are:
 
+        - ``trace_errors.enable`` -> Enable or disable error reporting,
+          by default is enabled if backlash is available and ``debug=false``
         - ``trace_errors.smtp_server`` -> SMTP Server to connect to for sending emails
         - ``trace_errors.from_address`` -> Address sending the error emails
         - ``trace_errors.error_email`` -> Address the error emails should be sent to.
@@ -70,7 +72,7 @@ def ErrorReporter(app, global_conf, **errorware):
 
     """
 
-    if not asbool(global_conf.get('debug')):
+    if errorware.get('enable', True) and not asbool(global_conf.get('debug')):
 
         reporters = []
 
@@ -104,7 +106,8 @@ def SlowReqsReporter(app, global_conf, **errorware):
     All the options available for error reporting are configured
     as ``trace_slowreqs.*`` options in your ``app_cfg`` or ``.ini`` files:
 
-        - ``trace_slowreqs.enable`` -> Enable/Disable slow requests reporting
+        - ``trace_slowreqs.enable`` -> Enable/Disable slow requests reporting,
+          by default it's disabled.
         - ``trace_slowreqs.interval`` -> Report requests slower than this value (default: 25s)
         - ``trace_slowreqs.exclude`` -> List of urls that should be excluded
 
