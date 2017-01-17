@@ -51,6 +51,7 @@ def ErrorReporter(app, global_conf, **errorware):
         - ``trace_errors.enable`` -> Enable or disable error reporting,
           by default is enabled if backlash is available and ``debug=false``
         - ``trace_errors.smtp_server`` -> SMTP Server to connect to for sending emails
+        - ``trace_errors.smtp_port`` -> SMTP port to connect to
         - ``trace_errors.from_address`` -> Address sending the error emails
         - ``trace_errors.error_email`` -> Address the error emails should be sent to.
         - ``trace_errors.smtp_username`` -> Username to authenticate on SMTP server.
