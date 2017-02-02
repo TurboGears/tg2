@@ -23,7 +23,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
         - ``tm.attempts``: Number of times the transaction should be retried if
           it fails (no retry by default)
         - ``tm.commit_veto``: A function that will be called for every transaction to check
-          if it should abort transaction or let it go. Function signature shoul be:
+          if it should abort transaction or let it go. Function signature should be:
           ``function(environ, status_code, headers) -> bool``.
 
     """
