@@ -9,6 +9,7 @@ except ImportError: #pragma: no cover
 
 log = logging.getLogger(__name__)
 
+
 class BalancedSession(Session):
     _force_engine = None
 
@@ -43,6 +44,7 @@ class BalancedSession(Session):
     def using_engine(self, engine_name):
         return UsingEngineContext(engine_name, self)
 
+
 class UsingEngineContext(object):
     def __init__(self, engine_name, DBSession=None):
         self.engine_name = engine_name
@@ -57,6 +59,7 @@ class UsingEngineContext(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.session._force_engine = self.past_engine
+
 
 def force_request_engine(engine_name):
     tg.request._tg_force_sqla_engine = engine_name

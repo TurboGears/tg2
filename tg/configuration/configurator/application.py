@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from tg.util import Bunch
+from ...util import Bunch
 from .base import Configurator
 from .base import EnvironmentLoadedConfigurationAction, AppReadyConfigurationAction
 from ..hooks import hooks
 from .. import milestones
 from ...wsgiapp import TGApp
 from ..utils import DependenciesList
+from ...request_local import config as reqlocal_config
 
 
 log = logging.getLogger(__name__)
@@ -18,6 +19,24 @@ class ApplicationConfigurator(Configurator):
         super(ApplicationConfigurator, self).__init__()
 
         self._application_wrappers = DependenciesList()
+
+    def configure(self, global_conf=None, app_conf=None):
+        global_conf = Bunch(global_conf or {})
+        app_conf = Bunch(app_conf or {})
+
+        conf = super(ApplicationConfigurator, self).configure(global_conf, app_conf)
+
+        # Load conf dict into the global config object
+        try:
+            reqlocal_config.pop_process_config()
+        except IndexError:  # pragma: no cover
+            log.warn('No global config in place, at least defaults should have been here')
+        finally:
+            reqlocal_config.push_process_config(conf)
+
+        milestones.config_ready.reach()
+        hooks.notify('initialized_config', args=(self, conf))
+        return conf
 
     def load_environment(self, global_conf, app_conf):
         """Configure a TurboGears Application environment.
@@ -31,12 +50,7 @@ class ApplicationConfigurator(Configurator):
             the [app:<name>] section of the Paste ini file (where <name>
             defaults to main).
         """
-
-        global_conf = Bunch(global_conf)
-        app_conf = Bunch(app_conf)
-
         conf = self.configure(global_conf, app_conf)
-        hooks.notify('initialized_config', args=(self, conf))
 
         self.setup(conf)
         hooks.notify('config_setup', args=(self, conf))

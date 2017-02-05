@@ -2,7 +2,7 @@
 import copy
 import logging
 
-from ..utils import DependenciesList
+from ..utils import DependenciesList, coerce_options
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class Configurator(object):
         try:
             return self._blueprint[name]
         except KeyError:
-            raise KeyError("Blueprint does not provide a '{}' option".format(name))
+            raise KeyError("Configuration Blueprint does not provide a '{}' option".format(name))
 
     def register(self, config_step_type, after=None):
         """Registers a new configuration step to be performed by the Configurator"""
@@ -69,7 +69,10 @@ class Configurator(object):
         conf.update(copy.deepcopy(self._blueprint))
         conf.update(copy.deepcopy(global_conf))
         conf.update(app_conf)
-        conf.update(dict(app_conf=app_conf, global_conf=global_conf))
+
+        # Convert the loaded options according to the coercion functions
+        # registered by each configuration step.
+        conf.update(coerce_options(conf, self._coercion))
 
         for _, step in self._steps:
             step._apply(BeforeConfigConfigurationAction, conf)
@@ -139,7 +142,7 @@ class ConfigurationStep(object):
 
         Must return a dictionary in the form::
 
-            {'option_name': cercion_function}
+            {'option_name': coerce_function}
         """
         return {}
 
@@ -160,6 +163,7 @@ class ConfigurationStep(object):
         for action in self._actions.get(action_type.__name__, []):
             app = action(conf, app)
         return app
+
 
 class _ConfigurationAction(object):
     """A :class:`ConfigurationStep` action.

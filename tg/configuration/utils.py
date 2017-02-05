@@ -48,6 +48,7 @@ def coerce_config(configuration, prefix, converters):
     options.update(coerce_options(options, converters))
     return options
 
+
 def get_partial_dict(prefix, dictionary, container_type=dict):
     """Given a dictionary and a prefix, return a Bunch, with just items
     that start with prefix
