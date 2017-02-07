@@ -32,7 +32,7 @@ class _SQLAlchemyQueryWrapper(object):
 
     def __getitem__(self, range):
         # postgres LIMIT-OFFSET performance optimization
-        if 'postgres' in self.obj.session.get_bind().url.drivername:
+        if self.is_bound_to_pg:
             subquery = self.obj.limit(range.stop-range.start) \
                                .offset(range.start) \
                                .subquery()
@@ -44,13 +44,21 @@ class _SQLAlchemyQueryWrapper(object):
 
     def __len__(self):
         # postgresql COUNT performance optimization
-        if 'postgres' in self.obj.session.get_bind().url.drivername:
+        if self.is_bound_to_pg:
             count_query = self.obj.statement \
                                   .with_only_columns([sqlalchemy.func.count()]) \
                                   .order_by(None)
             return self.obj.session.execute(count_query).scalar()
         else:
             return self.obj.count()
+
+    @property
+    def is_bound_to_pg(self):
+        try:
+            if 'postgres' in self.obj.session.get_bind().url.drivername:
+                return True
+        except sqlalchemy.exc.UnboundExecutionError as e:
+            pass
 
 class _MingQueryWrapper(object):
     def __init__(self, obj):
