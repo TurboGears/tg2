@@ -31,7 +31,16 @@ class _SQLAlchemyQueryWrapper(object):
         self.obj = obj
 
     def __getitem__(self, range):
-        return self.obj[range]
+        # postgres LIMIT-OFFSET performance optimization
+        if 'postgres' in self.obj.session.get_bind().url.drivername:
+            subquery = self.obj.limit(range.stop-range.start) \
+                               .offset(range.start) \
+                               .subquery()
+            return self.obj.join(subquery,
+                                 subquery.primary_key == \
+                                     self.obj.statement.froms[0].primary_key)
+        else:
+            return self.obj[range]
 
     def __len__(self):
         # postgresql COUNT performance optimization
