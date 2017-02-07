@@ -24,7 +24,7 @@ def _format_attrs(**attrs):
     return Markup("".join(strings))
 
 def _make_tag(template, text, **attrs):
-    return Markup(template % (_format_attrs(**attrs), escape(text))) 
+    return Markup(template % (_format_attrs(**attrs), escape(text)))
 
 class _SQLAlchemyQueryWrapper(object):
     def __init__(self, obj):
@@ -34,7 +34,14 @@ class _SQLAlchemyQueryWrapper(object):
         return self.obj[range]
 
     def __len__(self):
-        return self.obj.count()
+        # postgresql COUNT performance optimization
+        if 'postgres' in self.obj.session.get_bind().url.drivername:
+            count_query = self.obj.statement \
+                                  .with_only_columns([sqlalchemy.func.count()]) \
+                                  .order_by(None)
+            return self.obj.session.execute(count_query).scalar()
+        else:
+            return self.obj.count()
 
 class _MingQueryWrapper(object):
     def __init__(self, obj):
