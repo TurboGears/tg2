@@ -69,6 +69,11 @@ class CoreDispatcher(object):
                 mime_type, encoding = mimetypes.guess_type('file'+ext)
                 req._fast_setattr('_response_type', mime_type)
             req._fast_setattr('_response_ext', ext)
+        elif state.extension:
+            # If our user has disabled request extensions, crank doesn't
+            # know about this.  It has stripped the extension from the
+            # last token in our url path.  Here, we put it back on.
+            url_path[-1] = '.'.join([url_path[-1], state.extension])
 
         state = state.resolve()
 
