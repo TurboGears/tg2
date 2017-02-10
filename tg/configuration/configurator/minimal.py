@@ -17,7 +17,6 @@ from ...renderers.jinja import JinjaRenderer
 from ...renderers.kajiki import KajikiRenderer
 from ...renderers.mako import MakoRenderer
 
-
 log = logging.getLogger(__name__)
 
 
@@ -38,3 +37,5 @@ class MinimalApplicationConfigurator(ApplicationConfigurator):
         self.get('rendering').register_engine(MakoRenderer)
         self.get('rendering').register_engine(JinjaRenderer)
         self.get('rendering').register_engine(KajikiRenderer)
+
+

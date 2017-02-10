@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from ...utils import TGConfigError
+
 from ..base import ConfigurationStep, ConfigReadyConfigurationAction
+from ...utils import TGConfigError
+from ....support.middlewares import DBSessionRemoverMiddleware
 
 
 class SQLAlchemyConfigurationStep(ConfigurationStep):
@@ -31,6 +33,18 @@ class SQLAlchemyConfigurationStep(ConfigurationStep):
             # If the user hasn't specified a default session, assume
             # he/she uses the default DBSession in model
             conf['DBSession'] = model.DBSession
+
+    def add_middleware(self, conf, app):
+        """Set up middleware that cleans up the sqlalchemy session.
+
+        The default behavior of TG 2 is to clean up the session on every
+        request.  Only override this method if you know what you are doing!
+
+        """
+        dbsession = conf.get('SQLASession')
+        if dbsession is None:
+            dbsession = conf['DBSession']
+        return DBSessionRemoverMiddleware(dbsession, app)
 
     def _get_model(self, conf):
         try:

@@ -124,8 +124,8 @@ def call_controller(tg_config, controller, remainder, params):
 
 class AppConfig(object):
     def __init__(self, **kwargs):
-        from .configurator import MinimalApplicationConfigurator
-        self._configurator = MinimalApplicationConfigurator()
+        from .configurator import FullStackApplicationConfigurator
+        self._configurator = FullStackApplicationConfigurator()
         self._configurator.update_blueprint(kwargs)
 
         def _on_config_ready(_, conf):
@@ -324,12 +324,6 @@ class OldAppConfig(Bunch):
             self['tg.root_controller'] = root_controller
 
 
-        self.register_wrapper(I18NApplicationWrapper, after=True)
-        self.register_wrapper(IdentityApplicationWrapper, after=True)
-        self.register_wrapper(SessionApplicationWrapper, after=True)
-        self.register_wrapper(CacheApplicationWrapper, after=True)
-        self.register_wrapper(MingApplicationWrapper, after=True)
-        self.register_wrapper(TransactionApplicationWrapper, after=True)
 
     def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
@@ -365,35 +359,6 @@ class OldAppConfig(Bunch):
             conf['i18n.enabled'] = False
 
         return conf
-
-
-
-    def _setup_auth(self, conf):
-        """
-        Override this method to define how you would like the authentication options
-        to be setup for your application.
-        """
-        if hasattr(self, 'setup_sa_auth_backend'):
-            warnings.warn("setup_sa_auth_backend is deprecated, please override"
-                          "AppConfig._setup_auth instead", DeprecationWarning)
-            return self.setup_sa_auth_backend()
-
-        if conf['auth_backend'] in ("ming", "sqlalchemy"):
-            sa_auth_conf = conf['sa_auth']
-            if 'cookie_secret' not in sa_auth_conf and 'session.secret' not in conf:
-                raise TGConfigError("You must provide a value for authentication cookies secret. "
-                                    "Make sure that you have one of those options in app_cfg.py: "
-                                    "'sa_auth.cookie_secret' or 'session.secret'")
-
-            # The developer must have defined a 'sa_auth' section, because
-            # values such as the User, Group or Permission classes must be
-            # explicitly defined.
-            sa_auth_conf.setdefault('form_plugin', None)
-            sa_auth_conf.setdefault(
-                'cookie_secret',
-                conf.get('session.secret', conf.get('beaker.session.secret'))
-            )
-
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -453,109 +418,6 @@ class OldAppConfig(Bunch):
     def _add_debugger_middleware(self, app_config, app):
         from tg.error import ErrorHandler
         return ErrorHandler(app, app_config)
-
-    def _add_auth_middleware(self, app_config, app):
-        """
-        Configure authentication and authorization.
-        """
-        # Start with the current configured authentication options.
-        # Depending on the auth backend a new auth_args dictionary
-        # can replace this one later on.
-        skip_authentication = asbool(app_config.get('skip_authentication', False))
-        auth_args = copy(app_config['sa_auth'])
-
-        # Configuring auth logging:
-        if 'log_stream' not in auth_args:
-            auth_args['log_stream'] = logging.getLogger('auth')
-
-        # Removing keywords not used by repoze.who:
-        auth_args.pop('password_encryption_method', None)
-
-        if not skip_authentication and 'cookie_secret' not in auth_args:
-            raise TGConfigError("base_config.sa_auth.cookie_secret is required "
-                                "you must define it in app_cfg.py or set "
-                                "sa_auth.cookie_secret in development.ini")
-
-        if 'authmetadata' not in auth_args:  # pragma: no cover
-            warnings.warn("Authentication configured without authmetadata, "
-                          "this is not supported anymore and will be removed in future versions",
-                          DeprecationWarning)
-
-            # authmetadata not provided, fallback to old authentication setup
-            if self.auth_backend == "sqlalchemy":
-                from repoze.what.plugins.quickstart import setup_sql_auth
-                app = setup_sql_auth(app, skip_authentication=skip_authentication, **auth_args)
-            elif self.auth_backend == "ming":
-                from tgming import setup_ming_auth
-                app = setup_ming_auth(app, skip_authentication=skip_authentication, **auth_args)
-        else:
-            # Removing authmetadata as is not used by repoze.who:
-            tgauthmetadata = auth_args.pop('authmetadata', None)
-
-            try:
-                pos = auth_args['authenticators'].index(('default', None))
-            except KeyError:
-                # Didn't specify authenticators, setup default one
-                pos = None
-            except ValueError:
-                # Specified authenticators and default is not in there
-                # so we want to skip default TG auth configuration.
-                pos = -1
-
-            if pos is None or pos >= 0:
-                if getattr(tgauthmetadata, 'authenticate', None) is not None:
-                    from tg.configuration.auth import create_default_authenticator
-                    auth_args, tgauth = create_default_authenticator(tgauthmetadata, **auth_args)
-                    authenticator = ('tgappauth', tgauth)
-                elif self.auth_backend == "sqlalchemy":
-                    from tg.configuration.sqla.auth import create_default_authenticator
-                    auth_args, sqlauth = create_default_authenticator(**auth_args)
-                    authenticator = ('sqlauth', sqlauth)
-                elif self.auth_backend == "ming":
-                    from tg.configuration.mongo.auth import create_default_authenticator
-                    auth_args, mingauth = create_default_authenticator(**auth_args)
-                    authenticator = ('mingauth', mingauth)
-                else:
-                    authenticator = None
-
-                if authenticator is not None:
-                    if pos is None:
-                        auth_args['authenticators'] = [authenticator]
-                    else:
-                        # We make a copy so that we don't modify the original one.
-                        auth_args['authenticators'] = copy(auth_args['authenticators'])
-                        auth_args['authenticators'][pos] = authenticator
-
-            from tg.configuration.auth import setup_auth
-            app = setup_auth(app, skip_authentication=skip_authentication, **auth_args)
-
-        return app
-
-    def _add_core_middleware(self, conf, app):
-        """Add support for sessions, and caching middlewares
-
-        Those are all deprecated middlewares and will be removed in future TurboGears
-        versions as they have been replaced by other tools.
-        """
-        if conf.get('use_session_middleware', False):
-            warnings.warn('SessionMiddleware is deprecated and will be removed soon, '
-                          'please consider using SessionApplicationWrapper instead.',
-                          DeprecationWarning)
-            from tg.support.middlewares import SessionMiddleware, BeakerSessionMiddleware
-            if BeakerSessionMiddleware is object:  # pragma: no cover
-                raise ImportError('Beaker not installed')
-            app = SessionMiddleware(app, conf)
-
-        if conf.get('use_cache_middleware', False):
-            warnings.warn('CacheMiddleware is deprecated and will be removed soon, '
-                          'please consider using CacheApplicationWrapper instead.',
-                          DeprecationWarning)
-            from tg.support.middlewares import CacheMiddleware, BeakerCacheMiddleware
-            if BeakerCacheMiddleware is object:  # pragma: no cover
-                raise ImportError('Beaker not installed')
-            app = CacheMiddleware(app, conf)
-
-        return app
 
     def _add_tosca_middleware(self, conf, app):
         """Configure the ToscaWidgets middleware"""
@@ -652,24 +514,6 @@ class OldAppConfig(Bunch):
                           DeprecationWarning, stacklevel=2)
 
         return TGTransactionManager(app, conf)
-
-    def _add_ming_middleware(self, conf, app):
-        """Set up the ming middleware for the unit of work"""
-        from tg.support.middlewares import MingSessionRemoverMiddleware
-        from ming.odm import ThreadLocalODMSession
-        return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
-
-    def _add_sqlalchemy_middleware(self, conf, app):
-        """Set up middleware that cleans up the sqlalchemy session.
-
-        The default behavior of TG 2 is to clean up the session on every
-        request.  Only override this method if you know what you are doing!
-
-        """
-        dbsession = conf.get('SQLASession')
-        if dbsession is None:
-            dbsession = conf['DBSession']
-        return DBSessionRemoverMiddleware(dbsession, app)
 
     def _add_seekable_body_middleware(self, conf, app):
         """Make the request body seekable, so it can be read multiple times."""

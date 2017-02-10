@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction
+from ..base import (ConfigurationStep, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction,
+                    AppReadyConfigurationAction)
 from ...utils import get_partial_dict, TGConfigError
 from ....support.converters import asbool, asint
 
@@ -32,11 +33,12 @@ class MingConfigurationStep(ConfigurationStep):
 
     def get_actions(self):
         return (
-            BeforeConfigConfigurationAction(self.configure_ming),
-            ConfigReadyConfigurationAction(self.setup_ming)
+            BeforeConfigConfigurationAction(self.configure),
+            ConfigReadyConfigurationAction(self.setup),
+            AppReadyConfigurationAction(self.add_middleware)
         )
 
-    def configure_ming(self, conf, app):
+    def configure(self, conf, app):
         try:
             autoflush_enabled = conf['ming.autoflush']
         except KeyError:
@@ -45,7 +47,7 @@ class MingConfigurationStep(ConfigurationStep):
         conf.setdefault('ming.enabled', conf.get('use_ming', False))
         conf['ming.autoflush'] = conf['ming.enabled'] and autoflush_enabled
 
-    def setup_ming(self, conf, app):
+    def setup(self, conf, app):
         """Setup MongoDB database engine using Ming"""
         if not conf['ming.enabled']:
             return
@@ -64,6 +66,12 @@ class MingConfigurationStep(ConfigurationStep):
             # If the user hasn't specified a default session, assume
             # he/she uses the default DBSession in model
             conf['DBSession'] = model.DBSession
+
+    def add_middleware(self, conf, app):
+        """Set up the ming middleware for the unit of work"""
+        from tg.support.middlewares import MingSessionRemoverMiddleware
+        from ming.odm import ThreadLocalODMSession
+        return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
     def _get_models(self, conf):
         try:
