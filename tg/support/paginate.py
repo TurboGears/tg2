@@ -24,17 +24,41 @@ def _format_attrs(**attrs):
     return Markup("".join(strings))
 
 def _make_tag(template, text, **attrs):
-    return Markup(template % (_format_attrs(**attrs), escape(text))) 
+    return Markup(template % (_format_attrs(**attrs), escape(text)))
 
 class _SQLAlchemyQueryWrapper(object):
     def __init__(self, obj):
         self.obj = obj
 
     def __getitem__(self, range):
-        return self.obj[range]
+        # postgres LIMIT-OFFSET performance optimization
+        if self.is_bound_to_pg:
+            subquery = self.obj.limit(range.stop-range.start) \
+                               .offset(range.start) \
+                               .subquery()
+            return self.obj.join(subquery,
+                                 subquery.primary_key == \
+                                     self.obj.statement.froms[0].primary_key)
+        else:
+            return self.obj[range]
 
     def __len__(self):
-        return self.obj.count()
+        # postgresql COUNT performance optimization
+        if self.is_bound_to_pg:
+            count_query = self.obj.statement \
+                                  .with_only_columns([sqlalchemy.func.count()]) \
+                                  .order_by(None)
+            return self.obj.session.execute(count_query).scalar()
+        else:
+            return self.obj.count()
+
+    @property
+    def is_bound_to_pg(self):
+        try:
+            if 'postgres' in self.obj.session.get_bind().url.drivername:
+                return True
+        except sqlalchemy.exc.UnboundExecutionError as e:
+            pass
 
 class _MingQueryWrapper(object):
     def __init__(self, obj):
