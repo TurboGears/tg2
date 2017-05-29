@@ -122,7 +122,7 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
     identifiers = who_args.setdefault('identifiers', [('default', None)])
     try:
         default_identifier_index = identifiers.index(('default', None))
-    except:
+    except ValueError:
         pass
     else:
         # default identifier included.
