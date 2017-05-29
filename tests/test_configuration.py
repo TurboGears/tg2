@@ -1606,6 +1606,40 @@ class TestAppConfig:
         self.config['sa_auth'] = {}
         self.config.auth_backend = None
 
+    def test_auth_setup_default_identifier(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'identifiers': UncopiableList([('default', None)])}
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
+
+        identifiers = [x[0] for x in self.config['sa_auth']['identifiers']]
+        assert 'cookie' in identifiers
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
+    def test_auth_setup_custom_identifier(self):
+        self.config.auth_backend = 'sqlalchemy'
+        self.config['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                  'dbsession': None,
+                                  'user_class':None,
+                                  'cookie_secret':'12345',
+                                  'identifiers': UncopiableList([('custom', None)])}
+        cfg = self.config._init_config({}, {})
+        self.config._setup_auth(cfg)
+        self.config._add_auth_middleware(cfg, None)
+
+        identifiers = [x[0] for x in self.config['sa_auth']['identifiers']]
+        assert 'custom' in identifiers
+
+        self.config['sa_auth'] = {}
+        self.config.auth_backend = None
+
     def test_auth_middleware_doesnt_touch_authenticators(self):
         # Checks that the auth middleware process doesn't touch original authenticators
         # list, to prevent regressions on this.

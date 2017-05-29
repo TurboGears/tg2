@@ -119,12 +119,18 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
 
     # If no identifiers are provided in repoze setup arguments
     # then create a default one using AuthTktCookiePlugin.
-    if 'identifiers' not in who_args:
+    identifiers = who_args.setdefault('identifiers', [('default', None)])
+    try:
+        default_identifier_index = identifiers.index(('default', None))
+    except:
+        pass
+    else:
+        # default identifier included.
         from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
         cookie = AuthTktCookiePlugin(cookie_secret, cookie_name,
                                      timeout=cookie_timeout,
                                      reissue_time=cookie_reissue_time)
-        who_args['identifiers'] = [('cookie', cookie)]
+        who_args['identifiers'][default_identifier_index] = ('cookie', cookie)
         who_args['authenticators'].insert(0, ('cookie', cookie))
 
     # If no form plugin is provided then create a default
