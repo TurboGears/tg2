@@ -118,4 +118,7 @@ class KajikiTemplateLoader(FileLoader):
             if not os.path.exists(filename):
                 raise IOError('Template %s not found' % filename)
 
-        return super(KajikiTemplateLoader, self)._filename(filename)
+        resolved_filename = super(KajikiTemplateLoader, self)._filename(filename)
+        if resolved_filename is None:
+            raise IOError('Template %s not found in template paths' % filename)
+        return resolved_filename

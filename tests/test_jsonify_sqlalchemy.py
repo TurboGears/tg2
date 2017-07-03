@@ -1,6 +1,8 @@
 from nose.tools import assert_raises
 from tg import jsonify
 import json
+import datetime
+
 
 try:
     try:
@@ -8,7 +10,7 @@ try:
     except:
         import pysqlite2
     from sqlalchemy import (MetaData, Table, Column, ForeignKey,
-        Integer, String)
+        Integer, String, DateTime, Date, Time)
     from sqlalchemy.orm import create_session, mapper, relation
 
     metadata = MetaData('sqlite:///:memory:')
@@ -30,6 +32,12 @@ try:
         Column('id', Integer, primary_key=True),
         Column('val', String(8)))
 
+    test5 = Table('test5', metadata,
+        Column('id', Integer, primary_key=True),
+        Column('val', String(8)),
+        Column('date', DateTime()),
+        Column('time', Time()))
+
     metadata.create_all()
 
     class Test2(object):
@@ -50,11 +58,17 @@ try:
         pass
     mapper(Test4, test4)
 
+    class Test5(object):
+        pass
+    mapper(Test5, test5)
+
     test1.insert().execute({'id': 1, 'val': 'bob'})
     test2.insert().execute({'id': 1, 'test1id': 1, 'val': 'fred'})
     test2.insert().execute({'id': 2, 'test1id': 1, 'val': 'alice'})
     test3.insert().execute({'id': 1, 'val': 'bob'})
     test4.insert().execute({'id': 1, 'val': 'alberto'})
+    test5.insert().execute({'id': 1, 'val': 'sometime', 'time': datetime.time(21, 20, 19),
+                            'date': datetime.datetime(2016, 12, 11, 10, 9, 8)})
 
 except ImportError:
     from warnings import warn
@@ -109,3 +123,12 @@ else:
         jsonify.encode(t)
         s.expunge(t)
         assert_raises(ValueError, lambda: jsonify.encode(t))
+
+    def test_select_rows_datetime():
+        s = create_session()
+        t = test5.select().execute()
+        encoded = jsonify.encode(dict(results=t), encoder=jsonify.JSONEncoder(isodates=True))
+        expected = """{"results": {"count": -1, "rows": [{"count": 1, "rows": {"date": "2016-12-11T10:09:08", "id": 1, "val": "sometime", "time": "21:20:19"}}]}}"""
+        encoded = json.loads(encoded)
+        expected = json.loads(expected)
+        assert encoded == expected, encoded

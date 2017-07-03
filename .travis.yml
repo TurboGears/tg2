@@ -5,13 +5,14 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
   - "pypy"
 
 install:
   - "pip install git+git://github.com/TurboGears/crank.git"
   - "pip install git+git://github.com/TurboGears/backlash.git"
   - "pip install repoze.who"
-  - "pip install coverage"
+  - "pip install coverage==4.2"
   - "pip install nose"
   - "pip install --no-use-wheel -e .[testing]"
   - "pip install --upgrade git+http://git.code.sf.net/p/merciless/code"

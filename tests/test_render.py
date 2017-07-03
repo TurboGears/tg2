@@ -2,6 +2,7 @@
 Testing for TG2 Configuration
 """
 from nose.tools import raises
+from webtest import TestApp
 
 import tg
 from tg.render import MissingRendererError, _get_tg_vars
@@ -58,6 +59,41 @@ def test_jinja_lookup_nonexisting_template():
         assert False
     except TemplateNotFound:
         pass
+
+
+class TestKajikiSupport(object):
+    def setup(self):
+        conf = AppConfig(minimal=True)
+        conf.use_dotted_templatenames = True
+        conf.renderers.append('kajiki')
+        conf.package = FakePackage()
+        self.conf = conf
+        self.app = TestApp(conf.make_wsgi_app())
+        self.render = self.conf.render_functions['kajiki']
+
+    def test_template_found(self):
+        with test_context(self.app):
+            res = self.render('tests.test_stack.rendering.templates.kajiki_i18n', {})
+        assert 'Your application is now running' in res
+
+    def test_dotted_template_not_found(self):
+        try:
+            with test_context(self.app):
+                res = self.render('tests.test_stack.rendering.templates.this_doesnt_exists', {})
+        except IOError as e:
+            assert 'this_doesnt_exists.xhtml not found' in str(e)
+        else:
+            raise AssertionError('Should have raised IOError')
+
+    def test_filename_template_not_found(self):
+        try:
+            with test_context(self.app):
+                res = self.render('this_doesnt_exists/this_doesnt_exists.xhtml', {})
+        except IOError as e:
+            assert 'this_doesnt_exists.xhtml not found in template paths' in str(e)
+        else:
+            raise AssertionError('Should have raised IOError')
+
 
 class TestMakoLookup(object):
     def setup(self):

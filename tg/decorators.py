@@ -622,7 +622,12 @@ class decode_params(object):
 
     def run_hook(self, remainder, params):
         if self._format == 'json' and request.content_type == 'application/json':
-            params.update(request.json_body)
+            try:
+                params.update(request.json_body)
+            except ValueError:
+                # Invalid JSON provided, nothing to decode
+                log.debug('Invalid JSON provided to decode_params')
+                pass
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)

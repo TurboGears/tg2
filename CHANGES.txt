@@ -1,5 +1,20 @@
 = Change Log =
 
+== 2.3.11 (**July 3, 2017**) ==
+
+* When configuring authentication it is now possible to provide ``('default', None)`` as an identifier to set custom identifiers and retain the default one.
+* Python 3.6 is now officially supported
+* Invalid requests (like GETs with a body) will not crash ``decode_params`` anymore.
+* ``tg.util.webtest.test_context`` no longer depends on ``WebTest`` and can work on a plain ``TGApp`` instance.
+* ErrorReporter now supports ``trace_errors.smtp_port`` option.
+* ``trace_errors.enable = False`` can now disable error tracing middleware even when backlash is available
+* Improved Kajiki template not found error message
+* Support for datetime.time in json encoder
+* Extract i18n from python code in kajiki templates by default
+* Support for IPython in tgshell command.
+* Add support for migrations from multiple databases when more than one database is involved.
+* Fix for SCRIPT_NAME in login in quickstart template.
+
 == 2.3.10 (**December 4, 2016**) ==
 
 * Fixed unicode error messages in ``validation_errors_response``
