@@ -68,5 +68,9 @@ class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
       `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
 
     """
+    @expose()
+    def options(self):
+        return ""
+        
 
 __all__ = ['RestController']
