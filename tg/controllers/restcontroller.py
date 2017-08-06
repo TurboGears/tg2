@@ -5,6 +5,7 @@ combines controller decoration for TG-Controller behavior.
 """
 
 from crank.restdispatcher import RestDispatcher
+from tg.decorators import expose
 
 from tg.controllers.dispatcher import CoreDispatcher
 from tg.controllers.decoratedcontroller import DecoratedController
@@ -68,9 +69,17 @@ class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
       `CrudRestController <../main/Extensions/Crud/index.html>`_  A way to integrate ToscaWdiget Functionality with RESTful Dispatch.
 
     """
+
     @expose()
-    def options(self):
-        return ""
+    """The OPTIONS http verb is automatically sent by the browser when doing cross origin requests.
+
+    This default method was added to prevent receiving 404 HTTP Not found error. 
+    It returns None which translates to 204 No Content for HTTP. 
+    You can use the _before hook to set up your CORS headers.
+    
+    """
+    def options(self, *args, **kw):
+        return None
         
 
 __all__ = ['RestController']
