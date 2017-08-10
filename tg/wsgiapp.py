@@ -8,13 +8,6 @@ from tg import request_local
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
 
-try: #pragma: no cover
-    import pylons
-    has_pylons = True
-except:
-    has_pylons = False
-
-
 log = logging.getLogger(__name__)
 
 
@@ -52,7 +45,6 @@ class TGApp(object):
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
-        self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
 
         self.resp_options = config.get('tg.response_options',
                                        dict(content_type='text/html',
@@ -82,25 +74,6 @@ class TGApp(object):
 
         if 'tg.root_controller' in self.config:
             self.controller_instances['root'] = self.config['tg.root_controller']
-
-    def _setup_pylons_compatibility(self, environ, controller): #pragma: no cover
-        """Updates environ to be backward compatible with Pylons"""
-        try:
-            environ['pylons.controller'] = controller
-            environ['pylons.pylons'] = environ['tg.locals']
-
-            self.config['pylons.app_globals'] = self.globals
-
-            pylons.request = request_local.request
-            pylons.cache = request_local.cache
-            pylons.config = request_local.config
-            pylons.app_globals = request_local.app_globals
-            pylons.session = request_local.session
-            pylons.translator = request_local.translator
-            pylons.response = request_local.response
-            pylons.tmpl_context = request_local.tmpl_context
-        except ImportError:
-            pass
 
     def __call__(self, environ, start_response):
         """Serve a WSGI Request"""
@@ -133,8 +106,6 @@ class TGApp(object):
             # Help Python collect ram a bit faster by removing the reference
             # cycle that the thread local objects cause
             del environ['tg.locals']
-            if has_pylons and 'pylons.pylons' in environ: #pragma: no cover
-                del environ['pylons.pylons']
 
     def _setup_app_env(self, environ):
         """Setup Request, Response and TurboGears context objects.
@@ -275,10 +246,6 @@ class TGApp(object):
         """
         if not controller:
             return HTTPNotFound()
-
-        # Setup pylons compatibility before calling controller
-        if has_pylons and self.pylons_compatible:  # pragma: no cover
-            self._setup_pylons_compatibility(environ, controller)
 
         # Controller is assumed to accept WSGI Environ and TG Context
         # and return a Response object.

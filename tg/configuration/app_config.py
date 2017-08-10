@@ -105,7 +105,6 @@ defaults = {
     'package': None,
     'tg.app_globals': None,
     'tg.strict_tmpl_context': True,
-    'tg.pylons_compatible': True,
     'i18n.lang': None
 }
 
