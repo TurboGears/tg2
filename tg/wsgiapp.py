@@ -72,7 +72,7 @@ class TGApp(object):
                 # backward compatibility with wrappers that didn't receive the config
                 self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
 
-        if 'tg.root_controller' in self.config:
+        if self.config.get('tg.root_controller') is not None:
             self.controller_instances['root'] = self.config['tg.root_controller']
 
     def __call__(self, environ, start_response):

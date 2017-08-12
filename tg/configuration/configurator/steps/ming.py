@@ -11,6 +11,11 @@ class MingConfigurationStep(ConfigurationStep):
     """
     id = "ming"
 
+    def get_defaults(self):
+        return {
+            'use_ming': False
+        }
+
     def get_coercion(self):
         def mongo_read_pref(value):
             from pymongo.read_preferences import ReadPreference
@@ -37,6 +42,14 @@ class MingConfigurationStep(ConfigurationStep):
             ConfigReadyConfigurationAction(self.setup),
             AppReadyConfigurationAction(self.add_middleware)
         )
+
+    def on_bind(self, configurator):
+        from ..application import ApplicationConfigurator
+        if not isinstance(configurator, ApplicationConfigurator):
+            raise TGConfigError('Ming Support only works on an ApplicationConfigurator')
+
+        from ....appwrappers.mingflush import MingApplicationWrapper
+        configurator.register_application_wrapper(MingApplicationWrapper, after=True)
 
     def configure(self, conf, app):
         try:

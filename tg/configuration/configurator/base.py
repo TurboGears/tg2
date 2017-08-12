@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import copy
 import logging
 
 from ..utils import DependenciesList, coerce_options
+from ..hooks import hooks
 
 log = logging.getLogger(__name__)
 
@@ -39,10 +39,28 @@ class Configurator(object):
         self._blueprint.update(config)
 
     def get_blueprint_value(self, name):
+        """Get an option registered into the configuration blueprint."""
         try:
             return self._blueprint[name]
         except KeyError:
             raise KeyError("Configuration Blueprint does not provide a '{}' option".format(name))
+
+    def get_blueprint_view(self, key):
+        """A view is a subset of the blueprint options.
+
+        If the blueprint contains multiple values that share
+        a common prefix it is possible to get a view that
+        contains them all. A view acts like a dictionary
+        where it is possible to get or set the values.
+
+        Given a blueprint that contains ``section.option1`` and
+        ``section.option2`` it is possible to ask for the view
+        of ``section`` and get back a dictionary like object
+        that contains ``option1`` and ``option2``.
+        """
+        if key.endswith('.'):
+            raise ValueError('A Blueprint key cannot end with a .')
+        return DictionaryView(self._blueprint, key)
 
     def register(self, config_step_type, after=None):
         """Registers a new configuration step to be performed by the Configurator"""
@@ -59,6 +77,7 @@ class Configurator(object):
         self._steps.replace(stepid, new_config_step)
 
     def get(self, stepid):
+        """Retrieve a registered configuration step."""
         return self._steps.get(stepid)
 
     def configure(self, global_conf=None, app_conf=None):
@@ -66,8 +85,8 @@ class Configurator(object):
 
         conf = {}
 
-        conf.update(copy.deepcopy(self._blueprint))
-        conf.update(copy.deepcopy(global_conf))
+        conf.update(copyoption(self._blueprint))
+        conf.update(copyoption(global_conf))
         conf.update(app_conf)
 
         # Convert the loaded options according to the coercion functions
@@ -161,6 +180,7 @@ class ConfigurationStep(object):
 
     def _apply(self, action_type, conf, app=None):
         for action in self._actions.get(action_type.__name__, []):
+            log.debug('%s applying %s', self.__class__.__name__, action)
             app = action(conf, app)
         return app
 
@@ -174,6 +194,9 @@ class _ConfigurationAction(object):
     """
     def __init__(self, perform=None):
         self.perform = perform
+
+    def __repr__(self):
+        return '<%s: %r>' % (self.__class__.__name__, self.perform)
 
     def __call__(self, conf, app):
         return self.perform(conf, app)
@@ -195,3 +218,47 @@ class AppReadyConfigurationAction(_ConfigurationAction):
     pass
 
 
+# TODO: Move into utils
+class DictionaryView(object):
+    def __init__(self, d, keypath):
+        if keypath[-1] != '.':
+            keypath = keypath + '.'
+        self._d = d
+        self._keypath = keypath
+
+    def __getitem__(self, item):
+        key = self._keypath + item
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        key = self._keypath + key
+        self._d[key] = value
+
+    def __getattr__(self, item):
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            key = self._keypath + item
+            raise AttributeError(key)
+
+# TODO: Move into utils
+def copyoption(v):
+    """Copies a dictionary and all its nested dictionaries and lists.
+
+    Much like copy.deepcopy it provides a deep copy of a dictionary
+    but instead of trying to copy everything it will only make a copy
+    of dictionaries, lists, tuples and sets. All the containers typically
+    used in configuration blueprints. All the other objects will be
+    preserved by reference.
+    """
+    if isinstance(v, dict):
+        return dict((k, copyoption(v[k])) for k in v)
+    elif isinstance(v, list):
+        return [copyoption(e) for e in v]
+    elif isinstance(v, set):
+        return set(copyoption(e) for e in v)
+    elif isinstance(v, tuple):
+        return tuple(copyoption(e) for e in v)
+    else:
+        # Preserve anything else as is.
+        return v

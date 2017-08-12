@@ -8,13 +8,11 @@ from .steps.error_reporting import ErrorReportingConfigurationStep
 from .steps.ming import MingConfigurationStep
 from .steps.slow_requests import SlowRequestsConfigurationStep
 from .steps.sqlalchemy import SQLAlchemyConfigurationStep
+from .steps.auth import SimpleAuthenticationConfigurationStep
+from .steps.i18n import I18NConfigurationStep
+from .steps.caching import CachingConfigurationStep
+from .steps.session import SessionConfigurationStep
 
-from ...appwrappers.i18n import I18NApplicationWrapper
-from ...appwrappers.identity import IdentityApplicationWrapper
-from ...appwrappers.caching import CacheApplicationWrapper
-from ...appwrappers.mingflush import MingApplicationWrapper
-from ...appwrappers.session import SessionApplicationWrapper
-from ...appwrappers.transaction_manager import TransactionApplicationWrapper
 
 log = logging.getLogger(__name__)
 
@@ -26,17 +24,21 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
             'use_dotted_templatenames': True,
         })
 
-        self.register(ErrorPagesConfigurationStep)
-        # Tosca HERE
-        self.register(SQLAlchemyConfigurationStep)
-        self.register(MingConfigurationStep)
-        # Seekable HERE
-        self.register(ErrorReportingConfigurationStep)
-        self.register(SlowRequestsConfigurationStep)
+        self.register(I18NConfigurationStep)
+        self.register(SimpleAuthenticationConfigurationStep)
+        self.register(SessionConfigurationStep)
+        self.register(CachingConfigurationStep)
 
-        self.register_application_wrapper(I18NApplicationWrapper, after=True)
-        self.register_application_wrapper(IdentityApplicationWrapper, after=True)
-        self.register_application_wrapper(SessionApplicationWrapper, after=True)
-        self.register_application_wrapper(CacheApplicationWrapper, after=True)
-        self.register_application_wrapper(MingApplicationWrapper, after=True)
-        self.register_application_wrapper(TransactionApplicationWrapper, after=True)
+        # from here on, due to TW2, the response is a generator
+        # so any middleware that relies on the response to be
+        # a string needs to be applied before this point.
+
+
+        # Tosca HERE
+        self.register(MingConfigurationStep)
+        self.register(SQLAlchemyConfigurationStep)
+        self.register(ErrorPagesConfigurationStep)
+
+        # Seekable HERE
+        self.register(SlowRequestsConfigurationStep)
+        self.register(ErrorReportingConfigurationStep)

@@ -16,6 +16,7 @@ class SimpleAuthenticationConfigurationStep(ConfigurationStep):
 
     def get_defaults(self):
         return {
+            'auth_backend': None,
             'skip_authentication': False,
             'sa_auth.log_stream': logging.getLogger('auth'),
             'sa_auth.form_plugin': None
@@ -30,19 +31,27 @@ class SimpleAuthenticationConfigurationStep(ConfigurationStep):
 
     def get_actions(self):
         return (
-            BeforeConfigConfigurationAction(self.configure),
-            AppReadyConfigurationAction(self.add_middleware),
+            BeforeConfigConfigurationAction(self._configure),
+            AppReadyConfigurationAction(self._add_middleware),
         )
 
-    def configure(self, conf, app):
+    def on_bind(self, configurator):
+        from ..application import ApplicationConfigurator
+        if not isinstance(configurator, ApplicationConfigurator):
+            raise TGConfigError('Simple Authentication only works on an ApplicationConfigurator')
+
+        from ....appwrappers.identity import IdentityApplicationWrapper
+        configurator.register_application_wrapper(IdentityApplicationWrapper, after=True)
+
+    def _configure(self, conf, app):
         if conf['auth_backend'] not in self.SUPPORTED_AUTH_BACKENDS:
             return
 
-        if not conf['skip_authentication'] and 'sa_auth.cookie_secrect' not in conf:
+        if not conf['skip_authentication'] and 'sa_auth.cookie_secret' not in conf:
             raise TGConfigError("You must provide a value for authentication cookies secret. "
                                 "Make sure that you have an 'sa_auth.cookie_secret' config value.")
 
-    def add_middleware(self, conf, app):
+    def _add_middleware(self, conf, app):
         """
         Configure authentication and authorization.
         """
@@ -53,7 +62,7 @@ class SimpleAuthenticationConfigurationStep(ConfigurationStep):
             return
 
         auth_backend = conf['auth_backend']
-        auth_args = get_partial_dict('sa_auth.', conf)
+        auth_args = get_partial_dict('sa_auth', conf)
 
         # Removing keywords not used by repoze.who:
         auth_args.pop('password_encryption_method', None)

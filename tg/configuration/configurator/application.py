@@ -26,6 +26,9 @@ class ApplicationConfigurator(Configurator):
 
         conf = super(ApplicationConfigurator, self).configure(global_conf, app_conf)
 
+        # Application wrapper are made available in the configuration for TGApp use.
+        conf['application_wrappers'] = self._application_wrappers
+
         # Load conf dict into the global config object
         try:
             reqlocal_config.pop_process_config()
@@ -142,6 +145,7 @@ class ApplicationConfigurator(Configurator):
                         'milestone has been reached, the wrapper will be used only'
                         'for future TGApp instances.', wrapper)
 
+        log.debug('Registering application wrapper: %s', wrapper)
         self._application_wrappers.add(wrapper, after=after)
 
     def replace_application_wrapper(self, key, wrapper):
@@ -183,7 +187,7 @@ class ApplicationConfigurator(Configurator):
                   wrapper, controller or 'ALL')
 
         if controller is None:
-            self.controller_wrappers.append(wrapper)
+            self._controller_wrappers.append(wrapper)
         else:
             from tg.decorators import Decoration
             deco = Decoration.get_decoration(controller)

@@ -11,10 +11,24 @@ class SQLAlchemyConfigurationStep(ConfigurationStep):
     """
     id = "sqlalchemy"
 
+    def get_defaults(self):
+        return {
+            'use_sqlalchemy': False,
+            'tm.enabled': True
+        }
+
     def get_actions(self):
         return (
-            ConfigReadyConfigurationAction(self.setup_sqlalchemy)
+            ConfigReadyConfigurationAction(self.setup_sqlalchemy),
         )
+
+    def on_bind(self, configurator):
+        from ..application import ApplicationConfigurator
+        if not isinstance(configurator, ApplicationConfigurator):
+            raise TGConfigError('SQLAlchemy Support only works on an ApplicationConfigurator')
+
+        from ....appwrappers.transaction_manager import TransactionApplicationWrapper
+        configurator.register_application_wrapper(TransactionApplicationWrapper, after=True)
 
     def setup_sqlalchemy(self, conf, app):
         """Setup SQLAlchemy database engine"""

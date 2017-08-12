@@ -150,6 +150,9 @@ class _ApplicationHookRegistration(object):
         self.func = func
         self.hooks_namespace = hooks_namespace
 
+    def __repr__(self):
+        return '<ApplicationHookRegistration: %r %r>' % (self.hook_name, self.func)
+
     def __call__(self):
         log.debug("Registering %s for application wide hook %s",
                   self.func, self.hook_name)
@@ -171,6 +174,9 @@ class _ControllerHookRegistration(object):
         self.controller = controller
         self.hook_name = hook_name
         self.func = func
+
+    def __repr__(self):
+        return '<ControllerHookRegistration: %r %r>' % (self.hook_name, self.func)
 
     def __call__(self):
         log.debug("Registering %s for hook %s on controller %s",

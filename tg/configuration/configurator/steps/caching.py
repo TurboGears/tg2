@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-from ..configurator import ConfigurationStep, BeforeConfigConfigurationAction
+
+from ...utils import TGConfigError
+from ..base import ConfigurationStep, BeforeConfigConfigurationAction
 
 
 class CachingConfigurationStep(ConfigurationStep):
@@ -9,14 +11,24 @@ class CachingConfigurationStep(ConfigurationStep):
     """
     id = 'caching'
 
+    def get_defaults(self):
+        return {
+            'cache.enabled': True
+        }
+
+    def on_bind(self, configurator):
+        from ..application import ApplicationConfigurator
+        if not isinstance(configurator, ApplicationConfigurator):
+            raise TGConfigError('Caching only works on an ApplicationConfigurator')
+
+        from ....appwrappers.caching import CacheApplicationWrapper
+        configurator.register_application_wrapper(CacheApplicationWrapper, after=True)
+
     def get_actions(self):
         return (
             BeforeConfigConfigurationAction(self._configure_caching),
         )
 
     def _configure_caching(self, conf, app):
-        # Copy in some defaults
         if 'cache_dir' in conf:
-            conf.setdefault('session.data_dir', os.path.join(conf['cache_dir'], 'sessions'))
             conf.setdefault('cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
-        conf['tg.cache_dir'] = conf.pop('cache_dir', conf['app_conf'].get('cache_dir'))

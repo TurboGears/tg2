@@ -51,6 +51,19 @@ class TemplateRenderingConfigurationStep(ConfigurationStep):
             ConfigReadyConfigurationAction(self._setup_renderers)
         )
 
+    def on_bind(self, configurator):
+        from ....renderers.json import JSONRenderer
+        from ....renderers.genshi import GenshiRenderer
+        from ....renderers.jinja import JinjaRenderer
+        from ....renderers.kajiki import KajikiRenderer
+        from ....renderers.mako import MakoRenderer
+
+        self.register_engine(JSONRenderer)
+        self.register_engine(GenshiRenderer)
+        self.register_engine(MakoRenderer)
+        self.register_engine(JinjaRenderer)
+        self.register_engine(KajikiRenderer)
+
     def register_engine(self, factory):
         """Registers a rendering engine ``factory``.
 
@@ -91,6 +104,7 @@ class TemplateRenderingConfigurationStep(ConfigurationStep):
                     log.error('Failed to initialize %s template engine, removing it...' % renderer)
                     renderers.remove(renderer)
                 else:
+                    log.debug('Enabling renderer %s', renderer)
                     conf['render_functions'].update(engines)
             else:
                 raise TGConfigError('This configuration object does '
