@@ -31,6 +31,12 @@ class GenshiRenderer(RendererFactory):
         - ``templating.genshi.name_constant_patch`` -> Enable/Disable patch for Python3.4 compatibility.
         - ``templating.genshi.max_cache_size`` -> Maximum number of templates to keep cached, by default 30.
         - ``templating.genshi.method`` -> Genshi rendering method (html or xhtml).
+
+    Supported ``render_params``:
+
+        - Caching options supported by :func:`.cached_template`
+        - ``doctype`` -> To override the global doctype
+        - ``method`` -> To override the global rendering method
     """
     CONFIG_OPTIONS = {
         'max_cache_size': asint,

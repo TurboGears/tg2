@@ -28,6 +28,9 @@ class Request(WebObRequest):
     compatibility with paste.wsgiwrappers.WSGIRequest.
 
     """
+    def _fast_setattr(self, name, value):
+        object.__setattr__(self, name, value)
+
     def languages_best_match(self, fallback=None):
         al = self.accept_language
         try:
@@ -55,19 +58,23 @@ class Request(WebObRequest):
 
     @cached_property
     def dispatch_state(self):
+        """Details and info about dispatcher that handled this request."""
         return self._controller_state
 
     @cached_property
     def controller_url(self):
+        """Url of the current controller."""
         state = self._controller_state
         return '/'.join(state.path[:-len(state.remainder)])
 
     @cached_property
     def plain_languages(self):
+        """Return the list of browser preferred languages"""
         return self.languages_best_match()
 
     @cached_property
     def languages(self):
+        """Return the list of browser preferred languages ensuring that ``i18n.lang`` is listed."""
         return self.languages_best_match(self._language)
 
     @property
@@ -86,10 +93,21 @@ class Request(WebObRequest):
 
     @property
     def response_type(self):
+        """Expected response content type when URL Extensions are enabled.
+
+        In case URL Request Extension is enabled this will be the content type
+        of the expected response. ``disable_request_extensions`` drives
+        this is enabled or not.
+        """
         return self._response_type
 
     @property
     def response_ext(self):
+        """URL extension when URL Extensions are enabled.
+
+        In case URL Request Extension is enabled this will be the extension of the url.
+        ``disable_request_extensions`` drives this is enabled or not.
+        """
         return self._response_ext
 
     def match_accept(self, mimetypes):
@@ -122,6 +140,10 @@ class Request(WebObRequest):
 
     @cached_property
     def args_params(self):
+        """Arguments used for dispatching the request.
+
+        This mixes GET and POST arguments.
+        """
         # This was: dict(((str(n), v) for n,v in self.params.mixed().items()))
         # so that keys were all strings making possible to use them as arguments.
         # Now it seems that all keys are always strings, did WebOb change behavior?
@@ -129,11 +151,24 @@ class Request(WebObRequest):
 
     @property
     def quoted_path_info(self):
+        """PATH used for dispatching the request."""
         bpath = webob_bytes_(self.path_info, self.url_encoding)
         return webob_url_quote(bpath, PATH_SAFE)
 
-    def _fast_setattr(self, name, value):
-        object.__setattr__(self, name, value)
+    def disable_error_pages(self):
+        """Disable custom error pages for the current request.
+
+        This will forward your response as is bypassing the :class:`.ErrorPageApplicationWrapper`
+        """
+        self.environ['tg.status_code_redirect'] = False
+
+    def disable_auth_challenger(self):
+        """Disable authentication challenger for current request.
+
+        This will forward your response as is in case of 401 bypassing any
+        repoze.who challenger.
+        """
+        self.environ['tg.skip_auth_challenge'] = True
 
 
 class Response(WebObResponse):
@@ -158,6 +193,7 @@ class Response(WebObResponse):
         sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
         cookie_value = sig + base64.encodestring(pickled)
         self.set_cookie(name, cookie_value, **kwargs)
+
 
 config = DispatchingConfig()
 context = StackedObjectProxy(name="context")

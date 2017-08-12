@@ -15,7 +15,7 @@ This module also contains the standard ObjectDispatch
 class which provides the ordinary TurboGears mechanism.
 
 """
-import tg, sys
+import tg
 from webob.exc import HTTPException
 from tg._compat import unicode_text
 from tg.decorators import cached_property
@@ -97,7 +97,7 @@ class CoreDispatcher(object):
         py_request = context.request
 
         state = self._get_dispatchable(context, py_request.quoted_path_info)
-        controller, action = state.controller, state.method
+        controller, action = state.controller, state.action
         params, remainder = state.params, state.remainder
 
         if hasattr(controller, '_before'):
@@ -120,23 +120,35 @@ class CoreDispatcher(object):
         except HTTPException as httpe:
             response = httpe
 
-        if isinstance(response, bytes):
+        if response is tg.response or response is py_response:
+            # Controller returned the response itself, so we need to do nothing.
+            return response
+
+        if response is None:
+            # No content
+            py_response.body = b''
+            if py_response.status_int == 200:
+                # Ensure that for missing content we return 'No Content', instead of 200 OK
+                py_response.content_type = None
+                py_response.status_int = 204
+        elif isinstance(response, bytes):
             py_response.body = response
         elif isinstance(response, unicode_text):
             if not py_response.charset:
                 py_response.charset = 'utf-8'
             py_response.text = response
         elif isinstance(response, WebObResponse):
-            py_response.content_length = response.content_length
+            # Copy eventual headers from tg.response
             for name, value in py_response.headers.items():
                 header_name = name.lower()
+                if header_name in ('content-type', 'content-length'):
+                    # Do not overwrite content related headers in returned response
+                    continue
                 if header_name == 'set-cookie':
                     response.headers.add(name, value)
                 else:
                     response.headers.setdefault(name, value)
             py_response = context.response = response
-        elif response is None:
-            pass
         else:
             py_response.app_iter = response
 

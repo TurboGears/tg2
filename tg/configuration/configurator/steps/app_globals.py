@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from tg.util import DottedFileNameFinder, Bunch
+from ...._compat import import_module
+from ....util import DottedFileNameFinder, Bunch
 from ..base import (ConfigurationStep,
                     ConfigReadyConfigurationAction)
 
@@ -30,15 +31,26 @@ class AppGlobalsConfigurationStep(ConfigurationStep):
         are setup. TurboGears expects them to be available in ``conf`` dictionary
         as ``tg.app_globals`` and ``helpers``.
         """
+        # Setup AppGlobals
         gclass = conf.pop('app_globals', None)
         if gclass is None:
             try:
-                g = conf['package'].lib.app_globals.Globals()
+                gclass = conf['package'].lib.app_globals.Globals
             except AttributeError:
-                log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
-                g = Bunch()
-        else:
-            g = gclass()
+                pass
+
+        if gclass is None:
+            try:
+                app_globals_mod = import_module('.lib.app_globals', package=self.package.__name__)
+                gclass = getattr(app_globals_mod, 'Globals')
+            except (ImportError, AttributeError):
+                pass
+
+        if gclass is None:
+            log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
+            gclass = Bunch
+
+        g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
         conf['tg.app_globals'] = g

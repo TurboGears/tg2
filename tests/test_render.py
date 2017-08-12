@@ -2,6 +2,7 @@
 Testing for TG2 Configuration
 """
 from nose.tools import raises
+from webtest import TestApp
 
 import tg
 from tg.render import MissingRendererError, _get_tg_vars
@@ -33,6 +34,16 @@ def test_render_missing_renderer():
 
     tg.render_template({}, 'gensh')
 
+
+def test_render_default():
+    conf = AppConfig(minimal=True)
+    conf.default_renderer = 'json'
+    app = conf.make_wsgi_app()
+
+    res = tg.render_template({'value': 'value'})
+    assert 'value": "value' in res
+
+
 def test_jinja_lookup_nonexisting_template():
     conf = AppConfig(minimal=True)
     conf.use_dotted_templatenames = True
@@ -49,6 +60,41 @@ def test_jinja_lookup_nonexisting_template():
     except TemplateNotFound:
         pass
 
+
+class TestKajikiSupport(object):
+    def setup(self):
+        conf = AppConfig(minimal=True)
+        conf.use_dotted_templatenames = True
+        conf.renderers.append('kajiki')
+        conf.package = FakePackage()
+        self.conf = conf
+        self.app = TestApp(conf.make_wsgi_app())
+        self.render = self.conf.render_functions['kajiki']
+
+    def test_template_found(self):
+        with test_context(self.app):
+            res = self.render('tests.test_stack.rendering.templates.kajiki_i18n', {})
+        assert 'Your application is now running' in res
+
+    def test_dotted_template_not_found(self):
+        try:
+            with test_context(self.app):
+                res = self.render('tests.test_stack.rendering.templates.this_doesnt_exists', {})
+        except IOError as e:
+            assert 'this_doesnt_exists.xhtml not found' in str(e)
+        else:
+            raise AssertionError('Should have raised IOError')
+
+    def test_filename_template_not_found(self):
+        try:
+            with test_context(self.app):
+                res = self.render('this_doesnt_exists/this_doesnt_exists.xhtml', {})
+        except IOError as e:
+            assert 'this_doesnt_exists.xhtml not found in template paths' in str(e)
+        else:
+            raise AssertionError('Should have raised IOError')
+
+
 class TestMakoLookup(object):
     def setup(self):
         conf = AppConfig(minimal=True)
@@ -60,7 +106,7 @@ class TestMakoLookup(object):
 
     def test_adjust_uri(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         assert mlookup.adjust_uri('this_template_should_pass_unaltered', None) == 'this_template_should_pass_unaltered'
 
@@ -81,7 +127,7 @@ class TestMakoLookup(object):
         t = Template('Hi')
 
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.template_cache['hi_template'] = t
         assert mlookup.get_template('hi_template') is t
 
@@ -91,20 +137,20 @@ class TestMakoLookup(object):
         t = Template('Hi', filename='deleted_template.mak')
 
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.template_cache['deleted_template'] = t
         mlookup.get_template('deleted_template')
 
     @raises(IOError)
     def test_never_existed(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         mlookup.get_template('deleted_template')
 
     def test__check_should_reload_on_cache_expire(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
         t = mlookup.get_template(template_path) #cache the template
@@ -128,7 +174,7 @@ class TestMakoLookup(object):
 
     def test__check_should_not_reload_when_disabled(self):
         render_mako = self.conf.render_functions['mako']
-        mlookup = render_mako.loader
+        mlookup = render_mako.dotted_loader
         mlookup.auto_reload = False
 
         template_path = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)

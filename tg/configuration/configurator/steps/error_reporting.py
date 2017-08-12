@@ -18,6 +18,7 @@ class ErrorReportingConfigurationStep(ConfigurationStep):
     def _configure_backlash(self, conf, app):
 
         trace_errors_config = coerce_config(conf, 'trace_errors.', {
+            'enable': asbool,
             'smtp_use_tls': asbool,
             'dump_request_size': asint,
             'dump_request': asbool,

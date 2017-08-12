@@ -1,5 +1,57 @@
 = Change Log =
 
+== 2.3.11 (**July 3, 2017**) ==
+
+* When configuring authentication it is now possible to provide ``('default', None)`` as an identifier to set custom identifiers and retain the default one.
+* Python 3.6 is now officially supported
+* Invalid requests (like GETs with a body) will not crash ``decode_params`` anymore.
+* ``tg.util.webtest.test_context`` no longer depends on ``WebTest`` and can work on a plain ``TGApp`` instance.
+* ErrorReporter now supports ``trace_errors.smtp_port`` option.
+* ``trace_errors.enable = False`` can now disable error tracing middleware even when backlash is available
+* Improved Kajiki template not found error message
+* Support for datetime.time in json encoder
+* Extract i18n from python code in kajiki templates by default
+* Support for IPython in tgshell command.
+* Add support for migrations from multiple databases when more than one database is involved.
+* Fix for SCRIPT_NAME in login in quickstart template.
+
+== 2.3.10 (**December 4, 2016**) ==
+
+* Fixed unicode error messages in ``validation_errors_response``
+* Added support for strip_text in kajiki templates
+* Transaction manager no longer sets current path as not (fixes crash with transaction 2.0.3)
+* Improved deprecated features warning reporting
+* Allow custom error pages to only render for specific content types through ``errorpage.content_types`` option.
+* Custom error pages no longer will render for content types != text/html
+* Fixed ``tg.abort`` passthrough support, now properly skipping error pages and authentication.
+* Changing ``tg.response.content_type`` in controller actions will now properly change the rendered template when multiple ones are registered.
+* Documented request attributes and methods that previously were not.
+* Exposed ``request.disable_error_pages()`` and ``request.disable_auth_challenger()`` to skip custom error pages and auth challenging in current request.
+* It is no longer needed for ``lib.helpers`` and ``lib.app_globals`` to be imported into ``lib/__init__.py``.
+* Controller Actions can now return ``None`` for a *204 No Content* response.
+* Returning ``tg.response`` from a controller action will now return the response as it is instead of creating a new copy of it
+* JSON renderer now accepts rendering only a part of the dictionary returned by the action through the ``key`` render_param.
+* It is now possible to return JSON lists instead of objects from actions by using ``render_params={'allow_lists': False, 'key': 'values'}`` in ``@expose`` and returning the list in ``values`` key of the action returned dictionary.
+* ``script_json_encode`` will now encode as JSON lists and iso dates by default.
+* Remove downloads they are not more supported by pypi
+* Fixed scaffolds for templates in newly quickstarted projects
+
+== 2.3.9 (**August 11, 2016**) ==
+
+* Kajiki is now the default template engine for easier quickstarting of projects on Python 3.4 and 3.5
+* tgext.debugbar is now installed with devtools
+* When quickstarting a project with Genshi on Python3.4 "name_constant" patch is enabled by default
+* Devtools are now tested against Python 3.4 and 3.5 too
+* Python 3.2 is no longer officially supported.
+* Allow running python scripts through 'gearbox tgshell'
+* Support render_params in kajiki
+* Allow forcing file extension using !ext syntax in dotted templates
+* Allow mixing dotted and file notations in mako renderer too
+* Allow custom template file extension for mako templates
+* Make DotteFileNameFinder work with zips too and add test for it
+* Adapted tests for webob that doesn't specify encoding anymore for json
+* Better support pkg_resources for forezen TG apps
+
 == 2.3.8 (**March 16, 2016**) ==
 
 * Fix auth logger not being configured in Ming quickstart

@@ -32,8 +32,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-
-
 class _hook_decorator(object):
     """Superclass for all the specific TG2 hook validators.
 
@@ -154,7 +152,7 @@ class expose(object):
 
     The last expose decorator example uses the custom_format parameter
     which takes an arbitrary value (in this case 'special_xml').
-    You can then use the`use_custom_format` function within the method
+    You can then use the :meth:`use_custom_format` function within the method
     to decide which of the 'custom_format' registered expose decorators
     to use to render the template.
 
@@ -345,7 +343,12 @@ class decode_params(object):
 
     def run_hook(self, remainder, params):
         if self._format == 'json' and request.content_type == 'application/json':
-            params.update(request.json_body)
+            try:
+                params.update(request.json_body)
+            except ValueError:
+                # Invalid JSON provided, nothing to decode
+                log.debug('Invalid JSON provided to decode_params')
+                pass
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from tg.util import Bunch
+from ....util import Bunch
+from ...._compat import import_module
 from ..base import (ConfigurationStep,
                     ConfigReadyConfigurationAction)
 
@@ -30,12 +31,24 @@ class HelpersConfigurationStep(ConfigurationStep):
         are setup. TurboGears expects them to be available in ``conf`` dictionary
         as ``tg.app_globals`` and ``helpers``.
         """
+        # Setup Helpers
         h = conf.get('helpers', None)
         if h is None:
             try:
                 h = conf['package'].lib.helpers
             except AttributeError:
-                log.warn('helpers not provided and lib.helpers is not available.')
-                h = Bunch()
+                pass
+
+        if h is None:
+            try:
+                h = import_module('.lib.helpers', package=self.package.__name__)
+            except (ImportError, AttributeError):
+                pass
+
+        if h is None:
+            log.warn('helpers not provided and lib.helpers is not available.')
+            h = Bunch()
+
         conf['helpers'] = h
+
 

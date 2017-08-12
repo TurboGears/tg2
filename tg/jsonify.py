@@ -91,9 +91,9 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
                     return encoder(obj)
         elif hasattr(obj, '__json__') and callable(obj.__json__):
             return obj.__json__()
-        elif isinstance(obj, (datetime.date, datetime.datetime)):
+        elif isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
             if self._isodates:
-                if isinstance(obj, datetime.datetime):
+                if isinstance(obj, (datetime.datetime, datetime.time)):
                     obj = obj.replace(microsecond=0)
                 return obj.isoformat()
             else:

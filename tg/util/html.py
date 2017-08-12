@@ -1,7 +1,11 @@
+from ..jsonify import JSONEncoder
 from ..jsonify import encode as json_encode
 
 
-def script_json_encode(obj, **kwargs):
+_script_json_encoder = JSONEncoder(isodates=True, allow_lists=True)
+
+
+def script_json_encode(obj, encoder=_script_json_encoder, **kwargs):
     """Works exactly like :func:`tg.jsonify.encode` but is safe
     for use in ``<script>`` tags.
 
@@ -15,7 +19,7 @@ def script_json_encode(obj, **kwargs):
     notable exception of double quoted attributes.  In that case single
     quote your attributes or HTML escape it in addition.
     """
-    rv = json_encode(obj, **kwargs) \
+    rv = json_encode(obj, encoder=encoder, **kwargs) \
         .replace('<', '\\u003c') \
         .replace('>', '\\u003e') \
         .replace('&', '\\u0026') \

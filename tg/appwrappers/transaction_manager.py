@@ -23,7 +23,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
         - ``tm.attempts``: Number of times the transaction should be retried if
           it fails (no retry by default)
         - ``tm.commit_veto``: A function that will be called for every transaction to check
-          if it should abort transaction or let it go. Function signature shoul be:
+          if it should abort transaction or let it go. Function signature should be:
           ``function(environ, status_code, headers) -> bool``.
 
     """
@@ -73,15 +73,11 @@ class TransactionApplicationWrapper(ApplicationWrapper):
         while attempts_left:
             attempts_left -= 1
 
+            log.debug('Attempts Left %d (%d total)', attempts_left, total_attempts)
+            txn = transaction_manager.begin()
             try:
-                log.debug('Attempts Left %d (%d total)', attempts_left, total_attempts)
-                transaction_manager.begin()
-
-                t = transaction_manager.get()
-                t.note(environ.get('PATH_INFO', ''))
-
                 response = self.next_handler(controller, environ, context)
-                if transaction_manager.isDoomed():
+                if txn.isDoomed():
                     log.debug('Transaction doomed')
                     raise AbortTransaction(response)
 
@@ -91,18 +87,18 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                         log.debug('Transaction vetoed')
                         raise AbortTransaction(response)
 
-                transaction_manager.commit()
+                txn.commit()
                 log.debug('Transaction committed!')
                 return response
             except AbortTransaction as e:
-                transaction_manager.abort()
+                txn.abort()
                 return e.response
             except:
                 exc_info = sys.exc_info()
                 log.debug('Error while running request, aborting transaction')
                 try:
                     can_retry = transaction_manager._retryable(*exc_info[:-1])
-                    transaction_manager.abort()
+                    txn.abort()
                     if (attempts_left <= 0) or (not can_retry):
                         reraise(*exc_info)
                 finally:

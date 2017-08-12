@@ -58,6 +58,10 @@ class TestTGController(object):
         resp = self.app.post_json('/echo_json', params)
         assert resp.json_body == params
 
+    def test_decode_params_json_invalid(self):
+        resp = self.app.get('/echo_json', headers={'Content-Type': 'application/json'})
+        assert resp.json_body == {}
+
     @raises(ValueError)
     def test_decode_params_notjson(self):
         @decode_params('xml')

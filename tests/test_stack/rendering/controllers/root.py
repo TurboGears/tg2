@@ -9,6 +9,8 @@ from tg._compat import PY3
 from tg.render import _get_tg_vars, cached_template
 import datetime
 
+from webob.exc import HTTPForbidden
+
 if not PY3:
     from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
     from tw.api import WidgetsList
@@ -110,15 +112,33 @@ class SubClassingController(SubClassableController):
     def data(self, *args, **kw):
         return super(SubClassingController, self).data(*args, **kw)
 
+
+class ErrorController(TGController):
+    @expose('genshi:index.html')
+    def document(self, *args, **kwargs):
+        return dict()
+
+
 class RootController(TGController):
 
     j = JsonController()
     sub1 = SubClassableController()
     sub2 = SubClassingController()
+    error = ErrorController()
 
     @expose('genshi:index.html')
     def index(self):
         return {}
+
+    @expose('json')
+    def aborted_json(self):
+        raise HTTPForbidden(json_body={'error': 'value'})
+
+    @expose('kajiki:tests.test_stack.rendering.templates.index')
+    @expose('json')
+    def according_to_content_type(self, ctype):
+        tg.response.content_type = ctype
+        return dict(value='SomeValue')
 
     @expose('genshi:genshi_doctype.html')
     def auto_doctype(self):
@@ -305,6 +325,13 @@ class RootController(TGController):
     def index_dotted(self):
         return {}
 
+    @expose('kajiki:tests.test_stack.rendering.templates.index!html')
+    def index_dotted_with_forced_extension(self):
+        # This explicitly exposes a Genshi template through Kajiki
+        # using the !ext syntax to force correct extension resolution.
+        tmpl_context.now = lambda: 'IT WORKS'
+        return {}
+
     @expose('genshi:tests.test_stack.rendering.templates.genshi_inherits')
     def genshi_inherits_dotted(self):
         return {}
@@ -453,6 +480,10 @@ class RootController(TGController):
     def get_jsonp(self, **kwargs):
         return {'value': 5}
 
+    @expose('jsonp', render_params={'callback_param': 'call', 'key': 'result'})
+    def get_jsonp_with_key(self, **kwargs):
+        return {'result': {'value': 5}}
+
     @expose('json')
     def get_json_isodates_default(self, **kwargs):
         return {'date': datetime.datetime.utcnow()}
@@ -464,6 +495,14 @@ class RootController(TGController):
     @expose('json', render_params={'isodates': False})
     def get_json_isodates_off(self, **kwargs):
         return {'date': datetime.datetime.utcnow()}
+
+    @expose('json', render_params={'allow_lists': True, 'key': 'values'})
+    def get_json_list(self, **kwargs):
+        return dict(values=[1, 2, 3])
+
+    @expose('json', render_params={'allow_lists': False, 'key': 'values'})
+    def json_return_list(self):
+        return dict(values=[1,2,3])
 
     @expose('json')
     @decode_params('json')

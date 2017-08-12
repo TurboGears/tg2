@@ -154,7 +154,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if context is None:  # pragma: no cover
             warnings.warn("Calling DecoratedController._perform_validate without a Context is now deprecated."
                           " Please provide the context argument when calling it.",
-                          DeprecationWarning)
+                          DeprecationWarning, stacklevel=2)
             context = tg.request.environ['tg.locals']
 
         validations = controller.decoration.validations
@@ -191,28 +191,28 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         req = tgl.request
         resp = tgl.response
 
-        (content_type, engine_name, template_name, exclude_names, render_params
-            ) = controller.decoration.lookup_template_engine(tgl)
+        (engine_content_type, engine_name, template_name,
+         exclude_names, render_params) = controller.decoration.lookup_template_engine(tgl)
 
-        result = dict(response=response, content_type=content_type,
+        result = dict(response=response, content_type=engine_content_type,
                       engine_name=engine_name, template_name=template_name)
 
-        if content_type is not None:
-            resp.headers['Content-Type'] = content_type
+        if resp.content_type is None and engine_content_type is not None:
+            # User didn't set a specific content type during controller
+            # and template engine has a suggested one. Use template engine one.
+            resp.headers['Content-Type'] = engine_content_type
+
+            content_type = resp.headers['Content-Type']
+            if 'charset' not in content_type and (
+                        content_type.startswith('text') or content_type in ('application/xhtml+xml',
+                                                                            'application/xml',
+                                                                            'application/json')
+            ):
+                resp.content_type = content_type + '; charset=utf-8'
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
-            if engine_name == 'json' and isinstance(response, list):
-                raise JsonEncodeError(
-                    'You may not expose with JSON a list return value because'
-                    ' it leaves your application open to CSRF attacks.')
             return result
-
-        # Save these objects as locals from the SOP to avoid expensive lookups
-        tmpl_context = tgl.tmpl_context
-
-        # If there is an identity, push it to the Pylons template context
-        tmpl_context.identity = req.environ.get('repoze.who.identity')
 
         # Setup the template namespace, removing anything that the user
         # has marked to be excluded.

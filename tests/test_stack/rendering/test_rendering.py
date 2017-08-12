@@ -633,6 +633,19 @@ def test_variable_provider():
     resp = app.get('/get_tg_vars')
     assert 'inject_this_var' in resp
 
+def test_index_dotted_with_forced_extension():
+    app = setup_noDB()
+    resp = app.get('/index_dotted_with_forced_extension')
+    assert 'Welcome to TurboGears' in resp
+    assert 'NOW: IT WORKS' in resp
+
+    # The purely kajiki version of this template doesn't have NOW,
+    # check it's actually like that otherwise we would pass the previous
+    # check even when it didn't resolve to the genshi template.
+    kresp = app.get('/kajiki_index_dotted')
+    assert 'Welcome to TurboGears' in kresp
+    assert 'NOW: IT WORKS' not in kresp
+
 def test_render_hooks():
     old_hooks, tg.hooks = tg.hooks, _TGGlobalHooksNamespace()
 
@@ -659,6 +672,24 @@ def test_render_hooks():
         assert len(calls) == 2
     finally:
         tg.hooks = old_hooks
+
+
+class TestEngineDetection(object):
+    def setUp(self):
+        self.app = setup_noDB(genshi_doctype='html', extra={
+            'errorpage.enabled': True
+        })
+
+    def test_no_engine_for_content_type(self):
+        resp = self.app.get('/aborted_json', status=403)
+        assert '{"error":"value"}' in resp
+
+    def test_content_type_provided(self):
+        resp = self.app.get('/according_to_content_type?ctype=text/html')
+        assert '<p>SomeValue' in resp
+        resp = self.app.get('/according_to_content_type?ctype=application/json')
+        assert 'value": "SomeValue' in resp, resp
+
 
 class TestTemplateCaching(object):
     def setUp(self):
@@ -722,6 +753,10 @@ class TestJSONRendering(object):
         resp = self.app.get('/get_jsonp', params={'call': 'callme'})
         assert 'callme({"value": 5});' in resp.text, resp
 
+    def test_jsonp_with_key(self):
+        resp = self.app.get('/get_jsonp_with_key', params={'call': 'callme'})
+        assert 'callme({"value": 5});' in resp.text, resp
+
     def test_jsonp_missing_callback(self):
         resp = self.app.get('/get_jsonp', status=400)
         assert 'JSONP requires a "call" parameter with callback name' in resp.text, resp
@@ -739,3 +774,14 @@ class TestJSONRendering(object):
     def test_json_without_isodates(self):
         resp = self.app.get('/get_json_isodates_off')
         assert ' ' in resp.json_body['date'], resp
+
+    def test_json_lists_allowing(self):
+        resp = self.app.get('/get_json_list')
+        assert '[1, 2, 3]' == resp.text
+
+    def test_json_return_list(self):
+        try:
+            resp = self.app.get("/json_return_list")
+            assert False
+        except Exception as e:
+            assert 'Your Encoded object must be dict-like' in str(e), e

@@ -1,11 +1,9 @@
 """Configuration Helpers for TurboGears 2"""
-
 import os
 import logging
 import warnings
 from copy import copy, deepcopy
 from collections import MutableMapping as DictMixin, deque
-
 from tg.appwrappers.identity import IdentityApplicationWrapper
 
 from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
@@ -340,6 +338,8 @@ class OldAppConfig(Bunch):
         if self.prefer_toscawidgets2:
             self.use_toscawidgets = False
             self.use_toscawidgets2 = True
+
+        conf = {}
 
         # Load the errorware configuration from the Paste configuration file
         # These all have defaults, and emails are only sent if configured and

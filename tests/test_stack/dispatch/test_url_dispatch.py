@@ -170,20 +170,31 @@ def test_basicurls():
 
 def test_ignore_parameters():
     resp = app.get("/check_params?ignore='bar'&ignore_me='foo'")
-    assert "None Received"
-
-def test_json_return_list():
-    try:
-        resp = app.get("/json_return_list")
-        assert False
-    except Exception as e:
-        assert 'You may not expose with JSON a list' in str(e)
+    assert "None recieved" in resp.text, resp.text
 
 def test_https_redirect():
     resp = app.get("/test_https?foo=bar&baz=bat")
     assert 'https://' in resp, resp
     assert resp.location.endswith("/test_https?foo=bar&baz=bat")
     resp = app.post("/test_https?foo=bar&baz=bat", status=405)
+
+def test_return_non_string():
+    try:
+        resp = app.get("/return_something")
+        assert False
+    except:
+        # Do not try to be too smart catching all cases
+        # if returned value is not a valid wsgi app_iter
+        # let it crash
+        pass
+
+def test_return_none():
+    resp = app.get('/return_none', status=204)
+    assert 'Content-Type' not in str(resp), resp
+
+def test_return_modified_response():
+    resp = app.get('/return_modified_response', status=201)
+    assert 'Hello World' in resp.text
 
 class TestVisits(object):
     def test_visit_path_sub1(self):

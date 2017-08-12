@@ -1,4 +1,7 @@
 import warnings
+
+from tg._compat import unicode_text
+
 from .i18n import _formencode_gettext, lazy_ugettext
 
 try:
@@ -43,7 +46,7 @@ class _ValidationStatus(object):
 
     def __getitem__(self, item):
         warnings.warn("Accessing validation status properties with [] syntax is deprecated. "
-                      " Please use dot notation instead", DeprecationWarning)
+                      " Please use dot notation instead", DeprecationWarning, stacklevel=2)
         try:
             return getattr(self, item)
         except AttributeError:
@@ -146,10 +149,15 @@ class TGValidationError(Exception):
 
     @classmethod
     def make_compound_message(cls, error_dict):
-        return '\n'.join("%s: %s" % errorinfo for errorinfo in error_dict.items())
+        return unicode_text('\n').join(
+            unicode_text("%s: %s") % errorinfo for errorinfo in error_dict.items()
+        )
 
     def __str__(self):
         return str(self.msg)
+
+    def __unicode__(self):
+        return unicode_text(self.msg)
 
 
 class Convert(object):
@@ -169,7 +177,7 @@ class Convert(object):
 
         @expose()
         @validate({
-            'num': Converter(int, 'Must be a number')
+            'num': Convert(int, 'Must be a number')
         }, error_handler=insert_number)
         def post_pow2(self, num):
             return str(num*num)

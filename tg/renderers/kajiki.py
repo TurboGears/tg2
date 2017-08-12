@@ -30,6 +30,13 @@ class KajikiRenderer(RendererFactory):
         - ``templating.kajiki.xml_autoblocks`` -> List of tags that should be automatically converted to blocks.
         - ``templating.kajiki.cdata_scripts`` -> Automatically wrap scripts in CDATA.
         - ``templating.kajiki.html_optional_tags`` -> Allow unclosed html, head and body tags.
+        - ``templating.kajiki.strip_text`` -> Strip leading/trailing spaces from text nodes.
+
+    Supported ``render_params``:
+
+        - Caching options supported by :func:`.cached_template`
+        - All arguments supported by :func:`kajiki.xml_template.XMLTemplate`
+
     """
     CONFIG_OPTIONS = {
         'force_mode': str,
@@ -38,6 +45,7 @@ class KajikiRenderer(RendererFactory):
         'xml_autoblocks': aslist,
         'cdata_scripts': asbool,
         'html_optional_tags': asbool,
+        'strip_text': asbool
     }
     engines = {'kajiki': {'content_type': 'text/html'}}
 
@@ -72,7 +80,7 @@ class KajikiRenderer(RendererFactory):
         self.loader = loader
 
     def __call__(self, template_name, template_vars, cache_key=None,
-                 cache_type=None, cache_expire=None):
+                 cache_type=None, cache_expire=None, **render_params):
         """Render a template with Kajiki
 
         Accepts the cache options ``cache_key``, ``cache_type``, and
@@ -82,7 +90,7 @@ class KajikiRenderer(RendererFactory):
         # Create a render callable for the cache function
         def render_template():
             # Grab a template reference
-            template = self.loader.load(template_name)
+            template = self.loader.load(template_name, **render_params)
             return Markup(template(template_vars).render())
 
         return cached_template(template_name, render_template,
@@ -110,4 +118,7 @@ class KajikiTemplateLoader(FileLoader):
             if not os.path.exists(filename):
                 raise IOError('Template %s not found' % filename)
 
-        return super(KajikiTemplateLoader, self)._filename(filename)
+        resolved_filename = super(KajikiTemplateLoader, self)._filename(filename)
+        if resolved_filename is None:
+            raise IOError('Template %s not found in template paths' % filename)
+        return resolved_filename
