@@ -285,29 +285,12 @@ class OldAppConfig(Bunch):
     """
     CONFIG_OPTIONS = {
         'debug': asbool,
-        'serve_static': asbool,
-        'use_toscawidgets2': asbool,
-        'prefer_toscawidgets2': asbool
     }
 
     def __init__(self, minimal=False, root_controller=None):
         """Creates some configuration defaults"""
-        # Create a few bunches we know we'll use
-        self.paths = Bunch()
-
-        # Provide a default app_globals for single file applications
-        self.app_globals = None
-        self.helpers = None
-
-        # Set individual defaults
-        self.serve_static = not minimal
-
         self.enable_routing_args = False
         self.disable_request_extensions = minimal
-
-        self.use_toscawidgets = not minimal
-        self.use_toscawidgets2 = False
-        self.prefer_toscawidgets2 = False
 
         # Registry for functions to be called on startup/teardown
         self.call_on_startup = []
@@ -315,15 +298,6 @@ class OldAppConfig(Bunch):
         self.controller_caller = call_controller
         self.controller_wrappers = []
         self.application_wrappers = DependenciesList()
-
-        # override this variable to customize how the tw2 middleware is set up
-        self.custom_tw2_config = {}
-
-        # This is for minimal mode to set root controller manually
-        if root_controller is not None:
-            self['tg.root_controller'] = root_controller
-
-
 
     def _init_config(self, global_conf, app_conf):
         """Initialize the config object.
@@ -333,11 +307,6 @@ class OldAppConfig(Bunch):
 
         """
         # Load the mimetypes with its default types
-
-
-        if self.prefer_toscawidgets2:
-            self.use_toscawidgets = False
-            self.use_toscawidgets2 = True
 
         conf = {}
 
@@ -349,41 +318,7 @@ class OldAppConfig(Bunch):
 
         conf['tg.errorware'] = errorware
 
-        if not conf['paths']['static_files']:
-            conf['serve_static'] = False
-
         return conf
-
-    def make_load_environment(self):
-        """Return a load_environment function.
-
-        The returned load_environment function can be called to configure
-        the TurboGears runtime environment for this particular application.
-        You can do this dynamically with multiple nested TG applications
-        if necessary.
-
-        """
-
-        def load_environment(global_conf, app_conf):
-            """Configure the TurboGears environment via ``tg.configuration.config``."""
-            global_conf = Bunch(global_conf)
-            app_conf = Bunch(app_conf)
-
-            app_config = self._init_config(global_conf, app_conf)
-            tg.hooks.notify('initialized_config', args=(self, app_config))
-            tg.hooks.notify('startup', trap_exceptions=True)
-
-            self._setup_auth(app_config)
-            self._setup_renderers(app_config)
-            self._setup_persistence(app_config)
-
-            # Trigger milestone here so that it gets triggered even when
-            # websetup (setup-app command) is performed.
-            milestones.environment_loaded.reach()
-
-            return app_config
-
-        return load_environment
 
     def _add_error_middleware(self, app_config, app):
         """Add middleware which handles errors and exceptions."""
@@ -412,10 +347,6 @@ class OldAppConfig(Bunch):
     def _add_debugger_middleware(self, app_config, app):
         from tg.error import ErrorHandler
         return ErrorHandler(app, app_config)
-
-    def _add_static_file_middleware(self, conf, app):
-        app = StaticsMiddleware(app, conf['paths']['static_files'])
-        return app
 
     def _add_seekable_body_middleware(self, conf, app):
         """Make the request body seekable, so it can be read multiple times."""
@@ -489,17 +420,6 @@ class OldAppConfig(Bunch):
 
             app = tg.hooks.notify_with_value('before_config', app)
 
-            # TODO: Middlewares before this point should be converted to App Wrappers.
-            # They provide some basic TG features like AUTH, Caching and transactions
-            # which should be app wrappers to make possible to add wrappers in the
-            # stack before or after them.
-
-            if app_config.get('use_toscawidgets', False):
-                app = self._add_tosca_middleware(app_config, app)
-
-            if app_config.get('use_toscawidgets2', False):
-                app = self._add_tosca2_middleware(app_config, app)
-
             if app_config.get('make_body_seekable', False):
                 app = self._add_seekable_body_middleware(app_config, app)
 
@@ -512,17 +432,9 @@ class OldAppConfig(Bunch):
             # can preserve context in case of exceptions
             app = self._add_debugger_middleware(app_config, app)
 
-            # Static files (if running in production, and Apache or another
-            # web server is serving static files)
-            if app_config.get('serve_static', False):
-                app = self._add_static_file_middleware(app_config, app)
-
             app = tg.hooks.notify_with_value('after_config', app)
 
             return app
 
         return make_base_app
 
-    def make_wsgi_app(self, **app_conf):
-        loadenv = self.make_load_environment()
-        return self.setup_tg_wsgi_app(loadenv)(**app_conf)

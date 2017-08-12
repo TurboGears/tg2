@@ -12,7 +12,8 @@ from .steps.auth import SimpleAuthenticationConfigurationStep
 from .steps.i18n import I18NConfigurationStep
 from .steps.caching import CachingConfigurationStep
 from .steps.session import SessionConfigurationStep
-
+from .steps.toscawidgets2 import ToscaWidgets2ConfigurationStep
+from .steps.statics import StaticsConfigurationStep
 
 log = logging.getLogger(__name__)
 
@@ -32,9 +33,8 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         # from here on, due to TW2, the response is a generator
         # so any middleware that relies on the response to be
         # a string needs to be applied before this point.
+        self.register(ToscaWidgets2ConfigurationStep)
 
-
-        # Tosca HERE
         self.register(MingConfigurationStep)
         self.register(SQLAlchemyConfigurationStep)
         self.register(ErrorPagesConfigurationStep)
@@ -42,3 +42,5 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         # Seekable HERE
         self.register(SlowRequestsConfigurationStep)
         self.register(ErrorReportingConfigurationStep)
+        
+        self.register(StaticsConfigurationStep)

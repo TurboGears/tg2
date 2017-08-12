@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from tg.support.converters import asbool
+
 from ...utils import TGConfigError
 from ..base import (ConfigurationStep,
                     BeforeConfigConfigurationAction, AppReadyConfigurationAction)
@@ -15,7 +17,15 @@ class ToscaWidgets2ConfigurationStep(ConfigurationStep):
 
     def get_defaults(self):
         return {
-            'tw2.enabled': False
+            'tw2.enabled': False,
+            'custom_tw2_config': {}
+        }
+
+    def get_coercion(self):
+        return {
+            'tw2.enabled': asbool,
+            'prefer_toscawidgets2': asbool,
+            'use_toscawidgets2': asbool
         }
 
     def get_actions(self):
