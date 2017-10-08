@@ -722,13 +722,13 @@ class cached(object):
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
 
-        def controller_wrapper(__, next_caller):
+        def controller_wrapper(next_caller):
             if self.invalidate_on_startup:
                 starttime = time.time()
             else:
                 starttime = None
 
-            def cached_call_controller(controller, remainder, params):
+            def cached_call_controller(tg_config, controller, remainder, params):
                 req = request._current_obj()
                 if self.key:
                     key_dict = req.args_params
@@ -744,7 +744,7 @@ class cached(object):
                 req._fast_setattr('caching', Bunch(namespace=namespace,
                                                    key=cache_key))
 
-                return _cached_call(next_caller, (controller, remainder, params), {},
+                return _cached_call(next_caller, (tg_config, controller, remainder, params), {},
                                     namespace, cache_key,
                                     expire=self.expire, type=self.type,
                                     starttime=starttime, cache_headers=self.cache_headers,
