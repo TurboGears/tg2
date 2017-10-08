@@ -4,7 +4,6 @@ import warnings
 from webob.acceptparse import Accept
 
 from tg.configuration import milestones
-from tg.configuration.app_config import call_controller
 from tg.configuration import config
 
 import logging
@@ -15,7 +14,9 @@ def _decorated_controller_caller(tg_config, controller, remainder, params):
     try:
         application_controller_caller = tg_config['controller_caller']
     except KeyError:
-        application_controller_caller = call_controller
+        # This should never happen as controller_caller is setup by MinimalApplicationConfigurator.
+        from tg.configuration.configurator.steps.dispatch import _call_controller
+        application_controller_caller = _call_controller
 
     return application_controller_caller(tg_config, controller, remainder, params)
 

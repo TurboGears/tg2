@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from tg.configuration.configurator.steps.debugger import DebuggerConfigurationStep
+from tg.configuration.configurator.steps.seekable_request import SeekableRequestConfigurationStep
 from .minimal import MinimalApplicationConfigurator
 
 from .steps.error_pages import ErrorPagesConfigurationStep
@@ -39,8 +41,12 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         self.register(SQLAlchemyConfigurationStep)
         self.register(ErrorPagesConfigurationStep)
 
-        # Seekable HERE
+        self.register(SeekableRequestConfigurationStep)
         self.register(SlowRequestsConfigurationStep)
         self.register(ErrorReportingConfigurationStep)
         
         self.register(StaticsConfigurationStep)
+
+        # Place the debuggers after the registry so that we
+        # can preserve context in case of exceptions
+        self.register(DebuggerConfigurationStep)

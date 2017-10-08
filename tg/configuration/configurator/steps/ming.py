@@ -40,7 +40,7 @@ class MingConfigurationStep(ConfigurationStep):
         return (
             BeforeConfigConfigurationAction(self.configure),
             ConfigReadyConfigurationAction(self.setup),
-            AppReadyConfigurationAction(self.add_middleware)
+            AppReadyConfigurationAction(self.add_middleware),
         )
 
     def on_bind(self, configurator):

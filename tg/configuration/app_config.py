@@ -1,33 +1,12 @@
 """Configuration Helpers for TurboGears 2"""
-import os
 import logging
-import warnings
-from copy import copy, deepcopy
-from collections import MutableMapping as DictMixin, deque
-from tg.appwrappers.identity import IdentityApplicationWrapper
-
-from tg.support.middlewares import StaticsMiddleware, SeekableRequestBodyMiddleware, \
-    DBSessionRemoverMiddleware
-from tg.support.converters import asbool, asint, aslist
+from copy import deepcopy
+from collections import MutableMapping as DictMixin
 from tg.request_local import config as reqlocal_config
 
 import tg
-from tg.util import Bunch, DottedFileNameFinder
-from tg.configuration import milestones
-from tg.configuration.utils import TGConfigError, coerce_config, get_partial_dict, coerce_options, \
-    DependenciesList
-from tg.renderers.genshi import GenshiRenderer
-from tg.renderers.json import JSONRenderer
-from tg.renderers.jinja import JinjaRenderer
-from tg.renderers.mako import MakoRenderer
-from tg.renderers.kajiki import KajikiRenderer
-
-from tg.appwrappers.i18n import I18NApplicationWrapper
-from tg.appwrappers.caching import CacheApplicationWrapper
-from tg.appwrappers.session import SessionApplicationWrapper
-from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
-from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
-from tg.appwrappers.mingflush import MingApplicationWrapper
+from tg.util import Bunch
+from tg.configuration.utils import get_partial_dict
 
 log = logging.getLogger(__name__)
 
@@ -115,9 +94,6 @@ reqlocal_config.push_process_config(deepcopy(defaults))
 config = DispatchingConfigWrapper(reqlocal_config)
 
 
-def call_controller(tg_config, controller, remainder, params):
-    return controller(*remainder, **params)
-
 
 class AppConfig(object):
     __slots__ = ('_configurator', )
@@ -195,6 +171,9 @@ class AppConfig(object):
 
     def register_engine(self, factory):
         self._configurator.get('rendering').register_engine(factory)
+
+    def register_controller_wrapper(self, wrapper, controller=None):
+        self._configurator.get('dispatch').register_controller_wrapper(wrapper, controller)
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -290,158 +269,4 @@ class OldAppConfig(Bunch):
         - ``sqlalchemy.url`` -> Url of the SQLAlchemy database. Refer to :ref:`sqla_master_slave` for
           configuring master-slave urls.
     """
-    CONFIG_OPTIONS = {
-        'debug': asbool,
-    }
-
-    def __init__(self, minimal=False, root_controller=None):
-        """Creates some configuration defaults"""
-        self.enable_routing_args = False
-        self.disable_request_extensions = minimal
-
-        # Registry for functions to be called on startup/teardown
-        self.call_on_startup = []
-        self.call_on_shutdown = []
-        self.controller_caller = call_controller
-        self.controller_wrappers = []
-        self.application_wrappers = DependenciesList()
-
-    def _init_config(self, global_conf, app_conf):
-        """Initialize the config object.
-
-        Besides basic initialization, this method copies all the values
-        in base_config into the ``tg.config`` objects.
-
-        """
-        # Load the mimetypes with its default types
-
-        conf = {}
-
-        # Load the errorware configuration from the Paste configuration file
-        # These all have defaults, and emails are only sent if configured and
-        # if this application is running in production mode
-        errorware = {}
-        errorware['debug'] = conf['debug']
-
-        conf['tg.errorware'] = errorware
-
-        return conf
-
-    def _add_error_middleware(self, app_config, app):
-        """Add middleware which handles errors and exceptions."""
-        from tg.error import ErrorReporter
-        app = ErrorReporter(app, app_config, **app_config['tg.errorware'])
-
-        if app_config['status_code_redirect'] is True:
-            warnings.warn("Support for StatusCodeRedirect is deprecated and "
-                          "will be removed in next major release", DeprecationWarning)
-
-            if app_config['handle_error_page']:
-                from tg.support.middlewares import StatusCodeRedirect
-                # Display error documents for self.handle_status_codes status codes (and
-                # 500 when debug is disabled)
-                handled_status_codes = app_config['handle_status_codes']
-                if not asbool(app_config['debug']):
-                    handled_status_codes += [500]
-                app = StatusCodeRedirect(app, handled_status_codes)
-
-        return app
-
-    def _add_slowreqs_middleware(self, app_config, app):
-        from tg.error import SlowReqsReporter
-        return SlowReqsReporter(app, app_config, **app_config['tg.slowreqs'])
-
-    def _add_debugger_middleware(self, app_config, app):
-        from tg.error import ErrorHandler
-        return ErrorHandler(app, app_config)
-
-    def _add_seekable_body_middleware(self, conf, app):
-        """Make the request body seekable, so it can be read multiple times."""
-        return SeekableRequestBodyMiddleware(app)
-
-    def setup_tg_wsgi_app(self, load_environment=None):
-        """Create a base TG app, with all the standard middleware.
-
-        ``load_environment``
-            A required callable, which sets up the basic evironment
-            needed for the application.
-        ``setup_vars``
-            A dictionary with all special values necessary for setting up
-            the base wsgi app.
-
-        """
-
-        def make_base_app(global_conf=None, wrap_app=None, full_stack=False, **app_conf):
-            """Create a tg WSGI application and return it.
-
-            ``wrap_app``
-                a WSGI middleware component which takes the core turbogears
-                application and wraps it -- inside all the WSGI-components
-                provided by TG and Pylons. This allows you to work with the
-                full environment that your TG application would get before
-                anything happens in the application itself.
-
-            ``global_conf``
-                The inherited configuration for this application. Normally
-                from the [DEFAULT] section of the Paste ini file.
-
-            ``full_stack``
-                Whether or not this application provides a full WSGI stack (by
-                default, meaning it handles its own exceptions and errors).
-                Disable full_stack when this application is "managed" by
-                another WSGI middleware.
-
-            ``app_conf``
-                The application's local configuration. Normally specified in
-                the [app:<name>] section of the Paste ini file (where <name>
-                defaults to main).
-
-            """
-            from tg import TGApp
-
-            if global_conf is None:
-                global_conf = {}
-
-            # Configure the Application environment
-            if load_environment:
-                app_config = load_environment(global_conf, app_conf)
-            else:
-                app_config = tg.config._current_obj()
-
-                # In case load_environment was not performed we manually trigger all
-                # the milestones to ensure that events related to configuration milestones
-                # are performed in any case.
-                milestones.config_ready.reach()
-                milestones.renderers_ready.reach()
-                milestones.environment_loaded.reach()
-
-            # Apply controller wrappers to controller caller
-            self._setup_controller_wrappers(app_config)
-
-            app = TGApp(app_config)
-
-            tg.hooks.notify('configure_new_app', args=(app,))
-
-            if wrap_app:
-                app = wrap_app(app)
-
-            app = tg.hooks.notify_with_value('before_config', app)
-
-            if app_config.get('make_body_seekable', False):
-                app = self._add_seekable_body_middleware(app_config, app)
-
-            if asbool(full_stack):
-                # This should never be true for internal nested apps
-                app = self._add_slowreqs_middleware(app_config, app)
-                app = self._add_error_middleware(app_config, app)
-
-            # Place the debuggers after the registry so that we
-            # can preserve context in case of exceptions
-            app = self._add_debugger_middleware(app_config, app)
-
-            app = tg.hooks.notify_with_value('after_config', app)
-
-            return app
-
-        return make_base_app
-
+    pass
