@@ -120,6 +120,7 @@ _FILENAME_ASCII_STRIP_RE = re.compile(r'[^A-Za-z0-9_.-]')
 _WINDOWS_DEVICE_FILES = ('CON', 'AUX', 'COM1', 'COM2', 'COM3', 'COM4', 'LPT1',
                          'LPT2', 'LPT3', 'PRN', 'NUL')
 
+
 def safe_filename(filename):
     """Escapes a filename to ensure is valid and secure.
 

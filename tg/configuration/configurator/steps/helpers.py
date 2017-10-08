@@ -41,7 +41,7 @@ class HelpersConfigurationStep(ConfigurationStep):
 
         if h is None:
             try:
-                h = import_module('.lib.helpers', package=self.package.__name__)
+                h = import_module('.lib.helpers', package=conf['package'].__name__)
             except (ImportError, AttributeError):
                 pass
 

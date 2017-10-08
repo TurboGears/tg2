@@ -122,6 +122,11 @@ def call_controller(tg_config, controller, remainder, params):
 class AppConfig(object):
     __slots__ = ('_configurator', )
 
+    # Attributes and properties that are automatically returned as a view
+    # This mostly handles backward compatibility with some oddities of
+    # TG<2.4 where some config properties where flat and some were subdicts.
+    VIEWS_ATTRIBUTES = {'sa_auth', }
+
     def __init__(self, **kwargs):
         from .configurator import FullStackApplicationConfigurator
         self._configurator = FullStackApplicationConfigurator()
@@ -165,6 +170,8 @@ class AppConfig(object):
         self._configurator.update_blueprint({key: value})
 
     def __getitem__(self, item):
+        if item in self.VIEWS_ATTRIBUTES:
+            return self.get_view(item)
         return self._configurator.get_blueprint_value(item)
 
     def get_view(self, item):

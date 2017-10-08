@@ -41,7 +41,8 @@ class AppGlobalsConfigurationStep(ConfigurationStep):
 
         if gclass is None:
             try:
-                app_globals_mod = import_module('.lib.app_globals', package=self.package.__name__)
+                app_globals_mod = import_module('.lib.app_globals',
+                                                package=conf['package'].__name__)
                 gclass = getattr(app_globals_mod, 'Globals')
             except (ImportError, AttributeError):
                 pass

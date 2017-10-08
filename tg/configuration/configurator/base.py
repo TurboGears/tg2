@@ -220,6 +220,8 @@ class AppReadyConfigurationAction(_ConfigurationAction):
 
 # TODO: Move into utils
 class DictionaryView(object):
+    __slots__ = ('_d', '_keypath')
+
     def __init__(self, d, keypath):
         if keypath[-1] != '.':
             keypath = keypath + '.'
@@ -240,6 +242,13 @@ class DictionaryView(object):
         except KeyError:
             key = self._keypath + item
             raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        if key not in self.__slots__:
+            self.__setitem__(key, value)
+        else:
+            object.__setattr__(self, key, value)
+
 
 # TODO: Move into utils
 def copyoption(v):
