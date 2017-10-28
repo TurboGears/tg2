@@ -34,8 +34,6 @@ from ..base import make_app as base_make_app
 from tg.configuration.auth import setup_auth, TGAuthMetadata
 from tg.predicates import is_user, not_anonymous, in_group, has_permission
 
-from tg.error import ErrorHandler
-
 #{ AUT's setup
 NOT_AUTHENTICATED = "The current user must have been authenticated"
 

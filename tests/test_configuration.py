@@ -18,10 +18,9 @@ from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
-from tg.configuration.app_config import TGConfigError, defaults as app_config_defaults
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
-from tg.configuration.utils import coerce_config, coerce_options
+from tg.configuration.utils import coerce_config, coerce_options, TGConfigError
 from tg.configuration import milestones
 from tg.support.converters import asint, asbool
 

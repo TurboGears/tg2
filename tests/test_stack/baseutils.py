@@ -1,7 +1,9 @@
-import tg
+import tg.renderers.json
+
 
 class FakePackage(object):
     pass
+
 
 default_config = {
         'debug': False,
