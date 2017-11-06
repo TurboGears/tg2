@@ -9,6 +9,7 @@ python:
   - "pypy"
 
 install:
+  - "pip install --upgrade pip"
   - "pip install git+git://github.com/TurboGears/crank.git"
   - "pip install git+git://github.com/TurboGears/backlash.git"
   - "pip install repoze.who"
