@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from functools import partial
 from nose.tools import raises
 from nose import SkipTest
@@ -748,4 +749,4 @@ class TestChainValidation(TestWSGIController):
 
     def test_last_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 0}, status=412)
-        self.assertEqual(res.text, '{"errors":{"val":"Invalid"},"values":{"val":"0"}}')
+        self.assertEqual(res.json, json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}'))
