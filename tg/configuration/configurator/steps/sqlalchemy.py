@@ -33,6 +33,9 @@ class SQLAlchemyConfigurationStep(ConfigurationStep):
 
     def setup_sqlalchemy(self, conf, app):
         """Setup SQLAlchemy database engine"""
+        if not conf['use_sqlalchemy']:
+            return
+
         engine = self.create_sqlalchemy_engine(conf)
 
         conf['tg.app_globals'].sa_engine = engine
@@ -56,6 +59,9 @@ class SQLAlchemyConfigurationStep(ConfigurationStep):
         request.  Only override this method if you know what you are doing!
 
         """
+        if not conf['use_sqlalchemy']:
+            return app
+
         dbsession = conf.get('SQLASession')
         if dbsession is None:
             dbsession = conf['DBSession']

@@ -10,6 +10,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
+
+from tg.configuration.configurator import MinimalApplicationConfigurator
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
@@ -172,33 +174,27 @@ class TestAppConfig:
     def setup(self):
         milestones._reset_all()
 
-        self.config = AppConfig()
-        # set up some required paths and config settings
-        # FIXME: these seem to be needed so that
-        # other tests don't suffer - but that's a nasty
-        # side-effect. setup for those tests actually needs
-        # fixing.
-        self.config['package'] = self.fake_package
-        self.config['paths']['root'] = 'test'
-        self.config['paths']['controllers'] = 'test.controllers'
-        self.config['paths']['static_files'] = "test"
-        self.config["tg.app_globals"] = Bunch()
-        self.config["use_sqlalchemy"] = False
-        self.config["global_conf"] = Bunch()
-        self.config["render_functions"] = Bunch()
-        self.config['session.secret'] = 'some_secret'
-        self.config._init_config({'cache_dir':'/tmp'}, {})
-
+        self.config = MinimalApplicationConfigurator()
+        self.config.update_blueprint({
+            'package': self.fake_package,
+            'paths': {
+                'root': 'test',
+                'controllers': 'test.controllers',
+                'static_files': 'test'
+            },
+            'tg.app_globals': Bunch(),
+        })
+        self.config.configure({'cache_dir':'/tmp'}, {})
 
     def teardown(self):
-        #This is here to avoid that other tests keep using the forced controller
+        # This is here to avoid that other tests keep using the forced controller
         config.pop('tg.root_controller', None)
         milestones._reset_all()
         tg.hooks = _TGGlobalHooksNamespace()  # Reset hooks
 
     def test_reqlocal_configuration_dictionary(self):
-        self.config['RANDOM_VALUE'] = 5
-        conf = self.config._init_config({}, {})
+        self.config.update_blueprint({'RANDOM_VALUE': 5})
+        conf = self.config.configure({}, {})
 
         assert config['RANDOM_VALUE'] == 5
         assert len(config) == len(conf)
@@ -902,23 +898,6 @@ class TestAppConfig:
         assert expected_db == dstore.name, dstore.name
         assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
-
-    def test_add_auth_middleware(self):
-        class Dummy:pass
-
-        self.config.sa_auth.dbsession = Dummy()
-        self.config.sa_auth.user_class = Dummy
-        self.config.sa_auth.group_class = Dummy
-        self.config.sa_auth.permission_class = Dummy
-        self.config.sa_auth.cookie_secret = 'dummy'
-        self.config.sa_auth.password_encryption_method = 'sha'
-
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
-
-    def test_add_static_file_middleware(self):
-        self.config._add_static_file_middleware(self.config._init_config({}, {}), None)
 
     def test_setup_sqla_auth(self):
         if PY3: raise SkipTest()
