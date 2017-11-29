@@ -94,7 +94,6 @@ reqlocal_config.push_process_config(deepcopy(defaults))
 config = DispatchingConfigWrapper(reqlocal_config)
 
 
-
 class AppConfig(object):
     __slots__ = ('_configurator', )
 
