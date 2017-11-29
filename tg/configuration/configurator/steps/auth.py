@@ -59,7 +59,7 @@ class SimpleAuthenticationConfigurationStep(ConfigurationStep):
         # Depending on the auth backend a new auth_args dictionary
         # can replace this one later on.
         if conf['auth_backend'] not in self.SUPPORTED_AUTH_BACKENDS:
-            return
+            return app
 
         auth_backend = conf['auth_backend']
         auth_args = get_partial_dict('sa_auth', conf)

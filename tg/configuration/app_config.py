@@ -105,6 +105,24 @@ class AppConfig(object):
     def __init__(self, **kwargs):
         from .configurator import FullStackApplicationConfigurator
         self._configurator = FullStackApplicationConfigurator()
+
+        if kwargs.pop('minimal', False):
+            self._configurator.update_blueprint({
+                'i18n.enabled': False,
+                'session.enabled': False,
+                'auth_backend': None,
+                'cache.enabled': False,
+                'tw2.enabled': False,
+                'use_ming': False,
+                'use_sqlalchemy': False,
+                'tm.enabled': False,
+                'errorpage.enabled': False,
+                'make_body_seekable': False,
+                'trace_slowreqs.enable': False,
+                'trace_errors.enable': False,
+                'serve_static': False,
+                'debug': False
+            })
         self._configurator.update_blueprint(kwargs)
 
         def _on_config_ready(_, conf):
@@ -165,7 +183,7 @@ class AppConfig(object):
         except KeyError:
             raise AttributeError(item)
 
-    def register_application_wrapper(self, wrapper, after=None):
+    def register_wrapper(self, wrapper, after=None):
         self._configurator.register_application_wrapper(wrapper, after)
 
     def register_engine(self, factory):

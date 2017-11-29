@@ -43,14 +43,19 @@ class ToscaWidgets2ConfigurationStep(ConfigurationStep):
 
     def _add_middleware(self, conf, app):
         """Configure the ToscaWidgets2 middleware"""
+        if not conf['tw2.enabled']:
+            return app
+
         from tw2.core.middleware import Config, TwMiddleware
         from tg.i18n import ugettext, get_lang
 
         available_renderers = set(conf.get('renderers', []))
         shared_engines = list(available_renderers & set(Config.preferred_rendering_engines))
         if not shared_engines:
-            raise TGConfigError('None of the configured rendering engines is supported'
-                                'by ToscaWidgets2, unable to configure ToscaWidgets.')
+            raise TGConfigError(
+                'None of the configured rendering engines %s is supported '
+                'by ToscaWidgets2, unable to configure ToscaWidgets.' % available_renderers
+            )
 
         default_renderer = conf.get('default_renderer', None)
         if default_renderer in shared_engines:

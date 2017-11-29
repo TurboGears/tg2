@@ -82,6 +82,9 @@ class MingConfigurationStep(ConfigurationStep):
 
     def add_middleware(self, conf, app):
         """Set up the ming middleware for the unit of work"""
+        if not conf['ming.enabled']:
+            return app
+
         from tg.support.middlewares import MingSessionRemoverMiddleware
         from ming.odm import ThreadLocalODMSession
         return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)

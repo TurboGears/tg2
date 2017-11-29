@@ -249,6 +249,17 @@ class DictionaryView(object):
         else:
             object.__setattr__(self, key, value)
 
+    def update(self, d, **d2):
+        if hasattr(d, 'keys'):
+            for key in d.keys():
+                self[key] = d[key]
+        else:
+            for key, value in d:
+                self[key] = value
+
+        for key in d2:
+            self[key] = d2[key]
+
 
 # TODO: Move into utils
 def copyoption(v):

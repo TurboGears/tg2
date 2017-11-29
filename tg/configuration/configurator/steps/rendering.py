@@ -38,7 +38,7 @@ class TemplateRenderingConfigurationStep(ConfigurationStep):
             'auto_reload_templates': True,
             'use_dotted_templatenames': False,
             'renderers': [],
-            'default_renderer': 'genshi',
+            'default_renderer': 'kajiki',
             'render_functions': {},
             'rendering_engines': {},
             'rendering_engines_without_vars': set(),
