@@ -17,15 +17,12 @@ from nose.tools import raises
 from tg._compat import url_unquote
 from tg.configuration.utils import TGConfigError
 
-from tg.support.registry import RegistryManager
 from webob import Response, Request
 from webtest import TestApp
 
 from tg import request, response, expose, require, redirect
 from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort, auth_force_login, auth_force_logout
-from tg.wsgiapp import TGApp
-from tg.support.middlewares import CacheMiddleware, SessionMiddleware, StatusCodeRedirect
 from tg.decorators import Decoration
 
 from .baseutils import ControllerWrap, default_config
