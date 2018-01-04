@@ -4,7 +4,7 @@ TurboGears
 .. image:: https://travis-ci.org/TurboGears/tg2.png?branch=development
     :target: https://travis-ci.org/TurboGears/tg2
 
-.. image:: https://coveralls.io/repos/TurboGears/tg2/badge.png?branch=development 
+.. image:: https://coveralls.io/repos/TurboGears/tg2/badge.png?branch=development
     :target: https://coveralls.io/r/TurboGears/tg2?branch=development
 
 .. image:: https://img.shields.io/pypi/v/TurboGears2.svg
@@ -15,6 +15,9 @@ TurboGears
 
 .. image:: https://img.shields.io/pypi/l/TurboGears2.svg
     :target: https://pypi.python.org/pypi/TurboGears2
+
+.. image:: https://www.codetriage.com/turbogears/tg2/badges/users.svg
+    :target: https://www.codetriage.com/turbogears/tg2
 
 .. image:: https://img.shields.io/twitter/follow/turbogearsorg.svg?style=social&label=Follow
     :target: https://twitter.com/turbogearsorg
@@ -27,8 +30,8 @@ Support and Documentation
 -------------------------
 
 See the `TurboGears website <http://www.turbogears.org/>`_ to get
-a quick overview of the framework or visit the 
-`TurboGears Documentation <http://turbogears.readthedocs.org/>`_ 
+a quick overview of the framework or visit the
+`TurboGears Documentation <http://turbogears.readthedocs.org/>`_
 
 License
 -------
