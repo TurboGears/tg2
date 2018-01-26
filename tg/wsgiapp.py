@@ -33,13 +33,6 @@ class TGApp(object):
         self.package_name = config['package_name']
         self.lang = config.get('i18n.lang')
 
-        if self.lang is None:
-            backward_compatible_lang = config.get('lang')
-            if backward_compatible_lang:
-                warnings.warn('"lang" option has been renamed to "i18n.lang" and '
-                              'will be removed in next major version.', DeprecationWarning)
-                self.lang = backward_compatible_lang
-
         self.controller_classes = {}
         self.controller_instances = {}
 
