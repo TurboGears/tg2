@@ -106,7 +106,10 @@ class MingConfigurationStep(ConfigurationStep):
         from ming import create_datastore
         url = conf['ming.url']
         database = conf.get('ming.db', '')
-        connection_options = get_partial_dict('ming.connection.', conf)
+        try:
+            connection_options = get_partial_dict('ming.connection', conf)
+        except AttributeError:
+            connection_options = {}
         if database and url[-1] != '/':
             url += '/'
         ming_url = url + database

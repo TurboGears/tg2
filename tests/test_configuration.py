@@ -11,12 +11,10 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
-from tg.configuration.configurator import MinimalApplicationConfigurator
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.mingflush import MingApplicationWrapper
-from tg.appwrappers.transaction_manager import TransactionApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import AppConfig, config
@@ -199,23 +197,19 @@ class TestAppConfig:
         tg.hooks = _TGGlobalHooksNamespace()  # Reset hooks
 
     def test_reqlocal_configuration_dictionary(self):
-        self.config.update_blueprint({'RANDOM_VALUE': 5})
-        conf = self.config.configure({}, {})
+        from tg.configuration.configurator import FullStackApplicationConfigurator
+        cfg = FullStackApplicationConfigurator()
+
+        cfg.update_blueprint({'RANDOM_VALUE': 5})
+        conf = cfg.configure({}, {})
 
         assert config['RANDOM_VALUE'] == 5
         assert len(config) == len(conf)
 
-    def test_get_root(self):
-        current_root_module = self.config['paths']['root']
-        assert self.config._get_root_module() == 'tests.controllers.root', self.config._get_root_module()
-        self.config['paths']['root'] = None
-        assert self.config._get_root_module() == None, self.config._get_root_module()
-        self.config['paths']['root'] = current_root_module
-
     def test_lang_can_be_changed_by_ini(self):
         conf = AppConfig(minimal=True)
-        conf._init_config({'lang':'ru'}, {})
-        assert config['lang'] == 'ru'
+        conf.make_wsgi_app(**{'i18n.lang': 'ru'})
+        assert config['i18n.lang'] == 'ru'
 
     def test_create_minimal_app(self):
         class RootController(TGController):
@@ -279,7 +273,7 @@ class TestAppConfig:
         conf = AppConfig(minimal=True, root_controller=RootController())
 
         conf['use_ming'] = True
-        conf['ming.url'] = 'mim://'
+        conf['ming.url'] = 'mim:///dbname'
         conf['model'] = Bunch(init_model=init_model, DBSession=DBSession)
 
         app = conf.make_wsgi_app()
@@ -291,7 +285,6 @@ class TestAppConfig:
         class RootController(TGController):
             @expose()
             def test(self):
-
                 return 'HI!'
 
         DBSession = scoped_session(sessionmaker(autoflush=True, autocommit=False))
@@ -303,36 +296,6 @@ class TestAppConfig:
         conf['use_ming'] = True
         conf['ming.url'] = 'mim://'
         app = conf.make_wsgi_app()
-
-    def test_create(self):
-        pass
-
-    def test_setup_helpers_and_globals(self):
-        self.config._setup_helpers_and_globals(self.config._init_config({}, {}))
-
-    def test_setup_sa_auth_backend(self):
-        class ConfigWithSetupAuthBackend(self.config.__class__):
-            called = []
-
-            def setup_sa_auth_backend(self):
-                self.called.append(True)
-
-        conf = ConfigWithSetupAuthBackend()
-        conf._setup_auth(conf._init_config({}, {}))
-
-        assert len(ConfigWithSetupAuthBackend.called) >= 1
-
-    def test_setup_sa_auth_custom_backward_compatible(self):
-        class ConfigWithSetupAuthBackend(self.config.__class__):
-            called = []
-
-            def _setup_auth(self, app_config):
-                self.called.append(True)
-
-        conf = ConfigWithSetupAuthBackend()
-        conf._setup_auth(conf._init_config({}, {}))
-
-        assert len(ConfigWithSetupAuthBackend.called) >= 1
 
     def test_setup_jinja_without_package(self):
         class RootController(TGController):
@@ -361,37 +324,6 @@ class TestAppConfig:
 
         assert 'HI!' in app.get('/test')
         assert package.model.DBSession.DBSESSION_REMOVED
-
-    def test_custom_transaction_manager(self):
-        class CustomAppConfig(AppConfig):
-            def _add_tm_middleware(self, config, app):
-                self.did_perform_custom_tm = True
-                return app
-
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return 'HI!'
-
-        package = PackageWithModel()
-        conf = CustomAppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.use_transaction_manager = True
-        conf['sqlalchemy.url'] = 'sqlite://'
-
-        app = conf.make_wsgi_app()
-
-        # Check the custom manager got configured
-        assert conf.did_perform_custom_tm == True
-
-        # The transaction manager wrapper should not have been enabled.
-        tgapp = TGApp()
-        wrapper = tgapp.wrapped_dispatch
-        while wrapper != tgapp._dispatch:
-            assert not isinstance(wrapper, TransactionApplicationWrapper)
-            wrapper = wrapper.next_handler
 
     def test_sqlalchemy_commit_veto(self):
         class RootController(TGController):
@@ -425,9 +357,9 @@ class TestAppConfig:
 
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
+        conf['package'] = package
+        conf['model'] = package.model
+        conf['use_sqlalchemy'] = True
         conf['tm.enabled'] = True
         conf['tm.commit_veto'] = custom_commit_veto
         conf['sqlalchemy.url'] = 'sqlite://'
@@ -518,185 +450,41 @@ class TestAppConfig:
 
         transaction.manager = prev_transaction_manager
 
-    def test_old_sqlalchemy_commit_veto(self):
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return 'HI!'
-
-            @expose()
-            def crash(self):
-                raise Exception('crash')
-
-            @expose()
-            def forbidden(self):
-                response.status = 403
-                return 'FORBIDDEN'
-
-            @expose()
-            def notfound(self):
-                response.status = 404
-                return 'NOTFOUND'
-
-        def custom_commit_veto(environ, status, headers):
-            if status.startswith('404'):
-                return True
-            return False
-
-        fake_transaction = FakeTransaction()
-        import transaction
-        prev_transaction_manager = transaction.manager
-        transaction.manager = fake_transaction
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.use_transaction_manager = True
-        conf['sqlalchemy.url'] = 'sqlite://'
-        conf.commit_veto = custom_commit_veto
-
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        app.get('/test')
-        assert fake_transaction.aborted == False
-
-        try:
-            app.get('/crash')
-        except:
-            pass
-        assert fake_transaction.aborted == True
-
-        app.get('/forbidden', status=403)
-        assert fake_transaction.aborted == False
-
-        app.get('/notfound', status=404)
-        assert fake_transaction.aborted == True
-
-        transaction.manager = prev_transaction_manager
-
-    def test_old_sqlalchemy_doom(self):
-        fake_transaction = FakeTransaction()
-        import transaction
-        prev_transaction_manager = transaction.manager
-        transaction.manager = fake_transaction
-
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                fake_transaction.doom()
-                return 'HI!'
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.use_transaction_manager = True
-        conf['sqlalchemy.url'] = 'sqlite://'
-
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        app.get('/test')
-        assert fake_transaction.aborted == True
-
-        transaction.manager = prev_transaction_manager
-
-    def test_old_sqlalchemy_retry(self):
-        fake_transaction = FakeTransaction()
-        import transaction
-        prev_transaction_manager = transaction.manager
-        transaction.manager = fake_transaction
-
-        from transaction.interfaces import TransientError
-
-        class RootController(TGController):
-            attempts = []
-
-            @expose()
-            def test(self):
-                self.attempts.append(True)
-                if len(self.attempts) == 3:
-                    return 'HI!'
-                raise TransientError()
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.use_transaction_manager = True
-        conf['sqlalchemy.url'] = 'sqlite://'
-        conf['tm.attempts'] = 3
-
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert 'HI' in resp
-
-        transaction.manager = prev_transaction_manager
-
-    def test_old_sqlalchemy_is_disabled_when_missing(self):
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return 'HI!'
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = False
-        conf.use_transaction_manager = True
-
-        app = conf.make_wsgi_app()
-        assert conf.use_transaction_manager is False
-
-    def test_setup_persistence_custom_backward_compatible(self):
-        self.config.package = PackageWithModel()
-
-        def custom_persistence(conf):
-            conf['gotcha'] = 'YES!'
-
-        object.__setattr__(self.config, '_setup_persistence', custom_persistence)
-        conf = self.config.make_load_environment()({}, {})
-        assert conf['gotcha'] == 'YES!', conf
-
     def test_setup_sqla_persistance(self):
-        self.config['sqlalchemy.url'] = 'sqlite://'
-        self.config.use_sqlalchemy = True
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['sqlalchemy.url'] = 'sqlite://'
+        conf.use_sqlalchemy = True
+        conf.package = PackageWithModel()
 
-        self.config.package = PackageWithModel()
-        self.config._setup_persistence(self.config._init_config({}, {}))
+        conf.make_wsgi_app()
 
     def test_setup_sqla_balanced(self):
-        self.config['sqlalchemy.master.url'] = 'sqlite://'
-        self.config['sqlalchemy.slaves.slave1.url'] = 'sqlite://'
-        self.config.use_sqlalchemy = True
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['sqlalchemy.master.url'] = 'sqlite://'
+        conf['sqlalchemy.slaves.slave1.url'] = 'sqlite://'
+        conf.use_sqlalchemy = True
+        conf.package = PackageWithModel()
 
-        self.config.package = PackageWithModel()
-        self.config._setup_persistence(self.config._init_config({}, {}))
+        conf.make_wsgi_app()
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_prevent_slave_named_master(self):
-        self.config['sqlalchemy.master.url'] = 'sqlite://'
-        self.config['sqlalchemy.slaves.master.url'] = 'sqlite://'
-        self.config.use_sqlalchemy = True
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['sqlalchemy.master.url'] = 'sqlite://'
+        conf['sqlalchemy.slaves.master.url'] = 'sqlite://'
+        conf.use_sqlalchemy = True
+        conf.package = PackageWithModel()
 
-        self.config.package = PackageWithModel()
-        self.config._setup_persistence(self.config._init_config({}, {}))
+        conf.make_wsgi_app()
 
     @raises(TGConfigError)
     def test_setup_sqla_balanced_no_slaves(self):
-        self.config['sqlalchemy.master.url'] = 'sqlite://'
-        self.config.use_sqlalchemy = True
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['sqlalchemy.master.url'] = 'sqlite://'
+        conf.use_sqlalchemy = True
+        conf.package = PackageWithModel()
 
-        self.config.package = PackageWithModel()
-        self.config._setup_persistence(self.config._init_config({}, {}))
+        conf.make_wsgi_app()
 
     def test_setup_ming_persistance(self):
         class RootController(TGController):
@@ -884,7 +672,6 @@ class TestAppConfig:
         conf.use_ming = True
         conf['ming.url'] = 'mongodb://localhost:27017,localhost:27018/testdb'
         conf['ming.connection.replicaSet'] = 'test'
-        conf['ming.db'] = ''
 
         app = conf.make_wsgi_app()
         assert app is not None
@@ -898,8 +685,6 @@ class TestAppConfig:
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
     def test_setup_sqla_auth(self):
-        if PY3: raise SkipTest()
-
         class RootController(TGController):
             @expose()
             def test(self):
@@ -922,46 +707,27 @@ class TestAppConfig:
         resp = app.get('/test')
         assert 'repoze.who.plugins' in resp, resp
 
-        self.config.auth_backend = None
-
     def test_setup_ming_auth(self):
-        self.config.auth_backend = 'ming'
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
 
-        self.config._setup_auth(self.config._init_config({}, {}))
-        assert 'sa_auth' in config
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf.auth_backend = 'ming'
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
+                           'cookie_secret': '12345',
+                           'user_class': None}
+        conf['ming.url'] = 'mim:///testdb'
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
 
-        self.config.auth_backend = None
-
-    def test_deprecated_register_hooks(self):
-        def dummy(*args):
-            pass
-
-        milestones.config_ready._reset()
-        milestones.environment_loaded._reset()
-
-        self.config.register_hook('startup', dummy)
-        self.config.register_hook('shutdown', dummy)
-        self.config.register_hook('controller_wrapper', dummy)
-        for hook_name in ('before_validate', 'before_call', 'before_render',
-                          'after_render', 'before_render_call', 'after_render_call',
-                          'before_config', 'after_config'):
-            self.config.register_hook(hook_name, dummy)
-
-        milestones.config_ready.reach()
-        milestones.environment_loaded.reach()
-
-        for hooks in ('before_validate', 'before_call', 'before_render',
-                      'after_render', 'before_render_call', 'after_render_call',
-                      'before_config', 'after_config', 'startup', 'shutdown'):
-            assert tg.hooks._hooks[hooks]
-
-        assert self.config.controller_wrappers
-
-    @raises(TGConfigError)
-    def test_missing_secret(self):
-        self.config.auth_backend = 'sqlalchemy'
-        self.config.pop('session.secret', None)
-        self.config._setup_auth(self.config._init_config({}, {}))
+        resp = app.get('/test')
+        assert 'repoze.who.plugins' in resp, resp
 
     def test_sessions_enabled(self):
         class RootController(TGController):
@@ -1043,7 +809,7 @@ class TestAppConfig:
             return call
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.register_hook('controller_wrapper', controller_wrapper)
+        conf.register_controller_wrapper(controller_wrapper)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
@@ -1079,9 +845,9 @@ class TestAppConfig:
             return call
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.register_hook('controller_wrapper', controller_wrapper2)
-        conf.register_hook('controller_wrapper', controller_wrapper3)
-        conf.register_hook('controller_wrapper', controller_wrapper)
+        conf.register_controller_wrapper(controller_wrapper2)
+        conf.register_controller_wrapper(controller_wrapper3)
+        conf.register_controller_wrapper(controller_wrapper)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
@@ -1129,7 +895,7 @@ class TestAppConfig:
             return call
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        tg.hooks.wrap_controller(controller_wrapper, controller=RootController.test)
+        conf.register_controller_wrapper(controller_wrapper, controller=RootController.test)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
@@ -1160,8 +926,8 @@ class TestAppConfig:
             return call
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        tg.hooks.wrap_controller(app_controller_wrapper)
-        tg.hooks.wrap_controller(controller_wrapper, controller=RootController.test)
+        conf.register_controller_wrapper(app_controller_wrapper)
+        conf.register_controller_wrapper(controller_wrapper, controller=RootController.test)
         conf.package = PackageWithModel()
         app = conf.make_wsgi_app()
         app = TestApp(app)
@@ -1288,10 +1054,14 @@ class TestAppConfig:
 
     @raises(TGConfigError)
     def test_cookie_secret_required(self):
-        self.config.sa_auth = {}
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
+        conf = AppConfig(root_controller=RootController())
+        conf['auth_backend'] = 'sqlalchemy'
+        conf['sa_auth'] = {}
+        try:
+            conf.make_wsgi_app()
+        except TGConfigError as e:
+            assert str(e).startswith('You must provide a value for authentication cookies secret')
+            raise
 
     def test_sqla_auth_middleware(self):
         if PY3: raise SkipTest()
@@ -1452,12 +1222,12 @@ class TestAppConfig:
         conf = AppConfig(root_controller=RootController(),
                          auth_backend='ming')
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                  'user_class':None,
-                                  'cookie_secret':'12345',
-                                  'authenticators':UncopiableList([('default', None)])})
+                                'user_class':None,
+                                'cookie_secret':'12345',
+                                'authenticators': UncopiableList([('default', None)])})
         conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in conf['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert 'cookie' in authenticators
         assert 'mingauth' in authenticators
 
@@ -1988,10 +1758,9 @@ class TestAppConfig:
                 return 'HI'
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        app = conf.make_wsgi_app(global_conf={'trace_errors.error_email': 'test@domain.com'},
-                                 full_stack=True)
+        app = conf.make_wsgi_app(full_stack=True,
+                                 **{'trace_errors.error_email': 'test@domain.com'})
         app = TestApp(app)
-
         resp = app.get('/test')
         assert 'HI' in resp, resp
 
@@ -2080,8 +1849,8 @@ class TestAppConfig:
         conf.renderers = ['json', 'broken']
 
         app = conf.make_wsgi_app(full_stack=True)
-        assert conf.renderers == ['json', 'broken']
-        assert conf.render_functions.broken == 'BROKEN'
+        assert config['renderers'] == ['json', 'broken']
+        assert config['render_functions']['broken'] == 'BROKEN'
 
     def test_render_factory_failure(self):
         class RootController(TGController):
@@ -2100,8 +1869,8 @@ class TestAppConfig:
         conf.register_rendering_engine(FailedFactory)
         conf.renderers = ['json', 'broken']
 
-        app = conf.make_wsgi_app(full_stack=True)
-        assert conf.renderers == ['json']
+        conf.make_wsgi_app(full_stack=True)
+        assert config['renderers'] == ['json']
 
     def test_make_body_seekable(self):
         class RootController(TGController):
@@ -2140,9 +1909,9 @@ class TestAppConfig:
             def test(self):
                 raise Exception('Crash!')
 
-        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf = AppConfig(root_controller=RootController())
         conf['errorpage.enabled'] = True
-        app = conf.make_wsgi_app(global_conf={'debug': True}, full_stack=True)
+        app = conf.make_wsgi_app(debug=True, full_stack=True)
         app = TestApp(app)
 
         resp = app.get('/test', status=500)
@@ -2185,7 +1954,7 @@ class TestAppConfig:
             def test(self, *args, **kwargs):
                 return config['helpers'].get_text()
 
-        class FakeHelpers(Bunch):
+        class FakeHelpers(object):
             @classmethod
             def get_text(cls):
                 return 'HI!'
@@ -2209,17 +1978,3 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         app = TestApp(app)
         assert 'HI!!' in app.get('/test')
-
-    def test_make_app_without_load_environment(self):
-        class RootController(TGController):
-            @expose()
-            def test(self, *args, **kwargs):
-                return 'Helpers: %s' % tg.config.get('helpers')
-
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        cfg = conf._init_config({}, {})  # Manually call init_config otherwise no tg.config is pushed.
-        app = conf.setup_tg_wsgi_app(load_environment=None)()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert resp.text == 'Helpers: None', resp

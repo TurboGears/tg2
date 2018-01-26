@@ -160,7 +160,10 @@ class AppConfig(object):
         pass
 
     def __setitem__(self, key, value):
-        self._configurator.update_blueprint({key: value})
+        if key in self.VIEWS_ATTRIBUTES:
+            self.get_view(key).update(value)
+        else:
+            self._configurator.update_blueprint({key: value})
 
     def __getitem__(self, item):
         if item in self.VIEWS_ATTRIBUTES:
@@ -186,7 +189,7 @@ class AppConfig(object):
     def register_wrapper(self, wrapper, after=None):
         self._configurator.register_application_wrapper(wrapper, after)
 
-    def register_engine(self, factory):
+    def register_rendering_engine(self, factory):
         self._configurator.get('rendering').register_engine(factory)
 
     def register_controller_wrapper(self, wrapper, controller=None):

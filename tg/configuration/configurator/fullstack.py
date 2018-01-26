@@ -45,8 +45,8 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         self.register(SlowRequestsConfigurationStep)
         self.register(ErrorReportingConfigurationStep)
         
-        self.register(StaticsConfigurationStep)
+        self.register(StaticsConfigurationStep, after=True)
 
         # Place the debuggers after the registry so that we
         # can preserve context in case of exceptions
-        self.register(DebuggerConfigurationStep)
+        self.register(DebuggerConfigurationStep, after=True)

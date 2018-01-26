@@ -272,13 +272,9 @@ def copyoption(v):
     preserved by reference.
     """
     if isinstance(v, dict):
-        return dict((k, copyoption(v[k])) for k in v)
-    elif isinstance(v, list):
-        return [copyoption(e) for e in v]
-    elif isinstance(v, set):
-        return set(copyoption(e) for e in v)
-    elif isinstance(v, tuple):
-        return tuple(copyoption(e) for e in v)
+        return v.__class__((k, copyoption(v[k])) for k in v)
+    elif isinstance(v, (list, set, tuple)):
+        return v.__class__(copyoption(e) for e in v)
     else:
         # Preserve anything else as is.
         return v
