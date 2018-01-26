@@ -55,7 +55,7 @@ from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
                            require, with_engine, cached, decode_params)
 
-from tg.flash import flash, get_flash, get_status
+from tg.flash import flash
 from tg.jsonify import encode as json_encode
 from tg.controllers.util import *
 from tg.controllers.dispatcher import dispatched_controller
