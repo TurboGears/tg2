@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import logging
+import warnings
 
 from ..base import (ConfigurationStep, AppReadyConfigurationAction, BeforeConfigConfigurationAction)
 from ...utils import TGConfigError, get_partial_dict
@@ -86,10 +87,14 @@ class SimpleAuthenticationConfigurationStep(ConfigurationStep):
                 auth_args, tgauth = create_default_authenticator(tgauthmetadata, **auth_args)
                 authenticator = ('tgappauth', tgauth)
             elif auth_backend == "sqlalchemy":
+                warnings.warn('sqlauth is deprecated, you should add authenticate method '
+                              'to your authmetadata instance in app_cfg', DeprecationWarning, 2)
                 from tg.configuration.sqla.auth import create_default_authenticator
                 auth_args, sqlauth = create_default_authenticator(**auth_args)
                 authenticator = ('sqlauth', sqlauth)
             elif auth_backend == "ming":
+                warnings.warn('mingauth is deprecated, you should add authenticate method '
+                              'to your authmetadata instance in app_cfg', DeprecationWarning, 2)
                 from tg.configuration.mongo.auth import create_default_authenticator
                 auth_args, mingauth = create_default_authenticator(**auth_args)
                 authenticator = ('mingauth', mingauth)

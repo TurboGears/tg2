@@ -19,7 +19,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
 
     Supported options which can be provided by config are:
 
-        - ``tm.enabled``: Wenever the transaction manager is enabled or not.
+        - ``tm.enabled``: Whenever the transaction manager is enabled or not.
         - ``tm.attempts``: Number of times the transaction should be retried if
           it fails (no retry by default)
         - ``tm.commit_veto``: A function that will be called for every transaction to check
