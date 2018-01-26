@@ -160,7 +160,7 @@ def lurl(base_url=None, params=None, **kwargs):
     return LazyUrl(base_url, params, **kwargs)
 
 
-def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None, **kwargs):
+def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -174,12 +174,6 @@ def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None, **
 
     if params is None:
         params = {}
-
-    if kwargs:
-        warnings.warn('passing URL parameters by name is deprecated, please use params argument',
-                      DeprecationWarning)
-        params = params.copy()
-        params.update(kwargs)
 
     new_url = url(base_url, params=params, scheme=scheme)
     raise redirect_with(location=new_url)
