@@ -156,16 +156,8 @@ class _ApplicationHookRegistration(object):
     def __call__(self):
         log.debug("Registering %s for application wide hook %s",
                   self.func, self.hook_name)
-
-        if self.hook_name == 'controller_wrapper':
-            warnings.warn('controller wrappers should be registered on dispatch component.',
-                          DeprecationWarning, stacklevel=3)
-
-            config = tg_config._current_obj()
-            config['controller_wrappers'].append(self.func)
-        else:
-            hooks = self.hooks_namespace._hooks
-            hooks.setdefault(self.hook_name, []).append(self.func)
+        hooks = self.hooks_namespace._hooks
+        hooks.setdefault(self.hook_name, []).append(self.func)
 
 
 class _ControllerHookRegistration(object):
@@ -180,58 +172,11 @@ class _ControllerHookRegistration(object):
     def __call__(self):
         log.debug("Registering %s for hook %s on controller %s",
                   self.func, self.hook_name, self.controller)
-
-        if self.hook_name == 'controller_wrapper':
-            warnings.warn('controller wrappers should be registered on dispatch component.',
-                          DeprecationWarning, stacklevel=3)
-
-            deco = Decoration.get_decoration(self.controller)
-            deco._register_controller_wrapper(self.func)
-        else:
-            deco = Decoration.get_decoration(self.controller)
-            deco._register_hook(self.hook_name, self.func)
+        deco = Decoration.get_decoration(self.controller)
+        deco._register_hook(self.hook_name, self.func)
 
 
 class _TGGlobalHooksNamespace(HooksNamespace):
-    def wrap_controller(self, func, controller=None):
-        """Registers a TurboGears controller wrapper.
-
-        Controller Wrappers are much like a **decorator** applied to
-        every controller.
-        They receive :class:`tg.configuration.AppConfig` instance
-        as an argument and the next handler in chain and are expected
-        to return a new handler that performs whatever it requires
-        and then calls the next handler.
-
-        A simple example for a controller wrapper is a simple logging wrapper::
-
-            def controller_wrapper(app_config, caller):
-                def call(*args, **kw):
-                    try:
-                        print 'Before handler!'
-                        return caller(*args, **kw)
-                    finally:
-                        print 'After Handler!'
-                return call
-
-            tg.hooks.wrap_controller(controller_wrapper)
-
-        It is also possible to register wrappers for a specific controller::
-
-            tg.hooks.wrap_controller(controller_wrapper, controller=RootController.index)
-
-        """
-        if environment_loaded.reached:
-            raise TGConfigError('Controller wrappers can be registered only at '
-                                'configuration time.')
-
-        if controller is None:
-            environment_loaded.register(_ApplicationHookRegistration(self,
-                                                                     'controller_wrapper',
-                                                                     func))
-        else:
-            controller = default_im_func(controller)
-            registration = _ControllerHookRegistration(controller, 'controller_wrapper', func)
-            renderers_ready.register(registration)
+    pass
 
 hooks = _TGGlobalHooksNamespace()
