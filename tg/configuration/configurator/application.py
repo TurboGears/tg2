@@ -86,7 +86,7 @@ class ApplicationConfigurator(Configurator):
 
         hooks.notify('configure_new_app', args=(app,))
 
-        if wrap_app:
+        if wrap_app is not None:
             app = wrap_app(app)
 
         app = hooks.notify_with_value('before_wsgi_middlewares', app)
@@ -99,8 +99,11 @@ class ApplicationConfigurator(Configurator):
         return app
 
     def make_wsgi_app(self, **app_conf):
+        # wrap_app is an argument to make_app, not a configuration option.
+        wrap_app = app_conf.pop('wrap_app', None)
+
         conf = self.load_environment({}, app_conf)
-        return self.make_app(conf)
+        return self.make_app(conf, wrap_app=wrap_app)
 
     def register_application_wrapper(self, wrapper, after=None):
         """Registers a TurboGears application wrapper.

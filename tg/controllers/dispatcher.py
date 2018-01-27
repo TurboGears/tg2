@@ -177,9 +177,8 @@ class CoreDispatcher(object):
                         return v
             return []
 
-        if 'tg.root_controller' in tg.config:
-            root_controller = tg.config['tg.root_controller']
-        else:
+        root_controller = tg.config.get('tg.root_controller')
+        if root_controller is None:
             root_controller = TGApp.lookup_controller(tg.config, 'root')
 
         return find_url(root_controller, self, [('/', root_controller)])

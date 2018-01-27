@@ -11,7 +11,7 @@ from tg.configuration.utils import get_partial_dict
 log = logging.getLogger(__name__)
 
 
-class DispatchingConfigWrapper(DictMixin):
+class _DispatchingConfigWrapper(DictMixin):
     """Wrapper for the Dispatching configuration.
 
     Simple wrapper for the DispatchingConfig object that provides attribute
@@ -77,21 +77,24 @@ class DispatchingConfigWrapper(DictMixin):
         return self.config_proxy.keys()
 
 
-defaults = {
-    'debug': False,
-    'package': None,
-    'tg.app_globals': None,
-    'tg.strict_tmpl_context': True,
-    'i18n.lang': None
-}
+def _init_default_global_config():
+    defaults = {
+        'debug': False,
+        'package': None,
+        'tg.app_globals': None,
+        'tg.strict_tmpl_context': True,
+        'i18n.lang': None
+    }
 
-# Push an empty config so all accesses to config at import time have something
-# to look at and modify. This config will be merged with the app's when it's
-# built in the paste.app_factory entry point.
-reqlocal_config.push_process_config(deepcopy(defaults))
+    # Push an empty config so all accesses to config at import time have something
+    # to look at and modify. This config will be merged with the app's when it's
+    # built in the paste.app_factory entry point.
+    reqlocal_config.push_process_config(deepcopy(defaults))
 
-#Create a config object that has attribute style lookup built in.
-config = DispatchingConfigWrapper(reqlocal_config)
+
+# Create a config object that has attribute style lookup built in.
+_init_default_global_config()
+config = _DispatchingConfigWrapper(reqlocal_config)
 
 
 class AppConfig(object):

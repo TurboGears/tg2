@@ -47,6 +47,7 @@ class TestConfig(AppConfig):
     def _add_debugger_middleware(self, app_config, app):
         return app
 
+
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:
         deployment_config = {'debug': 'false',
@@ -54,13 +55,11 @@ def app_from_config(base_config, deployment_config=None, reset_milestones=True):
                              'smtp_server': 'localhost'}
 
     # Reset milestones so that they can be reached again
-    # on next configuration initialization
+    # on next configuration initialization\
     if reset_milestones:
         milestones._reset_all()
 
-    env_loader = base_config.make_load_environment()
-    app_maker = base_config.setup_tg_wsgi_app(env_loader)
-    app = TestApp(app_maker(deployment_config, full_stack=False))
+    app = TestApp(base_config.make_wsgi_app(full_stack=False, **deployment_config))
     return app
 
 

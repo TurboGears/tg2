@@ -24,6 +24,9 @@ class HooksNamespace(object):
         self._hooks = dict()
         atexit.register(self._atexit)
 
+    def _clear(self):
+        self._hooks.clear()
+
     def _atexit(self):
         for func in self._hooks.get('shutdown', tuple()):
             func()
@@ -55,7 +58,7 @@ class HooksNamespace(object):
             raise TGConfigError('Startup and Shutdown hooks cannot be registered on controllers')
 
         if hook_name == 'controller_wrapper':
-            raise TGConfigError('tg.hooks.wrap_controller must be used to register wrappers')
+            raise ValueError('dispatch component must be used to register controller wrappers')
 
         if controller is None:
             config_ready.register(_ApplicationHookRegistration(self, hook_name, func))
@@ -80,7 +83,7 @@ class HooksNamespace(object):
             pass
 
     def notify(self, hook_name, args=None, kwargs=None, controller=None,
-               context_config=None, trap_exceptions=False):
+               trap_exceptions=False):
         """Notifies a TurboGears hook.
 
         Each function registered for the given hook will be executed,
@@ -114,7 +117,7 @@ class HooksNamespace(object):
             for func in deco.hooks.get(hook_name, []):
                 self._call_handler(hook_name, trap_exceptions, func, args, kwargs)
 
-    def notify_with_value(self, hook_name, value, controller=None, context_config=None):
+    def notify_with_value(self, hook_name, value, controller=None):
         """Notifies a TurboGears hook which is expected to return a value.
 
         hooks with values are expected to accept an input value an return

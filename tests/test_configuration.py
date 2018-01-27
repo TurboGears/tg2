@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
+from tg.configuration.app_config import _init_default_global_config
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
@@ -33,12 +34,27 @@ from tg.renderers.base import RendererFactory
 from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
+
 def setup():
     milestones._reset_all()
     setup_session_dir()
+
+
 def teardown():
     milestones._reset_all()
     teardown_session_dir()
+
+
+def _reset_global_config():
+    milestones._reset_all()
+    try:
+        config.config_proxy.pop_thread_config()
+    except:
+        pass
+    try:
+        config.config_proxy.pop_process_config()
+    except:
+        pass
 
 
 class PackageWithModel:
@@ -123,16 +139,23 @@ class RootController(TGController):
     def test(self):
         return 'HI!'
 
+
 class TestPylonsConfigWrapper:
 
     def setup(self):
+        _reset_global_config()
+        _init_default_global_config()
         self.config = config
+
+    def tearDown(self):
+        _reset_global_config()
+        _init_default_global_config()
 
     def test_create(self):
         pass
 
     def test_getitem(self):
-        expected_keys = ['global_conf', 'use_sqlalchemy', 'package', 'tg.app_globals', 'call_on_shutdown']
+        expected_keys = ['debug', 'package', 'tg.app_globals', 'tg.strict_tmpl_context']
         for key in expected_keys:
             self.config[key]
 
@@ -144,9 +167,9 @@ class TestPylonsConfigWrapper:
         self.config['no_such_key'] = 'something'
 
     def test_delattr(self):
-        del self.config.use_sqlalchemy
-        eq_(hasattr(self.config, 'use_sqlalchemy'), False)
-        self.config.use_sqlalchemy = True
+        del self.config.debug
+        eq_(hasattr(self.config, 'debug'), False)
+        self.config.debug = False
 
     @raises(AttributeError)
     def test_delattr_bad(self):
@@ -176,25 +199,11 @@ class TestAppConfig:
         self.fake_package = PackageWithModel
 
     def setup(self):
-        milestones._reset_all()
-
-        self.config = AppConfig(minimal=True)
-        self.config._configurator.update_blueprint({
-            'package': self.fake_package,
-            'paths': {
-                'root': 'test',
-                'controllers': 'test.controllers',
-                'static_files': 'test'
-            },
-            'tg.app_globals': Bunch(),
-        })
-        self.config._configurator.configure({'cache_dir':'/tmp'}, {})
+        _reset_global_config()
 
     def teardown(self):
-        # This is here to avoid that other tests keep using the forced controller
-        config.pop('tg.root_controller', None)
-        milestones._reset_all()
-        tg.hooks = _TGGlobalHooksNamespace()  # Reset hooks
+        _reset_global_config()
+        tg.hooks._clear()  # Reset hooks
 
     def test_reqlocal_configuration_dictionary(self):
         from tg.configuration.configurator import FullStackApplicationConfigurator
@@ -776,8 +785,10 @@ class TestAppConfig:
         from tg.configuration.configurator.steps.dispatch import _call_controller
         orig_caller = _call_controller
 
+        appcfg = AppConfig(minimal=True, root_controller=RootController())
+
         conf = {}
-        dispatch = self.config._configurator.get('dispatch')
+        dispatch = appcfg._configurator.get('dispatch')
         dispatch._controller_wrappers[:] = []
         dispatch._setup_controller_wrappers(conf, None)
         assert conf['controller_caller'] == orig_caller
@@ -788,7 +799,7 @@ class TestAppConfig:
             return call
 
         conf = {}
-        dispatch = self.config._configurator.get('dispatch')
+        dispatch = appcfg._configurator.get('dispatch')
         dispatch._controller_wrappers[:] = [controller_wrapper]
         dispatch._setup_controller_wrappers(conf, None)
         assert conf['controller_caller'].__name__ == controller_wrapper(orig_caller).__name__
@@ -1042,15 +1053,16 @@ class TestAppConfig:
         assert 'HI!' in app.get('/test')
         assert middleware_has_been_visited[0] == True
 
+    @raises(TGConfigError)
     def test_unsupported_renderer(self):
-        renderers = self.config.renderers
-        self.config.renderers = ['unknwon']
+        conf = AppConfig(root_controller=RootController())
+        conf['renderers'] = ['unknwon']
+
         try:
-            self.config._setup_renderers(self.config._init_config({}, {}))
-        except TGConfigError:
-            self.config.renderers = renderers
-        else:
-            assert False
+            conf.make_wsgi_app()
+        except TGConfigError as e:
+            assert 'This configuration object does not support the unknwon renderer' in str(e)
+            raise
 
     @raises(TGConfigError)
     def test_cookie_secret_required(self):
@@ -1066,64 +1078,60 @@ class TestAppConfig:
     def test_sqla_auth_middleware(self):
         if PY3: raise SkipTest()
 
-        self.config.auth_backend = 'sqlalchemy'
-        self.config.skip_authentication = True
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                  'dbsession': None,
-                                  'user_class':None,
-                                  'cookie_secret':'12345',
-                                  'authenticators':UncopiableList([('default', None)])})
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.auth_backend = 'sqlalchemy'
+        conf.skip_authentication = True
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+                                'dbsession': None,
+                                'user_class':None,
+                                'cookie_secret':'12345',
+                                'authenticators':UncopiableList([('default', None)])})
+        conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in cfg['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert 'cookie' in authenticators
         assert 'sqlauth' in authenticators
 
     def test_sqla_auth_middleware_using_translations(self):
         if PY3: raise SkipTest()
 
-        self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                  'dbsession': None,
-                                  'user_class':None,
-                                  'translations': {'user_name':'SomethingElse'},
-                                  'cookie_secret':'12345',
-                                  'authenticators':UncopiableList([('default', None)])})
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.auth_backend = 'sqlalchemy'
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+                                'dbsession': None,
+                                'user_class':None,
+                                'translations': {'user_name':'SomethingElse'},
+                                'cookie_secret':'12345',
+                                'authenticators':UncopiableList([('default', None)])})
+        conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert 'cookie' in authenticators
         assert 'sqlauth' in authenticators
 
         auth = None
-        for authname, authobj in self.config['sa_auth']['authenticators']:
+        for authname, authobj in config['sa_auth.authenticators']:
             if authname == 'sqlauth':
                 auth = authobj
                 break
 
-        assert auth is not None, self.config['sa_auth']['authenticators']
+        assert auth is not None, config['sa_auth.authenticators']
         assert auth.translations['user_name'] == 'SomethingElse', auth.translations
 
     def test_sqla_auth_middleware_default_after(self):
         if PY3: raise SkipTest()
 
-        self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.auth_backend = 'sqlalchemy'
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
                                   'cookie_secret':'12345',
                                   'dbsession': None,
                                   'user_class': None,
                                   'authenticators':UncopiableList([('superfirst', None),
                                                                    ('default', None)])})
+        conf.make_wsgi_app()
 
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
-
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert authenticators[1] == 'superfirst'
         assert 'cookie' in authenticators
         assert 'sqlauth' in authenticators
@@ -1131,22 +1139,18 @@ class TestAppConfig:
     def test_sqla_auth_middleware_no_authenticators(self):
         if PY3: raise SkipTest()
 
-        self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                  'dbsession': None,
-                                  'user_class': None,
-                                  'cookie_secret':'12345'})
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.auth_backend = 'sqlalchemy'
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+                                'dbsession': None,
+                                'user_class': None,
+                                'cookie_secret':'12345'})
 
-        #In this case we can just test it doesn't crash
-        #as the sa_auth dict doesn't have an authenticators key to check for
-        cfg = self.config._init_config({}, {})
-        self.config._setup_auth(cfg)
-        self.config._add_auth_middleware(cfg, None)
+        # In this case we can just test it doesn't crash
+        # as the sa_auth dict doesn't have an authenticators key to check for
+        conf.make_wsgi_app()
 
     def test_sqla_auth_middleware_only_mine(self):
-        past_config_sa_auth = config.sa_auth
-        config.sa_auth = {}
-
         class RootController(TGController):
             @expose()
             def test(self):
@@ -1174,11 +1178,11 @@ class TestAppConfig:
 
         app = conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in conf['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert authenticators[0] == 'alwaysadmin'
         assert 'sqlauth' not in authenticators
 
-        challengers = [x[1] for x in conf['sa_auth']['challengers']]
+        challengers = [x[1] for x in config['sa_auth.challengers']]
         assert alwaysadmin in challengers
 
         app = TestApp(app)
@@ -1186,9 +1190,6 @@ class TestAppConfig:
         assert app.get('/forbidden', status=401)
 
     def test_sqla_auth_logging_stderr(self):
-        past_config_sa_auth = config.sa_auth
-        config.sa_auth = {}
-
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
@@ -1199,12 +1200,12 @@ class TestAppConfig:
 
         alwaysadmin = _AuthenticationForgerPlugin(fake_user_key='FAKE_USER')
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                           'cookie_secret':'12345',
-                           'form_plugin':alwaysadmin,
-                           'log_level':'DEBUG',
-                           'authenticators':UncopiableList([('alwaysadmin', alwaysadmin)]),
-                           'identifiers':[('alwaysadmin', alwaysadmin)],
-                           'challengers':[]})
+                                'cookie_secret':'12345',
+                                'form_plugin':alwaysadmin,
+                                'log_level':'DEBUG',
+                                'authenticators':UncopiableList([('alwaysadmin', alwaysadmin)]),
+                                'identifiers':[('alwaysadmin', alwaysadmin)],
+                                'challengers':[]})
 
         conf['sa_auth']['log_file'] = 'stderr'
         app = conf.make_wsgi_app()
@@ -1233,16 +1234,13 @@ class TestAppConfig:
 
     @raises(KeyError)
     def test_sqla_auth_middleware_no_backend(self):
-        #This is expected to raise error as no authenticators are specified for a custom backend
-        past_config_sa_auth = config.sa_auth
-        config.sa_auth = {}
+        conf = AppConfig(root_controller=RootController())
+        conf.auth_backend = None
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+                                'cookie_secret':'12345'})
+        conf.make_wsgi_app()
 
-        self.config.auth_backend = None
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                       'cookie_secret':'12345'})
-        self.config.make_wsgi_app()
-
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert 'cookie' in authenticators
         assert len(authenticators) == 1
 
@@ -1256,7 +1254,7 @@ class TestAppConfig:
                                   'authenticators':UncopiableList([('default', None)])})
         conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in conf['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in config['sa_auth.authenticators']]
         assert 'cookie' in authenticators
         assert 'tgappauth' in authenticators
 
@@ -1274,29 +1272,31 @@ class TestAppConfig:
         assert 'cookie' in identifiers
 
     def test_auth_setup_custom_identifier(self):
-        self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
-                                       'dbsession': None,
-                                       'user_class':None,
-                                       'cookie_secret':'12345',
-                                       'identifiers': UncopiableList([('custom', None)])})
-        self.config.make_wsgi_app()
+        conf = AppConfig(root_controller=RootController(),
+                         auth_backend='sqlalchemy')
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                'dbsession': None,
+                                'user_class':None,
+                                'cookie_secret':'12345',
+                                'identifiers': UncopiableList([('custom', None)])})
+        conf.make_wsgi_app()
 
-        identifiers = [x[0] for x in self.config['sa_auth']['identifiers']]
+        identifiers = [x[0] for x in config['sa_auth.identifiers']]
         assert 'custom' in identifiers
 
     def test_auth_middleware_doesnt_touch_authenticators(self):
         # Checks that the auth middleware process doesn't touch original authenticators
         # list, to prevent regressions on this.
-        self.config.auth_backend = 'sqlalchemy'
-        self.config['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
-                                       'dbsession': None,
-                                       'user_class':None,
-                                       'cookie_secret':'12345',
-                                       'authenticators':[('default', None)]})
-        self.config.make_wsgi_app()
+        conf = AppConfig(root_controller=RootController(),
+                         auth_backend='sqlalchemy')
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                                'dbsession': None,
+                                'user_class':None,
+                                'cookie_secret':'12345',
+                                'authenticators':[('default', None)]})
+        conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in self.config['sa_auth']['authenticators']]
+        authenticators = [x[0] for x in conf['sa_auth.authenticators']]
         assert len(authenticators) == 1
 
     def test_tgauthmetadata_loginpwd(self):
@@ -1306,23 +1306,6 @@ class TestAppConfig:
     def test_tgauthmetadata_nologinpwd(self):
         who_authenticator = _AuthMetadataAuthenticator(ApplicationAuthMetadataWithAuthentication(), using_password=False)
         assert who_authenticator.authenticate({}, {}) == 1
-
-    def test_toscawidgets_recource_variant(self):
-        if PY3: raise SkipTest()
-
-        resultingconfig = {}
-
-        def fake_make_middleware(app, twconfig):
-            resultingconfig.update(twconfig)
-            return app
-
-        import tw.api
-        prev_tw_make_middleware = tw.api.make_middleware
-
-        tw.api.make_middleware = fake_make_middleware
-        config['toscawidgets.framework.resource_variant'] = 'min'
-        self.config._add_tosca_middleware(config, None)
-        config.pop('toscawidgets.framework.resource_variant', None)
 
     def test_error_middleware_disabled_with_optimize(self):
         class RootController(TGController):
@@ -1417,12 +1400,20 @@ class TestAppConfig:
             def register(self, *args, **kw):
                 pass
 
-        a = TGApp()
-        testmode, __, __ = a._setup_app_env({'paste.registry':FakeRegistry()})
+        def track_app(app):
+            # Save a reference to the plain TGApp before it's wrapped by middlewares.
+            track_app.app = app
+            return app
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = PackageWithModel()
+        conf.make_wsgi_app(wrap_app=track_app)
+
+        testmode, __, __ = track_app.app._setup_app_env({'paste.registry':FakeRegistry()})
         assert testmode is False
 
-        testmode, __, __ = a._setup_app_env({'paste.registry':FakeRegistry(),
-                                             'paste.testing_variables':{}})
+        testmode, __, __ = track_app.app._setup_app_env({'paste.registry':FakeRegistry(),
+                                                         'paste.testing_variables':{}})
         assert testmode is True
 
     def test_application_no_controller_hijacking(self):
@@ -1741,7 +1732,6 @@ class TestAppConfig:
                 abort(403)
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.register_wrapper(ErrorPageApplicationWrapper)
         conf['errorpage.enabled'] = False
         conf['errorpage.status_codes'] = (403, 404)
         conf['errorpage.handle_exceptions'] = False
@@ -1829,7 +1819,8 @@ class TestAppConfig:
             app = conf.make_wsgi_app(full_stack=True)
             assert False
         except TGConfigError as e:
-            assert 'None of the configured rendering engines is supported' in str(e)
+            assert 'None of the configured rendering engines' in str(e)
+            assert 'is supported by ToscaWidgets2, unable to configure ToscaWidgets.' in str(e)
 
     def test_render_factory_success(self):
         class RootController(TGController):
