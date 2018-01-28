@@ -663,8 +663,8 @@ def test_render_hooks():
     })
 
     milestones._reset_all()
-    base_config.register_hook('before_render_call', render_call_hook)
-    base_config.register_hook('after_render_call', render_call_hook)
+    tg.hooks.register('before_render_call', render_call_hook)
+    tg.hooks.register('after_render_call', render_call_hook)
     app = app_from_config(base_config, reset_milestones=False)
     app.get('/')
 

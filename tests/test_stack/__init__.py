@@ -28,6 +28,8 @@ class TestConfig(AppConfig):
         self.use_dotted_templatenames = False
         self.serve_static = False
         self['errorpage.enabled'] = False
+        self['trace_errors.enable'] = False
+        self['trace_slowreqs.enable'] = False
 
         root = os.path.dirname(os.path.dirname(tests.__file__))
         test_base_path = os.path.join(root,'tests', 'test_stack',)
@@ -44,9 +46,6 @@ class TestConfig(AppConfig):
         for key, value in values.items():
             setattr(self, key, value)
 
-    def _add_debugger_middleware(self, app_config, app):
-        return app
-
 
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:
@@ -59,7 +58,7 @@ def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if reset_milestones:
         milestones._reset_all()
 
-    app = TestApp(base_config.make_wsgi_app(full_stack=False, **deployment_config))
+    app = TestApp(base_config.make_wsgi_app(**deployment_config))
     return app
 
 
