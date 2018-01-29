@@ -75,8 +75,8 @@ class DispatchConfigurationStep(ConfigurationStep):
             base_config.register_controller_wrapper(controller_wrapper, controller=RootController.index)
         """
         if milestones.environment_loaded.reached:
-            log.warning('Controller Wrapper %s registered after environment loaded'
-                        'milestone has been reached, the wrapper will be used only'
+            log.warning('Controller Wrapper %s registered after environment loaded '
+                        'milestone has been reached, the wrapper will be used only '
                         'for future TGApp instances.', wrapper)
 
         log.debug("Registering %s controller wrapper for controller: %s",

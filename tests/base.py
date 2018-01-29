@@ -20,7 +20,7 @@ from tg.support.registry import Registry, RegistryManager
 from webtest import TestApp
 
 import tg
-from tg import tmpl_context, request_local
+from tg import tmpl_context, request_local, AppConfig
 from tg.configuration import milestones
 
 from tg.wsgiapp import TemplateContext, TGApp, RequestLocals
@@ -39,40 +39,37 @@ def setup_session_dir():
 def teardown_session_dir():
     shutil.rmtree(session_dir, ignore_errors=True)
 
-def make_app(controller_klass=None, environ=None, config_options=None, with_errors=False):
+def make_app(controller_klass=None, environ=None, config_options=None, with_errors=False,
+             make_app=True):
     """Creates a `TestApp` instance."""
     if controller_klass is None:
         controller_klass = TGController
 
-    tg.config['renderers'] = default_config['renderers']
-    tg.config['rendering_engines_options'] = default_config['rendering_engines_options']
+    conf = AppConfig(root_controller=ControllerWrap(controller_klass),
+                     **default_config)
 
-    config = default_config.copy()
-    config['application_wrappers'] = DependenciesList(
-        I18NApplicationWrapper,
-        IdentityApplicationWrapper,
-        CacheApplicationWrapper,
-        SessionApplicationWrapper
-    )
+    # Just let exceptions crash.
+    conf['trace_errors.enable'] = False
 
     if with_errors:
-        config['errorpage.enabled'] = True
-        config['errorpage.status_codes'] = [403, 404]
-        config['application_wrappers'].add(ErrorPageApplicationWrapper)
+        conf['errorpage.enabled'] = True
+        conf['errorpage.status_codes'] = [403, 404]
+    else:
+        conf['errorpage.enabled'] = False
 
-    config['session.enabled'] = True
-    config['session.data_dir'] = session_dir
-    config['cache.enabled'] = True
-    config['cache.cache_dir'] = cache_dir
+    conf['session.enabled'] = True
+    conf['session.data_dir'] = session_dir
+    conf['cache.enabled'] = True
+    conf['cache.cache_dir'] = cache_dir
 
     if config_options is not None:
-        config.update(config_options)
+        for k, v in config_options.items():
+            conf[k] = v
 
-    app = TGApp(config=config)
-    app.controller_classes['root'] = ControllerWrap(controller_klass)
-
-    app = RegistryManager(app)
-    return TestApp(app)
+    if make_app:
+        return TestApp(conf.make_wsgi_app())
+    else:
+        return conf
 
 
 class TestWSGIController(TestCase):

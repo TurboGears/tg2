@@ -141,8 +141,8 @@ class ApplicationConfigurator(Configurator):
             # Wrappers are consumed by TGApp constructor, and all the hooks available
             # after the milestone and that could register new wrappers are actually
             # called after TGApp constructors and so the wrappers wouldn't be applied.
-            log.warning('Application Wrapper %s registered after environment loaded'
-                        'milestone has been reached, the wrapper will be used only'
+            log.warning('Application Wrapper %s registered after environment loaded '
+                        'milestone has been reached, the wrapper will be used only '
                         'for future TGApp instances.', wrapper)
 
         log.debug('Registering application wrapper: %s', wrapper)

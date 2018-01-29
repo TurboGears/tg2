@@ -13,22 +13,21 @@ from unittest import TestCase
 from shutil import rmtree
 import os
 from nose.tools import raises
+from webtest import TestApp
 
 from tg._compat import url_unquote
 from tg.configuration.utils import TGConfigError
 
 from webob import Response, Request
-from webtest import TestApp
 
 from tg import request, response, expose, require, redirect
 from tg.controllers import TGController, WSGIAppController, RestController
 from tg.controllers.util import abort, auth_force_login, auth_force_logout
 from tg.decorators import Decoration
 
-from .baseutils import ControllerWrap, default_config
 from ..base import make_app as base_make_app
 
-from tg.configuration.auth import setup_auth, TGAuthMetadata
+from tg.configuration.auth import TGAuthMetadata
 from tg.predicates import is_user, not_anonymous, in_group, has_permission
 
 #{ AUT's setup
@@ -70,35 +69,51 @@ class TestAuthMetadata(TGAuthMetadata):
 
         return super(TestAuthMetadata, self).get_permissions(identity, userid)
 
+    def authenticate(self, environ, identity):
+        # We always fail authentication, because we will skip this
+        # by using REMOTE_USER to signal which user is authenticated.
+        return None
+
 
 def make_app(controller_klass, environ=None, with_errors=False, config_options=None):
     """Creates a ``TestApp`` instance."""
-    authmetadata = TestAuthMetadata()
-
-    config_options = config_options or {}
-    config_options.setdefault('sa_auth', {})
-
-    sa_auth = config_options['sa_auth']
-    sa_auth.update({
-        'authmetadata': authmetadata
-    })
-
-    app = base_make_app(controller_klass, environ or {}, config_options, with_errors).app
 
     # Setting repoze.who up:
     from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
-    identifiers = [('cookie', cookie)]
 
-    app = setup_auth(app, identifiers=identifiers, skip_authentication=True,
-                     authenticators=[], challengers=[])
+    from tg.configuration.configurator.base import ConfigurationStep
+    class ForceAuthenticatorComponent(ConfigurationStep):
+        id = "test_force_auth"
 
-    # As setup_auth with skip_authentication sets empty authenticators always
-    # we must manually append it after creating the middleware.
-    app.api_factory.authenticators.append(('cookie', cookie))
+        def get_actions(self):
+            from tg.configuration.configurator.base import AppReadyConfigurationAction
+            return (
+                AppReadyConfigurationAction(self._add_middleware),
+            )
 
-    return TestApp(app)
+        def _add_middleware(self, conf, app):
+            # As setup_auth with skip_authentication sets empty authenticators always
+            # we must manually append it after creating the middleware.
+            app.api_factory.authenticators.append(('cookie', cookie))
+            return app
 
+    config_options = config_options or {}
+    config_options.setdefault('sa_auth', {})
+    sa_auth = config_options['sa_auth']
+    sa_auth.update({
+        'authmetadata': TestAuthMetadata(),
+        'challengers': [],
+        'identifiers': [('cookie', cookie)],
+        'form_identifies': True
+    })
+
+    config_options['skip_authentication'] = True
+    config_options['auth_backend'] = 'sqlalchemy'
+    conf = base_make_app(controller_klass, with_errors=with_errors, config_options=config_options,
+                         make_app=False)
+    conf._configurator.register(ForceAuthenticatorComponent, after='sa_auth')
+    return TestApp(conf.make_wsgi_app())
 
 #{ Mock objects
 
