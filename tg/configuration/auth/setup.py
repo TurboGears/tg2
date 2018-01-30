@@ -114,7 +114,7 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
     with repoze.who and repoze.what.
     """
     if 'charset' in who_args: #pragma: no cover
-        log.warn('charset argument in authentication setup is ignored')
+        log.warning('charset argument in authentication setup is ignored')
         who_args.pop('charset')
 
     # If no identifiers are provided in repoze setup arguments

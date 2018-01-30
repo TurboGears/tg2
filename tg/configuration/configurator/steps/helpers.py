@@ -46,7 +46,7 @@ class HelpersConfigurationStep(ConfigurationStep):
                 pass
 
         if h is None:
-            log.warn('helpers not provided and lib.helpers is not available.')
+            log.warning('helpers not provided and lib.helpers is not available.')
             h = Bunch()
 
         conf['helpers'] = h

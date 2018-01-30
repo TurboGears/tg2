@@ -84,8 +84,8 @@ class TemplateRenderingConfigurationStep(ConfigurationStep):
 
         if conf['default_renderer'] not in conf['renderers']:
             first_renderer = conf['renderers'][0]
-            log.warn('Default renderer not in renders, '
-                     'automatically switching to %s' % first_renderer)
+            log.warning('Default renderer not in renders, '
+                        'automatically switching to %s' % first_renderer)
             conf['default_renderer'] = first_renderer
 
         conf['rendering_engines'] = copy.copy(self.rendering_engines)

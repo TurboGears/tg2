@@ -77,10 +77,10 @@ class MakoRenderer(RendererFactory):
                     bad_path = compiled_dir
                     compiled_dir = None
             if bad_path:
-                log.warn("Unable to write cached templates to %r; falling back "
-                         "to an in-memory cache. Please set the `templating.mak"
-                         "o.compiled_templates_dir` configuration option to a "
-                         "writable directory." % bad_path)
+                log.warning("Unable to write cached templates to %r; falling back "
+                            "to an in-memory cache. Please set the `templating.mak"
+                            "o.compiled_templates_dir` configuration option to a "
+                            "writable directory." % bad_path)
 
         template_extension = options.get('template_extension', '.mak')
 

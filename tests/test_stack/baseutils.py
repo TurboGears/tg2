@@ -2,13 +2,14 @@ import tg.renderers.json
 
 
 class FakePackage(object):
-    __file__ = ''
+    __file__ = __file__
+FakePackage.__name__ = 'tests'
 
 
 default_config = {
         'debug': False,
         'package': FakePackage,
-        'package_name' : 'FakePackage',
+        'package_name' : 'tests',
         'paths': {'root': '.',
                   'controllers': '.',
                   'templates': [],

@@ -33,7 +33,7 @@ class ApplicationConfigurator(Configurator):
         try:
             reqlocal_config.pop_process_config()
         except IndexError:  # pragma: no cover
-            log.warn('No global config in place, at least defaults should have been here')
+            log.warning('No global config in place, at least defaults should have been here')
         finally:
             reqlocal_config.push_process_config(conf)
 

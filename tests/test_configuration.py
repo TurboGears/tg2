@@ -693,7 +693,9 @@ class TestAppConfig:
         assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
-    def test_setup_sqla_auth(self):
+    def test_setup_sqla_auth_repozesqla(self):
+        if PY3: raise SkipTest()
+
         class RootController(TGController):
             @expose()
             def test(self):
@@ -716,7 +718,32 @@ class TestAppConfig:
         resp = app.get('/test')
         assert 'repoze.who.plugins' in resp, resp
 
-    def test_setup_ming_auth(self):
+    def test_setup_sqla_auth(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.auth_backend = 'sqlalchemy'
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                           'dbsession': None,
+                           'user_class': None,
+                           'cookie_secret': '12345'}
+        conf['sqlalchemy.url'] = 'sqlite://'
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'repoze.who.plugins' in resp, resp
+
+    def test_setup_ming_auth_tgming(self):
+        if PY3: raise SkipTest()
+
         class RootController(TGController):
             @expose()
             def test(self):
@@ -729,6 +756,28 @@ class TestAppConfig:
         conf.use_ming = True
         conf.auth_backend = 'ming'
         conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
+                           'cookie_secret': '12345',
+                           'user_class': None}
+        conf['ming.url'] = 'mim:///testdb'
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        resp = app.get('/test')
+        assert 'repoze.who.plugins' in resp, resp
+
+    def test_setup_ming_auth(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_ming = True
+        conf.auth_backend = 'ming'
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                            'cookie_secret': '12345',
                            'user_class': None}
         conf['ming.url'] = 'mim:///testdb'

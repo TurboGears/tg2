@@ -14,19 +14,18 @@ if py_version[0] == 3 and py_version < (3, 2):
     raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.2')
 
 test_requirements = ['nose',
-                    'zope.sqlalchemy >= 0.4',
-                    'repoze.who',
-                    'repoze.who.plugins.sa >= 1.0.1',
-                    'Genshi >= 0.5.1',
-                    'Mako',
-                    'WebTest < 2.0',
-                    'backlash >= 0.0.7',
-                    'sqlalchemy',
-                    'raven < 4.1.0',
-                    'formencode>=1.3.0a1',
-                    'tw2.forms',
-                    'Beaker',
-                    'Kajiki >= 0.4.4']
+                     'zope.sqlalchemy >= 0.4',
+                     'repoze.who',
+                     'repoze.who.plugins.sa >= 1.0.1',
+                     'Genshi >= 0.5.1',
+                     'Mako',
+                     'WebTest < 2.0',
+                     'backlash >= 0.0.7',
+                     'raven < 4.1.0',
+                     'formencode>=1.3.0a1',
+                     'tw2.forms',
+                     'Beaker',
+                     'Kajiki >= 0.4.4']
 
 if py_version == (3, 2):
     # jinja2 2.7 is incompatible with Python 3.2
@@ -36,12 +35,14 @@ if py_version == (3, 2):
 else:
     test_requirements.append('jinja2')
     test_requirements.append('coverage')
-
-
-if py_version != (3, 2):
     # Ming is not compatible with Python3.2
     test_requirements.append('ming > 0.5.0')
 
+if py_version == (2, 6):
+    # SQLAlchemy 1.2+ doesn't support Python 2.6
+    test_requirements.append('sqlalchemy<1.2')
+else:
+    test_requirements.append('sqlalchemy')
 
 if py_version[0] == 2:
     test_requirements.extend(['TurboKid >= 1.0.4',

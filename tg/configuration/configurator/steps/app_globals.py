@@ -48,7 +48,7 @@ class AppGlobalsConfigurationStep(ConfigurationStep):
                 pass
 
         if gclass is None:
-            log.warn('app_globals not provided and lib.app_globals.Globals is not available.')
+            log.warning('app_globals not provided and lib.app_globals.Globals is not available.')
             gclass = Bunch
 
         g = gclass()
