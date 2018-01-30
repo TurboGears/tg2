@@ -14,7 +14,7 @@ class TestErrorReporterConfig(object):
 
     def _make(self, **options):
         step = ErrorReportingConfigurationStep()
-        conf = {'trace_errors.%s' % k: v for k, v in options.items() if k != 'debug'}
+        conf = dict(('trace_errors.%s' % k, v) for k, v in options.items() if k != 'debug')
         if 'debug' in options:
             conf['debug'] = options['debug']
         step._configure_backlash(conf, None)
@@ -58,7 +58,7 @@ class TestSlowReqsReporterConfig(object):
 
     def _make(self, **options):
         step = SlowRequestsConfigurationStep()
-        conf = {'trace_slowreqs.%s' % k: v for k, v in options.items() if k != 'debug'}
+        conf = dict(('trace_slowreqs.%s' % k, v) for k, v in options.items() if k != 'debug')
         if 'debug' in options:
             conf['debug'] = options['debug']
         step._configure_backlash(conf, None)

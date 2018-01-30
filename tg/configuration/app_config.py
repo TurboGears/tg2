@@ -103,7 +103,7 @@ class AppConfig(object):
     # Attributes and properties that are automatically returned as a view
     # This mostly handles backward compatibility with some oddities of
     # TG<2.4 where some config properties where flat and some were subdicts.
-    VIEWS_ATTRIBUTES = {'sa_auth', }
+    VIEWS_ATTRIBUTES = set(('sa_auth', ))
 
     def __init__(self, **kwargs):
         from .configurator import FullStackApplicationConfigurator
