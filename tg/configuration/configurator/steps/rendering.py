@@ -4,23 +4,23 @@ import copy
 from tg.configuration import milestones
 from tg.configuration.utils import TGConfigError
 from tg.support.converters import asbool
-from ..base import (ConfigurationStep, BeforeConfigConfigurationAction,
+from ..base import (ConfigurationComponent, BeforeConfigConfigurationAction,
                     ConfigReadyConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
-__all__ = ('TemplateRenderingConfigurationStep', )
+__all__ = ('TemplateRenderingConfigurationComponent', )
 
 
-class TemplateRenderingConfigurationStep(ConfigurationStep):
+class TemplateRenderingConfigurationComponent(ConfigurationComponent):
     """
 
     """
     id = 'rendering'
 
     def __init__(self):
-        super(TemplateRenderingConfigurationStep, self).__init__()
+        super(TemplateRenderingConfigurationComponent, self).__init__()
         self.rendering_engines = {}
         self.rendering_engines_options = {}
         self.rendering_engines_without_vars = set()

@@ -2,10 +2,10 @@
 from __future__ import absolute_import
 
 import mimetypes
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction
+from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
-class MimeTypesConfigurationStep(ConfigurationStep):
+class MimeTypesConfigurationComponent(ConfigurationComponent):
     """
     """
     id = "mimetypes"

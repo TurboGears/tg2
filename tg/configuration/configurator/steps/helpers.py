@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from ....util import Bunch
 from ...._compat import import_module
-from ..base import (ConfigurationStep,
+from ..base import (ConfigurationComponent,
                     ConfigReadyConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
 
-class HelpersConfigurationStep(ConfigurationStep):
+class HelpersConfigurationComponent(ConfigurationComponent):
     """
 
     """

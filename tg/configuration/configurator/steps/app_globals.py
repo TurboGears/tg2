@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from ...._compat import import_module
 from ....util import DottedFileNameFinder, Bunch
-from ..base import (ConfigurationStep,
+from ..base import (ConfigurationComponent,
                     ConfigReadyConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
 
-class AppGlobalsConfigurationStep(ConfigurationStep):
+class AppGlobalsConfigurationComponent(ConfigurationComponent):
     """
 
     """

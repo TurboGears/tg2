@@ -1,5 +1,5 @@
-from tg.configuration.configurator.steps.error_reporting import ErrorReportingConfigurationStep
-from tg.configuration.configurator.steps.slow_requests import SlowRequestsConfigurationStep
+from tg.configuration.configurator.steps.error_reporting import ErrorReportingConfigurationComponent
+from tg.configuration.configurator.steps.slow_requests import SlowRequestsConfigurationComponent
 
 def simple_app(environ, start_response):
     status = '200 OK'
@@ -13,7 +13,7 @@ class TestErrorReporterConfig(object):
     middleware_name = 'TraceErrorsMiddleware'
 
     def _make(self, **options):
-        step = ErrorReportingConfigurationStep()
+        step = ErrorReportingConfigurationComponent()
         conf = dict(('trace_errors.%s' % k, v) for k, v in options.items() if k != 'debug')
         if 'debug' in options:
             conf['debug'] = options['debug']
@@ -57,7 +57,7 @@ class TestSlowReqsReporterConfig(object):
     middleware_name = 'TraceSlowRequestsMiddleware'
 
     def _make(self, **options):
-        step = SlowRequestsConfigurationStep()
+        step = SlowRequestsConfigurationComponent()
         conf = dict(('trace_slowreqs.%s' % k, v) for k, v in options.items() if k != 'debug')
         if 'debug' in options:
             conf['debug'] = options['debug']

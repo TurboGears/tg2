@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ....support.converters import asbool
-from ..base import (ConfigurationStep,
+from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction,
                     AppReadyConfigurationAction)
 
@@ -8,7 +8,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-class StaticsConfigurationStep(ConfigurationStep):
+class StaticsConfigurationComponent(ConfigurationComponent):
     """Static files
 
     In production, use Apache or another web server to serve static files)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from ..base import ConfigurationStep, AppReadyConfigurationAction
+from ..base import ConfigurationComponent, AppReadyConfigurationAction
 
 
-class SeekableRequestConfigurationStep(ConfigurationStep):
+class SeekableRequestConfigurationComponent(ConfigurationComponent):
     """Make the request body seekable, so it can be read multiple times.
 
     """

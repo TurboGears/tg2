@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from ..base import (ConfigurationStep, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction,
+from ..base import (ConfigurationComponent, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction,
                     AppReadyConfigurationAction)
 from ...utils import get_partial_dict, TGConfigError
 from ....support.converters import asbool, asint
 
 
-class MingConfigurationStep(ConfigurationStep):
+class MingConfigurationComponent(ConfigurationComponent):
     """
     """
     id = "ming"

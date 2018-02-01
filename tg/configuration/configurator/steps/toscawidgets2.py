@@ -2,14 +2,14 @@
 from tg.support.converters import asbool
 
 from ...utils import TGConfigError
-from ..base import (ConfigurationStep,
+from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction, AppReadyConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
 
-class ToscaWidgets2ConfigurationStep(ConfigurationStep):
+class ToscaWidgets2ConfigurationComponent(ConfigurationComponent):
     """
 
     """

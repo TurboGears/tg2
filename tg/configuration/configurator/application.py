@@ -79,7 +79,7 @@ class ApplicationConfigurator(Configurator):
             anything happens in the application itself.
 
         """
-        for _, step in self._steps:
+        for _, step in self._components:
             step._apply(EnvironmentLoadedConfigurationAction, conf)
 
         app = TGApp(conf)
@@ -91,7 +91,7 @@ class ApplicationConfigurator(Configurator):
 
         app = hooks.notify_with_value('before_wsgi_middlewares', app)
 
-        for _, step in self._steps:
+        for _, step in self._components:
             app = step._apply(AppReadyConfigurationAction, conf, app)
 
         app = hooks.notify_with_value('after_wsgi_middlewares', app)

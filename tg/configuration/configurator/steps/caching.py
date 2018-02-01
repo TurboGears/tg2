@@ -2,10 +2,10 @@
 import os
 
 from ...utils import TGConfigError
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction
+from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
-class CachingConfigurationStep(ConfigurationStep):
+class CachingConfigurationComponent(ConfigurationComponent):
     """
 
     """

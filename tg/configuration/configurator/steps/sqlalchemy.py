@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ..base import ConfigurationStep, ConfigReadyConfigurationAction, AppReadyConfigurationAction
+from ..base import ConfigurationComponent, ConfigReadyConfigurationAction, AppReadyConfigurationAction
 from ...utils import TGConfigError
 from ....support.middlewares import DBSessionRemoverMiddleware
 
 
-class SQLAlchemyConfigurationStep(ConfigurationStep):
+class SQLAlchemyConfigurationComponent(ConfigurationComponent):
     """
     """
     id = "sqlalchemy"

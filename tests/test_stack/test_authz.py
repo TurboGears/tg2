@@ -82,8 +82,8 @@ def make_app(controller_klass, environ=None, with_errors=False, config_options=N
     from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
 
-    from tg.configuration.configurator.base import ConfigurationStep
-    class ForceAuthenticatorComponent(ConfigurationStep):
+    from tg.configuration.configurator.base import ConfigurationComponent
+    class ForceAuthenticatorComponent(ConfigurationComponent):
         id = "test_force_auth"
 
         def get_actions(self):

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from tg.configuration import milestones
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction, \
+from ..base import ConfigurationComponent, BeforeConfigConfigurationAction, \
     EnvironmentLoadedConfigurationAction
 
 from logging import getLogger
 log = getLogger(__name__)
 
 
-class DispatchConfigurationStep(ConfigurationStep):
+class DispatchConfigurationComponent(ConfigurationComponent):
     """
         - root_controller
         - disable_request_extensions
@@ -18,7 +18,7 @@ class DispatchConfigurationStep(ConfigurationStep):
     id = "dispatch"
 
     def __init__(self):
-        super(DispatchConfigurationStep, self).__init__()
+        super(DispatchConfigurationComponent, self).__init__()
         self._controller_wrappers = []
 
     def get_defaults(self):

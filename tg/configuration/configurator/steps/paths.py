@@ -2,10 +2,10 @@
 import os
 
 from tg.util import Bunch
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction
+from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
-class PathsConfigurationStep(ConfigurationStep):
+class PathsConfigurationComponent(ConfigurationComponent):
     """
             - ``paths`` -> Dictionary of directories where templates, static files and controllers are found::
 

@@ -253,3 +253,73 @@ class DependenciesList(object):
             visit_queue.extendleft(reversed(element_dependencies))
 
         self._ordered_elements = ordered_elements
+
+
+class DictionaryView(object):
+    """Provides a view on a slice of a dictionary.
+
+    This allows to expose all keys in a dictionary
+    that start with a common prefix as a subdictionary.
+
+    For example you might expose all keys starting with
+    sqlalchemy.* as a standalone dictionary, all changes
+    to the view will reflect into the dictionary updating
+    the original keys.
+    """
+    __slots__ = ('_d', '_keypath')
+
+    def __init__(self, d, keypath):
+        if keypath[-1] != '.':
+            keypath = keypath + '.'
+        self._d = d
+        self._keypath = keypath
+
+    def __getitem__(self, item):
+        key = self._keypath + item
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        key = self._keypath + key
+        self._d[key] = value
+
+    def __getattr__(self, item):
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            key = self._keypath + item
+            raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        if key not in self.__slots__:
+            self.__setitem__(key, value)
+        else:
+            object.__setattr__(self, key, value)
+
+    def update(self, d, **d2):
+        if hasattr(d, 'keys'):
+            for key in d.keys():
+                self[key] = d[key]
+        else:
+            for key, value in d:
+                self[key] = value
+
+        for key in d2:
+            self[key] = d2[key]
+
+
+def copyoption(v):
+    """Copies a dictionary and all its nested dictionaries and lists.
+
+    Much like copy.deepcopy it provides a deep copy of a dictionary
+    but instead of trying to copy everything it will only make a copy
+    of dictionaries, lists, tuples and sets. All the containers typically
+    used in configuration blueprints. All the other objects will be
+    preserved by reference.
+    """
+    if isinstance(v, dict):
+        return v.__class__((k, copyoption(v[k])) for k in v)
+    elif isinstance(v, (list, set, tuple)):
+        return v.__class__(copyoption(e) for e in v)
+    else:
+        # Preserve anything else as is.
+        return v

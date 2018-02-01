@@ -4,12 +4,13 @@ from __future__ import absolute_import
 import logging
 import warnings
 
-from ..base import (ConfigurationStep, AppReadyConfigurationAction, BeforeConfigConfigurationAction)
+from ..base import (ConfigurationComponent, AppReadyConfigurationAction,
+                    BeforeConfigConfigurationAction)
 from ...utils import TGConfigError, get_partial_dict
 from ....support.converters import asbool, aslogger
 
 
-class SimpleAuthenticationConfigurationStep(ConfigurationStep):
+class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
     """
     """
     id = "sa_auth"

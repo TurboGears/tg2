@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 from tg.support.converters import asbool
 from tg.support.registry import RegistryManager
-from ..base import (ConfigurationStep, AppReadyConfigurationAction)
+from ..base import (ConfigurationComponent, AppReadyConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
-__all__ = ('RegistryConfigurationStep', )
+__all__ = ('RegistryConfigurationComponent', )
 
 
-class RegistryConfigurationStep(ConfigurationStep):
+class RegistryConfigurationComponent(ConfigurationComponent):
     """
 
     """
     id = 'registry'
-
-    def __init__(self):
-        super(RegistryConfigurationStep, self).__init__()
 
     def get_coercion(self):
         return {

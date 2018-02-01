@@ -2,12 +2,12 @@
 import logging
 from tg.configuration.utils import coerce_config
 from tg.support.converters import asbool, asint, aslist
-from ..base import ConfigurationStep, BeforeConfigConfigurationAction, AppReadyConfigurationAction
+from ..base import ConfigurationComponent, BeforeConfigConfigurationAction, AppReadyConfigurationAction
 
 log = logging.getLogger(__name__)
 
 
-class SlowRequestsConfigurationStep(ConfigurationStep):
+class SlowRequestsConfigurationComponent(ConfigurationComponent):
     """Provides slow requests reporting for TurboGears through BackLash.
 
     This is enabled through the ``trace_slowreqs.enable`` option and

@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 import logging
-
-from ..utils import DependenciesList, coerce_options
-from ..hooks import hooks
+from ..utils import DependenciesList, coerce_options, DictionaryView, copyoption
 
 log = logging.getLogger(__name__)
 
 
 class Configurator(object):
-    """Manage application configuration steps and blueprint.
+    """Manage application configuration components and blueprint.
 
     The configuration blueprint will be used as configuration foundation
     for every new application built from the Configurator, configuration
     blueprint is merged with deployment configuration loaded from
     config files before creating the application.
 
-    Refer to each registered configuration step for configuration options
-    available in the Configurator.
+    Refer to each registered configuration component for
+    configuration options available in the Configurator.
 
     .. versionadded:: 2.4
     """
@@ -24,14 +22,14 @@ class Configurator(object):
         self._initialized = False
         self._blueprint = {}
         self._coercion = {}
-        self._steps = DependenciesList()
+        self._components = DependenciesList()
 
     def _initialize(self):
         if self._initialized:
             return
 
-        for _, step in self._steps:
-            step.on_bind(self)
+        for _, component in self._components:
+            component.on_bind(self)
         self._initialized = True
 
     def update_blueprint(self, config):
@@ -62,23 +60,27 @@ class Configurator(object):
             raise ValueError('A Blueprint key cannot end with a .')
         return DictionaryView(self._blueprint, key)
 
-    def register(self, config_step_type, after=None):
-        """Registers a new configuration step to be performed by the Configurator"""
-        if not issubclass(config_step_type, ConfigurationStep):
-            raise ValueError('Configuration step must inherit ConfigurationStep')
+    def register(self, component_type, after=None):
+        """Registers a new configuration component to be performed by the Configurator"""
+        if not issubclass(component_type, ConfigurationComponent):
+            raise ValueError('Configuration component must inherit ConfigurationComponent')
 
-        config_step = config_step_type()
-        config_step._prepare_blueprint(self._blueprint)
-        config_step._prepare_coercion(self._coercion)
-        self._steps.add(config_step, key=config_step_type.id, after=after)
+        component = component_type()
+        component._prepare_blueprint(self._blueprint)
+        component._prepare_coercion(self._coercion)
+        self._components.add(component, key=component_type.id, after=after)
 
-    def replace(self, stepid, new_config_step):
-        """Replaces an existing configuration step with another one."""
-        self._steps.replace(stepid, new_config_step)
+    def replace(self, component_id, new_component_type):
+        """Replaces an existing configuration component with another one.
 
-    def get(self, stepid):
-        """Retrieve a registered configuration step."""
-        return self._steps.get(stepid)
+        Note that replacing a component will only influence the applications
+        created after it was replaced.
+        """
+        self._components.replace(component_id, new_component_type)
+
+    def get(self, component_id):
+        """Retrieve a registered configuration component."""
+        return self._components.get(component_id)
 
     def configure(self, global_conf=None, app_conf=None):
         self._initialize()
@@ -90,39 +92,40 @@ class Configurator(object):
         conf.update(app_conf)
 
         # Convert the loaded options according to the coercion functions
-        # registered by each configuration step.
+        # registered by each configuration component.
         conf.update(coerce_options(conf, self._coercion))
 
-        for _, step in self._steps:
-            step._apply(BeforeConfigConfigurationAction, conf)
+        for _, component in self._components:
+            component._apply(BeforeConfigConfigurationAction, conf)
 
         log.debug("Initializing configuration, package: '%s'", conf.get('package_name'))
         return conf
 
     def setup(self, conf):
-        for _, step in self._steps:
-            step._apply(ConfigReadyConfigurationAction, conf)
+        for _, component in self._components:
+            component._apply(ConfigReadyConfigurationAction, conf)
 
 
-class ConfigurationStep(object):
-    """Represents a configuration step that as to be performed by :class:`.Configuration`.
+class ConfigurationComponent(object):
+    """Represents a configuration component that will collaborate in configuring an application.
 
-    Each configurator step can perform multiple actions at different times,
-    each action can be registered using :meth:`.ConfigurationStep.register`.
+    Each component once registered in a :class:`.Configuration` can perform multiple
+    actions at different times, each action can be registered using
+    :meth:`.ConfigurationComponent.register`.
 
     .. versionadded:: 2.4
     """
     def __init__(self):
         if not hasattr(self, 'id'):
-            raise ValueError('ConfigurationStep must provide an id class attribute '
-                             'to uniquely identify it.')
+            raise ValueError('ConfigurationComponent must provide an id class attribute '
+                             'to uniquely identify the component.')
 
         self._actions = {}
         for action in self.get_actions():
             self._register_action(action)
 
     def on_bind(self, configurator):
-        """Called when ConfigurationStep is bound to a Configurator.
+        """Called when component is bound to a Configurator.
 
         This should be overridden to register global settings and
         entities like ApplicationWrappers and RenderingEngines into
@@ -132,10 +135,10 @@ class ConfigurationStep(object):
         return
 
     def get_actions(self):
-        """Can be overridden to provide a set of actions the step has the perform.
+        """Can be overridden to provide a set of actions the component has the perform.
 
         Must return an iterable containing all the actions that must be
-        performed by this configuration step::
+        performed by this configuration component at any given time::
 
             (BeforeConfigConfigurationAction(self.setup_config),
              ConfigReadyConfigurationAction(self.initialize_things),
@@ -146,7 +149,7 @@ class ConfigurationStep(object):
     def get_defaults(self):
         """Can be overridden to provide default values for configuration blueprint.
 
-        This is used when the configuration step is added to a Configurator to
+        This is used when the configuration component is added to a Configurator to
         retrieve any default value for configuration options.
 
         Must return a dictionary in the form::
@@ -186,9 +189,12 @@ class ConfigurationStep(object):
 
 
 class _ConfigurationAction(object):
-    """A :class:`ConfigurationStep` action.
+    """An action done by a :class:`ConfigurationComponent` during configuration process.
 
-    Represents what should be done during a part of a configuration step.
+    Represents what should be done during part of configuration
+    process by a :class:`ConfigurationComponent`.
+    The :class:`.Configurator` will fire the actions at specific
+    times based on the action type.
 
     .. versionadded:: 2.4
     """
@@ -203,78 +209,24 @@ class _ConfigurationAction(object):
 
 
 class BeforeConfigConfigurationAction(_ConfigurationAction):
+    """An action to be executed before the app configuration is initialised."""
     pass
 
 
 class ConfigReadyConfigurationAction(_ConfigurationAction):
+    """An action to be executed once the configuration is loaded and ready."""
     pass
 
 
 class EnvironmentLoadedConfigurationAction(_ConfigurationAction):
+    """An action to be executed once the environment needed to create the app is ready."""
     pass
 
 
 class AppReadyConfigurationAction(_ConfigurationAction):
-    pass
+    """An action to be executed once the application has been created.
 
-
-# TODO: Move into utils
-class DictionaryView(object):
-    __slots__ = ('_d', '_keypath')
-
-    def __init__(self, d, keypath):
-        if keypath[-1] != '.':
-            keypath = keypath + '.'
-        self._d = d
-        self._keypath = keypath
-
-    def __getitem__(self, item):
-        key = self._keypath + item
-        return self._d[key]
-
-    def __setitem__(self, key, value):
-        key = self._keypath + key
-        self._d[key] = value
-
-    def __getattr__(self, item):
-        try:
-            return self.__getitem__(item)
-        except KeyError:
-            key = self._keypath + item
-            raise AttributeError(key)
-
-    def __setattr__(self, key, value):
-        if key not in self.__slots__:
-            self.__setitem__(key, value)
-        else:
-            object.__setattr__(self, key, value)
-
-    def update(self, d, **d2):
-        if hasattr(d, 'keys'):
-            for key in d.keys():
-                self[key] = d[key]
-        else:
-            for key, value in d:
-                self[key] = value
-
-        for key in d2:
-            self[key] = d2[key]
-
-
-# TODO: Move into utils
-def copyoption(v):
-    """Copies a dictionary and all its nested dictionaries and lists.
-
-    Much like copy.deepcopy it provides a deep copy of a dictionary
-    but instead of trying to copy everything it will only make a copy
-    of dictionaries, lists, tuples and sets. All the containers typically
-    used in configuration blueprints. All the other objects will be
-    preserved by reference.
+    It's typically the best time where to wrap WSGI middlewares
+    around the application.
     """
-    if isinstance(v, dict):
-        return v.__class__((k, copyoption(v[k])) for k in v)
-    elif isinstance(v, (list, set, tuple)):
-        return v.__class__(copyoption(e) for e in v)
-    else:
-        # Preserve anything else as is.
-        return v
+    pass

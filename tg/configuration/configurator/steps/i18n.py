@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 
-from ....util import Bunch
 from ...utils import TGConfigError
-from ..base import (ConfigurationStep,
+from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction)
 
 from logging import getLogger
 log = getLogger(__name__)
 
 
-class I18NConfigurationStep(ConfigurationStep):
+class I18NConfigurationComponent(ConfigurationComponent):
     """
 
     """

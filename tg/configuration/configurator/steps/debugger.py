@@ -2,12 +2,12 @@
 import logging
 
 from tg.support.converters import asbool
-from ..base import ConfigurationStep, AppReadyConfigurationAction
+from ..base import ConfigurationComponent, AppReadyConfigurationAction
 
 log = logging.getLogger(__name__)
 
 
-class DebuggerConfigurationStep(ConfigurationStep):
+class DebuggerConfigurationComponent(ConfigurationComponent):
     """If debug is enabled, this function will return the app wrapped in
     the BackLash debugger middleware which displays
     interactive debugging sessions when a traceback occurs.

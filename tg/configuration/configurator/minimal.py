@@ -3,13 +3,13 @@ import logging
 
 from .application import ApplicationConfigurator
 
-from .steps.mimetypes import MimeTypesConfigurationStep
-from .steps.paths import PathsConfigurationStep
-from .steps.app_globals import AppGlobalsConfigurationStep
-from .steps.helpers import HelpersConfigurationStep
-from .steps.dispatch import DispatchConfigurationStep
-from .steps.rendering import TemplateRenderingConfigurationStep
-from .steps.registry import RegistryConfigurationStep
+from .steps.mimetypes import MimeTypesConfigurationComponent
+from .steps.paths import PathsConfigurationComponent
+from .steps.app_globals import AppGlobalsConfigurationComponent
+from .steps.helpers import HelpersConfigurationComponent
+from .steps.dispatch import DispatchConfigurationComponent
+from .steps.rendering import TemplateRenderingConfigurationComponent
+from .steps.registry import RegistryConfigurationComponent
 
 log = logging.getLogger(__name__)
 
@@ -18,13 +18,13 @@ class MinimalApplicationConfigurator(ApplicationConfigurator):
     def __init__(self):
         super(MinimalApplicationConfigurator, self).__init__()
 
-        self.register(MimeTypesConfigurationStep, after=False)
-        self.register(PathsConfigurationStep, after=False)
-        self.register(DispatchConfigurationStep, after=False)
-        self.register(AppGlobalsConfigurationStep)
-        self.register(HelpersConfigurationStep)
-        self.register(TemplateRenderingConfigurationStep)
-        self.register(RegistryConfigurationStep, after=True)
+        self.register(MimeTypesConfigurationComponent, after=False)
+        self.register(PathsConfigurationComponent, after=False)
+        self.register(DispatchConfigurationComponent, after=False)
+        self.register(AppGlobalsConfigurationComponent)
+        self.register(HelpersConfigurationComponent)
+        self.register(TemplateRenderingConfigurationComponent)
+        self.register(RegistryConfigurationComponent, after=True)
 
 
 

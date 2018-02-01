@@ -3,7 +3,7 @@ Testing for TG2 Configuration
 """
 from nose import SkipTest
 from nose.tools import eq_, raises
-import atexit, sys, os
+import sys, os
 from datetime import datetime
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
@@ -11,10 +11,7 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
-from tg.configuration.app_config import _init_default_global_config
-from tg.configuration.hooks import _TGGlobalHooksNamespace
-
-from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
+from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
 from tg.util import Bunch
