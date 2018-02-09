@@ -3,13 +3,13 @@ import logging
 
 from .application import ApplicationConfigurator
 
-from .steps.mimetypes import MimeTypesConfigurationComponent
-from .steps.paths import PathsConfigurationComponent
-from .steps.app_globals import AppGlobalsConfigurationComponent
-from .steps.helpers import HelpersConfigurationComponent
-from .steps.dispatch import DispatchConfigurationComponent
-from .steps.rendering import TemplateRenderingConfigurationComponent
-from .steps.registry import RegistryConfigurationComponent
+from .components.mimetypes import MimeTypesConfigurationComponent
+from .components.paths import PathsConfigurationComponent
+from .components.app_globals import AppGlobalsConfigurationComponent
+from .components.helpers import HelpersConfigurationComponent
+from .components.dispatch import DispatchConfigurationComponent
+from .components.rendering import TemplateRenderingConfigurationComponent
+from .components.registry import RegistryConfigurationComponent
 
 log = logging.getLogger(__name__)
 

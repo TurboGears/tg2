@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from tg.configuration.configurator.steps.debugger import DebuggerConfigurationComponent
-from tg.configuration.configurator.steps.seekable_request import SeekableRequestConfigurationComponent
+from tg.configuration.configurator.components.debugger import DebuggerConfigurationComponent
+from tg.configuration.configurator.components.seekable_request import SeekableRequestConfigurationComponent
 from .minimal import MinimalApplicationConfigurator
 
-from .steps.error_pages import ErrorPagesConfigurationComponent
-from .steps.error_reporting import ErrorReportingConfigurationComponent
-from .steps.ming import MingConfigurationComponent
-from .steps.slow_requests import SlowRequestsConfigurationComponent
-from .steps.sqlalchemy import SQLAlchemyConfigurationComponent
-from .steps.auth import SimpleAuthenticationConfigurationComponent
-from .steps.i18n import I18NConfigurationComponent
-from .steps.caching import CachingConfigurationComponent
-from .steps.session import SessionConfigurationComponent
-from .steps.toscawidgets2 import ToscaWidgets2ConfigurationComponent
-from .steps.statics import StaticsConfigurationComponent
+from .components.error_pages import ErrorPagesConfigurationComponent
+from .components.error_reporting import ErrorReportingConfigurationComponent
+from .components.ming import MingConfigurationComponent
+from .components.slow_requests import SlowRequestsConfigurationComponent
+from .components.sqlalchemy import SQLAlchemyConfigurationComponent
+from .components.auth import SimpleAuthenticationConfigurationComponent
+from .components.i18n import I18NConfigurationComponent
+from .components.caching import CachingConfigurationComponent
+from .components.session import SessionConfigurationComponent
+from .components.toscawidgets2 import ToscaWidgets2ConfigurationComponent
+from .components.statics import StaticsConfigurationComponent
 
 log = logging.getLogger(__name__)
 

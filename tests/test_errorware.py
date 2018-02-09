@@ -1,5 +1,5 @@
-from tg.configuration.configurator.steps.error_reporting import ErrorReportingConfigurationComponent
-from tg.configuration.configurator.steps.slow_requests import SlowRequestsConfigurationComponent
+from tg.configuration.configurator.components.error_reporting import ErrorReportingConfigurationComponent
+from tg.configuration.configurator.components.slow_requests import SlowRequestsConfigurationComponent
 
 def simple_app(environ, start_response):
     status = '200 OK'

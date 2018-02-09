@@ -828,7 +828,7 @@ class TestAppConfig:
             assert resp.json['now'] == now, (resp, now)
 
     def test_controler_wrapper_setup(self):
-        from tg.configuration.configurator.steps.dispatch import _call_controller
+        from tg.configuration.configurator.components.dispatch import _call_controller
         orig_caller = _call_controller
 
         appcfg = AppConfig(minimal=True, root_controller=RootController())
