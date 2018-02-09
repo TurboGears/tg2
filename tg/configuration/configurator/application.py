@@ -17,10 +17,18 @@ log = logging.getLogger(__name__)
 class ApplicationConfigurator(Configurator):
     def __init__(self):
         super(ApplicationConfigurator, self).__init__()
-
         self._application_wrappers = DependenciesList()
 
     def configure(self, global_conf=None, app_conf=None):
+        """Initializes configuration of the application.
+
+        Applies all the blueprints, components defaults, global_conf, app_confg
+        and components coercions then returns the resulting configuration.
+        Also the configuration is set as the currently active one in the process.
+
+        This is the first step invoked by :meth:`.make_wsgi_app` to create a
+        new TurboGears application.
+        """
         global_conf = Bunch(global_conf or {})
         app_conf = Bunch(app_conf or {})
 
@@ -41,35 +49,45 @@ class ApplicationConfigurator(Configurator):
         hooks.notify('initialized_config', args=(self, conf))
         return conf
 
-    def load_environment(self, global_conf, app_conf):
-        """Configure a TurboGears Application environment.
+    def setup(self, conf):
+        """Setup a TurboGears application environment given a configuration.
 
-        ``global_conf``
-            The inherited configuration for this application. Normally
-            from the [DEFAULT] section of the Paste ini file.
+        This usually involves any configuration step that requires
+        all configuration options to be available before it can be executed.
 
-        ``app_conf``
-            The application's local configuration. Normally specified in
-            the [app:<name>] section of the Paste ini file (where <name>
-            defaults to main).
+        It's also the place where ApplicationWrappers and ControllerWrappers
+        are resolved.
         """
-        conf = self.configure(global_conf, app_conf)
-
-        self.setup(conf)
+        super(ApplicationConfigurator, self).setup(conf)
         hooks.notify('config_setup', args=(self, conf))
 
         # Trigger milestone here so that it gets triggered even when
         # websetup (setup-app command) is performed.
         milestones.environment_loaded.reach()
 
-        return conf
+        for _, step in self._components:
+            step._apply(EnvironmentLoadedConfigurationAction, conf)
 
-    def make_app(self, conf, wrap_app=None):
+    @classmethod
+    def current(self):
+        """Retrieves the current ApplicationConfigurator given that a configuration is in place.
+
+        The current configurator is saved within the configuration itself, so whenever
+        a configuration is in place it is possible to get access to the configurator
+        and then access any of its componenets::
+
+            ApplicationConfigurator.current().get('componentid')
+        """
+        configurator = reqlocal_config['tg.configurator']()
+        return configurator
+
+    def _make_app(self, conf, wrap_app=None):
         """Create a tg WSGI application and return it.
 
         ``conf``
             The application's configuration returned by the
-            Configurator
+            Configurator after :meth:`.configure` and :meth:`.setup`
+            were already applied.
 
         ``wrap_app``
             a WSGI middleware component which takes the core turbogears
@@ -79,9 +97,6 @@ class ApplicationConfigurator(Configurator):
             anything happens in the application itself.
 
         """
-        for _, step in self._components:
-            step._apply(EnvironmentLoadedConfigurationAction, conf)
-
         app = TGApp(conf)
 
         hooks.notify('configure_new_app', args=(app,))
@@ -98,12 +113,11 @@ class ApplicationConfigurator(Configurator):
 
         return app
 
-    def make_wsgi_app(self, **app_conf):
-        # wrap_app is an argument to make_app, not a configuration option.
-        wrap_app = app_conf.pop('wrap_app', None)
-
-        conf = self.load_environment({}, app_conf)
-        return self.make_app(conf, wrap_app=wrap_app)
+    def make_wsgi_app(self, global_conf, app_conf, wrap_app=None):
+        """Creates a new WSGI TurboGears application with provided configuration."""
+        conf = self.configure(global_conf, app_conf)
+        self.setup(conf)
+        return self._make_app(conf, wrap_app=wrap_app)
 
     def register_application_wrapper(self, wrapper, after=None):
         """Registers a TurboGears application wrapper.
@@ -149,4 +163,9 @@ class ApplicationConfigurator(Configurator):
         self._application_wrappers.add(wrapper, after=after)
 
     def replace_application_wrapper(self, key, wrapper):
+        """Replaces a registered application wrapper with another one.
+
+        Note that this only applies to future applications that will be created,
+        not to already existing ones.
+        """
         self._application_wrappers.replace(key, wrapper)

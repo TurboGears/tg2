@@ -116,7 +116,11 @@ class AppConfig(object):
         if necessary.
 
         """
-        return self._configurator.load_environment
+        def _load_environment(global_conf, app_conf):
+            conf = self._configurator.configure(global_conf, app_conf)
+            self._configurator.setup(conf)
+            return conf
+        return _load_environment
 
     def setup_tg_wsgi_app(self, load_environment=None):
         """Create a base TG app, with all the standard middleware.
@@ -136,13 +140,15 @@ class AppConfig(object):
             if init_config is None:
                 init_config = self.make_load_environment()
 
-            return self._configurator.make_app(init_config(global_conf or {}, app_conf),
-                                               wrap_app)
+            return self._configurator._make_app(init_config(global_conf or {}, app_conf),
+                                                wrap_app)
 
         return make_base_app
 
     def make_wsgi_app(self, **kwargs):
-        return self._configurator.make_wsgi_app(**kwargs)
+        # wrap_app is an argument to make_wsgi_app, not a configuration option.
+        wrap_app = kwargs.pop('wrap_app', None)
+        return self._configurator.make_wsgi_app({}, kwargs, wrap_app=wrap_app)
 
 
 class OldAppConfig(Bunch):
@@ -164,8 +170,6 @@ class OldAppConfig(Bunch):
 
         - ``debug`` -> Enables / Disables debug mode. **Can be set from .ini file**
         - ``serve_static`` -> Enable / Disable serving static files. **Can be set from .ini file**
-        - ``use_dotted_templatenames`` -> Use template names as packages in @expose instead of file paths.
-          This is usually the default unless TG is started in Minimal Mode. **Can be set from .ini file**
         - ``registry_streaming`` -> Enable streaming of responses, this is enabled by default.
           **Can be set from .ini file**
         - ``use_toscawidgets`` -> Enable ToscaWidgets1, this is deprecated.

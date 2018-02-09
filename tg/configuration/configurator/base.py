@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+import weakref
+
 from ..utils import DependenciesList, coerce_options, DictionaryView, copyoption
 
 log = logging.getLogger(__name__)
@@ -83,6 +85,10 @@ class Configurator(object):
         return self._components.get(component_id)
 
     def configure(self, global_conf=None, app_conf=None):
+        """Prepare a configuration using the configurator.
+
+        Once it's ready the configuration is returned.
+        """
         self._initialize()
 
         conf = {}
@@ -90,6 +96,10 @@ class Configurator(object):
         conf.update(copyoption(self._blueprint))
         conf.update(copyoption(global_conf))
         conf.update(app_conf)
+
+        # Let track of the configurator that generated the configuration
+        # into the configuration itself.
+        conf['tg.configurator'] = weakref.ref(self)
 
         # Convert the loaded options according to the coercion functions
         # registered by each configuration component.
@@ -102,6 +112,14 @@ class Configurator(object):
         return conf
 
     def setup(self, conf):
+        """Given a configuration setup the environment.
+
+        Applies ``ConfigReadyConfigurationAction`` configuration actions
+        from the registered components.
+
+        This usually involves all the configuration steps that already
+        need to have all configuration options available before they can proceed.
+        """
         for _, component in self._components:
             component._apply(ConfigReadyConfigurationAction, conf)
 

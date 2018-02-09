@@ -14,8 +14,23 @@ __all__ = ('TemplateRenderingConfigurationComponent', )
 
 
 class TemplateRenderingConfigurationComponent(ConfigurationComponent):
-    """
+    """Provides support for rendering engines.
 
+    The available options are:
+
+        - ``use_dotted_templatenames`` -> (``True``/``False``) Use template names as packages in
+          @expose instead of file paths. This is usually the default unless TG is started
+          in Minimal Mode.
+        - ``auto_reload_templates`` -> (``True``/``False``) Automatically reload template files
+         if they change. Should usually be disabled on production for performance reasons.
+        - ``tg.strict_tmpl_context`` -> (``True``/``False``) Should ``tg.tmpl_context`` be
+          strict and complain about missing value or should it always just return empty values
+          for missing ones?
+        - ``renderers`` -> (``list(str)``) List of template engines that should be enabled.
+        - ``default_renderer`` -> (``str``) The default template engine to use when not explicitly
+          specified by ``@expose`` decorations.
+
+    Refer to each template engine renderer for specific configuration options.
     """
     id = 'rendering'
 
