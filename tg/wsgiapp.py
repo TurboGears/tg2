@@ -272,7 +272,7 @@ class TemplateContext(object):
         if item in ('form_values', 'form_errors'):
             warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
                           'use request.validation instead', DeprecationWarning)
-            return tg.request.validation[item[5:]]
+            return getattr(tg.request.validation, item[5:])
         elif item == 'controller_url':
             warnings.warn('tmpl_context.controller_url got deprecated, '
                           'use request.controller_url instead', DeprecationWarning)
