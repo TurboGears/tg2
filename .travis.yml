@@ -12,11 +12,11 @@ install:
   - "pip install --upgrade setuptools"
   - "pip install git+git://github.com/TurboGears/crank.git"
   - "pip install git+git://github.com/TurboGears/backlash.git"
+  - "pip install git+git://git.code.sf.net/p/merciless/code"
   - "pip install repoze.who"
   - "pip install coverage==4.2"
   - "pip install nose"
   - "pip install --no-use-wheel -e .[testing]"
-  - "pip install --upgrade git+git://git.code.sf.net/p/merciless/code"
 
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi

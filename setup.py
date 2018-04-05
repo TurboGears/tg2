@@ -39,12 +39,9 @@ else:
 
 if py_version == (2, 6):
     test_requirements.append('sqlalchemy < 1.2')
+    test_requirements.append('ming < 0.5.6')
 else:
     test_requirements.append('sqlalchemy')
-
-
-if py_version != (3, 2):
-    # Ming is not compatible with Python3.2
     test_requirements.append('ming > 0.5.0')
 
 
