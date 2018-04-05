@@ -49,7 +49,7 @@ if py_version[0] == 2:
                               'tw.forms'])
 
 install_requires=[
-    'WebOb >= 1.2',
+    'WebOb >= 1.2, < 1.8.0',
     'crank >= 0.8.0, < 0.9.0',
     'repoze.lru'
 ]
