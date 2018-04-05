@@ -21,7 +21,6 @@ test_requirements = ['nose',
                     'Mako',
                     'WebTest < 2.0',
                     'backlash >= 0.0.7',
-                    'sqlalchemy',
                     'raven < 4.1.0',
                     'formencode>=1.3.0a1',
                     'tw2.forms',
@@ -36,6 +35,12 @@ if py_version == (3, 2):
 else:
     test_requirements.append('jinja2')
     test_requirements.append('coverage')
+
+
+if py_version == (2, 6):
+    test_requirements.append('sqlalchemy < 1.2')
+else:
+    test_requirements.append('sqlalchemy')
 
 
 if py_version != (3, 2):
