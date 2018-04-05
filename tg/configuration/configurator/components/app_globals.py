@@ -9,7 +9,24 @@ log = getLogger(__name__)
 
 
 class AppGlobalsConfigurationComponent(ConfigurationComponent):
-    """
+    """Enables the application global object.
+
+    ``tg.app_globals`` is a global object always available in TG
+    and shared across all requests and threads of the application.
+
+    It's meant to keep around any value or method that all other
+    parts of the application might depend on. As it's shared
+    between all application threads and requests its content
+    should be immutable or it will lead to race conditions.
+
+    By default an instance of ``.lib.app_globals.Globals`` from
+    within your application package is used. If it's not available
+    an empty ``Bunch`` will be created instead.
+
+    Provided options:
+
+    * ``app_globals`` -> Factory or Class that should be used to create
+      application global object instead of getting it from the application package.
 
     """
     id = 'app_globals'
@@ -25,12 +42,6 @@ class AppGlobalsConfigurationComponent(ConfigurationComponent):
         )
 
     def _setup_app_globals(self, conf, app):
-        """Add helpers and globals objects to the ``conf``.
-
-        Override this method to customize the way that ``app_globals`` and ``helpers``
-        are setup. TurboGears expects them to be available in ``conf`` dictionary
-        as ``tg.app_globals`` and ``helpers``.
-        """
         # Setup AppGlobals
         gclass = conf.pop('app_globals', None)
         if gclass is None:

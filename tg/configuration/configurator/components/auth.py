@@ -11,10 +11,110 @@ from ....support.converters import asbool, aslogger
 
 
 class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
-    """
+    """Provide support for Simple Authentication.
+
+    Simple Authentication is the standard way to handle authentication
+    and authorization in TurboGears. Where every request has an associated
+    User object (which might be None) and each user can be part of one or more
+    Groups each having a set of Permissions.
+
+    The simple auth is based on ``repoze.who`` and by default sets the
+    required ``authenticators``, ``identifiers`` and ``metadata providers``
+    for a form based login. The user, its groups and permissions are retrieved
+    through the ``authmetadata`` object configured by the application.
+
+    For most cases instead of tweaking the simple authentication options
+    you probably just want to change the behaviour of ``authmetadata``
+    object in your application configuration.
+
+    Provided options:
+
+        * ``auth_backed``: Which is the backend used to authenticate
+          the provided credentials (username and password) against a
+          store of credentials. Can be one of:
+
+          * ``"authmetadata"``: Which means the authmetadata object of your
+            application will be in charge of verifying the credentials
+            through an ``authenticate`` method.
+          * ``None``: Which means to disable the primary authenticator (only
+            authenticators explicitly provided in ``authenticators`` ooption
+            will be used). Most of Turbogears will consider authentication
+            as disabled.
+          * ``"ming"``: Which means to veirfy the credntials against a MongoDB
+            database (*deprecated*)
+          * ``"sqlalchemy"``: Which means to veirfy the credntials against a
+            SQLalchemy database (*deprecated*)
+
+        * ``skip_authentication``: Disable authentication for tests, the
+          user will always be authenticated through a ``REMOTE_USER`` environ
+          key which will be considered the authenticated user id when set.
+
+        * ``sa_auth.authmetadata``: authmetadata instance to use as an authenticator.
+          This is always applied unless ``auth_backend`` is ``None`` or the provided
+          object lacks an ``authenticate`` method.
+
+        * ``sa_auth.log_stream``: Provide a custom logger fo authentication.
+          by default the ``auth`` logger is used.
+
+        *  ``sa_auth.identifiers``: The identifiers to use to recognise a logged user.
+          By default ``('default', None)`` leads to an authentication cookie being
+          used to recognise logged users.
+
+        * ``sa_auth.form_identifies``: Whenever to add the form plugin to
+          the identifiers. By default ``True``. This allows the form plugin
+          to intercept requests and identify the user credentisl from the
+          data submitted by the login page. If this is
+          disabled, the form will be able to act as a challenger and redirect
+          the user to the login page, but it won't be able to actually get the
+          user_name/password from the submitted form and provide them to the
+          authenticator.
+
+        * ``sa_auth.cookie_secret``: Secret to encode the ``auth_tkt`` cookie.
+          This is only required when ``('default', None)`` is listed
+          in ``sa_auth.identifiers``.
+
+        * ``sa_auth.authenticators``: List of authenticators used to authenticate
+          user against the provided credentials. By default ``('default', None)`` and
+          ``cookie`` are the only enabled ones. This means that user will be
+          authenticated against an user name and password using the configured
+          ``auth_backend`` or will be authenticated through the presence of an
+          authentication cookie.
+
+        * ``sa_auth.cookie_name``: Name of the cookie used to authenticate the
+          user if the cookie identifer and authenticator are enabled (by default they are).
+
+        * ``sa_auth.login_url``: Url where the login form is displayed if
+          ``sa_auth.form_plugin`` is enabled. By default ``"/login"``.
+
+        * ``sa_auth.login_handler``: Url that should handle form submitted authentication
+          requests if ``sa_auth.form_plugin`` is enabled and it is allowed to identify.
+          By default it's ``"/login_handler"``.
+
+        * ``sa_auth.logout_handler``: Url that should handle logout requests
+          if ``sa_auth.form_plugin`` is enabled and it is allowed to identify.
+          By default it's ``"/logout_handler"``
+
+        * ``sa_auth.post_login_url``: Where to redirect user after a login.
+          Only applied if ``sa_auth.form_plugin`` is enabled and allowed to identify.
+
+        * ``sa_auth.post_logout_url`` Where to redirect user after a logout.
+          Only applied if ``sa_auth.form_plugin`` is enabled and allowed to identify.
+
+        * ``sa_auth.login_counter_name``: Parameter used by form login to keep track
+          of login attempts if `sa_auth.form_plugin`` is enabled. By default ``__logins``.
+
+        * ``sa_auth.form_plugin``: Provide an alternative login/logout implement
+          for form based authentication.  This might make all ``form_plugin`` related
+          options unusable.
+
+        * ``sa_auth.mdproviders``: Enable some metadata providers. This are used to
+          inject additional user details into the current request. By default it's
+          disabled and :class:`tg.appwrappers.identity.IdentityApplicationWrapper` is
+          used instead.
+
     """
     id = "sa_auth"
-    SUPPORTED_AUTH_BACKENDS = ("ming", "sqlalchemy")
+    SUPPORTED_AUTH_BACKENDS = ("ming", "sqlalchemy", "authmetadata")
 
     def get_defaults(self):
         return {
@@ -25,10 +125,10 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
         }
 
     def get_coercion(self):
-
         return {
             'skip_authentication': asbool,
-            'sa_auth.log_stream': aslogger
+            'sa_auth.log_stream': aslogger,
+            'sa_auth.form_identifies': asbool
         }
 
     def get_actions(self):

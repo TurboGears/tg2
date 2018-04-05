@@ -48,7 +48,8 @@ assumptions about how things will work.
 
 from tg.request_local import (app_globals, request, response, tmpl_context,
                               session, cache, translator)
-from tg.configuration import config, AppConfig, milestones
+from tg.configuration import config, milestones
+from tg.configuration.app_config import AppConfig
 from tg.configuration.configurator import (Configurator, ApplicationConfigurator,
                                            MinimalApplicationConfigurator,
                                            FullStackApplicationConfigurator)
