@@ -4,8 +4,7 @@ from webtest import TestApp
 import gettext as _gettext
 
 import tg
-from tg import i18n, expose, TGController, config
-from tg.configuration import AppConfig
+from tg import i18n, expose, TGController, config, AppConfig
 
 from tg._compat import unicode_text, u_
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from functools import partial
 from nose.tools import raises
 from nose import SkipTest
@@ -375,6 +376,34 @@ class BasicTGController(TGController):
     def lazy_unicode_error_pow(self, num=-1):
         return str(num * num)
 
+    @expose(content_type='text/plain')
+    @validate({
+        'val': Convert(lambda v: int(v) > 0 or int('ERROR'))
+    }, error_handler=validation_errors_response)
+    def chain_validation_0(self, val):
+        return '>0'
+
+    @expose(content_type='text/plain')
+    @validate({
+        'val': Convert(lambda v: int(v) > 1 or int('ERROR'))
+    }, error_handler=chain_validation_0, chain_validation=True)
+    def chain_validation_1(self, val):
+        return '>1'
+
+    @expose(content_type='text/plain')
+    @validate({
+        'val': Convert(lambda v: int(v) > 2 or int('ERROR'))
+    }, error_handler=chain_validation_1, chain_validation=True)
+    def chain_validation_2(self, val):
+        return '>2'
+
+    @expose(content_type='text/plain')
+    @validate({
+        'val': Convert(lambda v: int(v) > 3 or int('ERROR'))
+    }, error_handler=chain_validation_2, chain_validation=True)
+    def chain_validation_begin(self, val):
+        return '>3'
+
 
 class TestTGController(TestWSGIController):
     def setUp(self):
@@ -676,3 +705,35 @@ class TestTGController(TestWSGIController):
     def test_validation_errors_lazy_unicode(self):
         resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
         assert resp.json['errors']['num'] == u_('àèìòù'), resp.json
+
+
+class TestChainValidation(TestWSGIController):
+    def setUp(self):
+        TestWSGIController.setUp(self)
+        tg.config.update({
+            'paths': {'root': data_dir},
+            'package': tests,
+        })
+
+        self.app = make_app(BasicTGController, config_options={
+            'i18n.enabled': True
+        })
+
+    def test_no_chain_validation(self):
+        res = self.app.get('/chain_validation_begin', params={'val': 4})
+        self.assertEqual(res.text, '>3')
+
+        res = self.app.get('/chain_validation_begin', params={'val': 3})
+        self.assertEqual(res.text, '>2')
+
+    def test_single_chain_validation(self):
+        res = self.app.get('/chain_validation_begin', params={'val': 2})
+        self.assertEqual(res.text, '>1')
+
+    def test_double_chain_validation(self):
+        res = self.app.get('/chain_validation_begin', params={'val': 1})
+        self.assertEqual(res.text, '>0')
+
+    def test_last_chain_validation(self):
+        res = self.app.get('/chain_validation_begin', params={'val': 0}, status=412)
+        self.assertEqual(res.json, json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}'))

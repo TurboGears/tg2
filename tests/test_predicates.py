@@ -22,7 +22,8 @@ from webtest import TestApp
 from tg._compat import u_, unicode_text
 
 from tg import predicates, TGController, expose, config
-from tg.configuration import AppConfig
+from tg import AppConfig
+
 
 class BasePredicateTester(object):
     """Base test case for predicates."""

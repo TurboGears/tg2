@@ -3,7 +3,7 @@ from webtest import TestApp
 import tg
 import tests
 from tg.util import DottedFileNameFinder
-from tg.configuration import AppConfig
+from tg import AppConfig
 from tg.configuration import milestones
 from tg._compat import PY3
 

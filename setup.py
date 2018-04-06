@@ -27,6 +27,7 @@ test_requirements = ['nose',
                      'Beaker',
                      'Kajiki >= 0.4.4']
 
+
 if py_version == (3, 2):
     # jinja2 2.7 is incompatible with Python 3.2
     test_requirements.append('jinja2 < 2.7')
@@ -35,14 +36,15 @@ if py_version == (3, 2):
 else:
     test_requirements.append('jinja2')
     test_requirements.append('coverage')
-    # Ming is not compatible with Python3.2
-    test_requirements.append('ming > 0.5.0')
 
 if py_version == (2, 6):
     # SQLAlchemy 1.2+ doesn't support Python 2.6
-    test_requirements.append('sqlalchemy<1.2')
+    test_requirements.append('sqlalchemy < 1.2')
+    # Ming 0.5.6+ has 2.7+ syntax
+    test_requirements.append('ming < 0.5.6')
 else:
     test_requirements.append('sqlalchemy')
+    test_requirements.append('ming > 0.5.0')
 
 if py_version[0] == 2:
     test_requirements.extend(['TurboKid >= 1.0.4',
@@ -50,7 +52,7 @@ if py_version[0] == 2:
                               'tw.forms'])
 
 install_requires=[
-    'WebOb >= 1.2',
+    'WebOb >= 1.2, < 1.8.0',
     'crank >= 0.8.0, < 0.9.0',
     'repoze.lru'
 ]

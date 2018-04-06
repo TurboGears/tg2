@@ -15,7 +15,8 @@ from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
 from tg.util import Bunch
-from tg.configuration import AppConfig, config
+from tg.configuration import config
+from tg.configuration.app_config import AppConfig
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
 from tg.configuration.utils import coerce_config, coerce_options, TGConfigError

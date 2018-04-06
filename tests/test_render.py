@@ -8,7 +8,7 @@ import tg
 from tg.render import MissingRendererError, _get_tg_vars
 from tests.base import setup_session_dir, teardown_session_dir
 
-from tg.configuration import AppConfig
+from tg import AppConfig
 from mako.exceptions import TemplateLookupException
 from tg.util.webtest import test_context
 

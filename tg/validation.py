@@ -41,8 +41,13 @@ class _ValidationStatus(object):
     def error_handler(self):
         if self.intent is None:
             return None
-
         return self.intent.error_handler
+
+    @property
+    def chain_validation(self):
+        if self.intent is None:
+            return False
+        return self.intent.chain_validation
 
 
 class _ValidationIntent(object):
@@ -53,9 +58,10 @@ class _ValidationIntent(object):
     validation itself on the parameters for a given
     controller method.
     """
-    def __init__(self, validators, error_handler):
+    def __init__(self, validators, error_handler, chain_validation):
         self.validators = validators
         self.error_handler = error_handler
+        self.chain_validation = chain_validation
 
     def check(self, method, params):
         validators = self.validators

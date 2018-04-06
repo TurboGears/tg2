@@ -133,16 +133,13 @@ class AppConfig(object):
             the base wsgi app.
 
         """
-
         def make_base_app(global_conf=None, wrap_app=None, **app_conf):
             # Configure the Application environment
             init_config = load_environment
             if init_config is None:
                 init_config = self.make_load_environment()
-
             return self._configurator._make_app(init_config(global_conf or {}, app_conf),
                                                 wrap_app)
-
         return make_base_app
 
     def make_wsgi_app(self, **kwargs):
@@ -178,14 +175,6 @@ class OldAppConfig(Bunch):
         - ``custom_tw2_config`` -> Dictionary of configuration options for TW2, refer to
           :class:`.tw2.core.middleware.Config` for available options.
         - ``auth_backend`` -> Authentication Backend, can be ``None``, ``sqlalchemy`` or ``ming``.
-        - ``sa_auth`` -> Simple Authentication configuration dictionary.
-          This is a Dictionary that contains the configuration options for ``repoze.who``,
-          see :ref:`authentication` for available options. Basic options include:
-
-            - ``cookie_secret`` -> Secret phrase used to verify auth cookies.
-            - ``authmetadata`` -> Authentication and User Metadata Provider for TurboGears
-            - ``post_login_url`` -> Redirect users here after login
-            - ``post_logout_url`` -> Redirect users here when they logout
         - ``package`` -> Application Package, this is used to configure paths as being inside a python
         - ``app_globals`` -> Application Globals class, by default build from ``package.lib.app_globals``.
           package. Which enables serving templates, controllers, app globals and so on from the package itself.

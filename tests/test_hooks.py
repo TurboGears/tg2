@@ -4,9 +4,9 @@ from tests.test_configuration import PackageWithModel
 from tg.configuration.utils import TGConfigError
 from webtest import TestApp
 from tg.wsgiapp import TGApp
-from tg import expose, TGController
+from tg import expose, TGController, AppConfig
 import tg
-from tg.configuration import milestones, AppConfig
+from tg.configuration import milestones
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 
