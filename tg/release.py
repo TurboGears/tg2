@@ -1,5 +1,5 @@
 """TurboGears project related information"""
-version = "2.3.11"
+version = "2.3.12"
 description = "Next generation TurboGears"
 long_description="""
 TurboGears brings together a best of breed python tools
@@ -24,7 +24,7 @@ The latest development version is available in the
     https://github.com/TurboGears
 """
 url="http://www.turbogears.org/"
-author= "Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen, Alessandro Molina, and the TurboGears community"
-email = "m.pedersen@icelus.org, amol@turbogears.org"
-copyright = """Copyright 2005-2017 Kevin Dangoor, Alberto Valverde, Mark Ramm, Christopher Perkins, Alessandro Molina and contributors"""
+author= "Alessandro Molina, Mark Ramm, Christopher Perkins, Jonathan LaCour, Rick Copland, Alberto Valverde, Michael Pedersen and the TurboGears community"
+email = "amol@turbogears.org"
+copyright = """Copyright 2005-2018 Kevin Dangoor, Alberto Valverde, Mark Ramm, Christopher Perkins, Alessandro Molina and contributors"""
 license = "MIT"

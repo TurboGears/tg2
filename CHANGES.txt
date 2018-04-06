@@ -1,5 +1,11 @@
 = Change Log =
 
+== 2.3.12 (**April 6, 2018**) ==
+
+* OPTIONS HTTP method for a RestController will now respond with a 204 "No Content" by default instead of a 404
+* WebOb version constrained to >=1.2,<1.8.0 to ensure full compatibility with TurboGears2.3
+* 
+
 == 2.3.11 (**July 3, 2017**) ==
 
 * When configuring authentication it is now possible to provide ``('default', None)`` as an identifier to set custom identifiers and retain the default one.
