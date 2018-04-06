@@ -420,6 +420,10 @@ class TestRestController(TestWSGIController):
         TestWSGIController.__init__(self, *args, **kargs)
         self.app = make_app(BasicTGController)
 
+    def test_options(self):
+        r = self.app.options('/rest/')
+        assert r.status_int == 204 
+
     def test_post(self):
         r = self.app.post('/rest/')
         assert 'rest post' in r, r

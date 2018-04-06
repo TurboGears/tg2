@@ -583,23 +583,19 @@ class validate(_ValidationIntent):
     you can use the ``@validate()`` decorator to register
     the validators that ought to be called.
 
-    :Parameters:
-      validators
-        Pass in a dictionary of FormEncode validators.
-        The keys should match the form field names.
-      error_handler
-        Pass in the controller method which shoudl be used
-        to handle any form errors
-      form
-        Pass in a ToscaWidget based form with validators
+    :param validators: A dictionary of FormEncode/TW2 validators, a :class:`tg.validation.Convert`
+                       or any callable that might throw :class:`tg.validation.TGValidationError`.
+    :param error_handler: Function or action that should be used to handle the errors.
+    :param form: A TW2 or ToscaWidgets form to validate ( to be provided instead of ``validators`` )
+    :param chain_validation: Whenever ``error_handler`` should perform validation too in
+                             case it's a controller action or not. By default it's disabled.
 
     The first positional parameter can either be a dictonary of validators,
     a FormEncode schema validator, or a callable which acts like a FormEncode
     validator.
-
     """
-    def __init__(self, validators=None, error_handler=None, form=None):
-        super(validate, self).__init__(validators or form, error_handler)
+    def __init__(self, validators=None, error_handler=None, form=None, chain_validation=False):
+        super(validate, self).__init__(validators or form, error_handler, chain_validation)
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)

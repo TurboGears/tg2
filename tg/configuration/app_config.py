@@ -131,9 +131,9 @@ class _DeprecatedControllerWrapper(object):
     def __init__(self, controller_wrapper, config, next_wrapper):
         # Backward compatible old-way of configuring controller wrappers
         warnings.warn("Controller wrapper will now accept the configuration"
-                      "as parameter when called instead of receiving it as"
-                      "a constructor parameter, please refer to the documentation"
-                      "to update your controller wrappers",
+                      " as parameter when called instead of receiving it as"
+                      " a constructor parameter, please refer to the documentation"
+                      " to update your controller wrappers",
                       DeprecationWarning, stacklevel=3)
 
         def _adapted_next_wrapper(controller, remainder, params):

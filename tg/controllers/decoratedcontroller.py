@@ -50,7 +50,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
             return method.decoration.exposed
 
-    def _call(self, controller, params, remainder=None, context=None):
+    def _call(self, action, params, remainder=None, context=None):
         """Run the controller with the given parameters.
 
         _call is called by _perform_call in CoreDispatcher.
@@ -94,38 +94,50 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             remainder = tuple()
 
         hooks.notify('before_validate', args=(remainder, params),
-                     controller=controller, context_config=context_config)
+                     controller=action, context_config=context_config)
 
-        validate_params = get_params_with_argspec(controller, params, remainder)
+        validate_params = get_params_with_argspec(action, params, remainder)
         context.request.args_params = validate_params  # Update args_params with positional args
 
         try:
-            params = self._perform_validate(controller, validate_params, context)
+            params = self._perform_validate(action, validate_params, context)
         except validation_errors as inv:
-            instance, controller = self._process_validation_errors(controller,
-                                                                   remainder, params,
-                                                                   inv, context=context)
-            bound_controller_callable = partial(controller, instance)
+            instance, error_handler, chain_validation = self._process_validation_errors(
+                action, remainder, params, inv, context=context
+            )
+            while chain_validation:
+                # The validation asked for chained validation,
+                # go on and validate the error_handler too.
+                try:
+                    params = self._perform_validate(error_handler, validate_params, context)
+                except validation_errors as inv:
+                    instance, error_handler, chain_validation = self._process_validation_errors(
+                        error_handler, remainder, params, inv, context=context
+                    )
+                else:
+                    chain_validation = False
+            action = error_handler
+            bound_controller_callable = partial(error_handler, instance)
         else:
-            bound_controller_callable = controller
+            bound_controller_callable = action
             context.request.validation.values = params
-            remainder, params = flatten_arguments(controller, params, remainder)
+            remainder, params = flatten_arguments(action, params, remainder)
 
         hooks.notify('before_call', args=(remainder, params),
-                     controller=controller, context_config=context_config)
+                     controller=action, context_config=context_config)
 
         # call controller method with applied wrappers
-        controller_caller = controller.decoration.controller_caller
+        controller_caller = action.decoration.controller_caller
         output = controller_caller(context_config, bound_controller_callable, remainder, params)
 
         # Render template
         hooks.notify('before_render', args=(remainder, params, output),
-                     controller=controller, context_config=context_config)
+                     controller=action, context_config=context_config)
 
-        response = self._render_response(context, controller, output)
+        response = self._render_response(context, action, output)
 
         hooks.notify('after_render', args=(response,),
-                     controller=controller, context_config=context_config)
+                     controller=action, context_config=context_config)
 
         return response['response']
 
@@ -285,10 +297,12 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         # Get the error handler associated to the current validation status.
         error_handler = validation_status.error_handler
+        chain_validation = validation_status.chain_validation
         if error_handler is None:
             error_handler = default_im_func(controller)
+            chain_validation = False
 
-        return im_self(controller), error_handler
+        return im_self(controller), error_handler, chain_validation
 
     @classmethod
     def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
@@ -305,8 +319,8 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             # compatibility with old code that didn't pass request locals explicitly
             tgl = tg.request.environ['tg.locals']
 
-        obj, error_handler = cls._process_validation_errors(controller, remainder, params,
-                                                            exception, tgl)
+        obj, error_handler,_ = cls._process_validation_errors(controller, remainder, params,
+                                                              exception, tgl)
         return error_handler, error_handler(obj, *remainder, **dict(params))
 
     def _check_security(self):

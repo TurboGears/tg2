@@ -21,7 +21,6 @@ test_requirements = ['nose',
                     'Mako',
                     'WebTest < 2.0',
                     'backlash >= 0.0.7',
-                    'sqlalchemy',
                     'raven < 4.1.0',
                     'formencode>=1.3.0a1',
                     'tw2.forms',
@@ -38,8 +37,11 @@ else:
     test_requirements.append('coverage')
 
 
-if py_version != (3, 2):
-    # Ming is not compatible with Python3.2
+if py_version == (2, 6):
+    test_requirements.append('sqlalchemy < 1.2')
+    test_requirements.append('ming < 0.5.6')
+else:
+    test_requirements.append('sqlalchemy')
     test_requirements.append('ming > 0.5.0')
 
 
@@ -49,7 +51,7 @@ if py_version[0] == 2:
                               'tw.forms'])
 
 install_requires=[
-    'WebOb >= 1.2',
+    'WebOb >= 1.2, < 1.8.0',
     'crank >= 0.8.0, < 0.9.0',
     'repoze.lru'
 ]
