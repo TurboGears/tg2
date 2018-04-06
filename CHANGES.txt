@@ -4,7 +4,7 @@
 
 * OPTIONS HTTP method for a RestController will now respond with a 204 "No Content" by default instead of a 404
 * WebOb version constrained to >=1.2,<1.8.0 to ensure full compatibility with TurboGears2.3
-* 
+* Fixed highlight of active page in Jinja quickstart
 
 == 2.3.11 (**July 3, 2017**) ==
 
