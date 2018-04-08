@@ -9,11 +9,13 @@ log = getLogger(__name__)
 
 
 class StaticsConfigurationComponent(ConfigurationComponent):
-    """Static files
+    """Provide support for serving Static Files.
 
-    In production, use Apache or another web server to serve static files)
+    In production, use Apache or another web server to serve static files.
 
-        - ``serve_static`` -> Enable / Disable serving static files. **Can be set from .ini file**
+        - ``serve_static``: Enable / Disable serving static files. **Can be set from .ini file**
+        - ``paths.static_files``: Directory where the static files should be served from.
+                                  Refer to :class:`.PathsConfigurationComponent` for configuration.
     """
     id = 'statics'
 

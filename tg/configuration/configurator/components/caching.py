@@ -1,19 +1,38 @@
 # -*- coding: utf-8 -*-
 import os
 
+from ....support.converters import asbool
 from ...utils import TGConfigError
 from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
 class CachingConfigurationComponent(ConfigurationComponent):
-    """
+    """Provide support for caching through Beaker.
 
+    Caching components adds support for setting up the cache
+    manager used by all caching features of turbogears:
+
+        * The tg.cache object.
+        * Templates caching
+        * function results caching by key
+        * Controller actions caching.
+
+    Supported Options:
+
+        * ``cache.enabled``: Enabled/Disable caching, by default True.
+
+    Refer to :class:`.CacheApplicationWrapper` for additional options.
     """
     id = 'caching'
 
     def get_defaults(self):
         return {
             'cache.enabled': True
+        }
+
+    def get_coercion(self):
+        return {
+            'cache.enabled': asbool
         }
 
     def on_bind(self, configurator):

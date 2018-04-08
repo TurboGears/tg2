@@ -10,8 +10,20 @@ log = getLogger(__name__)
 
 
 class I18NConfigurationComponent(ConfigurationComponent):
-    """
+    """Enable support for internationalization.
 
+    Supported Options:
+
+        * ``i18n.lang``: Default web app language if none was requested or
+                         detected from browser.
+        * ``i18n.enabled``: Enable support for translations.
+                            Disabling i18n will speedup requests and all
+                            pages will be served as they were in ``i18n.lang`` value.
+        * ``localedir``: Where to find translation catalogs.
+                         By default it's project root/i18n
+
+    Refer to :class:`.I18NApplicationWrapper` for additional options
+    in supporting i18n.
     """
     id = 'i18n'
 

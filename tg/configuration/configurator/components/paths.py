@@ -6,14 +6,23 @@ from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
 class PathsConfigurationComponent(ConfigurationComponent):
-    """
-            - ``paths`` -> Dictionary of directories where templates, static files and controllers are found::
+    """Configure application paths.
 
-            {
-                'controllers': 'my/path/to/controlllers',
-                'static_files': 'my/path/to/files',
-                'templates': ['list/of/paths/to/templates']
-            )
+    States where the application is contained, where
+    to load controllers from, templates from, static files
+    and which is the application Python package.
+
+    Options:
+
+        * ``package``: The python package containing the web application.
+        * ``paths``: A Dictionary of directories where templates, static files
+                     and controllers can be found::
+
+                        {
+                            'controllers': 'my/path/to/controlllers',
+                            'static_files': 'my/path/to/files',
+                            'templates': ['list/of/paths/to/templates']
+                        )
     """
     id = "paths"
 

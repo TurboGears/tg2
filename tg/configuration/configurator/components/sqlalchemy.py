@@ -7,14 +7,41 @@ from ....support.middlewares import DBSessionRemoverMiddleware
 
 
 class SQLAlchemyConfigurationComponent(ConfigurationComponent):
-    """
+    """Support Relational Databases through SQLAlchemy.
+
+    Configures SQLAlchemy connection to the database,
+    the automatic session cleanup at the end of each request
+    and support for master/slave databases.
+
+    Support for transaction commit/rollback on request state
+    is provided by :class:`.TransactionManagerConfigurationComponent`.
+
+    The configured SQLAlchemy engine is made available as
+    ``tg.app_globals.sa_engine``. While the configured SQLAlchemy
+    session is made available as ``tg.config['SQLASession']``.
+
+    Options:
+
+        * ``use_sqlalchemy``: Enable SQLAlchemy in your application.
+        * ``model``: Configure where models could be found, by default
+                    they are expected in ``model`` Python module
+                    within your application package.
+        * ``sqlalchemy.*``: Options provided to SQLAlchemy connection
+                           as expected by :func:`.engine_from_config`.
+        * ``sqlalchemy.master.*`` Enable Master/Slave replication support
+                                 and configure the master connection.
+        * ``sqlalchemy.slaves.slavename.*``: Configure ``slavename`` slave in
+                                            Master/Slave support and setup its
+                                            connection. Multiple entries with
+                                            different ``slavename`` values can
+                                            be provided.
+
     """
     id = "sqlalchemy"
 
     def get_defaults(self):
         return {
             'use_sqlalchemy': False,
-            'tm.enabled': True
         }
 
     def get_actions(self):
@@ -27,9 +54,6 @@ class SQLAlchemyConfigurationComponent(ConfigurationComponent):
         from ..application import ApplicationConfigurator
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('SQLAlchemy Support only works on an ApplicationConfigurator')
-
-        from ....appwrappers.transaction_manager import TransactionApplicationWrapper
-        configurator.register_application_wrapper(TransactionApplicationWrapper, after=True)
 
     def setup_sqlalchemy(self, conf, app):
         """Setup SQLAlchemy database engine"""

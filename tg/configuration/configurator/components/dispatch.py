@@ -8,12 +8,33 @@ log = getLogger(__name__)
 
 
 class DispatchConfigurationComponent(ConfigurationComponent):
-    """
-        - root_controller
-        - disable_request_extensions
-        - dispatch_path_translator
-        - ignore_parameters
-        - enable_routing_args
+    """Provide support for controller wrappers and dispatching configuration.
+
+    This component allows to setup and configure dispatching options
+    and controller wrappers.
+
+    The supported options are:
+
+        - ``root_controller``: A root controller instance to use instead of
+                               loading it from the application package.
+        - ``disable_request_extensions``: Whenever to disable detection of expected
+                                          response type based on request path extension
+                                          (like ``/index.html`` returns HTML while
+                                          ``/index.json`` returns JSON).
+        - ``dispatch_path_translator``: A translation function to apply to request paths.
+                                        Can be False to disable translation or True to
+                                        apply default escaping. Refer to :class:`.DispatchState`
+                                        for details.
+        - ``ignore_parameters``: Request parameters that should be ignored when dispatching
+                                 requests. Refer to :class:`.DispatchState` for details.
+        - ``enable_routing_args``: Set routing args in dispatcher state during dispatch and
+                                   call ``_setup_wsgiorg_routing_args`` on root controller to
+                                   to allow trapping routing arguments.
+
+    Controller wrappers can be registered by using :meth:`.register_controller_wrapper`::
+
+        configurator.get('dispatch').register_controller_wrapper(wrapper)
+
     """
     id = "dispatch"
 

@@ -8,10 +8,19 @@ log = logging.getLogger(__name__)
 
 
 class DebuggerConfigurationComponent(ConfigurationComponent):
-    """If debug is enabled, this function will return the app wrapped in
+    """Enabled Backlash interactive debugger support.
+
+    If debug is enabled, the TurboGears app will be wrapped in
     the BackLash debugger middleware which displays
     interactive debugging sessions when a traceback occurs.
 
+    Supported Options:
+
+        * ``debug``: Whenever to enable or not the interactive debugger.
+
+    Make sure that the interactive debugger is never enable on
+    production, or it will be a major security issue as it will
+    allow full remote code execution.
     """
 
     id = "debugger"

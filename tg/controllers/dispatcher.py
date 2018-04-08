@@ -40,11 +40,10 @@ class CoreDispatcher(object):
 
     def _get_dispatchable(self, context, url_path):
         """
-        Returns a tuple (controller, remainder, params)
+        Returns a :class:`DispatchState` instance.
 
-        :Parameters:
-          url
-            url as string
+        :param context: The Request context.
+        :param url_path: The url to dispatch.
         """
         req = context.request
         conf = context.config

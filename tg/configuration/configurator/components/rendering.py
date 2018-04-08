@@ -22,7 +22,7 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
           @expose instead of file paths. This is usually the default unless TG is started
           in Minimal Mode.
         - ``auto_reload_templates`` -> (``True``/``False``) Automatically reload template files
-         if they change. Should usually be disabled on production for performance reasons.
+          if they change. Should usually be disabled on production for performance reasons.
         - ``tg.strict_tmpl_context`` -> (``True``/``False``) Should ``tg.tmpl_context`` be
           strict and complain about missing value or should it always just return empty values
           for missing ones?

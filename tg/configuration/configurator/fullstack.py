@@ -10,6 +10,7 @@ from .components.error_reporting import ErrorReportingConfigurationComponent
 from .components.ming import MingConfigurationComponent
 from .components.slow_requests import SlowRequestsConfigurationComponent
 from .components.sqlalchemy import SQLAlchemyConfigurationComponent
+from .components.transactions import TransactionManagerConfigurationComponent
 from .components.auth import SimpleAuthenticationConfigurationComponent
 from .components.i18n import I18NConfigurationComponent
 from .components.caching import CachingConfigurationComponent
@@ -39,6 +40,7 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
 
         self.register(MingConfigurationComponent)
         self.register(SQLAlchemyConfigurationComponent)
+        self.register(TransactionManagerConfigurationComponent)
         self.register(ErrorPagesConfigurationComponent)
 
         self.register(SeekableRequestConfigurationComponent)

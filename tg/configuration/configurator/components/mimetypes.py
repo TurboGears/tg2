@@ -6,16 +6,19 @@ from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
 class MimeTypesConfigurationComponent(ConfigurationComponent):
-    """
+    """Configure known MimeTypes.
+
+    Mimetypes are used by turbogears to detect expected content
+    types based on file extensions. For example it's used by
+    :class:`.DispatchConfigurationComponent` request extensions
+    to serve the right content based on URL path extension.
+
+    Options:
+
+        * ``mimetype_lookup``: Additional mapping from extensions to
+                               mimetypes that should be configured.
     """
     id = "mimetypes"
-
-    DEFAULT_PATHS = {
-        'root': None,
-        'controllers': None,
-        'templates': ['.'],
-        'static_files': None
-    }
 
     def get_actions(self):
         return (

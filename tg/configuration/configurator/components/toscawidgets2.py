@@ -10,7 +10,22 @@ log = getLogger(__name__)
 
 
 class ToscaWidgets2ConfigurationComponent(ConfigurationComponent):
-    """
+    """Support for ToscaWidgets2 based Widgets, Forms and Resources.
+
+    Options:
+
+        * ``tw2.enabled``: Enable ToscaWidgets2 support.
+                           For backward compatibility also ``prefer_toscawidgets2``
+                           and ``use_toscawidgets2`` options are supported.
+        * ``custom_tw2_config``: Additional TW2 Middleware options to provide.
+                                 This should be a dictionary of options.
+
+    Some options from other components influence TW2 behaviour too:
+
+        * ``auto_reload_templates``: Enable autoreloading of Widgets templates.
+        * ``debug``: Enable debug mode for TW2 (also injects debug resources).
+        * ``default_renderer``: Rendering Engine used to render Widgets templates.
+        * ``renderers``: Rendering engines that can be used to render Widgets templates.
 
     """
     id = 'tw2'

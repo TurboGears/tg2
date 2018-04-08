@@ -9,7 +9,19 @@ log = getLogger(__name__)
 
 
 class HelpersConfigurationComponent(ConfigurationComponent):
-    """
+    """Add support for helpers in templates.
+
+    Helpers are a bunch of help functions, usually involved
+    in generating small HTML snippets or formatting data
+    that are exposed in templates under the ``h`` object.
+
+    By default the helpers will be loaded from your application
+    package as ``package.lib.helpers`` which is expected
+    to be a module containing all helpers functions.
+
+    Supported options:
+
+        * ``helpers``: Set a different object as the template helpers.
 
     """
     id = 'helpers'

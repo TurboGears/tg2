@@ -10,7 +10,22 @@ __all__ = ('RegistryConfigurationComponent', )
 
 
 class RegistryConfigurationComponent(ConfigurationComponent):
-    """
+    """Configure the request local context registry.
+
+    This configures support for setting and restoring a clean
+    turbogears context on each request. This makes so that
+    ``tg.request``, ``tg.response`` and so on always refer to
+    the data for current request.
+
+    Options:
+
+        * ``registry_streaming``: Enable streaming responses, thus restoring
+                                  the registry at the end of the stream instead of
+                                  as soon as the controller action returned.
+                                  This is enabled by default.
+        * ``debug``: Ensures that the registry is not discarded in case of an
+                     exception. So that after the exception is possible to inspect
+                     the state of the request that caused the exception.
 
     """
     id = 'registry'
@@ -18,6 +33,7 @@ class RegistryConfigurationComponent(ConfigurationComponent):
     def get_coercion(self):
         return {
             'registry_streaming': asbool,
+            'debug': asbool
         }
 
     def get_defaults(self):

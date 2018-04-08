@@ -10,7 +10,20 @@ log = getLogger(__name__)
 
 
 class SessionConfigurationComponent(ConfigurationComponent):
-    """
+    """Provide support for sessions through Beaker.
+
+    Session components adds support for setting up the session
+    manager used by ``tg.sessions``.
+
+    Options:
+
+        * ``session.enabled``: Add support for sessions in the application.
+                               By default sesions are enabled.
+        * ``session.data_dir``: Where to store session files, by default
+                                the ``$cache_dir/sessions`` is used.
+
+    Refer to :class:`.SessionApplicationWrapper` for all the supported
+    options.
 
     """
     id = 'session'

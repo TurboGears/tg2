@@ -22,8 +22,8 @@ class SlowRequestsConfigurationComponent(ConfigurationComponent):
         - ``trace_slowreqs.exclude`` -> List of urls that should be excluded
 
     Slow requests are reported using *EMail* or *Sentry*, the same
-    options available in :class:`.ErrorReporter` apply with ``trace_slowreqs.``
-    instead of ``trace_errors.``.
+    options available in :class:`.ErrorReportingConfigurationComponent` apply
+    with ``trace_slowreqs.`` instead of ``trace_errors.``.
 
     """
     id = "slow_requests"

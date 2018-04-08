@@ -4,7 +4,16 @@ from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
 class ErrorPagesConfigurationComponent(ConfigurationComponent):
-    """
+    """Provides support for custom error pages.
+
+    This will enable the required parts to show a custom error page
+    when a common HTTP error happens in the TurboGears application.
+
+    Refer to :class:`.ErrorPageApplicationWrapper` for supported options.
+
+    When simple authentication backend is set to ``None`` (auth disabled)
+    status code ``401`` will always be handled by custom error pages
+    even if not specified in ``errorpage.status_codes``.
 
     """
     id = 'error_pages'

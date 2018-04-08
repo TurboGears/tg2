@@ -7,7 +7,29 @@ from ....support.converters import asbool, asint
 
 
 class MingConfigurationComponent(ConfigurationComponent):
-    """
+    """Support MongoDB through the Ming Object Document Mapper.
+
+    Configures the ming connection to MongoDB,
+    the automatic session cleanup at the end of each request
+    and support for the UnitOfWork flushing/discard based
+    on request success or failures.
+
+    The configured Ming session is made available as
+    ``tg.config['MingSession']``.
+
+    Options:
+
+        * ``ming.enabled``: Enable Ming in your application
+        * ``ming.url``: MongoDB url to connect to.
+        * ``ming.db``: Database to use. Can also be specified in ``ming.url``.
+        * ``ming.autoflush``: Automatically flush the unit of work as the end
+                              of each request, unless there was a failure.
+        * ``ming.connection.*``: Options provided to the ming engine to configure
+                                 the datastore and the ``MongoClient``. Refer to
+                                 :class:`.MongoClient` for available options.
+
+    See :class:`.MingApplicationWrapper` for additional
+    configuration options.
     """
     id = "ming"
 
@@ -33,7 +55,8 @@ class MingConfigurationComponent(ConfigurationComponent):
             'ming.connection.wtimeout': asint,
             'ming.connection.fsync': asbool,
             'ming.connection.ssl': asbool,
-            'ming.connection.read_preference': mongo_read_pref
+            'ming.connection.read_preference': mongo_read_pref,
+            'ming.connection.auto_ensure_indexes': asbool
         }
 
     def get_actions(self):
