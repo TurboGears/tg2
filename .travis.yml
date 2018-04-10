@@ -11,9 +11,9 @@ python:
 install:
   - "pip install --upgrade pip"
   - "pip install --upgrade setuptools"
-  - "pip install git+git://github.com/TurboGears/crank.git"
-  - "pip install git+git://github.com/TurboGears/backlash.git"
-  - "pip install git+git://git.code.sf.net/p/merciless/code"
+  - "travis_retry pip install git+git://github.com/TurboGears/crank.git"
+  - "travis_retry pip install git+git://github.com/TurboGears/backlash.git"
+  - "travis_retry pip install git+git://git.code.sf.net/p/merciless/code"
   - "pip install repoze.who"
   - "pip install coverage==4.2"
   - "pip install nose"
