@@ -19,6 +19,9 @@ TurboGears
 .. image:: https://www.codetriage.com/turbogears/tg2/badges/users.svg
     :target: https://www.codetriage.com/turbogears/tg2
 
+.. image:: https://img.shields.io/gitter/room/turbogears/Lobby.svg
+    :target: https://gitter.im/turbogears/Lobby
+
 .. image:: https://img.shields.io/twitter/follow/turbogearsorg.svg?style=social&label=Follow
     :target: https://twitter.com/turbogearsorg
 
