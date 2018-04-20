@@ -5,6 +5,7 @@ from webob.exc import HTTPNotFound
 
 import tg
 from tg import request_local
+from tg.configuration.utils import TGConfigError
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
 
@@ -183,6 +184,8 @@ class TGApp(object):
         """
         root_module_path = config['paths']['root']
         base_controller_path = config['paths']['controllers']
+        if base_controller_path is None:
+            raise TGConfigError('Unable to load controllers, no controllers path configured!')
 
         # remove the part of the path we expect to be the root part (plus one '/')
         assert base_controller_path.startswith(root_module_path)
