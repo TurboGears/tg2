@@ -16,6 +16,7 @@ from tg.appwrappers.mingflush import MingApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import config
+from tg.configuration.configurator import FullStackApplicationConfigurator
 from tg.configuration.app_config import AppConfig
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
@@ -201,7 +202,6 @@ class TestConfigurator:
         tg.hooks._clear()  # Reset hooks
 
     def test_reqlocal_configuration_dictionary(self):
-        from tg.configuration.configurator import FullStackApplicationConfigurator
         cfg = FullStackApplicationConfigurator()
 
         cfg.update_blueprint({'RANDOM_VALUE': 5})
@@ -209,6 +209,37 @@ class TestConfigurator:
 
         assert config['RANDOM_VALUE'] == 5
         assert len(config) == len(conf)
+
+    def test_retrieve_current_configurator(self):
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'RANDOM_VALUE': 5})
+        cfg.configure({}, {})
+
+        configurator = FullStackApplicationConfigurator.current()
+        assert configurator.get_blueprint_value('RANDOM_VALUE') == 5
+
+    def test_application_wrapper_replacement(self):
+        class AppWrapperTest(object):
+            def __init__(self, *args, **kwargs): pass
+            def __call__(self, *args, **kw):
+                return tg.Response('AppWrapper #1')
+
+        class AppWrapperTestReplacement(object):
+            def __init__(self, *args, **kwargs): pass
+            def __call__(self, *args, **kw):
+                return tg.Response('AppWrapper #2')
+
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'root_controller': Bunch(index=lambda *args, **kwargs: 'HI')})
+        cfg.register_application_wrapper(AppWrapperTest)
+
+        app = TestApp(cfg.make_wsgi_app({'debug': True}, {}))
+        assert app.get('/').text == 'AppWrapper #1', app.get('/').text
+
+        cfg.replace_application_wrapper('AppWrapperTest', AppWrapperTestReplacement)
+
+        app = TestApp(cfg.make_wsgi_app({}, {}))
+        assert app.get('/').text == 'AppWrapper #2', app.get('/').text
 
 
 class TestAppConfig:
