@@ -117,10 +117,14 @@ class AppConfig(object):
         self._configurator.register_application_wrapper(wrapper, after)
 
     def register_rendering_engine(self, factory):
-        self._configurator.get('rendering').register_engine(factory)
+        self._configurator.get_component(
+            'rendering'
+        ).register_engine(factory)
 
     def register_controller_wrapper(self, wrapper, controller=None):
-        self._configurator.get('dispatch').register_controller_wrapper(wrapper, controller)
+        self._configurator.get_component(
+            'dispatch'
+        ).register_controller_wrapper(wrapper, controller)
 
     def make_load_environment(self):
         """Return a load_environment function.

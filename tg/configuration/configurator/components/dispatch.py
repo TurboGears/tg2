@@ -33,7 +33,7 @@ class DispatchConfigurationComponent(ConfigurationComponent):
 
     Controller wrappers can be registered by using :meth:`.register_controller_wrapper`::
 
-        configurator.get('dispatch').register_controller_wrapper(wrapper)
+        configurator.get_component('dispatch').register_controller_wrapper(wrapper)
 
     """
     id = "dispatch"

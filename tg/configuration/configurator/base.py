@@ -80,7 +80,7 @@ class Configurator(object):
         """
         self._components.replace(component_id, new_component_type)
 
-    def get(self, component_id):
+    def get_component(self, component_id):
         """Retrieve a registered configuration component."""
         return self._components.get(component_id)
 

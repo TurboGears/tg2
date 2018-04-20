@@ -873,7 +873,7 @@ class TestAppConfig:
         appcfg = AppConfig(minimal=True, root_controller=RootController())
 
         conf = {}
-        dispatch = appcfg._configurator.get('dispatch')
+        dispatch = appcfg._configurator.get_component('dispatch')
         dispatch._controller_wrappers[:] = []
         dispatch._setup_controller_wrappers(conf, None)
         assert conf['controller_caller'] == orig_caller
@@ -884,7 +884,7 @@ class TestAppConfig:
             return call
 
         conf = {}
-        dispatch = appcfg._configurator.get('dispatch')
+        dispatch = appcfg._configurator.get_component('dispatch')
         dispatch._controller_wrappers[:] = [controller_wrapper]
         dispatch._setup_controller_wrappers(conf, None)
         assert conf['controller_caller'].__name__ == controller_wrapper(orig_caller).__name__
