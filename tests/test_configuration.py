@@ -192,10 +192,7 @@ def test_coerce_options():
     assert opts['connection'] == 'false'
 
 
-class TestAppConfig:
-    def __init__(self):
-        self.fake_package = PackageWithModel
-
+class TestConfigurator:
     def setup(self):
         _reset_global_config()
 
@@ -213,6 +210,38 @@ class TestAppConfig:
         assert config['RANDOM_VALUE'] == 5
         assert len(config) == len(conf)
 
+
+class TestAppConfig:
+    def __init__(self):
+        self.fake_package = PackageWithModel
+
+    def setup(self):
+        _reset_global_config()
+
+    def teardown(self):
+        _reset_global_config()
+        tg.hooks._clear()  # Reset hooks
+
+    def test_missing_attribute(self):
+        conf = AppConfig(minimal=True)
+        conf['existing_value'] = 5
+        assert conf['existing_value'] == 5
+        assert conf.existing_value == 5
+
+        try:
+            conf['missing_value']
+        except KeyError:
+            pass
+        else:
+            raise RuntimeError('Should have raised KeyError')
+
+        try:
+            conf.missing_value
+        except AttributeError:
+            pass
+        else:
+            raise RuntimeError('Should have raised AttributeError')
+
     def test_lang_can_be_changed_by_ini(self):
         conf = AppConfig(minimal=True)
         conf.make_wsgi_app(**{'i18n.lang': 'ru'})
@@ -229,8 +258,17 @@ class TestAppConfig:
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
 
-        #This is here to avoid that other tests keep using the forced controller
-        config.pop('tg.root_controller')
+    def test_create_minimal_app_with_factory(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        app_factory = conf.setup_tg_wsgi_app()
+        app = app_factory()
+        app = TestApp(app)
+        assert 'HI!' in app.get('/test')
 
     def test_minimal_app_with_sqlalchemy(self):
         class RootController(TGController):

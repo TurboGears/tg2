@@ -1,5 +1,7 @@
 """Configuration Helpers for TurboGears 2"""
 import logging
+import warnings
+
 import tg
 from tg.util import Bunch
 
@@ -7,6 +9,19 @@ log = logging.getLogger(__name__)
 
 
 class AppConfig(object):
+    """Backward compatible Application Configurator.
+
+    This allows to configure a TurboGears2 application in a way
+    that is compatible with existing >=2.1,<=2.3 applications.
+
+    All the attributes and keys you will set into the AppConfig
+    will be used to build the blueprint used by a
+    :class:`.FullStackApplicationConfigurator`
+    to configure a new :class:`.TGApp`.
+
+    .. deprecated:: 2.4.0
+        Use :class:`.FullStackApplicationConfigurator` instead.
+    """
     __slots__ = ('_configurator', )
 
     # Attributes and properties that are automatically returned as a view
@@ -123,16 +138,23 @@ class AppConfig(object):
         return _load_environment
 
     def setup_tg_wsgi_app(self, load_environment=None):
-        """Create a base TG app, with all the standard middleware.
+        """Creates a TGApp Factory, with the required load_environment.
 
         ``load_environment``
-            A required callable, which sets up the basic evironment
-            needed for the application.
-        ``setup_vars``
-            A dictionary with all special values necessary for setting up
-            the base wsgi app.
+            A callable, which sets up the basic evironment
+            needed for the application. A default environment is configured otherwise.
+
+        The returned factory function accepts:
+
+            * ``global_conf``: Dictionary with options that should be added to configuration.
+            * ``wrap_app``: A function that can wrap application and return a new WSGI app.
+            * ``**app_conf``: Keyword arguments that will be passed as configuration options.
 
         """
+        warnings.warn("Using AppConfig to create apps is deprecated in favor of"
+                      "tg.FullStackApplicationConfigurator and will be removed.",
+                      DeprecationWarning)
+
         def make_base_app(global_conf=None, wrap_app=None, **app_conf):
             # Configure the Application environment
             init_config = load_environment
@@ -143,55 +165,20 @@ class AppConfig(object):
         return make_base_app
 
     def make_wsgi_app(self, **kwargs):
+        """Creates a new TGApp.
+
+        Only accepted argument is ``wrap_app`` as a keyword argument,
+        that can be a callable used to wrap the TGApp in middlewares and
+        return a new WSGI application.
+
+        All remaining ``kwargs`` will be added as configuration options to the
+        application in addition to those specified in ``AppConfig`` itself.
+
+        """
+        warnings.warn("Using AppConfig to create apps is deprecated in favor of"
+                      "tg.FullStackApplicationConfigurator and will be removed.",
+                      DeprecationWarning)
+
         # wrap_app is an argument to make_wsgi_app, not a configuration option.
         wrap_app = kwargs.pop('wrap_app', None)
         return self._configurator.make_wsgi_app({}, kwargs, wrap_app=wrap_app)
-
-
-class OldAppConfig(Bunch):
-    """Class to store application configuration.
-
-    This class should have configuration/setup information
-    that is *necessary* for proper application function.
-    Deployment specific configuration information should go in
-    the config files (e.g. development.ini or deployment.ini).
-
-    AppConfig instances have a number of methods that are meant to be
-    overridden by users who wish to have finer grained control over
-    the setup of the WSGI environment in which their application is run.
-
-    This is the place to configure your application, database,
-    transaction handling, error handling, etc.
-
-    Configuration Options provided:
-
-        - ``debug`` -> Enables / Disables debug mode. **Can be set from .ini file**
-        - ``serve_static`` -> Enable / Disable serving static files. **Can be set from .ini file**
-        - ``registry_streaming`` -> Enable streaming of responses, this is enabled by default.
-          **Can be set from .ini file**
-        - ``use_toscawidgets`` -> Enable ToscaWidgets1, this is deprecated.
-        - ``use_toscawidgets2`` -> Enable ToscaWidgets2
-        - ``prefer_toscawidgets2`` -> When both TW2 and TW1 are enabled prefer TW2. **Can be set from .ini file**
-        - ``custom_tw2_config`` -> Dictionary of configuration options for TW2, refer to
-          :class:`.tw2.core.middleware.Config` for available options.
-        - ``auth_backend`` -> Authentication Backend, can be ``None``, ``sqlalchemy`` or ``ming``.
-        - ``package`` -> Application Package, this is used to configure paths as being inside a python
-        - ``app_globals`` -> Application Globals class, by default build from ``package.lib.app_globals``.
-          package. Which enables serving templates, controllers, app globals and so on from the package itself.
-        - ``helpers`` -> Template Helpers, by default ``package.lib.helpers`` is used.
-        - ``model`` -> The models module (or object) where all the models, DBSession and init_models method are
-           available. By default ``package.model`` is used.
-        - ``renderers`` -> List of enabled renderers names.
-        - ``default_renderer`` -> When not specified, use this renderer for templates.
-        - ``auto_reload_templates`` -> Automatically reload templates when modified (disable this on production
-          for a performance gain). **Can be set from .ini file**
-        - ``use_ming`` -> Enable/Disable Ming as Models storage.
-        - ``ming.url`` -> Url of the MongoDB database
-        - ``ming.db`` -> If Database is not provided in ``ming.url`` it can be specified here.
-        - ``ming.connection.*`` -> Options to configure the ming connection,
-          refer to :func:`ming.datastore.create_datastore` for available options.
-        - ``use_sqlalchemy`` -> Enable/Disable SQLalchemy as Models storage.
-        - ``sqlalchemy.url`` -> Url of the SQLAlchemy database. Refer to :ref:`sqla_master_slave` for
-          configuring master-slave urls.
-    """
-    pass
