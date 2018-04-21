@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 def _decorated_controller_caller(tg_config, controller, remainder, params):
     try:
         application_controller_caller = tg_config['controller_caller']
-    except KeyError:
+    except KeyError:  # pragma: no cover
         # This should never happen as controller_caller is setup by MinimalApplicationConfigurator.
         from tg.configuration.configurator.components.dispatch import _call_controller
         application_controller_caller = _call_controller
