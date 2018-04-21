@@ -17,7 +17,7 @@ install:
   - "pip install repoze.who"
   - "pip install coverage==4.2"
   - "pip install nose"
-  - "pip install no-binary :all: -e .[testing]"
+  - "pip install --no-binary :all: -e .[testing]"
 
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install git+git://github.com/TurboGears/tgext.chameleon_genshi.git; fi
