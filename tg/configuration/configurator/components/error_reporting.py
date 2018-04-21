@@ -37,6 +37,7 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
         - ``trace_errors.dump_local_frames`` -> Enable dumping local variables in case of crashes.
         - ``trace_errors.dump_local_frames_count`` -> Dump up to X frames when dumping local variables.
           The default is 2
+        - ``trace_errors.reporters`` -> Add custom reporters to error reporting middleware.
 
     Available options for **Sentry** reporter are:
 
@@ -48,7 +49,8 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
 
     def get_defaults(self):
         return {
-            'debug': False
+            'debug': False,
+            'trace_errors.enable': True
         }
 
     def get_coercion(self):
@@ -89,6 +91,10 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
             if errorware.get('sentry_dsn'):
                 from backlash.tracing.reporters.sentry import SentryReporter
                 reporters.append(SentryReporter(**errorware))
+
+            if errorware.get('reporters', []):
+                for reporter in errorware['reporters']:
+                    reporters.append(reporter)
 
             try:
                 import backlash

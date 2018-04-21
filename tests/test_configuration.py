@@ -14,6 +14,12 @@ from ming.orm import ThreadLocalORMSession
 from tg.configuration.configurator.base import ConfigurationComponent, Configurator
 from tg.configuration.configurator.components.auth import SimpleAuthenticationConfigurationComponent
 from tg.configuration.configurator.components.caching import CachingConfigurationComponent
+from tg.configuration.configurator.components.i18n import I18NConfigurationComponent
+from tg.configuration.configurator.components.ming import MingConfigurationComponent
+from tg.configuration.configurator.components.session import SessionConfigurationComponent
+from tg.configuration.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
+from tg.configuration.configurator.components.transactions import \
+    TransactionManagerConfigurationComponent
 from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
@@ -334,6 +340,61 @@ class TestConfigurator:
             configurator.configure({}, {})
         except TGConfigError as e:
             assert str(e) == 'Caching only works on an ApplicationConfigurator'
+        else:
+            assert False, 'Should have raised'
+
+    def test_i18n_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(I18NConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e) == 'I18N only works on an ApplicationConfigurator'
+        else:
+            assert False, 'Should have raised'
+
+    def test_ming_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(MingConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e).endswith('only works on an ApplicationConfigurator')
+        else:
+            assert False, 'Should have raised'
+
+    def test_session_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(SessionConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e).endswith('only work on an ApplicationConfigurator')
+        else:
+            assert False, 'Should have raised'
+
+    def test_sqlalchemy_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(SQLAlchemyConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e).endswith('only works on an ApplicationConfigurator')
+        else:
+            assert False, 'Should have raised'
+
+    def test_transaction_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(TransactionManagerConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e).endswith('only works on an ApplicationConfigurator')
         else:
             assert False, 'Should have raised'
 

@@ -55,7 +55,6 @@ class SlowRequestsConfigurationComponent(ConfigurationComponent):
     def _add_middleware(self, conf, app):
         errorware = conf['tg.slowreqs']
         if errorware.get('enable') and not asbool(conf.get('debug')):
-
             reporters = []
 
             if errorware.get('error_email'):
@@ -65,6 +64,10 @@ class SlowRequestsConfigurationComponent(ConfigurationComponent):
             if errorware.get('sentry_dsn'):
                 from backlash.tracing.reporters.sentry import SentryReporter
                 reporters.append(SentryReporter(**errorware))
+
+            if errorware.get('reporters', []):
+                for reporter in errorware['reporters']:
+                    reporters.append(reporter)
 
             try:
                 import backlash
