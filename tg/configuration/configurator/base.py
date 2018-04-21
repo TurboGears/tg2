@@ -75,10 +75,26 @@ class Configurator(object):
     def replace(self, component_id, new_component_type):
         """Replaces an existing configuration component with another one.
 
+        Any default value set in the blueprint by the previous component
+        won't be discarded and won't be replaced. So if you tuned the configuration
+        of the previous component, the new one will preserve it.
+
+        Also the id at which the component is registered won't be the one
+        of the new component, but will be the one of the old component.
+
+        In theory you should only replace components with components that
+        provide same id and same default options.
+
         Note that replacing a component will only influence the applications
         created after it was replaced.
         """
-        self._components.replace(component_id, new_component_type)
+        if not issubclass(new_component_type, ConfigurationComponent):
+            raise ValueError('Configuration component must inherit ConfigurationComponent')
+
+        component = new_component_type()
+        component._prepare_blueprint(self._blueprint)
+        component._prepare_coercion(self._coercion)
+        self._components.replace(component_id, component)
 
     def get_component(self, component_id):
         """Retrieve a registered configuration component."""

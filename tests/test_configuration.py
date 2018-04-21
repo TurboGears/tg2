@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
+from tg.configuration.configurator.base import ConfigurationComponent
 from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
@@ -209,6 +210,65 @@ class TestConfigurator:
 
         assert config['RANDOM_VALUE'] == 5
         assert len(config) == len(conf)
+
+    def test_blueprint_invalid_view(self):
+        cfg = FullStackApplicationConfigurator()
+        try:
+            cfg.get_blueprint_view('this.that.')
+        except ValueError as e:
+            assert str(e) == 'A Blueprint key cannot end with a .'
+        else:
+            assert False, 'Should have raised'
+
+    def test_invalid_component(self):
+        cfg = FullStackApplicationConfigurator()
+        try:
+            cfg.register(str)
+        except ValueError as e:
+            assert str(e) == 'Configuration component must inherit ConfigurationComponent'
+        else:
+            assert False, 'Should have raised'
+
+    def test_replace_component(self):
+        cfg = FullStackApplicationConfigurator()
+
+        class TestComponentFirst(ConfigurationComponent):
+            id = 'TESTCOMPONENT'
+
+        class TestComponentSecond(ConfigurationComponent):
+            id = 'TESTCOMPONENT2'
+
+        cfg.register(TestComponentFirst)
+        try:
+            cfg.replace(TestComponentFirst, str)
+        except ValueError as e:
+            assert str(e) == 'Configuration component must inherit ConfigurationComponent'
+        else:
+            assert False, 'Should have raised'
+
+        cfg.replace('TESTCOMPONENT', TestComponentSecond)
+        comp = cfg.get_component('TESTCOMPONENT')
+        assert isinstance(comp, TestComponentSecond), comp
+
+    def test_component_without_id(self):
+        cfg = FullStackApplicationConfigurator()
+
+        class TestComponentFirst(ConfigurationComponent):
+            pass
+
+        try:
+            cfg.register(TestComponentFirst)
+        except ValueError as e:
+            assert str(e).startswith('ConfigurationComponent must provide an id class attribute')
+        else:
+            assert False, 'Should have raised'
+
+        try:
+            cfg.replace(TestComponentFirst, TestComponentFirst)
+        except ValueError as e:
+            assert str(e).startswith('ConfigurationComponent must provide an id class attribute')
+        else:
+            assert False, 'Should have raised'
 
     def test_retrieve_current_configurator(self):
         cfg = FullStackApplicationConfigurator()
