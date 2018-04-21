@@ -43,7 +43,7 @@ class Configurator(object):
         try:
             return self._blueprint[name]
         except KeyError:
-            raise KeyError("Configuration Blueprint does not provide a '{}' option".format(name))
+            raise KeyError("Configuration Blueprint does not provide a '{0}' option".format(name))
 
     def get_blueprint_view(self, key):
         """A view is a subset of the blueprint options.

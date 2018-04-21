@@ -131,6 +131,7 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
                                      timeout=cookie_timeout,
                                      reissue_time=cookie_reissue_time)
         who_args['identifiers'][default_identifier_index] = ('cookie', cookie)
+        who_args.setdefault('authenticators', [])
         who_args['authenticators'].insert(0, ('cookie', cookie))
 
     # If no form plugin is provided then create a default

@@ -11,7 +11,9 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
-from tg.configuration.configurator.base import ConfigurationComponent
+from tg.configuration.configurator.base import ConfigurationComponent, Configurator
+from tg.configuration.configurator.components.auth import SimpleAuthenticationConfigurationComponent
+from tg.configuration.configurator.components.caching import CachingConfigurationComponent
 from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
@@ -300,6 +302,40 @@ class TestConfigurator:
 
         app = TestApp(cfg.make_wsgi_app({}, {}))
         assert app.get('/').text == 'AppWrapper #2', app.get('/').text
+
+    def test_sa_auth_requires_app_config(self):
+        configurator = Configurator()
+        configurator.register(SimpleAuthenticationConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e) == 'Simple Authentication only works on an ApplicationConfigurator'
+        else:
+            assert False, 'Should have raised'
+
+    def test_sa_auth_authmetadata_without_authenticate(self):
+        cfg = FullStackApplicationConfigurator()
+        class FakeAuthMetadata():
+            pass
+        cfg.update_blueprint({
+            'root_controller': Bunch(index=lambda *args, **kwargs: 'HI'),
+            'auth_backend': 'authmetadata',
+            'sa_auth.authmetadata': FakeAuthMetadata(),
+            'sa_auth.cookie_secret': 'SECRET!'
+        })
+        cfg.make_wsgi_app({}, {})
+
+    def test_caching_required_app_config(self):
+        configurator = Configurator()
+        configurator.register(CachingConfigurationComponent)
+
+        try:
+            configurator.configure({}, {})
+        except TGConfigError as e:
+            assert str(e) == 'Caching only works on an ApplicationConfigurator'
+        else:
+            assert False, 'Should have raised'
 
 
 class TestAppConfig:
