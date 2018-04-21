@@ -29,6 +29,24 @@ TurboGears is a hybrid web framework able to act both as a Full Stack
 framework or as a Microframework. TurboGears helps you get going fast
 and gets out of your way when you want it!
 
+
+TurboGears can be used *both* as a *full stack* framework or as a
+*microframework* in single file mode::
+
+	from wsgiref.simple_server import make_server
+	from tg import expose, TGController, AppConfig
+
+	class RootController(TGController):
+		 @expose()
+		 def index(self):
+			 return "<h1>Hello World</h1>"
+
+	config = AppConfig(minimal=True, root_controller=RootController())
+
+	print "Serving on port 8080..."
+	httpd = make_server('', 8080, config.make_wsgi_app())
+	httpd.serve_forever()
+
 Support and Documentation
 -------------------------
 
