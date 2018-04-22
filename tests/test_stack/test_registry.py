@@ -366,7 +366,7 @@ def test_stacked_object_twice():
     environ = {}
     resp = rm(environ, None)
     for idx, x in enumerate(resp, 1):
-        objproxy = environ['paste.registry'].reglist[-1].values()[0][0]
+        objproxy = list(environ['paste.registry'].reglist[-1].values())[0][0]
         if idx == 1:
             objproxy._pop_object()
         elif idx == 2:
