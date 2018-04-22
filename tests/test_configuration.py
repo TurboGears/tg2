@@ -12,10 +12,17 @@ from ming import Session
 from ming.orm import ThreadLocalORMSession
 
 from tg.configuration.configurator.base import ConfigurationComponent, Configurator
+from tg.configuration.configurator.components.app_globals import AppGlobalsConfigurationComponent
 from tg.configuration.configurator.components.auth import SimpleAuthenticationConfigurationComponent
 from tg.configuration.configurator.components.caching import CachingConfigurationComponent
+from tg.configuration.configurator.components.dispatch import DispatchConfigurationComponent
+from tg.configuration.configurator.components.helpers import HelpersConfigurationComponent
 from tg.configuration.configurator.components.i18n import I18NConfigurationComponent
 from tg.configuration.configurator.components.ming import MingConfigurationComponent
+from tg.configuration.configurator.components.paths import PathsConfigurationComponent
+from tg.configuration.configurator.components.registry import RegistryConfigurationComponent
+from tg.configuration.configurator.components.rendering import \
+    TemplateRenderingConfigurationComponent
 from tg.configuration.configurator.components.session import SessionConfigurationComponent
 from tg.configuration.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
 from tg.configuration.configurator.components.transactions import \
@@ -26,6 +33,7 @@ from tg.appwrappers.mingflush import MingApplicationWrapper
 from tg.util import Bunch
 from tg.configuration import config
 from tg.configuration.configurator import FullStackApplicationConfigurator
+from tg.configuration.configurator import ApplicationConfigurator
 from tg.configuration.app_config import AppConfig
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
@@ -34,7 +42,7 @@ from tg.configuration import milestones
 from tg.support.converters import asint, asbool
 
 import tg.i18n
-from tg import TGController, expose, response, request, abort
+from tg import TGController, expose, response, request, abort, MinimalApplicationConfigurator
 from tests.base import setup_session_dir, teardown_session_dir
 from webtest import TestApp
 from tg.renderers.base import RendererFactory
@@ -397,6 +405,56 @@ class TestConfigurator:
             assert str(e).endswith('only works on an ApplicationConfigurator')
         else:
             assert False, 'Should have raised'
+
+    def test_dispatch_without_mimetypes(self):
+        # This is exactly like MinimalApplicationConfigurator
+        # but without the mimetypes component.
+        apc = ApplicationConfigurator()
+        apc.register(PathsConfigurationComponent, after=False)
+        apc.register(DispatchConfigurationComponent, after=False)
+        apc.register(AppGlobalsConfigurationComponent)
+        apc.register(HelpersConfigurationComponent)
+        apc.register(TemplateRenderingConfigurationComponent)
+        apc.register(RegistryConfigurationComponent, after=True)
+
+        class MinimalController(TGController):
+            @expose()
+            def index(self):
+                return 'HI'
+
+        apc.update_blueprint({
+            'root_controller': MinimalController()
+        })
+        app = TestApp(apc.make_wsgi_app({}, {}))
+        assert app.get('/').text == 'HI'
+
+    def test_app_without_controller(self):
+        cfg = MinimalApplicationConfigurator()
+        app = TestApp(cfg.make_wsgi_app({}, {}))
+
+        try:
+            app.get('/')
+        except TGConfigError as e:
+            assert str(e) == 'Unable to load controllers, no controllers path configured!'
+        else:
+            assert False, 'Should have raised.'
+
+    def test_tgapp_caches_controller_classes(self):
+        class RootController(TGController):
+            @expose()
+            def index(self):
+                return 'HI'
+
+        tgapp = Bunch(app=None)
+        def save_app(app):
+            tgapp.app = app
+            return app
+
+        cfg = MinimalApplicationConfigurator()
+        app = TestApp(cfg.make_wsgi_app({}, {}, wrap_app=save_app))
+
+        tgapp.app.controller_classes['root'] = RootController
+        assert app.get('/').text == 'HI'
 
 
 class TestAppConfig:

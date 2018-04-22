@@ -350,3 +350,45 @@ def test_dispatch_config():
         assert False, 'It should fail due to empty objects stack'
     except AttributeError:
         pass
+
+
+def test_stacked_object_twice():
+    d = {'hi':'people'}
+
+    def app(environ, start_response):
+        environ['paste.registry'].register(regobj, d)
+        environ['paste.registry'].register(regobj, d)
+        for i in range(3):
+            yield str(i)
+
+    rm = RegistryManager(app, streaming=True)
+
+    environ = {}
+    resp = rm(environ, None)
+    for idx, x in enumerate(resp, 1):
+        objproxy = environ['paste.registry'].reglist[-1].values()[0][0]
+        if idx == 1:
+            objproxy._pop_object()
+        elif idx == 2:
+            # Trying to pop again should fail,
+            # because as we pushed twice the same object
+            # there is actually only on on the stack
+            try:
+                objproxy._pop_object()
+            except AssertionError as e:
+                assert str(e) == 'No object has been registered for this thread'
+            else:
+                assert False, 'Should have failed'
+
+            # Won't proceed further, as exhausting the iterator
+            # will lead to a crash due to cleanup of the registry.
+            break
+
+    assert idx == 2
+
+    try:
+        next(resp)
+    except:
+        # Looping again will crash because we already popped
+        # The registered object and cleanup will fail.
+        pass

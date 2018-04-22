@@ -4,30 +4,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def _call_wsgi_application(application, environ):
-    """
-    Call the given WSGI application, returning ``(status_string,
-    headerlist, app_iter)``
-
-    Be sure to call ``app_iter.close()`` if it's there.
-    """
-    captured = []
-    output = []
-    def _start_response(status, headers, exc_info=None):
-        captured[:] = [status, headers, exc_info]
-        return output.append
-
-    app_iter = application(environ, _start_response)
-    if not captured or output:
-        try:
-            output.extend(app_iter)
-        finally:
-            if hasattr(app_iter, 'close'):
-                app_iter.close()
-        app_iter = output
-    return (captured[0], captured[1], app_iter, captured[2])
-
-
 class SeekableRequestBodyMiddleware(object):
     def __init__(self, app):
         self.app = app

@@ -51,7 +51,10 @@ def astemplate(obj):
 
 
 def aslogger(val):
-    if isinstance(val, string_type):
-        return logging.getLogger(val)
+    if isinstance(val, logging.Logger):
+        return val
 
-    return val
+    if not isinstance(val, string_type):
+        raise ValueError('Logger names must be strings')
+
+    return logging.getLogger(val)
