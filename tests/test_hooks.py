@@ -4,9 +4,9 @@ from tests.test_configuration import PackageWithModel
 from tg.configuration.utils import TGConfigError
 from webtest import TestApp
 from tg.wsgiapp import TGApp
-from tg import expose, TGController
+from tg import expose, TGController, AppConfig
 import tg
-from tg.configuration import milestones, AppConfig
+from tg.configuration import milestones
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 
 
@@ -36,9 +36,9 @@ class TestGlobalHooks:
             visited_hooks.append('configure_new_app')
 
         conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.register_hook('before_config', before_config_hook)
-        conf.register_hook('after_config', after_config_hook)
-        conf.register_hook('configure_new_app', configure_new_app_hook)
+        tg.hooks.register('before_config', before_config_hook)
+        tg.hooks.register('after_config', after_config_hook)
+        tg.hooks.register('configure_new_app', configure_new_app_hook)
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
@@ -83,24 +83,25 @@ class TestGlobalHooks:
 
         tg.hooks.register('shutdown', None, controller=f)
 
-    @raises(TGConfigError)
+    @raises(ValueError)
     def test_controller_wrapper_using_register(self):
         milestones.config_ready.reach()
         tg.hooks.register('controller_wrapper', None)
 
-    @raises(TGConfigError)
     def test_global_controller_wrapper_after_milestone_reached(self):
         milestones.environment_loaded.reach()
-        tg.hooks.wrap_controller(None)
+        conf = AppConfig(minimal=True)
+        conf.register_controller_wrapper(None)
 
-    @raises(TGConfigError)
+    @raises(TypeError)
     def test_dedicated_controller_wrapper_after_milestone_reached(self):
-        milestones.environment_loaded.reach()
+        conf = AppConfig(minimal=True)
 
         def f():
             pass
 
-        tg.hooks.wrap_controller(None, controller=f)
+        milestones.environment_loaded.reach()
+        conf.register_controller_wrapper(None, controller=f)
 
     def test_startup_hook(self):
         # Temporary replace the hooks namespace so we register hooks only for this test

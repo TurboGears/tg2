@@ -4,6 +4,7 @@
 # Adapted to TurboGears 2.3
 from tg._compat import string_type
 from string import Template
+import logging
 
 
 def asbool(obj):
@@ -47,3 +48,13 @@ def astemplate(obj):
         raise ValueError('Templates must be strings')
 
     return Template(obj)
+
+
+def aslogger(val):
+    if isinstance(val, logging.Logger):
+        return val
+
+    if not isinstance(val, string_type):
+        raise ValueError('Logger names must be strings')
+
+    return logging.getLogger(val)

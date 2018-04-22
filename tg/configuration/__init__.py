@@ -1,1 +1,1 @@
-from .app_config import AppConfig, config
+from .tgconfig import config

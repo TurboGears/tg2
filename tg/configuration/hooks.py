@@ -6,12 +6,10 @@ Provides a consistent API to register and execute hooks.
 
 """
 import atexit
-import warnings
 from .utils import TGConfigError
-from .milestones import config_ready, renderers_ready, environment_loaded
-from ..decorators import Decoration
+from .milestones import config_ready, renderers_ready
+from ..controllers.decoration import Decoration
 from .._compat import default_im_func
-from .app_config import config as tg_config
 
 
 from logging import getLogger
@@ -23,6 +21,9 @@ class HooksNamespace(object):
     def __init__(self):
         self._hooks = dict()
         atexit.register(self._atexit)
+
+    def _clear(self):
+        self._hooks.clear()
 
     def _atexit(self):
         for func in self._hooks.get('shutdown', tuple()):
@@ -55,7 +56,7 @@ class HooksNamespace(object):
             raise TGConfigError('Startup and Shutdown hooks cannot be registered on controllers')
 
         if hook_name == 'controller_wrapper':
-            raise TGConfigError('tg.hooks.wrap_controller must be used to register wrappers')
+            raise ValueError('dispatch component must be used to register controller wrappers')
 
         if controller is None:
             config_ready.register(_ApplicationHookRegistration(self, hook_name, func))
@@ -80,7 +81,7 @@ class HooksNamespace(object):
             pass
 
     def notify(self, hook_name, args=None, kwargs=None, controller=None,
-               context_config=None, trap_exceptions=False):
+               trap_exceptions=False):
         """Notifies a TurboGears hook.
 
         Each function registered for the given hook will be executed,
@@ -114,7 +115,7 @@ class HooksNamespace(object):
             for func in deco.hooks.get(hook_name, []):
                 self._call_handler(hook_name, trap_exceptions, func, args, kwargs)
 
-    def notify_with_value(self, hook_name, value, controller=None, context_config=None):
+    def notify_with_value(self, hook_name, value, controller=None):
         """Notifies a TurboGears hook which is expected to return a value.
 
         hooks with values are expected to accept an input value an return
@@ -150,20 +151,14 @@ class _ApplicationHookRegistration(object):
         self.func = func
         self.hooks_namespace = hooks_namespace
 
+    def __repr__(self):
+        return '<ApplicationHookRegistration: %r %r>' % (self.hook_name, self.func)
+
     def __call__(self):
         log.debug("Registering %s for application wide hook %s",
                   self.func, self.hook_name)
-
-        if self.hook_name == 'controller_wrapper':
-            warnings.warn('controller wrappers should be registered on '
-                          'AppConfig using AppConfig.register_controller_wrapper',
-                          DeprecationWarning, stacklevel=3)
-
-            config = tg_config._current_obj()
-            config['controller_wrappers'].append(self.func)
-        else:
-            hooks = self.hooks_namespace._hooks
-            hooks.setdefault(self.hook_name, []).append(self.func)
+        hooks = self.hooks_namespace._hooks
+        hooks.setdefault(self.hook_name, []).append(self.func)
 
 
 class _ControllerHookRegistration(object):
@@ -172,62 +167,17 @@ class _ControllerHookRegistration(object):
         self.hook_name = hook_name
         self.func = func
 
+    def __repr__(self):
+        return '<ControllerHookRegistration: %r %r>' % (self.hook_name, self.func)
+
     def __call__(self):
         log.debug("Registering %s for hook %s on controller %s",
                   self.func, self.hook_name, self.controller)
-
-        if self.hook_name == 'controller_wrapper':
-            warnings.warn('controller wrappers should be registered on '
-                          'AppConfig using AppConfig.register_controller_wrapper',
-                          DeprecationWarning, stacklevel=3)
-
-            deco = Decoration.get_decoration(self.controller)
-            deco._register_controller_wrapper(self.func)
-        else:
-            deco = Decoration.get_decoration(self.controller)
-            deco._register_hook(self.hook_name, self.func)
+        deco = Decoration.get_decoration(self.controller)
+        deco._register_hook(self.hook_name, self.func)
 
 
 class _TGGlobalHooksNamespace(HooksNamespace):
-    def wrap_controller(self, func, controller=None):
-        """Registers a TurboGears controller wrapper.
-
-        Controller Wrappers are much like a **decorator** applied to
-        every controller.
-        They receive :class:`tg.configuration.AppConfig` instance
-        as an argument and the next handler in chain and are expected
-        to return a new handler that performs whatever it requires
-        and then calls the next handler.
-
-        A simple example for a controller wrapper is a simple logging wrapper::
-
-            def controller_wrapper(app_config, caller):
-                def call(*args, **kw):
-                    try:
-                        print 'Before handler!'
-                        return caller(*args, **kw)
-                    finally:
-                        print 'After Handler!'
-                return call
-
-            tg.hooks.wrap_controller(controller_wrapper)
-
-        It is also possible to register wrappers for a specific controller::
-
-            tg.hooks.wrap_controller(controller_wrapper, controller=RootController.index)
-
-        """
-        if environment_loaded.reached:
-            raise TGConfigError('Controller wrappers can be registered only at '
-                                'configuration time.')
-
-        if controller is None:
-            environment_loaded.register(_ApplicationHookRegistration(self,
-                                                                     'controller_wrapper',
-                                                                     func))
-        else:
-            controller = default_im_func(controller)
-            registration = _ControllerHookRegistration(controller, 'controller_wrapper', func)
-            renderers_ready.register(registration)
+    pass
 
 hooks = _TGGlobalHooksNamespace()

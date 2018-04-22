@@ -3,7 +3,7 @@ from webtest import TestApp
 import tg
 import tests
 from tg.util import DottedFileNameFinder
-from tg.configuration import AppConfig
+from tg import AppConfig
 from tg.configuration import milestones
 from tg._compat import PY3
 
@@ -28,6 +28,8 @@ class TestConfig(AppConfig):
         self.use_dotted_templatenames = False
         self.serve_static = False
         self['errorpage.enabled'] = False
+        self['trace_errors.enable'] = False
+        self['trace_slowreqs.enable'] = False
 
         root = os.path.dirname(os.path.dirname(tests.__file__))
         test_base_path = os.path.join(root,'tests', 'test_stack',)
@@ -44,8 +46,6 @@ class TestConfig(AppConfig):
         for key, value in values.items():
             setattr(self, key, value)
 
-    def _add_debugger_middleware(self, app_config, app):
-        return app
 
 def app_from_config(base_config, deployment_config=None, reset_milestones=True):
     if not deployment_config:
@@ -54,13 +54,11 @@ def app_from_config(base_config, deployment_config=None, reset_milestones=True):
                              'smtp_server': 'localhost'}
 
     # Reset milestones so that they can be reached again
-    # on next configuration initialization
+    # on next configuration initialization\
     if reset_milestones:
         milestones._reset_all()
 
-    env_loader = base_config.make_load_environment()
-    app_maker = base_config.setup_tg_wsgi_app(env_loader)
-    app = TestApp(app_maker(deployment_config, full_stack=False))
+    app = TestApp(base_config.make_wsgi_app(**deployment_config))
     return app
 
 

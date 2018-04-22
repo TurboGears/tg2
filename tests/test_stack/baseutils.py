@@ -1,16 +1,19 @@
-import tg
+import tg.renderers.json
+
 
 class FakePackage(object):
-    pass
+    __file__ = __file__
+FakePackage.__name__ = 'tests'
+
 
 default_config = {
         'debug': False,
         'package': FakePackage,
-        'package_name' : 'FakePackage',
-        'paths': {'root': None,
-                         'controllers': None,
-                         'templates': [],
-                         'static_files': None},
+        'package_name' : 'tests',
+        'paths': {'root': '.',
+                  'controllers': '.',
+                  'templates': [],
+                  'static_files': None},
         'db_engines': {},
         'tg.strict_tmpl_context':False,
         'use_dotted_templatenames':True,

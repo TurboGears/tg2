@@ -24,7 +24,7 @@ class IdentityApplicationWrapper(ApplicationWrapper):
         options = {
             'enabled': True,
             'allow_missing_user': True,
-            'authmetadata': config.get('sa_auth',  {}).get('authmetadata'),
+            'authmetadata': config.get('sa_auth.authmetadata')
         }
         options.update(coerce_config(config, 'identity.',  {
             'enabled': asbool,

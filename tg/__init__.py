@@ -46,15 +46,20 @@ assumptions about how things will work.
 
 """
 
-from tg.request_local import app_globals, request, response, tmpl_context, session, cache, translator
-from tg.configuration import config, AppConfig, milestones
+from tg.request_local import (app_globals, request, response, tmpl_context,
+                              session, cache, translator)
+from tg.configuration import config, milestones
+from tg.configuration.app_config import AppConfig
+from tg.configuration.configurator import (Configurator, ApplicationConfigurator,
+                                           MinimalApplicationConfigurator,
+                                           FullStackApplicationConfigurator)
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, RestController, redirect, url, lurl, abort
 from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
                            require, with_engine, cached, decode_params)
 
-from tg.flash import flash, get_flash, get_status
+from tg.flash import flash
 from tg.jsonify import encode as json_encode
 from tg.controllers.util import *
 from tg.controllers.dispatcher import dispatched_controller
@@ -66,8 +71,9 @@ from tg.request_local import Request, Response
 __version__ = version
 
 __all__ = ['__version__',
-    'app_globals', 'expose', 'override_template', 'request',
-    'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
-    'use_wsgi_app', 'validate', 'i18n','json_encode', 'cache', 'url', 'lurl',
-    'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',
-    'Request', 'Response', 'cached', 'decode_params', 'milestones']
+           'app_globals', 'expose', 'override_template', 'request',
+           'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
+           'use_wsgi_app', 'validate', 'i18n', 'json_encode', 'cache', 'url', 'lurl',
+           'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',
+           'Request', 'Response', 'cached', 'decode_params', 'milestones',
+           'MinimalApplicationConfigurator', 'FullStackApplicationConfigurator']

@@ -93,8 +93,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         else:
             remainder = tuple()
 
-        hooks.notify('before_validate', args=(remainder, params),
-                     controller=action, context_config=context_config)
+        hooks.notify('before_validate', args=(remainder, params), controller=action)
 
         validate_params = get_params_with_argspec(action, params, remainder)
         context.request.args_params = validate_params  # Update args_params with positional args
@@ -123,21 +122,18 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             context.request.validation.values = params
             remainder, params = flatten_arguments(action, params, remainder)
 
-        hooks.notify('before_call', args=(remainder, params),
-                     controller=action, context_config=context_config)
+        hooks.notify('before_call', args=(remainder, params), controller=action)
 
         # call controller method with applied wrappers
         controller_caller = action.decoration.controller_caller
         output = controller_caller(context_config, bound_controller_callable, remainder, params)
 
         # Render template
-        hooks.notify('before_render', args=(remainder, params, output),
-                     controller=action, context_config=context_config)
+        hooks.notify('before_render', args=(remainder, params, output), controller=action)
 
         response = self._render_response(context, action, output)
 
-        hooks.notify('after_render', args=(response,),
-                     controller=action, context_config=context_config)
+        hooks.notify('after_render', args=(response,), controller=action)
 
         return response['response']
 

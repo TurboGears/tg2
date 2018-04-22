@@ -5,15 +5,9 @@ from webob.exc import HTTPNotFound
 
 import tg
 from tg import request_local
+from tg.configuration.utils import TGConfigError
 from tg.i18n import _get_translator
 from tg.request_local import Request, Response
-
-try: #pragma: no cover
-    import pylons
-    has_pylons = True
-except:
-    has_pylons = False
-
 
 log = logging.getLogger(__name__)
 
@@ -40,19 +34,11 @@ class TGApp(object):
         self.package_name = config['package_name']
         self.lang = config.get('i18n.lang')
 
-        if self.lang is None:
-            backward_compatible_lang = config.get('lang')
-            if backward_compatible_lang:
-                warnings.warn('"lang" option has been renamed to "i18n.lang" and '
-                              'will be removed in next major version.', DeprecationWarning)
-                self.lang = backward_compatible_lang
-
         self.controller_classes = {}
         self.controller_instances = {}
 
         # Cache some options for use during requests
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
-        self.pylons_compatible = self.config.get('tg.pylons_compatible', True)
 
         self.resp_options = config.get('tg.response_options',
                                        dict(content_type='text/html',
@@ -80,27 +66,8 @@ class TGApp(object):
                 # backward compatibility with wrappers that didn't receive the config
                 self.wrapped_dispatch = wrapper(self.wrapped_dispatch)
 
-        if 'tg.root_controller' in self.config:
+        if self.config.get('tg.root_controller') is not None:
             self.controller_instances['root'] = self.config['tg.root_controller']
-
-    def _setup_pylons_compatibility(self, environ, controller): #pragma: no cover
-        """Updates environ to be backward compatible with Pylons"""
-        try:
-            environ['pylons.controller'] = controller
-            environ['pylons.pylons'] = environ['tg.locals']
-
-            self.config['pylons.app_globals'] = self.globals
-
-            pylons.request = request_local.request
-            pylons.cache = request_local.cache
-            pylons.config = request_local.config
-            pylons.app_globals = request_local.app_globals
-            pylons.session = request_local.session
-            pylons.translator = request_local.translator
-            pylons.response = request_local.response
-            pylons.tmpl_context = request_local.tmpl_context
-        except ImportError:
-            pass
 
     def __call__(self, environ, start_response):
         """Serve a WSGI Request"""
@@ -133,8 +100,6 @@ class TGApp(object):
             # Help Python collect ram a bit faster by removing the reference
             # cycle that the thread local objects cause
             del environ['tg.locals']
-            if has_pylons and 'pylons.pylons' in environ: #pragma: no cover
-                del environ['pylons.pylons']
 
     def _setup_app_env(self, environ):
         """Setup Request, Response and TurboGears context objects.
@@ -219,6 +184,8 @@ class TGApp(object):
         """
         root_module_path = config['paths']['root']
         base_controller_path = config['paths']['controllers']
+        if base_controller_path is None:
+            raise TGConfigError('Unable to load controllers, no controllers path configured!')
 
         # remove the part of the path we expect to be the root part (plus one '/')
         assert base_controller_path.startswith(root_module_path)
@@ -276,10 +243,6 @@ class TGApp(object):
         if not controller:
             return HTTPNotFound()
 
-        # Setup pylons compatibility before calling controller
-        if has_pylons and self.pylons_compatible:  # pragma: no cover
-            self._setup_pylons_compatibility(environ, controller)
-
         # Controller is assumed to accept WSGI Environ and TG Context
         # and return a Response object.
         return controller(environ, context)
@@ -312,7 +275,7 @@ class TemplateContext(object):
         if item in ('form_values', 'form_errors'):
             warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
                           'use request.validation instead', DeprecationWarning)
-            return tg.request.validation[item[5:]]
+            return getattr(tg.request.validation, item[5:])
         elif item == 'controller_url':
             warnings.warn('tmpl_context.controller_url got deprecated, '
                           'use request.controller_url instead', DeprecationWarning)

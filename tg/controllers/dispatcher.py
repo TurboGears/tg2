@@ -40,11 +40,10 @@ class CoreDispatcher(object):
 
     def _get_dispatchable(self, context, url_path):
         """
-        Returns a tuple (controller, remainder, params)
+        Returns a :class:`DispatchState` instance.
 
-        :Parameters:
-          url
-            url as string
+        :param context: The Request context.
+        :param url_path: The url to dispatch.
         """
         req = context.request
         conf = context.config
@@ -177,9 +176,8 @@ class CoreDispatcher(object):
                         return v
             return []
 
-        if 'tg.root_controller' in tg.config:
-            root_controller = tg.config['tg.root_controller']
-        else:
+        root_controller = tg.config.get('tg.root_controller')
+        if root_controller is None:
             root_controller = TGApp.lookup_controller(tg.config, 'root')
 
         return find_url(root_controller, self, [('/', root_controller)])

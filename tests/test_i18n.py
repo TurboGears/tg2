@@ -4,8 +4,7 @@ from webtest import TestApp
 import gettext as _gettext
 
 import tg
-from tg import i18n, expose, TGController, config
-from tg.configuration import AppConfig
+from tg import i18n, expose, TGController, config, AppConfig
 
 from tg._compat import unicode_text, u_
 
@@ -221,24 +220,3 @@ class TestI18NStackDefaultLang(object):
         langs = r.json['lang']
         assert langs == ['ru', 'de', 'kr'], langs
 
-
-class TestI18NStackDeprecatedDefaultLang(object):
-    def setup(self):
-        conf = AppConfig(minimal=True, root_controller=i18nRootController())
-        conf['paths']['root'] = 'tests'
-        conf['i18n.enabled'] = True
-        conf['session.enabled'] = True
-        conf['lang'] = 'kr'
-        conf['beaker.session.key'] = 'tg_test_session'
-        conf['beaker.session.secret'] = 'this-is-some-secret'
-        conf.renderers = ['json']
-        conf.default_renderer = 'json'
-        conf.package = _FakePackage()
-        app = conf.make_wsgi_app()
-        self.app = TestApp(app)
-
-    def test_get_lang_supported_with_default_lang(self):
-        r = self.app.get('/get_supported_lang?skip_lang=1',
-                         headers={'Accept-Language': 'ru,en,de;q=0.5'})
-        langs = r.json['lang']
-        assert langs == ['ru', 'de', 'kr'], langs

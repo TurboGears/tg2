@@ -1,5 +1,10 @@
-from tg.error import ErrorReporter
-from tg.error import SlowReqsReporter
+import time
+from webtest import TestApp
+
+from tg import FullStackApplicationConfigurator, TGController, expose
+from tg.configuration.configurator.components.error_reporting import ErrorReportingConfigurationComponent
+from tg.configuration.configurator.components.slow_requests import SlowRequestsConfigurationComponent
+from tg.util import Bunch
 
 
 def simple_app(environ, start_response):
@@ -13,68 +18,145 @@ class TestErrorReporterConfig(object):
 
     middleware_name = 'TraceErrorsMiddleware'
 
+    def _make(self, **options):
+        step = ErrorReportingConfigurationComponent()
+        conf = dict(('trace_errors.%s' % k, v) for k, v in options.items() if k != 'debug')
+        if 'debug' in options:
+            conf['debug'] = options['debug']
+        step._configure_backlash(conf, None)
+        return step._add_middleware(conf, simple_app)
+
     def test_enable_none(self):
-        app = ErrorReporter(simple_app, {})
+        app = self._make()
         assert app.__class__.__name__ == self.middleware_name
         assert not app.reporters
 
     def test_enable_false(self):
-        app = ErrorReporter(simple_app, {}, enable=False)
+        app = self._make(enable=False)
         assert app.__class__.__name__ != self.middleware_name
 
     def test_enable_true(self):
-        app = ErrorReporter(simple_app, {}, enable=True)
+        app = self._make(enable=True)
         assert app.__class__.__name__ == self.middleware_name
         assert not app.reporters
 
     def test_enable_email(self):
-        app = ErrorReporter(simple_app, {},
-            error_email='user@somedomain.com')
+        app = self._make(error_email='user@somedomain.com')
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'EmailReporter'
             for r in app.reporters)
 
     def test_enable_sentry(self):
-        app = ErrorReporter(simple_app, {},
-            sentry_dsn='http://public:secret@example.com/1')
+        app = self._make(sentry_dsn='http://public:secret@example.com/1')
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'SentryReporter'
             for r in app.reporters)
 
     def test_debug_mode(self):
-        app = ErrorReporter(simple_app, dict(debug='on'), enable=True,
-            error_email='user@somedomain.com')
+        app = self._make(debug='on', enable=True,
+                         error_email='user@somedomain.com')
         assert app is simple_app
+
+    def test_actually_reports(self):
+        class RootController(TGController):
+            @expose()
+            def index(self):
+                return 1/0
+
+        REPORTED_CONTEXT = {}
+        class Reporter(object):
+            def report(self, traceback):
+                REPORTED_CONTEXT.update(traceback.context)
+
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({
+            'debug': False,
+            'trace_errors.enable': True,
+            'trace_errors.reporters': [
+                Reporter()
+            ],
+            'root_controller': RootController()
+        })
+        app = TestApp(cfg.make_wsgi_app({}, {}))
+        app.get('/', status=404)
+
+        assert 'request' in REPORTED_CONTEXT
 
 
 class TestSlowReqsReporterConfig(object):
 
     middleware_name = 'TraceSlowRequestsMiddleware'
 
+    def _make(self, **options):
+        step = SlowRequestsConfigurationComponent()
+        conf = dict(('trace_slowreqs.%s' % k, v) for k, v in options.items() if k != 'debug')
+        if 'debug' in options:
+            conf['debug'] = options['debug']
+        step._configure_backlash(conf, None)
+        return step._add_middleware(conf, simple_app)
+
     def test_disable_all(self):
-        app = SlowReqsReporter(simple_app, {})
+        app = self._make()
         assert app is simple_app
 
     def test_enable_without_reporter(self):
-        app = SlowReqsReporter(simple_app, {}, enable=True)
+        app = self._make(enable=True)
         assert app.__class__.__name__ == self.middleware_name
         assert not app.reporters
 
     def test_enable_email(self):
-        app = SlowReqsReporter(simple_app, {}, enable=True,
-            error_email='user@somedomain.com')
+        app = self._make(enable=True, error_email='user@somedomain.com')
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'EmailReporter'
             for r in app.reporters)
 
     def test_enable_sentry(self):
-        app = SlowReqsReporter(simple_app, {}, enable=True,
-            sentry_dsn='http://public:secret@example.com/1')
+        app = self._make(enable=True, sentry_dsn='http://public:secret@example.com/1')
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'SentryReporter'
             for r in app.reporters)
 
     def test_debug_mode(self):
-        app = SlowReqsReporter(simple_app, dict(debug='on'), enable=True,
-            error_email='user@somedomain.com')
+        app = self._make(debug='on', enable=True,
+                         error_email='user@somedomain.com')
         assert app is simple_app
+
+    def test_backward_compatibility(self):
+        conf = {'tg.errorware': {'SOMETHING': True}}
+
+        step = SlowRequestsConfigurationComponent()
+        step._configure_backlash(conf, None)
+
+        assert conf['tg.slowreqs']['SOMETHING'] == True
+
+    def test_actually_reports(self):
+        class RootController(TGController):
+            @expose()
+            def index(self):
+                # Wait for the slow req reporter to report the request.
+                for i in range(100):
+                    if 'request' in REPORTED_CONTEXT:
+                        break
+                    time.sleep(0.01)
+                else:
+                    assert False, 'Timeout!'
+                return 'HI'
+
+        REPORTED_CONTEXT = {}
+        class Reporter(object):
+            def report(self, traceback):
+                REPORTED_CONTEXT.update(traceback.context)
+
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({
+            'debug': False,
+            'trace_slowreqs.enable': True,
+            'trace_slowreqs.interval': 0,
+            'trace_slowreqs.reporters': [
+                Reporter()
+            ],
+            'root_controller': RootController()
+        })
+        app = TestApp(cfg.make_wsgi_app({}, {}))
+        assert app.get('/').text == 'HI'
+        assert 'request' in REPORTED_CONTEXT

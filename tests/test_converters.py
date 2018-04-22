@@ -1,5 +1,8 @@
+import logging
+
 from nose.tools import raises
-from tg.support.converters import asbool, asint, aslist, astemplate
+from tg.support.converters import asbool, asint, aslist, astemplate, aslogger
+
 
 class TestAsBool(object):
     def test_asbool_truthy(self):
@@ -67,3 +70,15 @@ class TestAsTemplate(object):
 
     def test_aslready_template(self):
         assert astemplate(astemplate('You are ${name}')).substitute(name='John') == 'You are John'
+
+
+class TestAsLogger(object):
+    def test_fine(self):
+        assert aslogger('root') == logging.getLogger('root')
+
+    @raises(ValueError)
+    def test_nonstring(self):
+        aslogger(55)
+
+    def test_already_logger(self):
+        assert aslogger(logging.getLogger('root')) == logging.getLogger('root')

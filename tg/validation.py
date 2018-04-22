@@ -49,14 +49,6 @@ class _ValidationStatus(object):
             return False
         return self.intent.chain_validation
 
-    def __getitem__(self, item):
-        warnings.warn("Accessing validation status properties with [] syntax is deprecated. "
-                      " Please use dot notation instead", DeprecationWarning, stacklevel=2)
-        try:
-            return getattr(self, item)
-        except AttributeError:
-            raise KeyError
-
 
 class _ValidationIntent(object):
     """Details of validation intention.

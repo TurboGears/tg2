@@ -47,7 +47,7 @@ class SubController(TGController):
 
     @expose()
     def redirect_me(self, target, **kw):
-        tg.redirect(target, **kw)
+        tg.redirect(target, params=kw)
 
     @expose()
     def redirect_sub(self):
@@ -124,7 +124,7 @@ class RootController(TGController):
 
     @expose()
     def redirect_me(self, target, **kw):
-        tg.redirect(target, kw)
+        tg.redirect(target, params=kw)
 
     @expose()
     def hello(self, name, silly=None):
@@ -163,16 +163,16 @@ class RootController(TGController):
 
     @expose()
     def flash_after_redirect(self):
-        return tg.get_flash()
+        return tg.flash.message
 
     @expose()
     def flash_status(self):
-        return tg.get_status()
+        return tg.flash.status
 
     @expose()
     def flash_no_redirect(self):
         tg.flash("Wow, flash!")
-        return tg.get_flash()
+        return tg.flash.message
 
     @expose('json')
     @validate(validators={"some_int": validators.Int()})

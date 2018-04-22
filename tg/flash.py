@@ -186,15 +186,3 @@ class TGFlash(GlobalConfigurable):
 
 
 flash = TGFlash.create_global()
-
-
-def get_flash():
-    warnings.warn("get_flash() is deprecated, use tg.flash.message instead",
-                  DeprecationWarning, stacklevel=2)
-    return flash.message
-
-
-def get_status():
-    warnings.warn("get_status() is deprecated, use tg.flash.status instead",
-                  DeprecationWarning, stacklevel=2)
-    return flash.status

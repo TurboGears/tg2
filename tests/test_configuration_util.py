@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from nose.tools import raises
 
-from tg.configuration.utils import DependenciesList
+from tg.configuration.utils import DependenciesList, DictionaryView
+
 
 class DLEntry1: pass
 class DLEntry2: pass
@@ -191,3 +192,71 @@ class TestDependenciesList(object):
     def test_replace_key_check(self):
         dl = DependenciesList()
         dl.replace(object(), object())
+
+    def test_construction(self):
+        dl = DependenciesList(DLEntry2, DLEntry1)
+
+        dl.replace(DLEntry1, DLEntry3)
+
+        dl_values = list(dl.values())
+        assert dl_values[0] == DLEntry2
+        assert dl_values[1] == DLEntry3
+
+    @raises(KeyError)
+    def test_add_twice(self):
+        dl = DependenciesList()
+
+        dl.add(DLEntry2)
+        dl.add(DLEntry2)
+
+    def test_get_by_class(self):
+        dl = DependenciesList()
+
+        dl.add(DLEntry2)
+        assert issubclass(dl.get(DLEntry2), DLEntry2)
+
+    @raises(ValueError)
+    def test_get_by_invalid_type(self):
+        dl = DependenciesList()
+        dl.get(5)
+
+    def test_get_missing(self):
+        dl = DependenciesList()
+        assert dl.get('MISSING') == None
+
+
+class TestDictionaryView(object):
+    def test_dictionary_view(self):
+        d = DictionaryView({
+            'test.one': 1,
+            'test.two': 2
+        }, 'test.')
+        assert d['one'] == 1
+        assert d.one == 1
+
+    @raises(AttributeError)
+    def test_dictionary_view_missing_attr(self):
+        d = DictionaryView({}, '')
+        d.missing
+
+    @raises(KeyError)
+    def test_dictionary_view_missing_key(self):
+        d = DictionaryView({}, '')
+        d['missing']
+
+    def test_dictionary_set_attr(self):
+        d = DictionaryView({}, 'test.')
+        d.new = 5
+        assert d.new == 5
+
+    def test_dictionary_update(self):
+        d = DictionaryView({}, 'test.')
+        d.update({
+            'a': 5
+        })
+        d.update([('b', 6)])
+        d.update({}, c=7)
+
+        assert d.a == 5
+        assert d.b == 6
+        assert d.c == 7
