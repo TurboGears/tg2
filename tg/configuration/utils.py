@@ -269,7 +269,7 @@ class DictionaryView(object):
     __slots__ = ('_d', '_keypath')
 
     def __init__(self, d, keypath):
-        if keypath[-1] != '.':
+        if keypath and keypath[-1] != '.':
             keypath = keypath + '.'
         self._d = d
         self._keypath = keypath
