@@ -40,6 +40,25 @@ class IdentityApplicationWrapper(ApplicationWrapper):
     def injected(self):
         return self.enabled
 
+    def get_auth_metadata(self, resource, identity):
+        """
+        Safely get resource from authentication metadata (TGAuthMetadata).
+
+        The TGAuthMetadata class could be overridden by users. TurboGears should
+        catch possible exceptions raised by customizations in the get methods.
+
+        :param resource: 'user', 'groups' or 'permissions'
+        :param identity: repoze.who.identity
+        :return: requested resource object
+        """
+        getter_key = 'get_{resource}'.format(resource=resource)
+        getter_function = getattr(self.tgmdprovider, getter_key)
+        try:
+            return getter_function(identity, identity['repoze.who.userid'])
+        except:
+            msg = 'Could not get {resource} from TGAuthMetadata.'
+            log.exception(msg.format(resource=resource))
+
     def __call__(self, controller, environ, context):
         identity = environ.get('repoze.who.identity')
         if identity is None:
@@ -52,11 +71,11 @@ class IdentityApplicationWrapper(ApplicationWrapper):
         userid = identity['repoze.who.userid']
         if userid is not None:
             # Finding the user, groups and permissions:
-            identity['user'] = identity_user = self.tgmdprovider.get_user(identity, userid)
+            identity['user'] = identity_user = self.get_auth_metadata('user', identity)
 
             if identity_user:
-                identity['groups'] = self.tgmdprovider.get_groups(identity, userid)
-                identity['permissions'] = self.tgmdprovider.get_permissions(identity, userid)
+                identity['groups'] = self.get_auth_metadata('groups', identity)
+                identity['permissions'] = self.get_auth_metadata('permissions', identity)
             else:
                 identity['groups'] = identity['permissions'] = []
 
