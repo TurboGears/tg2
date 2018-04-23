@@ -31,7 +31,19 @@ and gets out of your way when you want it!
 
 
 TurboGears can be used *both* as a *full stack* framework or as a
-*microframework* in single file mode::
+*microframework* in single file mode.
+
+To try it just get ``pip`` if you don't already have it::
+
+    $ curl -O 'https://bootstrap.pypa.io/get-pip.py'
+    $ python get-pip.py
+
+And install Turbogears::
+
+    $ pip install tg
+
+Then serving a TurboGears web application is as simple as making a ``webapp.py``
+file with you application::
 
 	from wsgiref.simple_server import make_server
 	from tg import expose, TGController, AppConfig
@@ -47,12 +59,16 @@ TurboGears can be used *both* as a *full stack* framework or as a
 	httpd = make_server('', 8080, config.make_wsgi_app())
 	httpd.serve_forever()
 
+Start it with ``python webapp.py`` and open your browser at ``http://localhost:8080/``
+
 Support and Documentation
 -------------------------
 
+Visit `TurboGears Documentation <http://turbogears.readthedocs.org/>`_ for
+complete documentation and **tutorials**.
+
 See the `TurboGears website <http://www.turbogears.org/>`_ to get
-a quick overview of the framework or visit the
-`TurboGears Documentation <http://turbogears.readthedocs.org/>`_
+a quick overview of the framework and look for support.
 
 License
 -------
