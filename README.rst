@@ -66,8 +66,8 @@ Start it with ``python webapp.py`` and open your browser at ``http://localhost:8
 
 Want to play further with TurboGears? Try the TurboGears Tutorials:
 
-    * `Getting Started with Turbogears <http://turbogears.readthedocs.io/en/latest/turbogears/minimal/index.html>`_
-    * `Building a Wiki in 20 minutes <http://turbogears.readthedocs.io/en/latest/turbogears/wiki20.html>`_
+* `Getting Started with Turbogears <http://turbogears.readthedocs.io/en/latest/turbogears/minimal/index.html>`_
+* `Building a Wiki in 20 minutes <http://turbogears.readthedocs.io/en/latest/turbogears/wiki20.html>`_
 
 Support and Documentation
 -------------------------
