@@ -33,14 +33,17 @@ and gets out of your way when you want it!
 TurboGears can be used *both* as a *full stack* framework or as a
 *microframework* in single file mode.
 
-To try it just get ``pip`` if you don't already have it::
+Get Started
+-----------
+
+To try TurboGears just get ``pip`` if you don't already have it::
 
     $ curl -O 'https://bootstrap.pypa.io/get-pip.py'
     $ python get-pip.py
 
 And install Turbogears::
 
-    $ pip install tg
+    $ pip install TurboGears2
 
 Then serving a TurboGears web application is as simple as making a ``webapp.py``
 file with you application::
@@ -61,11 +64,16 @@ file with you application::
 
 Start it with ``python webapp.py`` and open your browser at ``http://localhost:8080/``
 
+Want to play further with TurboGears? Try the TurboGears Tutorials:
+
+    * `Getting Started with Turbogears <http://turbogears.readthedocs.io/en/latest/turbogears/minimal/index.html>`_
+    * `Building a Wiki in 20 minutes <http://turbogears.readthedocs.io/en/latest/turbogears/wiki20.html>`_
+
 Support and Documentation
 -------------------------
 
 Visit `TurboGears Documentation <http://turbogears.readthedocs.org/>`_ for
-complete documentation and **tutorials**.
+complete **documentation** and **tutorials**.
 
 See the `TurboGears website <http://www.turbogears.org/>`_ to get
 a quick overview of the framework and look for support.
