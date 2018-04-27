@@ -52,9 +52,9 @@ file with you application::
 	from tg import expose, TGController, AppConfig
 
 	class RootController(TGController):
-		 @expose()
-		 def index(self):
-			 return "<h1>Hello World</h1>"
+	    @expose()
+	    def index(self):
+	        return "<h1>Hello World</h1>"
 
 	config = AppConfig(minimal=True, root_controller=RootController())
 
