@@ -13,7 +13,7 @@ install:
   - "pip install --upgrade setuptools"
   - "travis_retry pip install git+git://github.com/TurboGears/crank.git"
   - "travis_retry pip install git+git://github.com/TurboGears/backlash.git"
-  - "travis_retry pip install git+git://git.code.sf.net/p/merciless/code"
+  - "travis_retry pip install git+git://github.com/TurboGears/Ming.git"
   - "pip install repoze.who"
   - "pip install coverage==4.2"
   - "pip install nose"
