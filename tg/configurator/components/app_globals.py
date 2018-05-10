@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from ...._compat import import_module
-from ....util import DottedFileNameFinder, Bunch
+from ..._compat import import_module
+from ...util import DottedFileNameFinder, Bunch
 from ..base import (ConfigurationComponent,
                     ConfigReadyConfigurationAction)
 

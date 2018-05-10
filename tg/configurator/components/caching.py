@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 
-from ....support.converters import asbool
-from ...utils import TGConfigError
+from ...support.converters import asbool
+from ...configuration.utils import TGConfigError
 from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
 
 
@@ -40,7 +40,7 @@ class CachingConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('Caching only works on an ApplicationConfigurator')
 
-        from ....appwrappers.caching import CacheApplicationWrapper
+        from ...appwrappers.caching import CacheApplicationWrapper
         configurator.register_application_wrapper(CacheApplicationWrapper, after=True)
 
     def get_actions(self):

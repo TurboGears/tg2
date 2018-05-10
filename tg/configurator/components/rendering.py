@@ -67,11 +67,11 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
         )
 
     def on_bind(self, configurator):
-        from ....renderers.json import JSONRenderer
-        from ....renderers.genshi import GenshiRenderer
-        from ....renderers.jinja import JinjaRenderer
-        from ....renderers.kajiki import KajikiRenderer
-        from ....renderers.mako import MakoRenderer
+        from ...renderers.json import JSONRenderer
+        from ...renderers.genshi import GenshiRenderer
+        from ...renderers.jinja import JinjaRenderer
+        from ...renderers.kajiki import KajikiRenderer
+        from ...renderers.mako import MakoRenderer
 
         self.register_engine(JSONRenderer)
         self.register_engine(GenshiRenderer)

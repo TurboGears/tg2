@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from ...util import Bunch
+from ..util import Bunch
 from .base import Configurator
 from .base import EnvironmentLoadedConfigurationAction, AppReadyConfigurationAction
-from ..hooks import hooks
+from ..configuration.hooks import hooks
 from .. import milestones
-from ...wsgiapp import TGApp
-from ..utils import DependenciesList
-from ...request_local import config as reqlocal_config
+from ..wsgiapp import TGApp
+from ..configuration.utils import DependenciesList
+from ..request_local import config as reqlocal_config
 
 
 log = logging.getLogger(__name__)
 
 
 class ApplicationConfigurator(Configurator):
+    """A Configurator specialised in creating TurboGears applications.
+
+    The configuration blueprint will be used as configuration foundation
+    for every new application built from the Configurator, configuration
+    blueprint is merged with deployment configuration loaded from
+    config files before creating the application.
+
+    Refer to each registered configuration component for
+    configuration options available in the Configurator.
+
+    .. versionadded:: 2.4
+    """
     def __init__(self):
         super(ApplicationConfigurator, self).__init__()
         self._application_wrappers = DependenciesList()
@@ -113,7 +125,7 @@ class ApplicationConfigurator(Configurator):
 
         return app
 
-    def make_wsgi_app(self, global_conf, app_conf, wrap_app=None):
+    def make_wsgi_app(self, global_conf=None, app_conf=None, wrap_app=None):
         """Creates a new WSGI TurboGears application with provided configuration."""
         conf = self.configure(global_conf, app_conf)
         self.setup(conf)

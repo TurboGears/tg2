@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from ...utils import TGConfigError
+from ...configuration.utils import TGConfigError
 from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction)
 
@@ -43,7 +43,7 @@ class SessionConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('Sessions only work on an ApplicationConfigurator')
 
-        from ....appwrappers.session import SessionApplicationWrapper
+        from ...appwrappers.session import SessionApplicationWrapper
         configurator.register_application_wrapper(SessionApplicationWrapper, after=True)
 
     def _configure(self, conf, app):

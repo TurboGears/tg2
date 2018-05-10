@@ -6,8 +6,8 @@ import warnings
 
 from ..base import (ConfigurationComponent, AppReadyConfigurationAction,
                     BeforeConfigConfigurationAction)
-from ...utils import TGConfigError, get_partial_dict
-from ....support.converters import asbool, aslogger
+from ...configuration.utils import TGConfigError, get_partial_dict
+from ...support.converters import asbool, aslogger
 
 
 class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
@@ -127,7 +127,7 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('Simple Authentication only works on an ApplicationConfigurator')
 
-        from ....appwrappers.identity import IdentityApplicationWrapper
+        from ...appwrappers.identity import IdentityApplicationWrapper
         configurator.register_application_wrapper(IdentityApplicationWrapper, after=True)
 
     def _configure(self, conf, app):

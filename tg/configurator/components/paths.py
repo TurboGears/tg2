@@ -23,6 +23,7 @@ class PathsConfigurationComponent(ConfigurationComponent):
                             'static_files': 'my/path/to/files',
                             'templates': ['list/of/paths/to/templates']
                         )
+        * ``static_files``: An alias to ``paths['static_files']`` for convenience.
     """
     id = "paths"
 

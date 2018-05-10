@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from tg.configuration.configurator.components.debugger import DebuggerConfigurationComponent
-from tg.configuration.configurator.components.seekable_request import SeekableRequestConfigurationComponent
+from .components.debugger import DebuggerConfigurationComponent
+from .components.seekable_request import SeekableRequestConfigurationComponent
 from .minimal import MinimalApplicationConfigurator
 
 from .components.error_pages import ErrorPagesConfigurationComponent

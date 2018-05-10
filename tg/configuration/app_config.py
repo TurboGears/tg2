@@ -3,7 +3,6 @@ import logging
 import warnings
 
 import tg
-from tg.util import Bunch
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class AppConfig(object):
     VIEWS_ATTRIBUTES = set(('sa_auth', ))
 
     def __init__(self, **kwargs):
-        from .configurator import FullStackApplicationConfigurator
+        from ..configurator import FullStackApplicationConfigurator
         self._configurator = FullStackApplicationConfigurator()
 
         if kwargs.pop('minimal', False):

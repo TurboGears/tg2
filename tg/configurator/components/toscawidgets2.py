@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from tg.support.converters import asbool
 
-from ...utils import TGConfigError
+from ...configuration.utils import TGConfigError
 from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction, AppReadyConfigurationAction)
 

@@ -50,9 +50,9 @@ from tg.request_local import (app_globals, request, response, tmpl_context,
                               session, cache, translator)
 from tg.configuration import config, milestones
 from tg.configuration.app_config import AppConfig
-from tg.configuration.configurator import (Configurator, ApplicationConfigurator,
-                                           MinimalApplicationConfigurator,
-                                           FullStackApplicationConfigurator)
+from tg.configurator import (Configurator, ApplicationConfigurator,
+                             MinimalApplicationConfigurator,
+                             FullStackApplicationConfigurator)
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, RestController, redirect, url, lurl, abort
 from tg.release import version

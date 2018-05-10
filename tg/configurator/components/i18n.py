@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from ...utils import TGConfigError
+from ...configuration.utils import TGConfigError
 from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction)
 
@@ -43,7 +43,7 @@ class I18NConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('I18N only works on an ApplicationConfigurator')
 
-        from ....appwrappers.i18n import I18NApplicationWrapper
+        from ...appwrappers.i18n import I18NApplicationWrapper
         configurator.register_application_wrapper(I18NApplicationWrapper, after=True)
 
     def _configure(self, conf, app):

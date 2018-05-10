@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from tg.support.converters import asbool
 from ..base import ConfigurationComponent
-from ...utils import TGConfigError
+from ...configuration.utils import TGConfigError
 
 
 class TransactionManagerConfigurationComponent(ConfigurationComponent):
@@ -36,5 +36,5 @@ class TransactionManagerConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('Transactions Support only works on an ApplicationConfigurator')
 
-        from ....appwrappers.transaction_manager import TransactionApplicationWrapper
+        from ...appwrappers.transaction_manager import TransactionApplicationWrapper
         configurator.register_application_wrapper(TransactionApplicationWrapper, after=True)

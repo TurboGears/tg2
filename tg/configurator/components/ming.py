@@ -2,8 +2,8 @@
 from __future__ import absolute_import
 from ..base import (ConfigurationComponent, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction,
                     AppReadyConfigurationAction)
-from ...utils import get_partial_dict, TGConfigError
-from ....support.converters import asbool, asint
+from ...configuration.utils import get_partial_dict, TGConfigError
+from ...support.converters import asbool, asint
 
 
 class MingConfigurationComponent(ConfigurationComponent):
@@ -71,7 +71,7 @@ class MingConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('Ming Support only works on an ApplicationConfigurator')
 
-        from ....appwrappers.mingflush import MingApplicationWrapper
+        from ...appwrappers.mingflush import MingApplicationWrapper
         configurator.register_application_wrapper(MingApplicationWrapper, after=True)
 
     def configure(self, conf, app):

@@ -2,21 +2,25 @@
 import logging
 import weakref
 
-from ..utils import DependenciesList, coerce_options, DictionaryView, copyoption
+from ..configuration.utils import DependenciesList, coerce_options, DictionaryView, copyoption
 
 log = logging.getLogger(__name__)
 
 
 class Configurator(object):
-    """Manage application configuration components and blueprint.
+    """Manages a configuration process with multiple components and steps.
 
-    The configuration blueprint will be used as configuration foundation
-    for every new application built from the Configurator, configuration
-    blueprint is merged with deployment configuration loaded from
-    config files before creating the application.
+    Multiple registered components will be configured by applying
+    the options provided during configuration on top of a bluepint
+    (a set of default options).
 
-    Refer to each registered configuration component for
-    configuration options available in the Configurator.
+    The result will be a configuration dictionary and whatever side effect
+    each component triggered when being configured.
+
+    This doesn't really know anything about that it is configuring
+    and is not TurboGears specific. An ``ApplicationConfigurator``
+    is provided which is a specialised ``Configurator`` for configuring
+    TurboGears applications.
 
     .. versionadded:: 2.4
     """

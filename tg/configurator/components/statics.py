@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ....support.converters import asbool
+from ...support.converters import asbool
 from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction,
                     AppReadyConfigurationAction)

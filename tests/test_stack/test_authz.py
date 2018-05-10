@@ -82,12 +82,12 @@ def make_app(controller_klass, environ=None, with_errors=False, config_options=N
     from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
     cookie = AuthTktCookiePlugin('secret', 'authtkt')
 
-    from tg.configuration.configurator.base import ConfigurationComponent
+    from tg.configurator.base import ConfigurationComponent
     class ForceAuthenticatorComponent(ConfigurationComponent):
         id = "test_force_auth"
 
         def get_actions(self):
-            from tg.configuration.configurator.base import AppReadyConfigurationAction
+            from tg.configurator.base import AppReadyConfigurationAction
             return (
                 AppReadyConfigurationAction(self._add_middleware),
             )

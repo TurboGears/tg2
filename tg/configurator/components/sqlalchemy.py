@@ -2,8 +2,8 @@
 from __future__ import absolute_import
 
 from ..base import ConfigurationComponent, ConfigReadyConfigurationAction, AppReadyConfigurationAction
-from ...utils import TGConfigError
-from ....support.middlewares import DBSessionRemoverMiddleware
+from ...configuration.utils import TGConfigError
+from ...support.middlewares import DBSessionRemoverMiddleware
 
 
 class SQLAlchemyConfigurationComponent(ConfigurationComponent):

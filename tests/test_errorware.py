@@ -2,8 +2,8 @@ import time
 from webtest import TestApp
 
 from tg import FullStackApplicationConfigurator, TGController, expose
-from tg.configuration.configurator.components.error_reporting import ErrorReportingConfigurationComponent
-from tg.configuration.configurator.components.slow_requests import SlowRequestsConfigurationComponent
+from tg.configurator.components.error_reporting import ErrorReportingConfigurationComponent
+from tg.configurator.components.slow_requests import SlowRequestsConfigurationComponent
 from tg.util import Bunch
 
 

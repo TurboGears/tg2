@@ -11,29 +11,29 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
-from tg.configuration.configurator.base import ConfigurationComponent, Configurator
-from tg.configuration.configurator.components.app_globals import AppGlobalsConfigurationComponent
-from tg.configuration.configurator.components.auth import SimpleAuthenticationConfigurationComponent
-from tg.configuration.configurator.components.caching import CachingConfigurationComponent
-from tg.configuration.configurator.components.dispatch import DispatchConfigurationComponent
-from tg.configuration.configurator.components.helpers import HelpersConfigurationComponent
-from tg.configuration.configurator.components.i18n import I18NConfigurationComponent
-from tg.configuration.configurator.components.ming import MingConfigurationComponent
-from tg.configuration.configurator.components.paths import PathsConfigurationComponent
-from tg.configuration.configurator.components.registry import RegistryConfigurationComponent
-from tg.configuration.configurator.components.rendering import \
+from tg.configurator.base import ConfigurationComponent, Configurator
+from tg.configurator.components.app_globals import AppGlobalsConfigurationComponent
+from tg.configurator.components.auth import SimpleAuthenticationConfigurationComponent
+from tg.configurator.components.caching import CachingConfigurationComponent
+from tg.configurator.components.dispatch import DispatchConfigurationComponent
+from tg.configurator.components.helpers import HelpersConfigurationComponent
+from tg.configurator.components.i18n import I18NConfigurationComponent
+from tg.configurator.components.ming import MingConfigurationComponent
+from tg.configurator.components.paths import PathsConfigurationComponent
+from tg.configurator.components.registry import RegistryConfigurationComponent
+from tg.configurator.components.rendering import \
     TemplateRenderingConfigurationComponent
-from tg.configuration.configurator.components.session import SessionConfigurationComponent
-from tg.configuration.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
-from tg.configuration.configurator.components.transactions import \
+from tg.configurator.components.session import SessionConfigurationComponent
+from tg.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
+from tg.configurator.components.transactions import \
     TransactionManagerConfigurationComponent
 from tg.configuration.tgconfig import _init_default_global_config
 from tg.appwrappers.mingflush import MingApplicationWrapper
 
 from tg.util import Bunch
 from tg.configuration import config
-from tg.configuration.configurator import FullStackApplicationConfigurator
-from tg.configuration.configurator import ApplicationConfigurator
+from tg.configurator import FullStackApplicationConfigurator
+from tg.configurator import ApplicationConfigurator
 from tg.configuration.app_config import AppConfig
 from tg.configuration.auth import _AuthenticationForgerPlugin
 from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
@@ -1113,7 +1113,7 @@ class TestAppConfig:
             assert resp.json['now'] == now, (resp, now)
 
     def test_controler_wrapper_setup(self):
-        from tg.configuration.configurator.components.dispatch import _call_controller
+        from tg.configurator.components.dispatch import _call_controller
         orig_caller = _call_controller
 
         appcfg = AppConfig(minimal=True, root_controller=RootController())
