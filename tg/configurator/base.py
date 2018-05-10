@@ -147,9 +147,9 @@ class Configurator(object):
 class ConfigurationComponent(object):
     """Represents a configuration component that will collaborate in configuring an application.
 
-    Each component once registered in a :class:`.Configuration` can perform multiple
-    actions at different times, each action can be registered using
-    :meth:`.ConfigurationComponent.register`.
+    Each component once registered in a :class:`.Configurator` can perform multiple
+    actions at different times, each action can be registered by
+    returing them through :meth:`.get_actions`.
 
     .. versionadded:: 2.4
     """
@@ -227,7 +227,7 @@ class ConfigurationComponent(object):
 
 
 class _ConfigurationAction(object):
-    """An action done by a :class:`ConfigurationComponent` during configuration process.
+    """An action done by a :class:`.ConfigurationComponent` during configuration process.
 
     Represents what should be done during part of configuration
     process by a :class:`ConfigurationComponent`.
