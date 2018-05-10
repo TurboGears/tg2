@@ -15,6 +15,23 @@ log = logging.getLogger(__name__)
 
 
 class MinimalApplicationConfigurator(ApplicationConfigurator):
+    """An ApplicationConfigurator that enables minimum set of components.
+
+    This is meant to create small self contained applications that
+    might serve the purpose of simple JSON webservices or micro
+    web applications.
+
+    Enables components for:
+
+        - mimetypes
+        - load controllers and templates from paths
+        - dispatch requests to a root controller
+        - provide tg.app_globals
+        - provide helpers in templates
+        - support templates rendering
+        - enable requests local registry for tg.request, tg.response, etc...
+
+    """
     def __init__(self):
         super(MinimalApplicationConfigurator, self).__init__()
 

@@ -22,6 +22,29 @@ log = logging.getLogger(__name__)
 
 
 class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
+    """An ApplicationConfigurator that enables all TurboGears components.
+
+    This is meant to create full stack applications or generally applications
+    where most components are needed and some can be explicitly disabled.
+
+    Enables all components from :class:`.MinimalApplicationConfigurator`
+    plus:
+
+        - I18N support
+        - Authentication
+        - Sessions
+        - Caching
+        - Widgets (ToscaWidgets2)
+        - Databases (Ming and SQLAlchemy)
+        - Transaction Manager
+        - Custom Error Pages
+        - Seekable Requests
+        - Slow Requests Reporting
+        - Errors Reporting
+        - Static Files
+        - Interactive Debugger
+
+    """
     def __init__(self):
         super(FullStackApplicationConfigurator, self).__init__()
         self.update_blueprint({
