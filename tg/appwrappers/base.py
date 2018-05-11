@@ -11,8 +11,8 @@ class ApplicationWrapper(with_metaclass(ABCMeta)):
     with abstractions like Request and Respone objects.
 
     Application Wrappers can be registered using
-    :meth:`.AppConfig.register_wrapper` which will inject
-    them into the next `TGApp` created.
+    :meth:`.ApplicationConfigurator.register_application_wrapper`
+    which will inject them into the next `TGApp` created.
 
     While they can be any callable, inheriting from this base class
     is strongly suggested as enables additional behaviours and

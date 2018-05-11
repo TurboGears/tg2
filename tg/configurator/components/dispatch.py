@@ -73,14 +73,13 @@ class DispatchConfigurationComponent(ConfigurationComponent):
 
         Controller Wrappers are much like a **decorator** applied to
         every controller.
-        They receive :class:`tg.configuration.AppConfig` instance
-        as an argument and the next handler in chain and are expected
+        They receive the next handler in chain and are expected
         to return a new handler that performs whatever it requires
         and then calls the next handler.
 
         A simple example for a controller wrapper is a simple logging wrapper::
 
-            def controller_wrapper(app_config, caller):
+            def controller_wrapper(caller):
                 def call(*args, **kw):
                     try:
                         print 'Before handler!'

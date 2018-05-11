@@ -76,7 +76,7 @@ class TGFlash(GlobalConfigurable):
                   js_call='webflash.render()',
                   js_template=DEFAULT_JSFLASH_TEMPLATE,
                   allow_html=False):
-        """Flash messages can be configured through :class:`.AppConfig` (``app_cfg.base_config``)
+        """Flash messages can be configured through :class:`.ApplicationConfigurator`
         using the following options:
 
         - ``flash.cookie_name`` -> Name of the cookie used to store flash messages

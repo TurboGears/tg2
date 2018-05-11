@@ -23,12 +23,7 @@ def test_context(app, url=None, environ=None):
     context.
     """
     if app is None:
-        from ..configuration.app_config import AppConfig
-        loadenv = AppConfig(
-            minimal=True,
-            root_controller=lambda *args: Response('HELLO')
-        ).make_load_environment()
-        app = TGApp(loadenv({}, {}))
+        app = _BareTGAppMaker().make()
 
     url = url or '/'
 
@@ -42,6 +37,25 @@ def test_context(app, url=None, environ=None):
         return _WebTestTGTestContextManager(app, wsgienviron)
 
 test_context.__test__ = False  # Prevent nose from detecting this as a test.
+
+
+class _BareTGAppMaker(object):
+    """Makes a new TGApp and returns it without any surrounding middleware."""
+    def __init__(self):
+        self.app = None
+
+    def set_app(self, app):
+        self.app = app
+        return app
+
+    def make(self):
+        from ..configurator import MinimalApplicationConfigurator
+        configurator = MinimalApplicationConfigurator()
+        configurator.update_blueprint({
+            'root_controller': lambda *args: Response('HELLO')
+        })
+        configurator.make_wsgi_app(wrap_app=self.set_app)
+        return self.app
 
 
 class _TGTestContextManager(object):

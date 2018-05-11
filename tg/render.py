@@ -138,7 +138,7 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
                                vars can also include the ``tg_cache`` dictionary
                                which enables template caching.
     :param str template_engine: This is the template engine name, same as
-                                specified inside AppConfig.renderers.
+                                specified inside ``tg.config['renderers']``.
     :param str template_name: This is the template to render, can be specified
                               both as a path or using dotted notation if available.
 

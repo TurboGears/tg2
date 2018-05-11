@@ -86,8 +86,8 @@ class GlobalConfigurable(object):
     but users can create their own.
 
     While user created versions are configured calling the :meth:`.GlobalConfigurable.configure`
-    method, global versions are configured by :class:`.AppConfig` which configures them when
-    ``config_ready`` milestone is reached.
+    method, global versions are configured by :class:`.ApplicationConfigurator` which
+    configures them when ``config_ready`` milestone is reached.
 
     """
     CONFIG_NAMESPACE = None
@@ -107,7 +107,7 @@ class GlobalConfigurable(object):
 
     @classmethod
     def create_global(cls):
-        """Creates a global instance which configuration will be bound to :class:`.AppConfig`."""
+        """Creates a global instance whose configuration is linked to ``tg.config``."""
         if cls.CONFIG_NAMESPACE is None:
             raise TGConfigError('Must specify a CONFIG_NAMESPACE attribute in class for the'
                                 'namespace used by all configuration options.')
@@ -124,9 +124,10 @@ class GlobalConfigurable(object):
 class DependenciesList(object):
     """Manages a list of entries which might depend one from the other.
 
-    This powers :meth:`.AppConfig.register_wrapper` and other features in
-    TurboGears2, making possible to register the wrappers right after
-    other wrappers or at the end of the wrappers chain.
+    This powers everything that needs to keep track of a list of entries that
+    might have dependencies one to the other and keeps them linearised according
+    to the dependencies. This powers the resolution of ConfigurationComponenets,
+    ApplicationsWrappers and so on...
 
     .. note:: This is highly inefficient as it is only meant to run at configuration time,
               a new implementation will probably be provided based on heapq in the future.

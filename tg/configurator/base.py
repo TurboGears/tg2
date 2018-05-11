@@ -227,7 +227,7 @@ class ConfigurationComponent(object):
 
 
 class _ConfigurationAction(object):
-    """An action done by a :class:`.ConfigurationComponent` during configuration process.
+    """An action done by a :class:`,ConfigurationComponent` during configuration process.
 
     Represents what should be done during part of configuration
     process by a :class:`ConfigurationComponent`.

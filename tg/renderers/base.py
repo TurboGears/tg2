@@ -3,7 +3,7 @@ class RendererFactory(object):
     """
     Factory that creates one or multiple rendering engines
     for TurboGears. Subclasses have to be registered with
-    :func:`tg.configuration.AppConfig.register_rendering_engine`
+    :meth:`.TemplateRenderingConfigurationComponent.register_engine`
     and must implement the ``create`` method accordingly.
 
     """
