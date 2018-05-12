@@ -36,6 +36,12 @@ TurboGears can be used *both* as a *full stack* framework or as a
 Get Started
 -----------
 
+**NOTE: This is development branch**,
+for current stable release refer to `Documentation <http://turbogears.readthedocs.io/>`_
+
+.. image:: https://asciinema.org/a/181221.png
+    :target: https://asciinema.org/a/181221
+
 To try TurboGears just get ``pip`` if you don't already have it::
 
     $ curl -O 'https://bootstrap.pypa.io/get-pip.py'
@@ -72,7 +78,7 @@ Want to play further with TurboGears? Try the TurboGears Tutorials:
 Support and Documentation
 -------------------------
 
-Visit `TurboGears Documentation <http://turbogears.readthedocs.org/>`_ for
+Visit `TurboGears Documentation <http://turbogears.readthedocs.io/>`_ for
 complete **documentation** and **tutorials**.
 
 See the `TurboGears website <http://www.turbogears.org/>`_ to get
