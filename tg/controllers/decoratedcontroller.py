@@ -30,7 +30,7 @@ class _DecoratedControllerMeta(type):
     def __init__(cls, name, bases, attrs):
         super(_DecoratedControllerMeta, cls).__init__(name, bases, attrs)
         for name, value in attrs.items():
-            #Inherit decorations for methods exposed with inherit=True
+            # Inherit decorations for methods exposed with inherit=True
             if hasattr(value, 'decoration') and value.decoration.inherit:
                 for pcls in reversed(bases):
                     parent_method = getattr(pcls, name, None)
