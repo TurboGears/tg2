@@ -96,6 +96,12 @@ class AppConfig(object):
             return self.get_view(item)
         return self._configurator.get_blueprint_value(item)
 
+    def get(self, k, d=None):
+        try:
+            return self[k]
+        except KeyError:
+            return d
+
     def get_view(self, item):
         return self._configurator.get_blueprint_view(item)
 
@@ -111,6 +117,9 @@ class AppConfig(object):
             return self[item]
         except KeyError:
             raise AttributeError(item)
+
+    def register_hook(self, hookname, handler, controller=None):
+        tg.hooks.register(hookname, handler, controller=controller)
 
     def register_wrapper(self, wrapper, after=None):
         self._configurator.register_application_wrapper(wrapper, after)
