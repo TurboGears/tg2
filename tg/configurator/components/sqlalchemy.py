@@ -46,8 +46,8 @@ class SQLAlchemyConfigurationComponent(ConfigurationComponent):
 
     def get_actions(self):
         return (
-            ConfigReadyConfigurationAction(self.setup_sqlalchemy),
-            AppReadyConfigurationAction(self.add_middleware)
+            ConfigReadyConfigurationAction(self._setup_sqlalchemy),
+            AppReadyConfigurationAction(self._add_middleware)
         )
 
     def on_bind(self, configurator):
@@ -55,11 +55,13 @@ class SQLAlchemyConfigurationComponent(ConfigurationComponent):
         if not isinstance(configurator, ApplicationConfigurator):
             raise TGConfigError('SQLAlchemy Support only works on an ApplicationConfigurator')
 
-    def setup_sqlalchemy(self, conf, app):
-        """Setup SQLAlchemy database engine"""
+    def _setup_sqlalchemy(self, conf, app):
         if not conf['use_sqlalchemy']:
             return
+        self.setup_sqlalchemy(conf, app)
 
+    def setup_sqlalchemy(self, conf, app):
+        """Setup SQLAlchemy database engine"""
         engine = self.create_sqlalchemy_engine(conf)
 
         conf['tg.app_globals'].sa_engine = engine
@@ -76,6 +78,11 @@ class SQLAlchemyConfigurationComponent(ConfigurationComponent):
             # he/she uses the default DBSession in model
             conf['DBSession'] = model.DBSession
 
+    def _add_middleware(self, conf, app):
+        if not conf['use_sqlalchemy']:
+            return app
+        return self.add_middleware(conf, app)
+
     def add_middleware(self, conf, app):
         """Set up middleware that cleans up the sqlalchemy session.
 
@@ -83,9 +90,6 @@ class SQLAlchemyConfigurationComponent(ConfigurationComponent):
         request.  Only override this method if you know what you are doing!
 
         """
-        if not conf['use_sqlalchemy']:
-            return app
-
         dbsession = conf.get('SQLASession')
         if dbsession is None:
             dbsession = conf['DBSession']
