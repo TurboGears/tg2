@@ -1,5 +1,12 @@
 = Change Log =
 
+== 2.4.0 (**??, 2018**) ==
+
+* Configuration system rewrite, configuration is now based on a Configurator and Components.
+* All features that were deprecated in 2.2 and 2.3 are now gone (IE support for ToscaWidgets1)
+* Support custom reporters in Slow and Error reporting
+* Removed support for Pylons Compatibility Mode.
+
 == 2.3.12 (**April 6, 2018**) ==
 
 * OPTIONS HTTP method for a RestController will now respond with a 204 "No Content" by default instead of a 404
