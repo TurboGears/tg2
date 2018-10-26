@@ -65,7 +65,9 @@ class TransactionApplicationWrapper(ApplicationWrapper):
             # Skip transaction manager if repoze.tm2 is enabled
             return self.next_handler(controller, environ, context)
 
-        transaction_manager = self.manager
+        # Support 2.4+ transaction manager, where the manager
+        # is now a property of a ThreadTransactionManager
+        transaction_manager = getattr(self.manager, 'manager', self.manager)
         total_attempts = self.attempts
         commit_veto = self.commit_veto
 
