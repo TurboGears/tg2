@@ -6,6 +6,7 @@
 * All features that were deprecated in 2.2 and 2.3 are now gone (IE support for ToscaWidgets1)
 * Support custom reporters in Slow and Error reporting
 * Removed support for Pylons Compatibility Mode.
+* Removed support for Python 2.6
 
 == 2.3.12 (**April 6, 2018**) ==
 
