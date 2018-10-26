@@ -16,7 +16,7 @@ class TestGlobalHooks:
 
     def teardown(self):
         milestones._reset_all()
-        tg.hooks = _TGGlobalHooksNamespace()  # Reset hooks
+        tg.hooks._clear()  # Reset hooks
 
     def test_config_hooks(self):
         class RootController(TGController):
@@ -39,6 +39,35 @@ class TestGlobalHooks:
         tg.hooks.register('before_config', before_config_hook)
         tg.hooks.register('after_config', after_config_hook)
         tg.hooks.register('configure_new_app', configure_new_app_hook)
+        app = conf.make_wsgi_app()
+        app = TestApp(app)
+
+        assert 'HI!' in app.get('/test')
+        assert 'before_config' in visited_hooks
+        assert 'after_config' in visited_hooks
+        assert 'configure_new_app' in visited_hooks
+
+    def test_config_hooks_through_app_config(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return 'HI!'
+
+        visited_hooks = []
+        def before_config_hook(app):
+            visited_hooks.append('before_config')
+            return app
+        def after_config_hook(app):
+            visited_hooks.append('after_config')
+            return app
+        def configure_new_app_hook(app):
+            assert isinstance(app, TGApp)
+            visited_hooks.append('configure_new_app')
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.register_hook('before_config', before_config_hook)
+        conf.register_hook('after_config', after_config_hook)
+        conf.register_hook('configure_new_app', configure_new_app_hook)
         app = conf.make_wsgi_app()
         app = TestApp(app)
 
@@ -104,34 +133,22 @@ class TestGlobalHooks:
         conf.register_controller_wrapper(None, controller=f)
 
     def test_startup_hook(self):
-        # Temporary replace the hooks namespace so we register hooks only for this test
-        original_hooks, tg.hooks = tg.hooks, _TGGlobalHooksNamespace()
+        executed = []
+        def func():
+            executed.append(True)
 
-        try:
-            executed = []
-            def func():
-                executed.append(True)
-
-            tg.hooks.register('startup', func)
-            conf = AppConfig(minimal=True)
-            app = conf.make_wsgi_app()
-            assert True in executed, executed
-        finally:
-            tg.hooks = original_hooks
+        tg.hooks.register('startup', func)
+        conf = AppConfig(minimal=True)
+        app = conf.make_wsgi_app()
+        assert True in executed, executed
 
     def test_startup_hook_with_exception(self):
-        # Temporary replace the hooks namespace so we register hooks only for this test
-        original_hooks, tg.hooks = tg.hooks, _TGGlobalHooksNamespace()
+        def func():
+            raise Exception
 
-        try:
-            def func():
-                raise Exception
-
-            tg.hooks.register('startup', func)
-            conf = AppConfig(minimal=True)
-            app = conf.make_wsgi_app()
-        finally:
-            tg.hooks = original_hooks
+        tg.hooks.register('startup', func)
+        conf = AppConfig(minimal=True)
+        app = conf.make_wsgi_app()
 
     def test_shutdown_hook_callable(self):
         _registered_exit_funcs = []

@@ -35,13 +35,13 @@ class Request(WebObRequest):
         al = self.accept_language
         try:
             items = [i for i, q in sorted(al._parsed, key=lambda iq: -iq[1])]
-        except AttributeError:
-            #NilAccept has no _parsed, here for test units
+        except (AttributeError, TypeError):
+            # NilAccept has no _parsed, here for test units
             items = []
 
         if fallback:
             for index, item in enumerate(items):
-                if al._match(item, fallback):
+                if al._old_match(item, fallback):
                     items[index:] = [fallback]
                     break
             else:

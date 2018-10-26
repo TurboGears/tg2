@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import warnings
 
-from webob.acceptparse import Accept
+from webob.acceptparse import create_accept_header
 
 from tg.configuration import milestones
 from tg.configuration import config
@@ -228,13 +228,20 @@ class Decoration(object):
             elif self.engines:
                 if response.content_type is not None:
                     # Check for overridden content type from the controller call
-                    accept_types = response.content_type
+                    accept_types = create_accept_header(response.content_type)
                 elif request._response_type and request._response_type in self.engines:
                     # Check for content type detected by request extensions
-                    accept_types = request._response_type
+                    accept_types = create_accept_header(request._response_type)
                 else:
-                    accept_types = request.headers.get('accept', '*/*')
-                content_type = Accept(accept_types).best_match(self.engines_keys, self.engines_keys[0])
+                    accept_types = request.accept
+
+                best_matches = (
+                    accept_types.acceptable_offers(self.engines_keys) or
+                    # If none of the available engines matches with the
+                    # available options, just suggest usage of the first engine.
+                    ((self.engines_keys[0], None), )
+                )
+                content_type = best_matches[0][0]
             else:
                 content_type = 'text/html'
 

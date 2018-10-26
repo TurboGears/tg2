@@ -52,7 +52,10 @@ class HooksNamespace(object):
             tg.hooks.register('startup', startup_function)
 
         """
-        if hook_name in ('startup', 'shutdown') and controller is not None:
+        if controller is not None and hook_name in ('startup', 'shutdown',
+                                                    'initialized_config',
+                                                    'before_wsgi_middlewares',
+                                                    'after_wsgi_middlewares'):
             raise TGConfigError('Startup and Shutdown hooks cannot be registered on controllers')
 
         if hook_name == 'controller_wrapper':

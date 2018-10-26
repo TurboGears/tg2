@@ -468,6 +468,12 @@ class TestAppConfig:
         _reset_global_config()
         tg.hooks._clear()  # Reset hooks
 
+    def test_get_value(self):
+        conf = AppConfig(minimal=True)
+        conf['existing_value'] = 5
+        assert conf['existing_value'] == 5
+        assert conf.get('non_existing_value') == None
+
     def test_missing_attribute(self):
         conf = AppConfig(minimal=True)
         conf['existing_value'] = 5
