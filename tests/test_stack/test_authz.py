@@ -9,9 +9,13 @@ this writing).
 
 """
 
-from unittest import TestCase
-from shutil import rmtree
 import os
+from unittest import TestCase
+try:
+    from http.cookies import SimpleCookie
+except ImportError:
+    from Cookie import SimpleCookie
+from shutil import rmtree
 from nose.tools import raises
 from webtest import TestApp
 
@@ -273,11 +277,13 @@ class BaseIntegrationTests(TestCase):
         Check that ``expected_messages`` are defined in the WebFlash cookie.
 
         """
-        assert 'webflash' in response.cookies_set, "Such no WebFlash cookie"
-        flash = url_unquote(response.cookies_set['webflash'])
+        cookies = SimpleCookie(response.headers['Set-Cookie'])
+        assert 'webflash' in cookies, "Such no WebFlash cookie"
+        flash = url_unquote(cookies['webflash'].value)
         for msg in expected_messages:
             msg = '"%s"' % msg
             assert msg in flash, 'Message %s not in flash: %s' % (msg, flash)
+
 
 class TestLoginLogout(BaseIntegrationTests):
     def test_user_login(self):

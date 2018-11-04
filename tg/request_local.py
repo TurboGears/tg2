@@ -1,8 +1,5 @@
 import hmac, base64, binascii
 import warnings
-from tg.support.objectproxy import TurboGearsObjectProxy
-from tg.support.registry import StackedObjectProxy, DispatchingConfig
-from tg.caching import cached_property
 
 try:
     import cPickle as pickle
@@ -18,6 +15,11 @@ from webob import Request as WebObRequest
 from webob import Response as WebObResponse
 from webob.request import PATH_SAFE
 from webob.compat import url_quote as webob_url_quote, bytes_ as webob_bytes_
+
+from tg._compat import unicode_text, PY2
+from tg.support.objectproxy import TurboGearsObjectProxy
+from tg.support.registry import StackedObjectProxy, DispatchingConfig
+from tg.caching import cached_property
 
 
 class Request(WebObRequest):
@@ -193,6 +195,23 @@ class Response(WebObResponse):
         sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
         cookie_value = sig + base64.encodestring(pickled)
         self.set_cookie(name, cookie_value, **kwargs)
+
+    @property
+    def content_type(self):
+        return WebObResponse.content_type.__get__(self, type(self))
+
+    @content_type.setter
+    def content_type(self, value):
+        if PY2 and isinstance(value, unicode_text):
+            # Workaround a WebOb 1.8 issue,
+            # where the content_type header is not
+            # properly encoded.
+            value = value.encode('latin-1')
+        WebObResponse.content_type.__set__(self, value)
+
+    @content_type.deleter
+    def content_type(self):
+        WebObResponse.content_type.__delete__(self)
 
 
 config = DispatchingConfig()

@@ -1,4 +1,6 @@
+from tg._compat import u_
 from tg.request_local import Request, Response
+
 
 class TestRequest(object):
     def test_language(self):
@@ -41,8 +43,20 @@ class TestRequest(object):
         value = r.signed_cookie('non_existing', '123')
         assert not value
 
+
 class TestResponse(object):
     def test_wsgi_response(self):
         r = Response()
         status, headers, body = r.wsgi_response()
         assert '200 OK' == status
+
+    def test_content_type(self):
+        r = Response()
+
+        r.content_type = u_('text/html')
+        # Verify it's a native string, and not unicode.
+        assert type(r.content_type) == str
+        assert r.content_type == 'text/html'
+
+        del r.content_type
+        assert r.content_type is None

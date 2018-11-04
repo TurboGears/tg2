@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from wsgiref.simple_server import demo_app
 from wsgiref.validate import validator
 from nose.tools import raises
 
@@ -556,12 +555,18 @@ class TestWSGIAppController(TestWSGIController):
 
     def __init__(self, *args, **kargs):
         TestWSGIController.__init__(self, *args, **kargs)
+
+        def hello_app(environ, start_response):
+            start_response("200 OK", [('Content-Type', 'text/plain')])
+            return [b'Hello From: ',
+                    environ['PATH_INFO'].encode('ascii')]
+
         class TestedWSGIAppController(WSGIAppController):
             def __init__(self):
                 def test_app(environ, start_response):
                     if environ.get('CONTENT_LENGTH', None) in (-1, '-1'):
                         del environ['CONTENT_LENGTH']
-                    return validator(demo_app)(environ, start_response)
+                    return validator(hello_app)(environ, start_response)
                 super(TestedWSGIAppController, self).__init__(test_app)
         self.app = make_app(TestedWSGIAppController, config_options={
             'make_body_seekable': True

@@ -19,7 +19,7 @@ test_requirements = ['nose',
                      'repoze.who.plugins.sa >= 1.0.1',
                      'Genshi >= 0.5.1',
                      'Mako',
-                     'WebTest < 2.0',
+                     'WebTest',
                      'backlash >= 0.0.7',
                      'raven',
                      'formencode>=1.3.0a1',
@@ -52,7 +52,7 @@ if py_version[0] == 2:
                               'tw.forms'])
 
 install_requires=[
-    'WebOb >= 1.8.0, < 1.9.0',
+    'WebOb >= 1.8.0, < 1.10.0',
     'crank >= 0.8.0, < 0.9.0',
     'repoze.lru'
 ]

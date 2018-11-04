@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 
 import tg
@@ -12,7 +10,7 @@ from tg.controllers import TGController
 from tg import dispatched_controller
 from nose.tools import eq_
 from tests.test_validation import validators
-from tg._compat import unicode_text
+from tg._compat import unicode_text, u_
 
 from paste.deploy.converters import asbool
 
@@ -158,7 +156,7 @@ class RootController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash("Привет, мир!")
+        tg.flash(u_("Привет, мир!"))
         tg.redirect("/flash_after_redirect")
 
     @expose()

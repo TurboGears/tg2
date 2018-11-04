@@ -191,7 +191,7 @@ def etag_cache(key=None):
     """
     if_none_matches = IF_NONE_MATCH.findall(tg.request.environ.get('HTTP_IF_NONE_MATCH', ''))
     response = tg.response._current_obj()
-    response.headers['ETag'] = '"%s"' % key
+    response.etag = key
     if str(key) in if_none_matches:
         response.headers.pop('Content-Type', None)
         response.headers.pop('Cache-Control', None)

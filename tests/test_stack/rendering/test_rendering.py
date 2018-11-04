@@ -4,7 +4,6 @@ import shutil, os
 import json
 import tg
 from tg.configuration import milestones
-#tg.configuration.reqlocal_config.push_process_config({})
 
 from tests.test_stack import TestConfig, app_from_config
 from tg.configuration.hooks import _TGGlobalHooksNamespace
@@ -12,8 +11,6 @@ from tg.util import Bunch
 from tg._compat import PY3, im_func
 from tg.renderers.genshi import GenshiRenderer
 from tg import expose
-from tg import TGController, AppConfig
-from webtest import TestApp
 from datetime import datetime
 
 try:
@@ -677,7 +674,7 @@ def test_render_hooks():
 class TestEngineDetection(object):
     def setUp(self):
         self.app = setup_noDB(genshi_doctype='html', extra={
-            'errorpage.enabled': True
+            'errorpage.enabled': False
         })
 
     def test_no_engine_for_content_type(self):

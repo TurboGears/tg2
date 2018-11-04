@@ -163,7 +163,7 @@ class AppConfig(object):
             * ``**app_conf``: Keyword arguments that will be passed as configuration options.
 
         """
-        warnings.warn("Using AppConfig to create apps is deprecated in favor of"
+        warnings.warn("Using AppConfig to create apps is deprecated in favor of "
                       "tg.FullStackApplicationConfigurator and will be removed.",
                       DeprecationWarning)
 
@@ -187,7 +187,7 @@ class AppConfig(object):
         application in addition to those specified in ``AppConfig`` itself.
 
         """
-        warnings.warn("Using AppConfig to create apps is deprecated in favor of"
+        warnings.warn("Using AppConfig to create apps is deprecated in favor of "
                       "tg.FullStackApplicationConfigurator and will be removed.",
                       DeprecationWarning)
 

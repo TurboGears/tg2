@@ -172,7 +172,8 @@ class TestEtagCaching(TestWSGIController):
         assert resp.etag == 'bar', resp.etag    
         
     def test_304(self):
-        resp = self.app.get('/etagged/', params={'etag':'foo'}, headers={'if-none-match': '"foo"'})
+        resp = self.app.get('/etagged/', params={'etag': 'foo'},
+                            headers={'if-none-match': '"foo"'})
         assert "304" in resp.status, resp
 
 
