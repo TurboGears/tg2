@@ -7,6 +7,7 @@
 * Support custom reporters in Slow and Error reporting
 * Removed support for Pylons Compatibility Mode.
 * Removed support for Python 2.6
+* WebTest is no longer a dependency of TurboGears, only of it's quickstarted apps.
 
 == 2.3.12 (**April 6, 2018**) ==
 
