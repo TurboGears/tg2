@@ -85,7 +85,7 @@ class GenshiRenderer(RendererFactory):
         options = coerce_config(config, 'templating.genshi.', cls.CONFIG_OPTIONS)
 
         # Patch for Genshi on Python3.4
-        if options.get('name_constant_patch', False):
+        if options.get('name_constant_patch', False):  # pragma: no cover
             from genshi.template.astutil import ASTCodeGenerator
             if not hasattr(ASTCodeGenerator, 'visit_NameConstant'):
                 def _visit_NameConstant(self, node):
