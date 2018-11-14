@@ -65,9 +65,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
             # Skip transaction manager if repoze.tm2 is enabled
             return self.next_handler(controller, environ, context)
 
-        # Support 2.4+ transaction manager, where the manager
-        # is now a property of a ThreadTransactionManager
-        transaction_manager = getattr(self.manager, 'manager', self.manager)
+        transaction_manager = self.manager
         total_attempts = self.attempts
         commit_veto = self.commit_veto
 
@@ -99,7 +97,10 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                 exc_info = sys.exc_info()
                 log.debug('Error while running request, aborting transaction')
                 try:
-                    can_retry = transaction_manager._retryable(*exc_info[:-1])
+                    try:
+                        can_retry = txn.isRetryableError(exc_info[1])
+                    except AttributeError:
+                        can_retry = transaction_manager._retryable(*exc_info[:-1])
                     txn.abort()
                     if (attempts_left <= 0) or (not can_retry):
                         reraise(*exc_info)
