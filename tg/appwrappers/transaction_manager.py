@@ -97,7 +97,10 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                 exc_info = sys.exc_info()
                 log.debug('Error while running request, aborting transaction')
                 try:
-                    can_retry = transaction_manager._retryable(*exc_info[:-1])
+                    try:
+                        can_retry = txn.isRetryableError(exc_info[1])
+                    except AttributeError:
+                        can_retry = transaction_manager._retryable(*exc_info[:-1])
                     txn.abort()
                     if (attempts_left <= 0) or (not can_retry):
                         reraise(*exc_info)
