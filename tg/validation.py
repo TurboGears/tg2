@@ -81,14 +81,16 @@ class _ValidationIntent(object):
 
             errors = {}
             for field, validator in validators.items():
-                try:
-                    if isinstance(validator, _FormEncodeValidator):
-                        validated_params[field] = validator.to_python(params.get(field), formencode_state)
-                    else:
-                        validated_params[field] = validator.to_python(params.get(field))
-                # catch individual validation errors into the errors dictionary
-                except validation_errors as inv:
-                    errors[field] = inv
+
+                if params.has_key(field) :
+                    try:
+                        if isinstance(validator, _FormEncodeValidator):
+                            validated_params[field] = validator.to_python(params.get(field), formencode_state)
+                        else:
+                            validated_params[field] = validator.to_python(params.get(field))
+                        # catch individual validation errors into the errors dictionary
+                    except validation_errors as inv:
+                        errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
             for param, param_value in params.items():
