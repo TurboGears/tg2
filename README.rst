@@ -54,19 +54,27 @@ And install Turbogears::
 Then serving a TurboGears web application is as simple as making a ``webapp.py``
 file with you application::
 
-	from wsgiref.simple_server import make_server
-	from tg import expose, TGController, AppConfig
+    from wsgiref.simple_server import make_server
+    from tg import MinimalApplicationConfigurator
+    from tg import expose, TGController
 
-	class RootController(TGController):
-	    @expose()
-	    def index(self):
-	        return "<h1>Hello World</h1>"
 
-	config = AppConfig(minimal=True, root_controller=RootController())
+    class RootController(TGController):
+        @expose(content_type="text/plain")
+        def index(self):
+            return 'Hello World'
 
-	print "Serving on port 8080..."
-	httpd = make_server('', 8080, config.make_wsgi_app())
-	httpd.serve_forever()
+
+    config = MinimalApplicationConfigurator()
+    config.update_blueprint({
+        'root_controller': RootController()
+    })
+
+
+    print("Serving on port 8080...")
+    httpd = make_server('', 8080, config.make_wsgi_app())
+    httpd.serve_forever()
+
 
 Start it with ``python webapp.py`` and open your browser at ``http://localhost:8080/``
 
