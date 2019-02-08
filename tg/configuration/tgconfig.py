@@ -66,7 +66,10 @@ class _DispatchingConfigWrapper(DictMixin):
         return iter(self.config_proxy.current_conf())
 
     def __repr__(self):
-        return repr(self.config_proxy.current_conf())
+        try:
+            return repr(self.config_proxy.current_conf())
+        except AttributeError:
+            return '<TGConfig: missing>'
 
     def keys(self):
         return self.config_proxy.keys()
