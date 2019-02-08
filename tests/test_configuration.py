@@ -954,14 +954,14 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
-        expected_url = 'mongodb://localhost:27017,localhost:27018/?replicaSet=test'
+        expected_url = 'mongodb://localhost:27017,localhost:27018/testdb?replicaSet=test'
         expected_db = 'testdb'
 
         dstore = config['tg.app_globals'].ming_datastore
         assert expected_db == dstore.name, dstore.name
-        assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
+        assert dstore.bind._conn_args[0] == expected_url
 
-    def test_setup_mig_persistance_replica_set_option(self):
+    def test_setup_ming_persistance_replica_set_option(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
@@ -973,12 +973,12 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
-        expected_url = 'mongodb://localhost:27017,localhost:27018/'
+        expected_url = 'mongodb://localhost:27017,localhost:27018/testdb'
         expected_db = 'testdb'
 
         dstore = config['tg.app_globals'].ming_datastore
         assert expected_db == dstore.name, dstore.name
-        assert expected_url == dstore.bind._conn_args[0], dstore.bind._conn_args
+        assert dstore.bind._conn_args[0] == expected_url
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
     def test_setup_sqla_auth_repozesqla(self):
