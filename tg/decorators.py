@@ -675,7 +675,7 @@ class cached(object):
     The following parameters are accepted:
 
     ``key`` - Specifies the controller parameters used to generate the cache key.
-        NoDefault - Uses function name and parameters (excluding \*args) as the key (default)
+        NoDefault - Uses function name and parameters (excluding args) as the key (default)
 
         None - No variable key, uses only function name as key
 

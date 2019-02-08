@@ -179,7 +179,7 @@ def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None):
     raise redirect_with(location=new_url)
 
 
-IF_NONE_MATCH = re.compile('(?:W/)?(?:"([^"]*)",?\s*)')
+IF_NONE_MATCH = re.compile(r'(?:W/)?(?:"([^"]*)",?\s*)')
 def etag_cache(key=None):
     """Use the HTTP Entity Tag cache for Browser side caching
 
