@@ -258,3 +258,11 @@ class RootController(TGController):
     @with_engine('mainslave', master_params={'first':True, 'second':False})
     def onmaster(self, **kw):
         return '%s-%s' % (tg.request._tg_force_sqla_engine, kw)
+
+    @expose()
+    def commit_transaction(self, witherror=False):
+        import transaction
+        transaction.commit()
+        if witherror:
+            raise RuntimeError("Some Error")
+        return 'HELLO'

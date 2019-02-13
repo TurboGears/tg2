@@ -74,10 +74,10 @@ class TransactionApplicationWrapper(ApplicationWrapper):
             attempts_left -= 1
 
             log.debug('Attempts Left %d (%d total)', attempts_left, total_attempts)
-            txn = transaction_manager.begin()
+            transaction_manager.begin()
             try:
                 response = self.next_handler(controller, environ, context)
-                if txn.isDoomed():
+                if transaction_manager.isDoomed():
                     log.debug('Transaction doomed')
                     raise AbortTransaction(response)
 
@@ -87,15 +87,16 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                         log.debug('Transaction vetoed')
                         raise AbortTransaction(response)
 
-                txn.commit()
+                transaction_manager.commit()
                 log.debug('Transaction committed!')
                 return response
             except AbortTransaction as e:
-                txn.abort()
+                transaction_manager.abort()
                 return e.response
             except:
                 exc_info = sys.exc_info()
                 log.debug('Error while running request, aborting transaction')
+                txn = transaction_manager.get()
                 try:
                     try:
                         can_retry = txn.isRetryableError(exc_info[1])
