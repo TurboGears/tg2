@@ -164,15 +164,15 @@ class RootController(TGController):
     def explicit_doctype_xhtml(self):
         return {}
 
-    @expose('genshi:genshi_form.html')
+    @expose('kajiki:kajiki_form.xhtml')
     def form(self):
         return dict(form=base_movie_form)
 
-    @expose('genshi:genshi_form.html')
+    @expose('kajiki:kajiki_form.xhtml')
     def tw2form(self):
         return dict(form=tw2_movie_form)
 
-    @expose('genshi:genshi_foreign.html')
+    @expose('kajiki:kajiki_foreign.xhtml')
     def foreign(self):
         return {}
 
