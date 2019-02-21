@@ -12,6 +12,9 @@
   <div id="getting_started">
     <p>TurboGears 2 is rapid web application development toolkit designed to make your life easier.</p>
     <p py:if="defined('value')">${value}</p>
+    <div py:if="hasattr(tmpl_context, 'now')">
+      NOW: ${tmpl_context.now()}
+    </div>
   </div>
 </body>
 </html>

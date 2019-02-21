@@ -79,11 +79,11 @@ class JsonController(TGController):
 
 
 class SubClassableController(TGController):
-    @expose('genshi:index.html')
+    @expose('kajiki:index.xhtml')
     def index(self):
         return {}
 
-    @expose('genshi:index.html')
+    @expose('kajiki:index.xhtml')
     def index_override(self):
         return {}
 
