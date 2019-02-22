@@ -23,15 +23,6 @@ def setup_noDB(prefer_tw2=False):
 
 expected_fields = ['name="year"', 'name="title"']
 
-def test_basic_form_rendering():
-    if PY3: raise SkipTest()
-
-    app = setup_noDB()
-    resp = app.get('/form')
-    assert "form" in resp
-
-    for expected_field in expected_fields:
-        assert expected_field in resp, resp
 
 def test_tw2_form_rendering():
     app = setup_noDB(prefer_tw2=True)

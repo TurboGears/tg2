@@ -11,23 +11,6 @@ import datetime
 
 from webob.exc import HTTPForbidden
 
-if not PY3:
-    from tw.forms import TableForm, TextField, CalendarDatePicker, SingleSelectField, TextArea
-    from tw.api import WidgetsList
-
-    class MovieForm(TableForm):
-        # This WidgetsList is just a container
-        class fields(WidgetsList):
-            title = TextField()
-            year = TextField(size=4, default=1984)
-            description = TextArea()
-
-    #then, we create an instance of this form
-    base_movie_form = MovieForm("movie_form", action='create')
-else:
-    base_movie_form = None
-
-
 import tw2.forms as tw2f
 import tw2.core as tw2c
 class TW2MovieForm(tw2f.TableForm):
@@ -165,24 +148,13 @@ class RootController(TGController):
         return {}
 
     @expose('kajiki:kajiki_form.xhtml')
-    def form(self):
-        return dict(form=base_movie_form)
-
-    @expose('kajiki:kajiki_form.xhtml')
     def tw2form(self):
         return dict(form=tw2_movie_form)
 
     @expose('kajiki:kajiki_foreign.xhtml')
     def foreign(self):
         return {}
-
-    @expose('json')
-    @validate(form=base_movie_form)
-    def process_form_errors(self, **kwargs):
-        #add error messages to the kwargs dictionary and return it
-        kwargs['errors'] = request.validation['errors']
-        return dict(kwargs)
-
+    
     @expose()
     @paginate('testdata')
     def paginated_text(self):
