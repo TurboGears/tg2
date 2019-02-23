@@ -109,7 +109,7 @@ class RootController(TGController):
     sub2 = SubClassingController()
     error = ErrorController()
 
-    @expose('genshi:index.html')
+    @expose('kajiki:index.html')
     def index(self):
         return {}
 
@@ -293,7 +293,7 @@ class RootController(TGController):
         i18n.set_temporary_lang("de")
         return {}
 
-    @expose('genshi:tests.test_stack.rendering.templates.index')
+    @expose('kajiki:tests.test_stack.rendering.templates.index')
     def index_dotted(self):
         return {}
 
@@ -325,13 +325,13 @@ class RootController(TGController):
         return {}
 
     @expose('json')
-    @expose('genshi:index.html')
+    @expose('kajiki:index.xhtml')
     def html_and_json(self):
         return {}
 
     @expose('json', custom_format='json')
     @expose('mako:mako_custom_format.mak', content_type='text/xml', custom_format='xml')
-    @expose('genshi:genshi_custom_format.html', content_type='text/html', custom_format='html')
+    @expose('kajiki:kajiki_custom_format.xhtml', content_type='text/html', custom_format='html')
     def custom_format(self, format='default'):
         if format != 'default':
             use_custom_format(self.custom_format, format)
