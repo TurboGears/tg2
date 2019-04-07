@@ -361,7 +361,7 @@ class RootController(TGController):
             return "alert('Not overridden')"
 
     @expose('mako:mako_custom_format.mak', content_type='text/xml')
-    @expose('genshi:genshi_custom_format.html', content_type='text/html')
+    @expose('kajiki:kajiki_custom_format.xhtml', content_type='text/html')
     def template_override_multiple_content_type(self, override=False):
         if override:
             override_template(self.template_override_multiple_content_type, "mako:mako_noop.mak")
@@ -396,7 +396,7 @@ class RootController(TGController):
         return render_template({}, 'genshi', 'genshi_doctype.html', doctype=doctype)
 
     @expose('mako:mako_custom_format.mak')
-    @expose('genshi:genshi_custom_format.html')
+    @expose('kajiki:kajiki_custom_format.xhtml')
     def multiple_engines(self):
         deco = Decoration.get_decoration(self.multiple_engines)
         used_engine = deco.engines.get('text/html')[0]
