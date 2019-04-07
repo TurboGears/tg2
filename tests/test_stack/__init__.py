@@ -20,7 +20,7 @@ class TestConfig(AppConfig):
         self.renderers = ['genshi', 'mako', 'jinja','json', 'jsonp', 'kajiki']
         self.render_functions = tg.util.Bunch()
         self.package = tests.test_stack
-        self.default_renderer = 'genshi'
+        self.default_renderer = 'kajiki'
         self.globals = self
         self.auth_backend = None
         self.auto_reload_templates = False

@@ -2107,14 +2107,14 @@ class TestAppConfig:
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.prefer_toscawidgets2 = True
-        conf.renderers = ['json', 'genshi']
+        conf.renderers = ['json', 'kajiki']
         conf.default_renderer = 'json'
 
         app = conf.make_wsgi_app(full_stack=True)
         app = TestApp(app)
 
         resp = app.get('/test')
-        assert 'genshi' in resp, resp
+        assert 'kajiki' in resp, resp
 
     def test_tw2_renderers_preference(self):
         import tw2.core
@@ -2128,14 +2128,14 @@ class TestAppConfig:
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.prefer_toscawidgets2 = True
-        conf.renderers = ['genshi']
-        conf.default_renderer = 'genshi'
+        conf.renderers = ['kajiki']
+        conf.default_renderer = 'kajiki'
 
         app = conf.make_wsgi_app(full_stack=True)
         app = TestApp(app)
 
         resp = app.get('/test')
-        assert 'genshi' in resp, resp
+        assert 'kajiki' in resp, resp
 
     def test_tw2_unsupported(self):
         import tw2.core

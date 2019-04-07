@@ -83,7 +83,7 @@ class SubClassingController(SubClassableController):
     def index(self, *args, **kw):
         return super(SubClassingController, self).index(*args, **kw)
 
-    @expose('genshi:genshi_doctype.html', inherit=True)
+    @expose('kajiki:kajiki_foreign.xhtml', inherit=True)
     def index_override(self, *args, **kw):
         return super(SubClassingController, self).index_override(*args, **kw)
 
@@ -109,7 +109,7 @@ class RootController(TGController):
     sub2 = SubClassingController()
     error = ErrorController()
 
-    @expose('kajiki:index.html')
+    @expose('kajiki:index.xhtml')
     def index(self):
         return {}
 

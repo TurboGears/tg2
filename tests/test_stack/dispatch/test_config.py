@@ -29,7 +29,7 @@ def test_config_reading():
     resp = app.get('/config_test')
     assert "default_renderer" in str(resp.body)
     resp = app.get('/config_attr_lookup')
-    assert "genshi" in str(resp.body)
+    assert "kajiki" in str(resp.body)
     resp = app.get('/config_dotted_values')
     assert "root" in str(resp.body)
 
