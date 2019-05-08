@@ -1,4 +1,5 @@
 """Caching decorator, took as is from pylons"""
+import warnings
 import tg, inspect, time
 from tg.support.converters import asbool
 from tg.support import NoDefault, EmptyContext
@@ -175,6 +176,10 @@ def beaker_cache(key="cache_default", expire="never", type=None,
     disabled globally.
 
     """
+    warnings.warn("@beaker_cache is deprecated, use @cached to cache controllers "
+                  "and tg.cache to cache functions.",
+                  DeprecationWarning)
+    
     if invalidate_on_startup:
         starttime = time.time()
     else:
