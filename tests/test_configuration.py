@@ -179,13 +179,7 @@ class TestPylonsConfigWrapper:
         _reset_global_config()
         assert repr(self.config) == '<TGConfig: missing>'
         _init_default_global_config()
-        assert repr(self.config) == repr({
-            'debug': False,
-            'package': None,
-            'tg.app_globals': None,
-            'tg.strict_tmpl_context': True,
-            'i18n.lang': None
-        })
+        assert repr(self.config) == repr(self.config.config_proxy.current_conf())
 
     @raises(KeyError)
     def test_getitem_bad(self):
