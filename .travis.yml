@@ -9,8 +9,6 @@ matrix:
     - { python: "3.8-dev", dist: xenial }  # Python 3.8+ requires Xenial
     - { python: "pypy" }
     - { python: "pypy3" }
-  allow_failures:
-    - python: "3.8-dev"
 
 install:
   - "pip install --upgrade pip"
