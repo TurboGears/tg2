@@ -472,7 +472,7 @@ class TestTGController(TestWSGIController):
         assert 'someemail' in errors, \
             'The email was invalid and should have been reported in the errors'
 
-    def test_form_validation(self):
+    def test_tw1form_validation(self):
         """Check @validate's handing of ToscaWidget forms instances"""
         if PY3: raise SkipTest()
 
@@ -485,7 +485,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/error_with_colon', {'e':"fakeparam"})
         assert 'Description' in str(resp.body), resp.body
 
-    def test_form_render(self):
+    def test_tw1form_render(self):
         """Test that myform renders properly"""
         if PY3: raise SkipTest()
 
@@ -494,7 +494,7 @@ class TestTGController(TestWSGIController):
         assert 'class="fieldlabel required"' in resp, resp
         assert "Title" in resp, resp
 
-    def test_form_validation_error(self):
+    def test_tw1form_validation_error(self):
         """Test form validation with error message"""
         if PY3: raise SkipTest()
 
@@ -504,7 +504,7 @@ class TestTGController(TestWSGIController):
         assert "Please enter an integer value" in values['errors']['year'], \
             'Error message not found: %r' % values['errors']
 
-    def test_form_validation_redirect(self):
+    def test_tw1form_validation_redirect(self):
         """Test form validation error message with redirect"""
         if PY3: raise SkipTest()
 
@@ -535,7 +535,7 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/formencode_dict_validation', {'param': "hello"}, status=412)
         assert 'Please enter an integer value' in str(resp.body), resp
 
-    def test_form_validation_translation(self):
+    def test_tw1form_validation_translation(self):
         if PY3: raise SkipTest()
 
         """Test translation of form validation error messages"""
