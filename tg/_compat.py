@@ -24,7 +24,7 @@ if PY3: # pragma: no cover
 
     def bytes_(s):
         return str(s).encode('ascii', 'strict')
-else:
+else: # pragma: no cover
     string_type = basestring
     unicode_text = unicode
     byte_string = str
@@ -43,21 +43,21 @@ else:
 def im_func(f):
     if PY3: # pragma: no cover
         return getattr(f, '__func__', None)
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_func', None)
 
 
 def default_im_func(f):
     if PY3: # pragma: no cover
         return getattr(f, '__func__', f)
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_func', f)
 
 
 def im_self(f):
     if PY3: # pragma: no cover
         return getattr(f, '__self__', None)
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_self', None)
 
 
@@ -68,7 +68,7 @@ def im_class(f):
             return self.__class__
         else:
             return None
-    else:
+    else: # pragma: no cover
         return getattr(f, 'im_class', None)
 
 
@@ -104,7 +104,7 @@ else: # pragma: no cover
 """)
 
 
-try:
+try:  # pragma: no cover
     from importlib import import_module
 except ImportError:  # pragma: no cover
     # Compatibility module for python2.6
