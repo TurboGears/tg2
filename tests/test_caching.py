@@ -362,6 +362,15 @@ class BeakerCacheController(TGController):  # For backward compatibility
         BeakerCacheController.CALL_COUNT += 1
         return 'Counter=%s' % BeakerCacheController.CALL_COUNT
 
+    @expose()
+    def inner_cache(self):
+        @beaker_cache()
+        def somefunc(a, b, c):
+            somefunc.COUNTER += 1
+            return somefunc.COUNTER
+        somefunc.COUNTER = 0
+        return 'Value=%s' % somefunc(a=1, b=2, c=3)
+
 
 class TestCacheTouch(TestWSGIController):
     CACHED_CONTROLLER = CachedController
@@ -569,3 +578,10 @@ class TestBeakerCacheTouch(TestWSGIController):
         assert 'Counter=1' in r
         r = self.app.get('/disabled_cache')
         assert 'Counter=2' in r
+
+    def test_cache_function_with_kwargs(self):
+        r = self.app.get('/inner_cache')
+        assert 'Value=1' in r
+        r = self.app.get('/inner_cache')
+        assert 'Value=1' in r
+        
