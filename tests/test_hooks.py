@@ -7,7 +7,11 @@ from tg.wsgiapp import TGApp
 from tg import expose, TGController, AppConfig
 import tg
 from tg.configuration import milestones
-from tg.configuration.hooks import _TGGlobalHooksNamespace
+from tg.configuration.hooks import (
+    _TGGlobalHooksNamespace, 
+    _ApplicationHookRegistration, 
+    _ControllerHookRegistration
+)
 
 
 class TestGlobalHooks:
@@ -275,3 +279,13 @@ class TestGlobalHooks:
 
         assert len(hook1_has_been_called) == 2, hook1_has_been_called
         assert len(hook2_has_been_called) == 5, hook2_has_been_called
+
+    def test_hooks_describe_themselves(self):
+        apphook = _ApplicationHookRegistration(None, "fakename", lambda x:x)
+        apphook_repr = repr(apphook)
+        assert apphook_repr.startswith("<ApplicationHookRegistration: 'fakename' <function")
+        
+        controllerhook = _ControllerHookRegistration(None, "fakename", lambda x:x)
+        controllerhook_repr = repr(controllerhook)
+        assert controllerhook_repr.startswith("<ControllerHookRegistration: 'fakename' <function")
+        
