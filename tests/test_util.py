@@ -61,6 +61,11 @@ class TestUrlMethod(object):
             res = url('.', {'p1':1})
             assert res == '.?p1=1'
 
+    def test_url_bytes(self):
+        with test_context(None, '/'):
+            res = url('.', {'p1': b'hi'})
+            assert res == '.?p1=hi'
+
     def test_url_object(self):
         class Object(object):
             def __str__(self):

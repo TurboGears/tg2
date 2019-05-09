@@ -172,13 +172,13 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
                 from tg.configuration.auth import create_default_authenticator
                 auth_args, tgauth = create_default_authenticator(tgauthmetadata, **auth_args)
                 authenticator = ('tgappauth', tgauth)
-            elif auth_backend == "sqlalchemy":
+            elif auth_backend == "sqlalchemy":  # pragma: no cover
                 warnings.warn('sqlauth is deprecated, you should add authenticate method '
                               'to your authmetadata instance in app_cfg', DeprecationWarning, 2)
                 from tg.configuration.sqla.auth import create_default_authenticator
                 auth_args, sqlauth = create_default_authenticator(**auth_args)
                 authenticator = ('sqlauth', sqlauth)
-            elif auth_backend == "ming":
+            elif auth_backend == "ming":  # pragma: no cover
                 warnings.warn('mingauth is deprecated, you should add authenticate method '
                               'to your authmetadata instance in app_cfg', DeprecationWarning, 2)
                 from tg.configuration.mongo.auth import create_default_authenticator

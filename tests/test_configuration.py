@@ -11,7 +11,7 @@ from sqlalchemy.engine import Engine
 from ming import Session
 from ming.orm import ThreadLocalORMSession
 
-from tg.configurator.base import ConfigurationComponent, Configurator
+from tg.configurator.base import ConfigurationComponent, Configurator, BeforeConfigConfigurationAction
 from tg.configurator.components.app_globals import AppGlobalsConfigurationComponent
 from tg.configurator.components.auth import SimpleAuthenticationConfigurationComponent
 from tg.configurator.components.caching import CachingConfigurationComponent
@@ -223,6 +223,10 @@ class TestConfigurator:
     def teardown(self):
         _reset_global_config()
         tg.hooks._clear()  # Reset hooks
+
+    def test_repr_action(self):
+        act = BeforeConfigConfigurationAction()
+        assert repr(act) == "<BeforeConfigConfigurationAction: None>"
 
     def test_reqlocal_configuration_dictionary(self):
         cfg = FullStackApplicationConfigurator()

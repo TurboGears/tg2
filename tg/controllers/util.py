@@ -10,7 +10,7 @@ from webob.exc import status_map
 
 import tg
 
-from tg._compat import string_type, url_encode, unicode_text, bytes_
+from tg._compat import string_type, url_encode, unicode_text, bytes_, byte_string
 from tg.exceptions import HTTPFound
 from tg.request_local import request, response, Response
 from tg.configuration.utils import TGConfigError
@@ -20,12 +20,14 @@ def _smart_str(s):
     """
     Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
-    If strings_only is True, don't convert (some) non-string-like objects.
-
     This function was borrowed from Django.
 
     """
-    if not isinstance(s, string_type):
+    if isinstance(s, byte_string):
+        return s
+    elif isinstance(s, unicode_text):
+        return s.encode('utf-8', 'strict')
+    else:
         try:
             return bytes_(s)
         except UnicodeEncodeError:
@@ -35,10 +37,6 @@ def _smart_str(s):
                 # further exception.
                 return ' '.join([_smart_str(arg).decode('utf-8') for arg in s.args]).encode('utf-8', 'strict')
             return unicode_text(s).encode('utf-8', 'strict')
-    elif isinstance(s, unicode_text):
-        return s.encode('utf-8', 'strict')
-    else:
-        return s
 
 
 def _generate_smart_str(params):

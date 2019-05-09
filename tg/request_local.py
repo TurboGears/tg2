@@ -202,7 +202,7 @@ class Response(WebObResponse):
 
     @content_type.setter
     def content_type(self, value):
-        if PY2 and isinstance(value, unicode_text):
+        if PY2 and isinstance(value, unicode_text):  # pragma: no cover
             # Workaround a WebOb 1.8 issue,
             # where the content_type header is not
             # properly encoded.

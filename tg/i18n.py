@@ -83,9 +83,9 @@ def ugettext(value):
         _('This should be in lots of languages')
 
     """
-    if PY3: #pragma: no cover
+    if PY3:  #pragma: no cover
         return tg.translator.gettext(value)
-    else:
+    else:  #pragma: no cover
         return tg.translator.ugettext(value)
 lazy_ugettext = lazify(ugettext)
 
@@ -105,9 +105,9 @@ def ungettext(singular, plural, n):
                   n) % {'num': n}
 
     """
-    if PY3: #pragma: no cover
+    if PY3:  #pragma: no cover
         return tg.translator.ngettext(singular, plural, n)
-    else:
+    else:  #pragma: no cover
         return tg.translator.ungettext(singular, plural, n)
 lazy_ungettext = lazify(ungettext)
 

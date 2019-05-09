@@ -154,7 +154,7 @@ class TGValidationError(Exception):
     def __str__(self):
         return str(self.msg)
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         return unicode_text(self.msg)
 
 
