@@ -1,5 +1,5 @@
 """TurboGears project related information"""
-version = "2.4.0a2"
+version = "2.4.0"
 description = "Next generation TurboGears"
 long_description="""
 TurboGears brings together a best of breed python tools
@@ -13,7 +13,7 @@ develeopment, back database development and everything in between:
 
  * dynamic javascript powered widgets (ToscaWidgets2)
  * automatic JSON generation from your controllers
- * powerful, designer friendly XHTML based templating (Genshi)
+ * powerful, designer friendly XHTML based templating
  * object or route based URL dispatching
  * powerful Object Relational Mappers (SQLAlchemy)
 
