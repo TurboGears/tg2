@@ -49,7 +49,7 @@ To try TurboGears just get ``pip`` if you don't already have it::
 
 And install Turbogears::
 
-    $ pip install --pre TurboGears2
+    $ pip install TurboGears2
 
 Then serving a TurboGears web application is as simple as making a ``webapp.py``
 file with your application::
