@@ -1,6 +1,6 @@
 = Change Log =
 
-== 2.4.0 (**??, 2018**) ==
+== 2.4.0 (**May 10, 2019**) ==
 
 * Configuration system rewrite, configuration is now based on a Configurator and Components.
 * All features that were deprecated in 2.2 and 2.3 are now gone (IE support for ToscaWidgets1)
@@ -8,6 +8,19 @@
 * Removed support for Pylons Compatibility Mode.
 * Removed support for Python 2.6
 * WebTest is no longer a dependency of TurboGears, only of it's quickstarted apps.
+* 100% test coverage guaranteed on PY3 too
+* Removed deprecated transaction manager middleware
+* Deprecated @beaker_cache
+* genshi_custom_format removed
+* Many tests moved from Genshi to Kajiki
+* Make TransactionApplicationWrapper handle changes of active transaction
+* Use transaction>=2.4 public API
+* Support WebOb1.9 and WebTest2
+* Remove constraint on raven during tests
+* Remove support for deprecated request.validation.__getitem__
+* Deprecated mingauth and sqlauth, only authmetadata is officially supported
+* Get rid of deprecated get_flash and get_status
+* Remove no longer supported Cache and Session middlewares
 
 == 2.3.12 (**April 6, 2018**) ==
 
