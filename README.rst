@@ -1,10 +1,10 @@
 TurboGears
 ==========
 
-.. image:: https://travis-ci.org/TurboGears/tg2.png?branch=development
+.. image:: https://travis-ci.org/TurboGears/tg2.svg?branch=development
     :target: https://travis-ci.org/TurboGears/tg2
 
-.. image:: https://coveralls.io/repos/TurboGears/tg2/badge.png?branch=development
+.. image:: https://coveralls.io/repos/TurboGears/tg2/badge.svg?branch=development
     :target: https://coveralls.io/r/TurboGears/tg2?branch=development
 
 .. image:: https://img.shields.io/pypi/v/TurboGears2.svg
