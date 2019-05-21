@@ -94,7 +94,8 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
             context.response = Response(
                 content_type=resp_options['content_type'],
                 charset=resp_options['charset'],
-                headers=resp_options['headers']
+                headers=resp_options['headers'],
+                status_code=status_code
             )
 
             environ['PATH_INFO'] = self.handle_error_path
