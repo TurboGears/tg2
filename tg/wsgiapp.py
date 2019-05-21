@@ -41,12 +41,7 @@ class TGApp(object):
         self.strict_tmpl_context = self.config['tg.strict_tmpl_context']
 
         self.resp_options = config.get('tg.response_options',
-                                       dict(content_type='text/html',
-                                            charset='utf-8',
-                                            headers={'Cache-Control': 'no-cache',
-                                                     'Pragma': 'no-cache',
-                                                     'Content-Type': None,
-                                                     'Content-Length': '0'}))
+                                       Response._DEFAULT_RESPONSE_OPTIONS)
 
         self.wrapped_dispatch = self._dispatch
         for __, wrapper in self.config.get('application_wrappers', []):

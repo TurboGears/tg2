@@ -2,6 +2,7 @@ import logging
 import sys
 from ..configuration.utils import coerce_config
 from ..support.converters import asbool, aslist, asint
+from ..request_local import Response
 from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)
@@ -83,6 +84,18 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
                 (not self.handle_content_types or content_type in self.handle_content_types):
             environ['tg.original_request'] = context.request.copy()
             environ['tg.original_response'] = resp
+
+            # Reset the response, so the error controller starts
+            # with a clean one and can provide the wished response.
+            # The original one will be available in environ as
+            # tg.original_response
+            resp_options = context.config.get('tg.response_options',
+                                              Response._DEFAULT_RESPONSE_OPTIONS)
+            context.response = Response(
+                content_type=resp_options['content_type'],
+                charset=resp_options['charset'],
+                headers=resp_options['headers']
+            )
 
             environ['PATH_INFO'] = self.handle_error_path
             log.debug('ErrorPageApplicationWrapper serving %s:%s',

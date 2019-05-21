@@ -175,6 +175,13 @@ class Request(WebObRequest):
 
 class Response(WebObResponse):
     """WebOb Response subclass"""
+    _DEFAULT_RESPONSE_OPTIONS = dict(content_type='text/html',
+                                            charset='utf-8',
+                                            headers={'Cache-Control': 'no-cache',
+                                                     'Pragma': 'no-cache',
+                                                     'Content-Type': None,
+                                                     'Content-Length': '0'})
+                                                     
     content = WebObResponse.body
 
     def wsgi_response(self):
