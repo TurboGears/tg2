@@ -2088,6 +2088,32 @@ class TestAppConfig:
         resp = app.get('/test', status=403)
         assert 'ERROR!!!' not in resp, resp
 
+    def test_custom_500_json(self):
+        class ErrorController(TGController):
+            @expose(content_type="text/html")
+            @expose('json', content_type="application/json")
+            def document(self, *args, **kw):
+                return dict(a=5)
+
+        class RootController(TGController):
+            error = ErrorController()
+            @expose()
+            def test(self):
+                abort(500)
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['debug'] = False
+        conf['errorpage.handle_exceptions'] = False
+        conf['errorpage.status_codes'] += [500]
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test', status=500,
+                       headers={'Accept': 'application/json'})
+        assert '{"a": 5}' in resp.text, resp
+        assert 'application/json' == resp.content_type
+
     def test_errorware_configuration(self):
         class RootController(TGController):
             @expose()
