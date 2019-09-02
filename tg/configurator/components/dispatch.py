@@ -88,11 +88,11 @@ class DispatchConfigurationComponent(ConfigurationComponent):
                         print 'After Handler!'
                 return call
 
-            base_config.register_controller_wrapper(controller_wrapper)
+            dispatch_component.register_controller_wrapper(controller_wrapper)
 
         It is also possible to register wrappers for a specific controller::
 
-            base_config.register_controller_wrapper(controller_wrapper, controller=RootController.index)
+            dispatch_component.register_controller_wrapper(controller_wrapper, controller=RootController.index)
         """
         if milestones.environment_loaded.reached:
             log.warning('Controller Wrapper %s registered after environment loaded '
