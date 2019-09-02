@@ -1,5 +1,14 @@
 = Change Log =
 
+== 2.4.1 (**Sep 3, 2019**) ==
+
+* Fixed hooks documentation (it wasn't updated to 2.4 hooks)
+* Fixed examples in controller wrappers registration (they weren't updated to 2.4)
+* Error controller is now able to properly respond JSON when the client sends ``Accept: application/json`` even if the routed action didn't support it.
+* Fixed crash when error controller is accessed directly without any error.
+* Removed stray ``<p>`` tag in JSON responses from error controller.
+* Replaced references to 2.3 with 2.4 in quickstarted apps
+
 == 2.4.0 (**May 10, 2019**) ==
 
 * Configuration system rewrite, configuration is now based on a Configurator and Components.
