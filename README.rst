@@ -1,6 +1,6 @@
 .. raw:: html
 
-    <img src="https://turbogears.org/_static/logos/tg.png" style="float:left; width: 50px;">
+    <img src="https://turbogears.org/_static/logos/tg.png" style="width: 50px;">
 
 TurboGears
 ==========
