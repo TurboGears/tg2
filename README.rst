@@ -1,7 +1,3 @@
-.. raw:: html
-
-    <img src="https://turbogears.org/_static/logos/tg.png" style="width: 50px;">
-
 TurboGears
 ==========
 
@@ -28,6 +24,10 @@ TurboGears
 
 .. image:: https://img.shields.io/twitter/follow/turbogearsorg.svg?style=social&label=Follow
     :target: https://twitter.com/turbogearsorg
+
+.. raw:: html
+   
+   <img align="right" width="100px" src="https://turbogears.org/_static/logos/tg.png">
 
 TurboGears is a hybrid web framework able to act both as a Full Stack
 framework or as a Microframework. 
