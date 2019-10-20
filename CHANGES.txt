@@ -1,5 +1,9 @@
 = Change Log =
 
+== 2.4.2 (**Oct 20, 2019**) ==
+
+* Fixed support for zope.sqlalchemy 1.2
+
 == 2.4.1 (**Sep 3, 2019**) ==
 
 * Fixed hooks documentation (it wasn't updated to 2.4 hooks)
