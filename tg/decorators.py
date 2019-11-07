@@ -364,8 +364,7 @@ class decode_params(object):
             print('*' * 60)
             print('ticket', typology, quantity, price, ticketlist_id)
             ...do stuff...
-            return dict(ticket=something)
-        
+            return dict(ticket=something)       
     """
     def __init__(self, format='json'):
         if format not in ('json', ):
