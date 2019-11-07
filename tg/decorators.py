@@ -329,7 +329,43 @@ class decode_params(object):
 
     By default the arguments are parsed in **JSON** format (which is
     currently the only supported format).
-
+    
+    This should be used like:
+        Image you are posting a payload of type 'application/json' like:
+        
+        ticket = {
+          ticketlist_id: 2,
+          typology: 'Xmas Discount',
+          quantity: 3,
+          price: 4.75
+        }
+        
+        Your controller's method should be something like
+        
+        .. code-block:: python
+        
+        @expose('json')
+        @decode_params(format='json')
+        def create(self, **kw):
+            print('*' * 60)
+            print('kw', kw)
+            ...do stuff...
+            return dict(ticket=something)
+        
+        or even
+        
+        @expose('json')
+        @decode_params(format='json')
+        def create(
+                self, typology=None,
+                quantity=None, price=None,
+                ticketlist_id=None, **kw
+        ):
+            print('*' * 60)
+            print('ticket', typology, quantity, price, ticketlist_id)
+            ...do stuff...
+            return dict(ticket=something)
+        
     """
     def __init__(self, format='json'):
         if format not in ('json', ):
