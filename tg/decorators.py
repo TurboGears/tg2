@@ -331,15 +331,15 @@ class decode_params(object):
     currently the only supported format).
     
     This should be used like:
-        Image you are posting a payload of type 'application/json' like:
+        Image you are posting a payload of type ``application/json`` like:
         
-        .. codeblock:: javascript
+        .. code-block:: javascript
         
-            ticket = {
-                ticketlist_id: 2,
-                typology: 'Xmas Discount',
-                quantity: 3,
-                price: 4.75
+            {
+                "ticketlist_id": 2,
+                "typology": "Xmas Discount",
+                "quantity": 3,
+                "price": 4.75
             }
         
         Your controller's method will be something like
