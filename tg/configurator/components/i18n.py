@@ -21,6 +21,11 @@ class I18NConfigurationComponent(ConfigurationComponent):
                             pages will be served as they were in ``i18n.lang`` value.
         * ``localedir``: Where to find translation catalogs.
                          By default it's project root/i18n
+        * ``i18n.self_translated_langs``: List of comma or space separated
+                                          languages which are considered self
+                                          translating, i.e. they do not need a
+                                          translation file and all strings are
+                                          returned untranslated.
 
     Refer to :class:`.I18NApplicationWrapper` for additional options
     in supporting i18n.
@@ -30,7 +35,8 @@ class I18NConfigurationComponent(ConfigurationComponent):
     def get_defaults(self):
         return {
             'i18n.lang': None,
-            'i18n.enabled': True
+            'i18n.enabled': True,
+            'i18n.self_translated_langs': None
         }
 
     def get_actions(self):

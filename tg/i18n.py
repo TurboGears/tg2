@@ -1,3 +1,4 @@
+import re
 import copy
 import logging, os
 import gettext as _gettext
@@ -14,6 +15,12 @@ class LanguageError(Exception):
     """Exception raised when a problem occurs with changing languages"""
     pass
 
+class TGI18NIdentityTranslator(NullTranslations):
+    """Self translating language translator."""
+
+    def add_fallback(self, fallback):
+        # disable fallback
+        return
 
 def _parse_locale(identifier, sep='_'):
     """
@@ -128,14 +135,18 @@ def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
 
     result = None
     for mofile in mofiles:
-        key = (class_, os.path.abspath(mofile))
-        t = _TRANSLATORS_CACHE.get(key)
-        if t is None:
-            with open(mofile, 'rb') as fp:
-                # Cache Translator to avoid reading it again
-                t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
+        if isinstance(mofile, NullTranslations):
+            t = TGI18NIdentityTranslator()
+        else:
+            key = (class_, os.path.abspath(mofile))
+            t = _TRANSLATORS_CACHE.get(key)
+            if t is None:
+                with open(mofile, 'rb') as fp:
+                    # Cache Translator to avoid reading it again
+                    t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
 
-        t = copy.copy(t)
+            t = copy.copy(t)
+
         if result is None:
             # Copy the translation object to be able to append fallbacks
             # without affecting the cached object.
@@ -167,13 +178,19 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
         localedir = os.path.join(conf['paths']['root'], 'i18n')
     app_domain = conf['package'].__name__
 
+    self_translated_langs = re.split(
+        '\\s*[, ]?\\s*', (conf.get('i18n.self_translated_langs') or '').lower())
+
     if not isinstance(lang, list):
         lang = [lang]
 
     mofiles = []
     supported_languages = []
     for l in lang:
-        mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
+        if _parse_locale(l)[0] in self_translated_langs:
+            mo = TGI18NIdentityTranslator()
+        else:
+            mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
         if mo is not None:
             mofiles.append(mo)
             supported_languages.append(l)

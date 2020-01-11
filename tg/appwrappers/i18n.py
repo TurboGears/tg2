@@ -19,6 +19,9 @@ class I18NApplicationWrapper(ApplicationWrapper):
           detection is enabled or disabled. If this is set and language detection is
           dislabled, the application will consider that all gettext wrapped strings must
           be translated to this language.
+        - ``i18n.self_translated_langs``: List of comma or space separated languages
+          which are considered self translating, i.e. they do not need a translation file
+          and all strings are returned untranslated.
         - ``i18n.lang_session_key``: Session key from which to read the saved language
           (``tg_lang`` by default).
         - ``i18n.no_session_touch``: Avoid causing a session save when reading it to retrieve the
