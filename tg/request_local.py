@@ -42,12 +42,7 @@ class Request(WebObRequest):
             items = []
 
         if fallback:
-            for index, item in enumerate(items):
-                if al._old_match(item, fallback):
-                    items[index:] = [fallback]
-                    break
-            else:
-                items.append(fallback)
+            items.append(fallback)
 
         return items
 

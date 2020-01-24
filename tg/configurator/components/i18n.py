@@ -2,6 +2,7 @@
 import os
 
 from ...configuration.utils import TGConfigError
+from ...support.converters import aslist
 from ..base import (ConfigurationComponent,
                     BeforeConfigConfigurationAction)
 
@@ -15,10 +16,14 @@ class I18NConfigurationComponent(ConfigurationComponent):
     Supported Options:
 
         * ``i18n.lang``: Default web app language if none was requested or
-                         detected from browser.
+                         detected from browser. 
+                         This will always be listed as fallback language.
         * ``i18n.enabled``: Enable support for translations.
                             Disabling i18n will speedup requests and all
                             pages will be served as they were in ``i18n.lang`` value.
+        * ``i18n.native``: Native languages templates are written into. 
+                           No translation will occurr for those language.
+                           Provide space separated or as a list.
         * ``localedir``: Where to find translation catalogs.
                          By default it's project root/i18n
 
@@ -30,7 +35,13 @@ class I18NConfigurationComponent(ConfigurationComponent):
     def get_defaults(self):
         return {
             'i18n.lang': None,
+            'i18n.native': None,
             'i18n.enabled': True
+        }
+
+    def get_coercion(self):
+        return {
+            'i18n.native': aslist
         }
 
     def get_actions(self):

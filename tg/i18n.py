@@ -112,6 +112,15 @@ def ungettext(singular, plural, n):
 lazy_ungettext = lazify(ungettext)
 
 
+class _TGI18NIdentityTranslator(NullTranslations):
+    """Translator where each string always translates to itself."""
+
+    def add_fallback(self, fallback):
+        # disable fallbacks, otherwise strings would be chained to fallbacks
+        # instead of being translated by themselves.
+        return
+
+
 _TRANSLATORS_CACHE = {}
 def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
     """
@@ -128,12 +137,17 @@ def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
 
     result = None
     for mofile in mofiles:
-        key = (class_, os.path.abspath(mofile))
-        t = _TRANSLATORS_CACHE.get(key)
-        if t is None:
-            with open(mofile, 'rb') as fp:
-                # Cache Translator to avoid reading it again
-                t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
+        if hasattr(mofile, 'gettext'):
+            # An instance of a translator was provided.
+            # Use it instead of trying to load from disk.
+            t = mofile
+        else:
+            key = (class_, os.path.abspath(mofile))
+            t = _TRANSLATORS_CACHE.get(key)
+            if t is None:
+                with open(mofile, 'rb') as fp:
+                    # Cache Translator to avoid reading it again
+                    t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
 
         t = copy.copy(t)
         if result is None:
@@ -166,6 +180,7 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     except KeyError:  # pragma: no cover
         localedir = os.path.join(conf['paths']['root'], 'i18n')
     app_domain = conf['package'].__name__
+    native_lang = conf.get('i18n.native')  # Languages that requires no translation
 
     if not isinstance(lang, list):
         lang = [lang]
@@ -173,7 +188,11 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     mofiles = []
     supported_languages = []
     for l in lang:
-        mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
+        if native_lang and l in native_lang:
+            mo = _TGI18NIdentityTranslator()
+        else:
+            mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
+
         if mo is not None:
             mofiles.append(mo)
             supported_languages.append(l)

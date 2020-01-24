@@ -5,6 +5,7 @@ import gettext as _gettext
 
 import tg
 from tg import i18n, expose, TGController, config, AppConfig
+from tg.configurator import FullStackApplicationConfigurator
 
 from tg._compat import unicode_text, u_
 
@@ -220,3 +221,44 @@ class TestI18NStackDefaultLang(object):
         langs = r.json['lang']
         assert langs == ['ru', 'de', 'kr'], langs
 
+
+class TestI18NNativeLang(object):
+    def test_i18n_no_native(self):
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'root_controller': i18nRootController(),
+                              'paths': {'root': 'tests'},
+                              'package': _FakePackage(),
+                              'i18n.enabled': True,
+                              'errorpage.enabled': False})
+
+        app = TestApp(cfg.make_wsgi_app({'debug': True}, {}))
+        resp = app.get('/hello?skip_lang=1', headers={"Accept-Language": "en,de"})
+        assert resp.json['text'].startswith('Ihre Anwendung')
+
+    def test_i18n_native(self):
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'root_controller': i18nRootController(),
+                              'paths': {'root': 'tests'},
+                              'package': _FakePackage(),
+                              'i18n.enabled': True,
+                              'i18n.native': 'en',
+                              'errorpage.enabled': False})
+
+        app = TestApp(cfg.make_wsgi_app({'debug': True}, {}))
+        resp = app.get('/hello?skip_lang=1', headers={"Accept-Language": "en,de"})
+        text = resp.json['text']
+        assert text.startswith('Your application')
+
+    def test_i18n_native_with_locale(self):
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'root_controller': i18nRootController(),
+                              'paths': {'root': 'tests'},
+                              'package': _FakePackage(),
+                              'i18n.enabled': True,
+                              'i18n.native': 'en en_GB en_US',
+                              'errorpage.enabled': False})
+
+        app = TestApp(cfg.make_wsgi_app({'debug': True}, {}))
+        resp = app.get('/hello?skip_lang=1', headers={"Accept-Language": "en-gb,de"})
+        text = resp.json['text']
+        assert text.startswith('Your application')
