@@ -16,14 +16,15 @@ class TestRequest(object):
     def test_language_fallback_already_there(self):
         r = Request({}, headers={'Accept-Language': 'en-gb;q=0.8, it, da'})
         bmatch = r.languages_best_match(fallback='it')
-        assert ['it'] == bmatch, bmatch
+        assert bmatch[-1] == 'it', bmatch
 
     def test_languages(self):
         r = Request({}, headers={'Accept-Language': 'en-gb;q=0.8, it;q=0.9, da'})
         r.language = 'it'
         assert r.language == 'it'
         bmatch = r.languages
-        assert ['da', 'it'] == bmatch, bmatch
+        assert bmatch[:2] == ['da', 'it'], bmatch
+        assert bmatch[-1] == 'it'
 
     def test_match_accept(self):
         r = Request({}, headers={'Accept': 'text/html;q=0.5, foo/bar'})
