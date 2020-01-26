@@ -49,7 +49,8 @@ def coerce_config(configuration, prefix, converters):
     return options
 
 
-def get_partial_dict(prefix, dictionary, container_type=dict):
+def get_partial_dict(prefix, dictionary, container_type=dict, 
+                     ignore_missing=False, pop_keys=False):
     """Given a dictionary and a prefix, return a Bunch, with just items
     that start with prefix
 
@@ -68,9 +69,17 @@ def get_partial_dict(prefix, dictionary, container_type=dict):
     new_dict = container_type(((key[n:], dictionary[key])
                                 for key in dictionary
                                 if key.startswith(match)))
+
+    if pop_keys:
+        for key in list(dictionary.keys()):
+            if key.startswith(match):
+                dictionary.pop(key, None)
+
     if new_dict:
         return new_dict
     else:
+        if ignore_missing:
+            return {}
         raise AttributeError(prefix)
 
 

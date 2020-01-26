@@ -96,6 +96,11 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
           inject additional user details into the current request. By default it's
           disabled and :class:`tg.appwrappers.identity.IdentityApplicationWrapper` is
           used instead.
+        * ``sa_auth.authtkt.timeout``: Timeout of the authtkt token.
+        * ``sa_auth.authtkt.reissue_time``: Frequency at which the authtkt token 
+                                            should be refreshed.
+        * ``sa_auth.authtkt.secure``: Make cookie HTTPS only and disable Javascript access.
+        * ``sa_auth.authtkt.samesite``: Enable a ``SameSite=X`` option on the cookie. 
 
     """
     id = "sa_auth"

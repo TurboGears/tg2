@@ -6,6 +6,7 @@ and removes the dependency from repoze.what.
 """
 import sys, logging, re
 from tg.support.converters import asbool
+from ..utils import get_partial_dict
 from zope.interface import implementer
 from repoze.who.middleware import PluggableAuthenticationMiddleware
 from repoze.who.interfaces import IIdentifier, IAuthenticator, IChallenger
@@ -103,7 +104,6 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
                login_url='/login', login_handler='/login_handler',
                post_login_url=None, logout_handler='/logout_handler',
                post_logout_url=None, login_counter_name=None,
-               cookie_timeout=None, cookie_reissue_time=None,
                **who_args):
     """
     Sets :mod:`repoze.who` up with the provided authenticators and
@@ -125,11 +125,13 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
     except ValueError:
         pass
     else:
+        authtkt_options = get_partial_dict('authtkt', who_args,
+                                           ignore_missing=True,
+                                           pop_keys=True)
+
         # default identifier included.
         from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
-        cookie = AuthTktCookiePlugin(cookie_secret, cookie_name,
-                                     timeout=cookie_timeout,
-                                     reissue_time=cookie_reissue_time)
+        cookie = AuthTktCookiePlugin(cookie_secret, cookie_name, **authtkt_options)
         who_args['identifiers'][default_identifier_index] = ('cookie', cookie)
         who_args.setdefault('authenticators', [])
         who_args['authenticators'].insert(0, ('cookie', cookie))

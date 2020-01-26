@@ -1085,6 +1085,36 @@ class TestAppConfig:
         resp = app.get('/test')
         assert 'repoze.who.plugins' in resp, resp
 
+    def test_setup_authtkt(self):
+        class RootController(TGController):
+            @expose()
+            def test(self):
+                return str(request.environ)
+
+        package = PackageWithModel()
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf.package = package
+        conf.model = package.model
+        conf.use_sqlalchemy = True
+        conf.auth_backend = 'sqlalchemy'
+        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
+                           'dbsession': None,
+                           'user_class': None,
+                           'cookie_secret': '12345',
+                           'post_login_url': '/'}
+        conf['sqlalchemy.url'] = 'sqlite://'
+
+        secure_app = conf.make_wsgi_app(**{'sa_auth.authtkt.secure': True})
+        secure_app = TestApp(secure_app)
+        resp = secure_app.post('/login_handler', params={'login': 'l', 'password': 'p'})
+        assert 'HttpOnly' in resp.headers["Set-Cookie"], resp.headers
+
+        insecure_app = conf.make_wsgi_app(**{'sa_auth.authtkt.secure': False})
+        insecure_app = TestApp(insecure_app)
+        resp = insecure_app.post('/login_handler', params={'login': 'l', 'password': 'p'})
+        assert 'HttpOnly' not in resp.headers["Set-Cookie"], resp.headers
+
+
     def test_sessions_enabled(self):
         class RootController(TGController):
             @expose('json')
