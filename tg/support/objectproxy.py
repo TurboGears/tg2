@@ -16,6 +16,14 @@ class TurboGearsObjectProxy(object):
         return dir_list
 
     def __getattr__(self, attr):
+        if attr == "__wrapped__":
+            # Provide a special behaviour for __wrapped__.
+            # Stacked Object Proxies are rarely used as functions,
+            # and even less frequently are decorated.
+            # This is necessary to allow inspect.unwrap to work
+            # on a stacked object proxy during discovery phase of doctest.
+            raise AttributeError(attr)
+        
         return getattr(self._current_obj(), attr)
 
     def __setattr__(self, attr, value):

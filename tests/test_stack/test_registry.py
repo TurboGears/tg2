@@ -1,7 +1,9 @@
 # (c) 2005 Ben Bangert
 # This module is part of the Python Paste Project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
+import inspect
 from nose.tools import raises
+from nose import SkipTest
 
 from webtest import TestApp
 from tg.support.registry import RegistryManager, StackedObjectProxy, DispatchingConfig
@@ -182,6 +184,15 @@ def test_stacked_object_preserved():
     so._preserve_object()
     assert so._is_preserved
     so._pop_object()
+
+
+def test_stacked_object_inspect():
+    if not hasattr(inspect, 'unwrap'):
+        raise SkipTest("unwrap unavailable")
+
+    so = StackedObjectProxy()
+    assert inspect.unwrap(so) is so
+
 
 def test_simple():
     app = TestApp(simpleapp)
