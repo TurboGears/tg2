@@ -41,10 +41,21 @@ class TestErrorReporterConfig(object):
         assert not app.reporters
 
     def test_enable_email(self):
-        app = self._make(error_email='user@somedomain.com')
+        app = self._make(error_email='user@somedomain.com', 
+                         smtp_server="fakeserver", 
+                         from_address="fakesender")
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'EmailReporter'
             for r in app.reporters)
+
+    def test_enable_email_requires_options(self):
+        try:
+            app = self._make(error_email='user@somedomain.com', 
+                             from_address="fakesender")
+        except ValueError as e:
+            assert "smtp_server" in str(e)
+        else:
+            assert False, "not raised"
 
     def test_enable_sentry(self):
         app = self._make(sentry_dsn='http://public:secret@example.com/1')
@@ -105,7 +116,8 @@ class TestSlowReqsReporterConfig(object):
         assert not app.reporters
 
     def test_enable_email(self):
-        app = self._make(enable=True, error_email='user@somedomain.com')
+        app = self._make(enable=True, error_email='user@somedomain.com',
+                         smtp_server="fakesmtp", from_address="fakefrom")
         assert app.__class__.__name__ == self.middleware_name
         assert any(r.__class__.__name__ == 'EmailReporter'
             for r in app.reporters)
