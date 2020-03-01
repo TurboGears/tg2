@@ -39,9 +39,6 @@ TurboGears can be used *both* as a *full stack* framework or as a
 Get Started
 -----------
 
-**NOTE: This is development branch**,
-for current stable release refer to `Documentation <http://turbogears.readthedocs.io/>`_
-
 .. image:: https://asciinema.org/a/181221.png
     :target: https://asciinema.org/a/181221
 

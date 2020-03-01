@@ -1,5 +1,12 @@
 = Change Log =
 
+== 2.4.3 (**Mar 1, 2020**) ==
+
+* Support for ``i18n.native`` list of languages to disable translation for languages the templates are natively written in.
+* Support for ``repoze.who`` options like Cookie ``SameSite`` and ``Secure``.
+* Dunder ``__`` methods are no longer hijacked in context local objects. This allows ``pytest``, ``doctest`` and ``mock`` to inspect thread local objects like request.
+* Error reporting now gives a proper error if email support is enabled but not properly configured
+
 == 2.4.2 (**Oct 20, 2019**) ==
 
 * Fixed support for zope.sqlalchemy 1.2
