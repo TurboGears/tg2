@@ -2308,7 +2308,7 @@ class TestAppConfig:
         app = conf.make_wsgi_app(debug=True, full_stack=True)
         app = TestApp(app)
 
-        resp = app.get('/test', status=500)
+        resp = app.get('/test', status=500, expect_errors=True)
         assert 'Exception: Crash! // Backlash' in resp, resp
 
     def test_make_app_with_custom_appglobals(self):

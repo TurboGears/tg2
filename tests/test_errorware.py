@@ -89,7 +89,7 @@ class TestErrorReporterConfig(object):
             'root_controller': RootController()
         })
         app = TestApp(cfg.make_wsgi_app({}, {}))
-        app.get('/', status=404)
+        app.get('/', status=404, expect_errors=True)
 
         assert 'request' in REPORTED_CONTEXT
 
