@@ -170,7 +170,7 @@ class TGFlash(GlobalConfigurable):
         if payload:
             payload = json.loads(url_unquote(payload))
             if 'webflash.deleted_cookie' not in req.environ:
-                response.delete_cookie(self.cookie_name)
+                response.set_cookie(self.cookie_name, None, samesite="Strict")
                 req.environ['webflash.delete_cookie'] = True
         return payload or {}
 
