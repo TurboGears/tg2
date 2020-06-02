@@ -118,7 +118,7 @@ class TGFlash(GlobalConfigurable):
             request.environ['webflash.payload'] = payload
 
         resp = response._current_obj()
-        resp.set_cookie(self.cookie_name, payload)
+        resp.set_cookie(self.cookie_name, payload, samesite="Strict")
         if len(resp.headers['Set-Cookie']) > 4096:
             raise ValueError('Flash value is too long (cookie would be >4k)')
 
