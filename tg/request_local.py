@@ -127,6 +127,10 @@ class Request(WebObRequest):
 
         secret = secret.encode('ascii')
         try:
+            # Keep base64.decodestring for backward compatibility.
+            # In the past Response.signed_cookie used base64.encodestring which could
+            # lead to multiple lines in the encoded text. That's in theory unsupported
+            # as cookies can't have newlines, but we still want to be able to decode it.
             sig, pickled = cookie[:40], base64.decodestring(cookie[40:].encode('ascii'))
         except binascii.Error: #pragma: no cover
             # Badly formed data can make base64 die
@@ -195,7 +199,7 @@ class Response(WebObResponse):
 
         pickled = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
         sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
-        cookie_value = sig + base64.encodestring(pickled)
+        cookie_value = sig + base64.b64encode(pickled)
         self.set_cookie(name, cookie_value, **kwargs)
 
     @property
