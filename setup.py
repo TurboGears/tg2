@@ -22,7 +22,6 @@ test_requirements = ['nose',
                      'WebTest',
                      'backlash >= 0.3.0',
                      'raven',
-                     'formencode>=1.3.0a1',
                      'tw2.forms',
                      'Beaker',
                      'sqlalchemy',
@@ -30,6 +29,11 @@ test_requirements = ['nose',
                      'coverage',
                      'ming >= 0.8.0',
                      'Kajiki >= 0.4.4']
+
+if py_version[0] == 3 and py_version < (3, 6):
+    test_requirements.extend(["formencode<2.0"])
+else:
+    test_requirements.extend(['formencode>=1.3.0a1'])
 
 
 if py_version[0] == 2:
