@@ -131,7 +131,11 @@ class Request(WebObRequest):
             # In the past Response.signed_cookie used base64.encodestring which could
             # lead to multiple lines in the encoded text. That's in theory unsupported
             # as cookies can't have newlines, but we still want to be able to decode it.
-            sig, pickled = cookie[:40], base64.decodestring(cookie[40:].encode('ascii'))
+            try:
+                base64decode = base64.decodebytes
+            except AttributeError:  # pragma: no cover
+                base64decode = base64.decodestring
+            sig, pickled = cookie[:40], base64decode(cookie[40:].encode('ascii'))
         except binascii.Error: #pragma: no cover
             # Badly formed data can make base64 die
             return
