@@ -3,11 +3,18 @@ from __future__ import absolute_import
 
 try:
     import sqlalchemy
-    from sqlalchemy.engine import ResultProxy, RowProxy
+    from sqlalchemy.engine import ResultProxy
 except ImportError:  # pragma: no cover
     sqlalchemy = None
     ResultProxy = None
-    RowProxy = None
+
+try:  # sa>=1.4
+    from sqlalchemy.engine import LegacyRow as RowProxy
+except ImportError:
+    try:  # sa<1.4
+        from sqlalchemy.engine import RowProxy
+    except ImportError:  # pragma: no cover
+        RowProxy = None
 
 
 def is_saobject(obj):
