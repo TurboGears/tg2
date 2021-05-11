@@ -26,6 +26,7 @@ test_requirements = ['nose',
                      'Beaker',
                      'sqlalchemy',
                      'jinja2',
+                     'typing;python_version<"3.5"',
                      'coverage',
                      'ming >= 0.8.0',
                      'Kajiki >= 0.4.4']
