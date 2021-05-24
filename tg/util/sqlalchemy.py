@@ -10,10 +10,12 @@ except ImportError:  # pragma: no cover
 
 try:  # sa>=1.4
     from sqlalchemy.engine import LegacyRow as RowProxy
-except ImportError:
+    from sqlalchemy.engine import Row
+except ImportError:  # pragma: no cover
+    Row = None
     try:  # sa<1.4
         from sqlalchemy.engine import RowProxy
-    except ImportError:  # pragma: no cover
+    except ImportError:
         RowProxy = None
 
 
@@ -27,7 +29,10 @@ def is_query_result(values):
 
 
 def is_query_row(obj):
-    return RowProxy is not None and isinstance(obj, RowProxy)
+    return (
+        RowProxy is not None and isinstance(obj, RowProxy)
+        or Row is not None and isinstance(obj, Row)
+    )
 
 
 def dictify(obj):
@@ -43,5 +48,3 @@ def dictify(obj):
         if not key.startswith('_sa_'):
             props[key] = getattr(obj, key)
     return props
-
-
