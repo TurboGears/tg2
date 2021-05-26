@@ -360,7 +360,7 @@ def test_jinja_autoload():
         resp = app.get('/jinja_autoload')
         assert False
     except Exception as e:
-        assert "no filter named 'polluting_function'" in str(e)
+        assert "No filter named 'polluting_function'" in str(e)
 
 def _test_jinja_inherits():
     app = setup_noDB()
