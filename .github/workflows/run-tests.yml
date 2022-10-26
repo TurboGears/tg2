@@ -18,9 +18,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install git+git://github.com/TurboGears/crank.git
-          pip install git+git://github.com/TurboGears/backlash.git
-          pip install git+git://github.com/TurboGears/Ming.git
+          pip install git+https://github.com/TurboGears/crank.git
+          pip install git+https://github.com/TurboGears/backlash.git
+          pip install git+https://github.com/TurboGears/Ming.git
           pip install repoze.who
           pip install nose
           pip install -U --upgrade-strategy=eager --pre -e .[testing]
