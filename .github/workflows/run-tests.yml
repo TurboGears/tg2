@@ -1,0 +1,35 @@
+
+name: run-tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build:
+    name: Run tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["2.7", "3.6", "3.7", "3.8", "3.9"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install git+git://github.com/TurboGears/crank.git
+          pip install git+git://github.com/TurboGears/backlash.git
+          pip install git+git://github.com/TurboGears/Ming.git
+          pip install repoze.who
+          pip install nose
+          pip install -U --upgrade-strategy=eager --pre -e .[testing]
+      - name: Test with pytest
+        run: |
+          pytest -v --cov=tg  --cov-report=term-missing
+      - name: Publish to coveralls.io
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install 'coveralls'
+          coveralls --service=github
