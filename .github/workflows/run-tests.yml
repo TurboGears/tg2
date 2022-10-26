@@ -24,9 +24,9 @@ jobs:
           pip install repoze.who
           pip install nose
           pip install -U --upgrade-strategy=eager --pre -e .[testing]
-      - name: Test with pytest
+      - name: Run Tests
         run: |
-          pytest -v --cov=tg  --cov-report=term-missing
+          nosetests -v --with-coverage --cover-package=tg --cover-erase
       - name: Publish to coveralls.io
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
