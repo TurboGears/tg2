@@ -199,10 +199,12 @@ try:
     import sqlite3
 except:
     import pysqlite2
-from sqlalchemy import (MetaData, Table, Column, ForeignKey, Integer, String)
-from sqlalchemy.orm import create_session, mapper, relation
+from sqlalchemy import (create_engine, MetaData, Table, Column, ForeignKey, Integer, String)
+from sqlalchemy.orm import Session as SQLASession, registry, relationship
 
-metadata = MetaData('sqlite:///:memory:')
+engine = create_engine("sqlite:///:memory:")
+mapper_registry = registry()
+metadata = mapper_registry.metadata
 
 test1 = Table('test1', metadata,
     Column('id', Integer, primary_key=True),
@@ -221,33 +223,37 @@ test4 = Table('test4', metadata,
     Column('id', Integer, primary_key=True),
     Column('val', String(8)))
 
-metadata.create_all()
+metadata.create_all(engine)
 
 class Test2(object):
     pass
-mapper(Test2, test2)
+mapper_registry.map_imperatively(Test2, test2)
 
 class Test1(object):
     pass
-mapper(Test1, test1, properties={'test2s': relation(Test2)})
+mapper_registry.map_imperatively(Test1, test1, properties={'test2s': relationship(Test2)})
 
 class Test3(object):
     pass
-mapper(Test3, test3)
+mapper_registry.map_imperatively(Test3, test3)
 
 class Test4(object):
     pass
-mapper(Test4, test4)
+mapper_registry.map_imperatively(Test4, test4)
 
-test1.insert().execute({'id': 1, 'val': 'bob'})
-test2.insert().execute({'id': 1, 'test1id': 1, 'val': 'fred'})
-test2.insert().execute({'id': 2, 'test1id': 1, 'val': 'alice'})
-test3.insert().execute({'id': 1, 'val': 'bob'})
-test4.insert().execute({'id': 1, 'val': 'alberto'})
+connection = engine.connect()
+connection.execute(test1.insert(), {'id': 1, 'val': 'bob'})
+connection.execute(test2.insert(), {'id': 1, 'test1id': 1, 'val': 'fred'})
+connection.execute(test2.insert(), {'id': 2, 'test1id': 1, 'val': 'alice'})
+connection.execute(test3.insert(), {'id': 1, 'val': 'bob'})
+connection.execute(test4.insert(), {'id': 1, 'val': 'alberto'})
+
+def teardown_module():
+    connection.close()
 
 class TestPageSQLA(object):
-    def setup_method(self):
-        self.s = create_session()
+    def setup_class(self):
+        self.s = SQLASession(connection)
 
     def test_relationship(self):
         t = self.s.query(Test1).get(1)

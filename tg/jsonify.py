@@ -107,7 +107,7 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         elif is_query_result(obj):
             return dict(rows=list(obj), count=obj.rowcount)
         elif is_query_row(obj):
-            return dict(rows=dict(obj), count=1)
+            return dict(rows=dict(getattr(obj, "_mapping", obj)), count=1)
         elif is_objectid(obj):
             return str(obj)
         elif isinstance(obj, MultiDict):

@@ -341,37 +341,40 @@ class TestMiscUtils(object):
             not5(10)
 
     def test_unless_sqla(self):
-        from sqlalchemy import (MetaData, Table, Column, Integer, String)
-        from sqlalchemy.orm import create_session, mapper
+        from sqlalchemy import (create_engine, MetaData, Table, Column, ForeignKey, Integer, String)
+        from sqlalchemy.orm import Session, registry, relationship
 
-        metadata = MetaData('sqlite:///:memory:')
+        engine = create_engine("sqlite:///:memory:")
+        mapper_registry = registry()
+        metadata = mapper_registry.metadata
         testtable = Table('test1', metadata,
             Column('id', Integer, primary_key=True),
             Column('val', String(8)))
-        metadata.create_all()
+        metadata.create_all(engine)
 
         class Test(object):
             pass
-        mapper(Test, testtable)
+        mapper_registry.map_imperatively(Test, testtable)
 
-        testtable.insert().execute({'id': 1, 'val': 'bob'})
-        testtable.insert().execute({'id': 2, 'val': 'bobby'})
-        testtable.insert().execute({'id': 3, 'val': 'alberto'})
+        with engine.connect() as connection:
+            connection.execute(testtable.insert(), {'id': 1, 'val': 'bob'})
+            connection.execute(testtable.insert(), {'id': 2, 'val': 'bobby'})
+            connection.execute(testtable.insert(), {'id': 3, 'val': 'alberto'})
 
-        sess = create_session()
-        getunless = unless(sess.query(Test).get)
+            sess = Session(connection)
+            getunless = unless(sess.query(Test).get)
 
-        x = getunless(1)
-        assert x.val == 'bob', x
+            x = getunless(1)
+            assert x.val == 'bob', x
 
-        x = getunless(2)
-        assert x.val == 'bobby', x
+            x = getunless(2)
+            assert x.val == 'bobby', x
 
-        with pytest.raises(ValueError):
-            getunless(5)
+            with pytest.raises(ValueError):
+                getunless(5)
 
-        with pytest.raises(TGValidationError):
-            Convert(getunless).to_python('5')
+            with pytest.raises(TGValidationError):
+                Convert(getunless).to_python('5')
 
-        x = Convert(getunless).to_python('1')
-        assert x.val == 'bob', x
+            x = Convert(getunless).to_python('1')
+            assert x.val == 'bob', x

@@ -9,8 +9,11 @@ except ImportError:  # pragma: no cover
     ResultProxy = None
 
 try:  # sa>=1.4
-    from sqlalchemy.engine import LegacyRow as RowProxy
     from sqlalchemy.engine import Row
+    try:
+        from sqlalchemy.engine import LegacyRow as RowProxy
+    except ImportError:
+        RowProxy = None
 except ImportError:  # pragma: no cover
     Row = None
     try:  # sa<1.4
