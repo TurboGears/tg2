@@ -1,8 +1,8 @@
 TurboGears
 ==========
 
-.. image:: https://travis-ci.org/TurboGears/tg2.svg?branch=development
-    :target: https://travis-ci.org/TurboGears/tg2
+.. image:: https://github.com/TurboGears/tg2/actions/workflows/run-tests.yml/badge.svg
+    :target: https://github.com/TurboGears/tg2/actions/workflows/run-tests.yml
 
 .. image:: https://coveralls.io/repos/TurboGears/tg2/badge.svg?branch=development
     :target: https://coveralls.io/r/TurboGears/tg2?branch=development
