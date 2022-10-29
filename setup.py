@@ -13,7 +13,8 @@ if py_version < (2, 7):
 if py_version[0] == 3 and py_version < (3, 4):
     raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.4')
 
-test_requirements = ['zope.sqlalchemy >= 0.4',
+test_requirements = ['pytest',
+                     'zope.sqlalchemy >= 0.4',
                      'repoze.who',
                      'repoze.who.plugins.sa >= 1.0.1',
                      'Genshi >= 0.5.1',

@@ -22,11 +22,11 @@ jobs:
           pip install git+https://github.com/TurboGears/backlash.git
           pip install git+https://github.com/TurboGears/Ming.git
           pip install repoze.who
-          pip install nose
           pip install -U --upgrade-strategy=eager --pre -e .[testing]
+          pip install pytest-cov
       - name: Run Tests
         run: |
-          nosetests -v --with-coverage --cover-package=tg --cover-erase
+          pytest --cov=tg
       - name: Publish to coveralls.io
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
