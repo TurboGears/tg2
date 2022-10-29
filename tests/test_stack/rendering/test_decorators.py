@@ -1,4 +1,4 @@
-from nose.tools import raises
+import pytest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import no_warn
 from tg.configuration import config
@@ -22,7 +22,7 @@ def make_app():
 
 class TestTGController(object):
 
-    def setup(self):
+    def setup_method(self):
         self.app = make_app()
 
     def test_simple_jsonification(self):
@@ -62,15 +62,15 @@ class TestTGController(object):
         resp = self.app.get('/echo_json', headers={'Content-Type': 'application/json'})
         assert resp.json_body == {}
 
-    @raises(ValueError)
     def test_decode_params_notjson(self):
-        @decode_params('xml')
-        def _fakefunc():
-            pass
+        with pytest.raises(ValueError):
+            @decode_params('xml')
+            def _fakefunc():
+                pass
 
 
 class TestExposeInheritance(object):
-    def setup(self):
+    def setup_method(self):
         self.app = make_app()
 
     def test_inherited_expose_template(self):

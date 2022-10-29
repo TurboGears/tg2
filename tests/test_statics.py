@@ -1,5 +1,5 @@
+import pytest
 from webtest import TestApp
-from nose.tools import raises
 from webob import Request
 from tg.support.statics import StaticsMiddleware, FileServeApp
 from webob.exc import HTTPBadRequest, HTTPForbidden
@@ -9,7 +9,7 @@ def FakeApp(environ, start_response):
     return ['APP']
 
 class TestStatics(object):
-    def setup(self):
+    def setup_method(self):
         self.app = TestApp(StaticsMiddleware(FakeApp, './tests'))
 
     def test_plain_request(self):
@@ -25,9 +25,9 @@ class TestStatics(object):
         r = self.app.get('/empty_file.unknown', headers={'If-Modified-Since':'Sat, 29 Oct 1994 19:43:31 GMT'})
         assert 'EMPTY' in r
 
-    @raises(HTTPBadRequest)
     def test_if_modified_since_invalid_date(self):
-        r = self.app.get('/empty_file.unknown', headers={'If-Modified-Since':'This is not a date'})
+        with pytest.raises(HTTPBadRequest):
+           r = self.app.get('/empty_file.unknown', headers={'If-Modified-Since':'This is not a date'})
 
     def test_if_modified_since_future(self):
         next_year = datetime.utcnow()

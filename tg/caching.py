@@ -207,7 +207,6 @@ def beaker_cache(key="cache_default", expire="never", type=None,
             if args:
                 self = args[0]
             namespace, cache_key = create_cache_key(func, key_dict, self)
-
             return _cached_call(func, args, kwargs, namespace, cache_key,
                                 expire, type, starttime,
                                 cache_headers, cache_response,

@@ -1,6 +1,6 @@
 import logging
 
-from nose.tools import raises
+import pytest
 from tg.support.converters import asbool, asint, aslist, astemplate, aslogger
 
 
@@ -21,26 +21,26 @@ class TestAsBool(object):
         assert not asbool('f')
         assert not asbool('0')
 
-    @raises(ValueError)
     def test_asbool_broken(self):
-        asbool('Test')
+        with pytest.raises(ValueError):
+            asbool('Test')
 
-    @raises(ValueError)
     def test_nonstring(self):
-        asint([True])
+        with pytest.raises(ValueError):
+            asint([True])
 
 
 class TestAsInt(object):
     def test_fine(self):
         assert asint('55') == 55
 
-    @raises(ValueError)
     def test_nan(self):
-        asint('hello')
+        with pytest.raises(ValueError):
+            asint('hello')
 
-    @raises(ValueError)
     def test_nonstring(self):
-        asint(['55'])
+        with pytest.raises(ValueError):
+            asint(['55'])
 
 
 class TestAsList(object):
@@ -64,9 +64,9 @@ class TestAsTemplate(object):
         assert hasattr(astemplate('You are ${name}'), 'substitute')
         assert astemplate('You are ${name}').substitute(name='John') == 'You are John'
 
-    @raises(ValueError)
     def test_nonstring(self):
-        astemplate(55)
+        with pytest.raises(ValueError):
+            astemplate(55)
 
     def test_aslready_template(self):
         assert astemplate(astemplate('You are ${name}')).substitute(name='John') == 'You are John'
@@ -76,9 +76,9 @@ class TestAsLogger(object):
     def test_fine(self):
         assert aslogger('root') == logging.getLogger('root')
 
-    @raises(ValueError)
     def test_nonstring(self):
-        aslogger(55)
+        with pytest.raises(ValueError):
+            aslogger(55)
 
     def test_already_logger(self):
         assert aslogger(logging.getLogger('root')) == logging.getLogger('root')

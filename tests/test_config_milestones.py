@@ -1,4 +1,4 @@
-from nose.tools import raises
+import pytest
 from tg._compat import im_self
 from tg.configuration.milestones import _ConfigMilestoneTracker, config_ready
 from tg.configuration.utils import GlobalConfigurable, TGConfigError
@@ -11,7 +11,7 @@ class Action:
 
 
 class TestMilestones(object):
-    def setup(self):
+    def setup_method(self):
         self.milestone = _ConfigMilestoneTracker('test_milestone')
 
     def test_multiple_registration(self):
@@ -58,10 +58,10 @@ class TemporaryGlobalConfigurable(GlobalConfigurable):
     pass
 
 class TestGlobalConfigurable(object):
-    def setup(self):
+    def setup_method(self):
         config_ready._reset()
 
-    def teardown(self):
+    def teardown_method(self):
         for action in config_ready._keep_on_reset[:]:
             default_object = im_self(action)
             if default_object and isinstance(default_object, TemporaryGlobalConfigurable):
@@ -69,22 +69,23 @@ class TestGlobalConfigurable(object):
 
         config_ready._reset()
 
-    @raises(NotImplementedError)
     def test_requires_configure_implementation(self):
         class NoConfig(TemporaryGlobalConfigurable):
             CONFIG_NAMESPACE = 'fake.'
 
         default_object = NoConfig.create_global()
-        config_ready.reach()
 
-    @raises(TGConfigError)
+        with pytest.raises(NotImplementedError):
+            config_ready.reach()
+
     def test_requires_namespace(self):
         class NoNameSpace(TemporaryGlobalConfigurable):
             def configure(self, **options):
                 return options
 
-        default_object = NoNameSpace.create_global()
-        config_ready.reach()
+        with pytest.raises(TGConfigError):
+            default_object = NoNameSpace.create_global()
+            config_ready.reach()
 
     def test_gets_configured_on_config_ready(self):
         class Configurable(TemporaryGlobalConfigurable):

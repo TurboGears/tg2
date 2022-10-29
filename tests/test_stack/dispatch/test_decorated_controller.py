@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from nose.tools import raises
 import os, tg
+import pytest
 from tests.test_stack import TestConfig, app_from_config
 from tg.configuration.hooks import _TGGlobalHooksNamespace
 from tg.decorators import Decoration
@@ -9,11 +9,11 @@ from tg.util import Bunch
 
 
 class TestHooks(object):
-    def setUp(self):
+    def setup_method(self):
         milestones._reset_all()
         tg.hooks._clear()
 
-    def tearDown(self):
+    def teardown_method(self):
         milestones._reset_all()
         tg.hooks._clear()
 
@@ -36,10 +36,10 @@ class TestHooks(object):
 
 
 class TestExpose(object):
-    def setUp(self):
+    def setup_method(self):
         milestones.renderers_ready._reset()
 
-    def tearDown(self):
+    def teardown_method(self):
         milestones.renderers_ready._reset()
 
     def test_unregisterd_renderers_detection(self):
@@ -118,7 +118,7 @@ class TestExpose(object):
         assert len(deco.engines) == 1, deco.engines
 
 class TestDecorators(object):
-    def setup(self):
+    def setup_method(self):
         base_config = TestConfig(folder = 'dispatch',
             values = {'use_sqlalchemy': False,
                       'use_toscawidgets': False,

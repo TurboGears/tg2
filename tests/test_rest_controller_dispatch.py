@@ -10,10 +10,10 @@ from tests.base import (
     TestWSGIController, make_app, setup_session_dir, teardown_session_dir)
 
 
-def setup():
+def setup_module():
     setup_session_dir()
 
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 
@@ -353,9 +353,9 @@ class BasicTGControllerNoDefault(TGController):
 
 class TestTGControllerRoot(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.app = make_app(BasicTGControllerNoDefault)
+        TestWSGIController.setup_method(self)
 
     def test_root_default_dispatch(self):
         self.app.get('/i/am/not/a/sub/controller', status=404)
@@ -363,9 +363,9 @@ class TestTGControllerRoot(TestWSGIController):
 
 class TestTGController(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.app = make_app(BasicTGController)
+        TestWSGIController.setup_method(self)
 
     def test_lookup(self):
         r = self.app.get('/lookup/eye')
@@ -416,9 +416,9 @@ class TestTGController(TestWSGIController):
 
 class TestRestController(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.app = make_app(BasicTGController)
+        TestWSGIController.setup_method(self)
 
     def test_options(self):
         r = self.app.options('/rest/')

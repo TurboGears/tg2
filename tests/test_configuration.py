@@ -1,10 +1,11 @@
 """
 Testing for TG2 Configuration
 """
-from nose import SkipTest
-from nose.tools import eq_, raises
 import sys, os
 from datetime import datetime
+
+import pytest
+
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
@@ -51,12 +52,12 @@ from tg.wsgiapp import TGApp
 from tg._compat import PY3
 
 
-def setup():
+def setup_module():
     milestones._reset_all()
     setup_session_dir()
 
 
-def teardown():
+def teardown_module():
     milestones._reset_all()
     teardown_session_dir()
 
@@ -158,12 +159,12 @@ class RootController(TGController):
 
 class TestPylonsConfigWrapper:
 
-    def setup(self):
+    def setup_method(self):
         _reset_global_config()
         _init_default_global_config()
         self.config = config
 
-    def tearDown(self):
+    def teardown_method(self):
         _reset_global_config()
         _init_default_global_config()
 
@@ -181,21 +182,21 @@ class TestPylonsConfigWrapper:
         _init_default_global_config()
         assert repr(self.config) == repr(self.config.config_proxy.current_conf())
 
-    @raises(KeyError)
     def test_getitem_bad(self):
-        self.config['no_such_key']
+        with pytest.raises(KeyError):
+            self.config['no_such_key']
 
     def test_setitem(self):
         self.config['no_such_key'] = 'something'
 
     def test_delattr(self):
         del self.config.debug
-        eq_(hasattr(self.config, 'debug'), False)
+        assert hasattr(self.config, 'debug') == False
         self.config.debug = False
 
-    @raises(AttributeError)
     def test_delattr_bad(self):
-        del self.config.i_dont_exist
+        with pytest.raises(AttributeError):
+            del self.config.i_dont_exist
 
     def test_keys(self):
         k = self.config.keys()
@@ -217,10 +218,10 @@ def test_coerce_options():
 
 
 class TestConfigurator:
-    def setup(self):
+    def setup_method(self):
         _reset_global_config()
 
-    def teardown(self):
+    def teardown_method(self):
         _reset_global_config()
         tg.hooks._clear()  # Reset hooks
 
@@ -468,13 +469,11 @@ class TestConfigurator:
 
 
 class TestAppConfig:
-    def __init__(self):
+    def setup_method(self):
+        _reset_global_config()
         self.fake_package = PackageWithModel
 
-    def setup(self):
-        _reset_global_config()
-
-    def teardown(self):
+    def teardown_method(self):
         _reset_global_config()
         tg.hooks._clear()  # Reset hooks
 
@@ -553,7 +552,6 @@ class TestAppConfig:
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
 
-    @raises(TGConfigError)
     def test_sqlalchemy_without_models(self):
         class RootController(TGController):
             @expose()
@@ -563,7 +561,9 @@ class TestAppConfig:
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf['use_sqlalchemy'] = True
         conf['sqlalchemy.url'] = 'sqlite://'
-        app = conf.make_wsgi_app()
+
+        with pytest.raises(TGConfigError):
+            app = conf.make_wsgi_app()
 
     def test_minimal_app_with_ming(self):
         class RootController(TGController):
@@ -587,7 +587,6 @@ class TestAppConfig:
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
 
-    @raises(TGConfigError)
     def test_ming_without_models(self):
         class RootController(TGController):
             @expose()
@@ -602,7 +601,9 @@ class TestAppConfig:
 
         conf['use_ming'] = True
         conf['ming.url'] = 'mim://'
-        app = conf.make_wsgi_app()
+
+        with pytest.raises(TGConfigError):
+            app = conf.make_wsgi_app()
 
     def test_setup_jinja_without_package(self):
         class RootController(TGController):
@@ -774,7 +775,6 @@ class TestAppConfig:
 
         conf.make_wsgi_app()
 
-    @raises(TGConfigError)
     def test_setup_sqla_balanced_prevent_slave_named_master(self):
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf['sqlalchemy.master.url'] = 'sqlite://'
@@ -782,16 +782,17 @@ class TestAppConfig:
         conf.use_sqlalchemy = True
         conf.package = PackageWithModel()
 
-        conf.make_wsgi_app()
+        with pytest.raises(TGConfigError):
+            conf.make_wsgi_app()
 
-    @raises(TGConfigError)
     def test_setup_sqla_balanced_no_slaves(self):
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf['sqlalchemy.master.url'] = 'sqlite://'
         conf.use_sqlalchemy = True
         conf.package = PackageWithModel()
 
-        conf.make_wsgi_app()
+        with pytest.raises(TGConfigError):
+            conf.make_wsgi_app()
 
     def test_setup_ming_persistance(self):
         class RootController(TGController):
@@ -951,7 +952,7 @@ class TestAppConfig:
 
     def test_setup_ming_persistance_replica_set(self):
         if sys.version_info[:2] == (2, 6):
-            raise SkipTest()
+            pytest.skip()
 
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -992,7 +993,7 @@ class TestAppConfig:
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
     def test_setup_sqla_auth_repozesqla(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         class RootController(TGController):
             @expose()
@@ -1040,7 +1041,7 @@ class TestAppConfig:
         assert 'repoze.who.plugins' in resp, resp
 
     def test_setup_ming_auth_tgming(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         class RootController(TGController):
             @expose()
@@ -1430,7 +1431,6 @@ class TestAppConfig:
         assert 'HI!' in app.get('/test')
         assert middleware_has_been_visited[0] == True
 
-    @raises(TGConfigError)
     def test_unsupported_renderer(self):
         conf = AppConfig(root_controller=RootController())
         conf['renderers'] = ['unknwon']
@@ -1439,9 +1439,9 @@ class TestAppConfig:
             conf.make_wsgi_app()
         except TGConfigError as e:
             assert 'This configuration object does not support the unknwon renderer' in str(e)
-            raise
+        else:
+            assert False
 
-    @raises(TGConfigError)
     def test_cookie_secret_required(self):
         conf = AppConfig(root_controller=RootController())
         conf['auth_backend'] = 'sqlalchemy'
@@ -1450,10 +1450,11 @@ class TestAppConfig:
             conf.make_wsgi_app()
         except TGConfigError as e:
             assert str(e).startswith('You must provide a value for authentication cookies secret')
-            raise
+        else:
+            assert False
 
     def test_sqla_auth_middleware(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.auth_backend = 'sqlalchemy'
@@ -1470,7 +1471,7 @@ class TestAppConfig:
         assert 'sqlauth' in authenticators
 
     def test_sqla_auth_middleware_using_translations(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.auth_backend = 'sqlalchemy'
@@ -1496,7 +1497,7 @@ class TestAppConfig:
         assert auth.translations['user_name'] == 'SomethingElse', auth.translations
 
     def test_sqla_auth_middleware_default_after(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.auth_backend = 'sqlalchemy'
@@ -1514,7 +1515,7 @@ class TestAppConfig:
         assert 'sqlauth' in authenticators
 
     def test_sqla_auth_middleware_no_authenticators(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.auth_backend = 'sqlalchemy'
@@ -1595,7 +1596,7 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
 
     def test_ming_auth_middleware(self):
-        if PY3: raise SkipTest()
+        if PY3: pytest.skip()
 
         conf = AppConfig(root_controller=RootController(),
                          auth_backend='ming')
@@ -1609,7 +1610,6 @@ class TestAppConfig:
         assert 'cookie' in authenticators
         assert 'mingauth' in authenticators
 
-    @raises(KeyError)
     def test_sqla_auth_middleware_no_backend(self):
         conf = AppConfig(root_controller=RootController())
         conf.auth_backend = None
@@ -1617,9 +1617,10 @@ class TestAppConfig:
                                 'cookie_secret':'12345'})
         conf.make_wsgi_app()
 
-        authenticators = [x[0] for x in config['sa_auth.authenticators']]
-        assert 'cookie' in authenticators
-        assert len(authenticators) == 1
+        with pytest.raises(KeyError):
+            authenticators = [x[0] for x in config['sa_auth.authenticators']]
+        #assert 'cookie' in authenticators
+        #assert len(authenticators) == 1
 
     def test_tgauthmetadata_auth_middleware(self):
         conf = AppConfig(root_controller=RootController(),

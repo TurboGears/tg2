@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from functools import partial
-from nose.tools import raises
-from nose import SkipTest
+import pytest
 from crank.util import get_params_with_argspec
 
 import tg
@@ -56,10 +55,10 @@ else:
     myform = None
 
 
-def setup():
+def setup_module():
     setup_session_dir()
 
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 
@@ -406,8 +405,7 @@ class BasicTGController(TGController):
 
 
 class TestTGController(TestWSGIController):
-    def setUp(self):
-        TestWSGIController.setUp(self)
+    def setup_method(self):
         tg.config.update({
             'paths': {'root': data_dir},
             'package': tests,
@@ -416,6 +414,7 @@ class TestTGController(TestWSGIController):
         self.app = make_app(BasicTGController, config_options={
             'i18n.enabled': True
         })
+        TestWSGIController.setup_method(self)
 
     def test_basic_validation_and_jsonification(self):
         """Ensure you can pass in a dictionary of validators"""
@@ -450,10 +449,11 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/with_default_shadow_long/1?b=2&c=3&d=4')
         assert '"int": [1, 2, 3, 4]' in resp, resp
 
-    @raises(AssertionError)
     def test_validation_fails_with_no_error_handler(self):
         form_values = {'a':'asdf', 'b':"string"}
-        resp = self.app.post('/validated_and_unvalidated', form_values)
+
+        with pytest.raises(AssertionError):
+            resp = self.app.post('/validated_and_unvalidated', form_values)
 
     def test_two_validators_errors(self):
         """Ensure that multiple validators are applied correctly"""
@@ -474,7 +474,7 @@ class TestTGController(TestWSGIController):
 
     def test_tw1form_validation(self):
         """Check @validate's handing of ToscaWidget forms instances"""
-        if PY3: raise SkipTest()
+        if PY3: raise pytest.skip()
 
         form_values = {'title': 'Razer', 'year': "2007"}
         resp = self.app.post('/process_form', form_values)
@@ -487,7 +487,7 @@ class TestTGController(TestWSGIController):
 
     def test_tw1form_render(self):
         """Test that myform renders properly"""
-        if PY3: raise SkipTest()
+        if PY3: raise pytest.skip()
 
         resp = self.app.post('/display_form')
         assert 'id="my_form_title.label"' in resp, resp
@@ -496,7 +496,7 @@ class TestTGController(TestWSGIController):
 
     def test_tw1form_validation_error(self):
         """Test form validation with error message"""
-        if PY3: raise SkipTest()
+        if PY3: raise pytest.skip()
 
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/process_form', form_values)
@@ -506,7 +506,7 @@ class TestTGController(TestWSGIController):
 
     def test_tw1form_validation_redirect(self):
         """Test form validation error message with redirect"""
-        if PY3: raise SkipTest()
+        if PY3: raise pytest.skip()
 
         form_values = {'title': 'Razer', 'year': "t007"}
         resp = self.app.post('/send_to_error_handler', form_values)
@@ -536,7 +536,7 @@ class TestTGController(TestWSGIController):
         assert 'Please enter an integer value' in str(resp.body), resp
 
     def test_tw1form_validation_translation(self):
-        if PY3: raise SkipTest()
+        if PY3: raise pytest.skip()
 
         """Test translation of form validation error messages"""
         form_values = {'title': 'Razer', 'year': "t007"}
@@ -708,8 +708,7 @@ class TestTGController(TestWSGIController):
 
 
 class TestChainValidation(TestWSGIController):
-    def setUp(self):
-        TestWSGIController.setUp(self)
+    def setup_method(self):
         tg.config.update({
             'paths': {'root': data_dir},
             'package': tests,
@@ -719,21 +718,23 @@ class TestChainValidation(TestWSGIController):
             'i18n.enabled': True
         })
 
+        TestWSGIController.setup_method(self)
+
     def test_no_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 4})
-        self.assertEqual(res.text, '>3')
+        assert res.text == '>3'
 
         res = self.app.get('/chain_validation_begin', params={'val': 3})
-        self.assertEqual(res.text, '>2')
+        assert res.text == '>2'
 
     def test_single_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 2})
-        self.assertEqual(res.text, '>1')
+        assert res.text == '>1'
 
     def test_double_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 1})
-        self.assertEqual(res.text, '>0')
+        assert res.text == '>0'
 
     def test_last_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 0}, status=412)
-        self.assertEqual(res.json, json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}'))
+        assert res.json == json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}')

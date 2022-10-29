@@ -57,7 +57,7 @@ class FakeAppWithClose(object):
 
 
 class TestDBSessionRemoverMiddleware(object):
-    def setup(self):
+    def setup_method(self):
         self.app_with_close = FakeAppWithClose()
         self.session = FakeDBSession()
         self.app = TestApp(DBSessionRemoverMiddleware(self.session, self.app_with_close))
@@ -80,7 +80,7 @@ class TestDBSessionRemoverMiddleware(object):
 
 
 class TestMingSessionRemoverMiddlewaree(object):
-    def setup(self):
+    def setup_method(self):
         self.app_with_close = FakeAppWithClose()
         self.session = FakeDBSession()
         self.app = TestApp(MingSessionRemoverMiddleware(self.session, self.app_with_close))

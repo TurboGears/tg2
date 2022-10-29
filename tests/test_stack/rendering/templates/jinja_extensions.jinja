@@ -13,6 +13,7 @@
 {% block content %}
     <h1>Index</h1>
     <p class="important">
+        {% do 5 + 3 %}
         {% autoescape true %}
             {{ test_autoescape_on }}
         {% endautoescape %}

@@ -1,7 +1,7 @@
 """
 Testing for TG2 Configuration
 """
-from nose.tools import raises
+import pytest
 from webtest import TestApp
 
 import tg
@@ -13,9 +13,9 @@ from mako.exceptions import TemplateLookupException
 from tg.util.webtest import test_context
 
 
-def setup():
+def setup_module():
     setup_session_dir()
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 class FakePackage:
@@ -27,12 +27,12 @@ class FakePackage:
             class Globals:
                 pass
 
-@raises(MissingRendererError)
 def test_render_missing_renderer():
     conf = AppConfig(minimal=True)
     app = conf.make_wsgi_app()
 
-    tg.render_template({}, 'gensh')
+    with pytest.raises(MissingRendererError):
+        tg.render_template({}, 'gensh')
 
 
 def test_render_default():
@@ -62,7 +62,7 @@ def test_jinja_lookup_nonexisting_template():
 
 
 class TestKajikiSupport(object):
-    def setup(self):
+    def setup_method(self):
         conf = AppConfig(minimal=True)
         conf.use_dotted_templatenames = True
         conf.renderers.append('kajiki')
@@ -96,7 +96,7 @@ class TestKajikiSupport(object):
 
 
 class TestMakoLookup(object):
-    def setup(self):
+    def setup_method(self):
         conf = AppConfig(minimal=True)
         conf.use_dotted_templatenames = True
         conf.renderers.append('mako')
@@ -131,7 +131,6 @@ class TestMakoLookup(object):
         mlookup.template_cache['hi_template'] = t
         assert mlookup.get_template('hi_template') is t
 
-    @raises(TemplateLookupException)
     def test__check_not_existing_anymore(self):
         from mako.template import Template
         t = Template('Hi', filename='deleted_template.mak')
@@ -139,14 +138,16 @@ class TestMakoLookup(object):
         render_mako = tg.config['render_functions']['mako']
         mlookup = render_mako.dotted_loader
         mlookup.template_cache['deleted_template'] = t
-        mlookup.get_template('deleted_template')
 
-    @raises(IOError)
+        with pytest.raises(TemplateLookupException):
+            mlookup.get_template('deleted_template')
+
     def test_never_existed(self):
         render_mako = tg.config['render_functions']['mako']
         mlookup = render_mako.dotted_loader
 
-        mlookup.get_template('deleted_template')
+        with pytest.raises(IOError):
+            mlookup.get_template('deleted_template')
 
     def test__check_should_reload_on_cache_expire(self):
         render_mako = tg.config['render_functions']['mako']

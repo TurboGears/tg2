@@ -16,8 +16,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-
-from nose.tools import raises
+import pytest
 from webtest import TestApp
 from tg._compat import u_, unicode_text
 
@@ -55,10 +54,10 @@ class BasePredicateTester(object):
 
 class TestPredicate(BasePredicateTester):
 
-    @raises(NotImplementedError)
     def test_evaluate_isnt_implemented(self):
         p = MockPredicate()
-        p.evaluate(None, None)
+        with pytest.raises(NotImplementedError):
+            p.evaluate(None, None)
 
     def test_message_is_changeable(self):
         previous_msg = EqualsTwo.message
@@ -129,7 +128,7 @@ class TestPredicate(BasePredicateTester):
         self.assertEqual(True, p.is_met(environ))
 
 class TestContextRelatedBoolPredicate(BasePredicateTester):
-    def setup(self):
+    def setup_method(self):
         class RootController(TGController):
             @expose()
             def test(self):
@@ -139,7 +138,7 @@ class TestContextRelatedBoolPredicate(BasePredicateTester):
         app = conf.make_wsgi_app()
         self.app = TestApp(app)
 
-    def teardown(self):
+    def teardown_method(self):
         config.pop('tg.root_controller', None)
 
     def test_success(self):

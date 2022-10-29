@@ -8,7 +8,6 @@ from tg.decorators import expose, validate, https, variable_decode, with_trailin
 from tg import expose, redirect, config
 from tg.controllers import TGController
 from tg import dispatched_controller
-from nose.tools import eq_
 from tests.test_validation import validators
 from tg._compat import unicode_text, u_
 
@@ -213,7 +212,7 @@ class RootController(TGController):
     @expose()
     def test_url_sop(self):
         from tg import url
-        eq_('/foo', url('/foo'))
+        assert '/foo' == url('/foo')
 
 
         u = url("/foo", params=dict(bar=1, baz=2))

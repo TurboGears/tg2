@@ -2,9 +2,7 @@
 # This module is part of the Python Paste Project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 import inspect
-from nose.tools import raises
-from nose import SkipTest
-
+import pytest
 from webtest import TestApp
 from tg.support.registry import RegistryManager, StackedObjectProxy, DispatchingConfig
 from tg.util import Bunch
@@ -143,15 +141,15 @@ def test_stacked_object_common_actions():
     finally:
         regobj._pop_object()
 
-@raises(AssertionError)
 def test_stacked_object_pop_something_else():
-    o = Bunch({'hi':'people'})
-    regobj._push_object(o)
-    regobj._pop_object({'another':'object'})
+    with pytest.raises(AssertionError):
+        o = Bunch({'hi':'people'})
+        regobj._push_object(o)
+        regobj._pop_object({'another':'object'})
 
-@raises(AssertionError)
 def test_stacked_object_pop_never_registered():
-    regobj._pop_object()
+    with pytest.raises(AssertionError):
+        regobj._pop_object()
 
 def test_stacked_object_stack():
     so = StackedObjectProxy()
@@ -188,7 +186,7 @@ def test_stacked_object_preserved():
 
 def test_stacked_object_inspect():
     if not hasattr(inspect, 'unwrap'):
-        raise SkipTest("unwrap unavailable")
+        pytest.skip("unwrap unavailable")
 
     so = StackedObjectProxy()
     assert inspect.unwrap(so) is so
@@ -209,10 +207,10 @@ def test_solo_registry():
     assert 'The variable is' in res
     assert "{'hi': 'people'}" in res
 
-@raises(TypeError)
 def test_registry_no_object_error():
     app = TestApp(simpleapp_withregistry)
-    app.get('/')
+    with pytest.raises(TypeError):
+        app.get('/')
 
 def test_with_default_object():
     app = TestApp(simpleapp_withregistry_default)
@@ -290,7 +288,6 @@ def test_registry_streaming():
     assert len(res) == 10
     assert not(regobj._object_stack())
 
-@raises(SystemError)
 def test_registry_streaming_exception():
     def app(environ, start_response):
         environ['paste.registry'].register(regobj, {'hi':'people'})
@@ -304,11 +301,12 @@ def test_registry_streaming_exception():
     try:
         for x in app_with_rm(environ, None):
             assert len(regobj._object_stack())
-    except:
+    except SystemError:
         #check the object got preserved due to exception
         assert regobj._object_stack()
         regobj._pop_object()
-        raise
+    else:
+        assert False
 
 
 def test_registry_not_preserved_when_disabled():

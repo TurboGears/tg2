@@ -5,7 +5,7 @@ from tg import request_local
 import tg
 
 class TestBalancedSession(object):
-    def setup(self):
+    def setup_method(self):
         locals = RequestLocals()
         locals.request = Bunch()
         locals.app_globals = Bunch()
@@ -25,7 +25,7 @@ class TestBalancedSession(object):
         self.session = BalancedSession()
         locals.config['DBSession'] = self.session
 
-    def teardown(self):
+    def teardown_method(self):
         request_local.config._pop_object()
         request_local.context._pop_object()
 

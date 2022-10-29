@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os, shutil
-from unittest import TestCase
 from tg.appwrappers.caching import CacheApplicationWrapper
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
 from tg.appwrappers.i18n import I18NApplicationWrapper
@@ -72,8 +71,8 @@ def make_app(controller_klass=None, environ=None, config_options=None, with_erro
         return conf
 
 
-class TestWSGIController(TestCase):
-    def setUp(self):
+class TestWSGIController(object):
+    def setup_method(self):
         tmpl_options = {}
         tmpl_options['genshi.search_path'] = ['tests']
 
@@ -90,7 +89,7 @@ class TestWSGIController(TestCase):
         warnings.resetwarnings()
         setup_session_dir()
 
-    def tearDown(self):
+    def teardown_method(self):
         request_local.context._pop_object(self._tgl)
         tg.config.pop_process_config()
         teardown_session_dir()

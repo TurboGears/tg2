@@ -6,8 +6,6 @@ http://turbogears.org/2.1/docs/main/Caching.html
 
 For more details.
 """
-
-
 import tg
 from tg.controllers import TGController
 from tg.decorators import expose, cached
@@ -16,10 +14,10 @@ from tg.controllers.util import etag_cache
 from tg import cache
 from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
 
-def setup():
+def setup_module():
     setup_session_dir()
     
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 # a variable used to represent state held outside the controllers
@@ -43,7 +41,7 @@ import beaker.container
 beaker.container.time = mocktime
 
 class TestCachedProperty(object):
-    def setup(self):
+    def setup_method(self):
         class FakeObject(object):
             def __init__(self):
                 self.v = 0
@@ -92,10 +90,10 @@ class SimpleCachingController(TGController):
         return x
 
 class TestSimpleCaching(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.baseenviron = {}
         self.app = make_app(SimpleCachingController, self.baseenviron)
+        TestWSGIController.setup_method(self)
 
     def test_simple_cache(self):
         """ test that caches get different results for different cache keys. """
@@ -129,11 +127,11 @@ class TestDecoratorCaching(TestWSGIController):
     
     """ Test that the decorators function. """
     
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
         self.baseenviron = {}
         self.app = make_app(DecoratorController, self.baseenviron)
-    
+        TestWSGIController.setup_method(self)
+
     def test_simple(self):
         """ Test expiry of cached results for decorated functions. """
         mocktime.set_time(0)
@@ -160,9 +158,9 @@ class TestEtagCaching(TestWSGIController):
     
     """ A simple mechanism is provided to set the etag header for returned results. """
     
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
         self.app = make_app(EtagController)
+        TestWSGIController.setup_method(self)
 
     def test_etags(self):
         """ Test that the etag in the response headers is the one we expect. """
@@ -230,11 +228,11 @@ class CustomSessionController(TGController):
 
 
 class TestMultipleSessions(TestWSGIController):
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
         self.app = make_app(CustomSessionController, config_options={
             'session.key': 'test_app'
         })
+        TestWSGIController.setup_method(self)
 
     def test_multiple_sessions_work(self):
         resp = self.app.get('/session_init')
@@ -320,6 +318,12 @@ class BeakerCacheController(TGController):  # For backward compatibility
     CALL_COUNT = 0
 
     @expose()
+    def clear_cache(self):
+        curcache = tg.cache.get_cache('tests.test_caching.BeakerCacheController')
+        curcache.clear()
+        return ''
+
+    @expose()
     @beaker_cache(key=None)
     def none_key(self):
         BeakerCacheController.CALL_COUNT += 1
@@ -375,12 +379,9 @@ class BeakerCacheController(TGController):  # For backward compatibility
 class TestCacheTouch(TestWSGIController):
     CACHED_CONTROLLER = CachedController
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
         self.app = make_app(self.CACHED_CONTROLLER)
-
-    def setUp(self):
-        super(TestCacheTouch, self).setUp()
+        TestWSGIController.setup_method(self)
         self.app.get('/clear_cache')
 
     def test_none_key(self):
@@ -489,9 +490,10 @@ class TestCacheTouch(TestWSGIController):
 class TestBeakerCacheTouch(TestWSGIController):
     CACHED_CONTROLLER = BeakerCacheController
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
         self.app = make_app(self.CACHED_CONTROLLER)
+        TestWSGIController.setup_method(self)
+        self.app.get('/clear_cache')
 
     def test_none_key(self):
         self.CACHED_CONTROLLER.CALL_COUNT = 0

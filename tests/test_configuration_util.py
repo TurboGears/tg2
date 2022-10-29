@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from nose.tools import raises
-
+import pytest
 from tg.configuration.utils import DependenciesList, DictionaryView
 
 
@@ -124,16 +123,17 @@ class TestDependenciesList(object):
         assert dl_values[1].__class__ == DLEntry2
         assert dl_values[2].__class__ == DLEntry3
 
-    @raises(ValueError)
     def test_objects_must_have_key(self):
         dl = DependenciesList()
-        dl.add(DLEntry1())
 
-    @raises(ValueError)
+        with pytest.raises(ValueError):
+            dl.add(DLEntry1())
+
     def test_after_cannot_be_an_instance(self):
         dl = DependenciesList()
         dl.add(DLEntry1(), key='DLEntry1')
-        dl.add(DLEntry2(), key='DLEntry2', after=DLEntry1())
+        with pytest.raises(ValueError):
+            dl.add(DLEntry2(), key='DLEntry2', after=DLEntry1())
 
     def test_after_everything_else(self):
         dl = DependenciesList()
@@ -188,10 +188,11 @@ class TestDependenciesList(object):
         assert dl_values[3] == DLEntry4
         assert dl_values[4] == DLEntry5
 
-    @raises(ValueError)
     def test_replace_key_check(self):
         dl = DependenciesList()
-        dl.replace(object(), object())
+
+        with pytest.raises(ValueError):
+            dl.replace(object(), object())
 
     def test_construction(self):
         dl = DependenciesList(DLEntry2, DLEntry1)
@@ -202,12 +203,12 @@ class TestDependenciesList(object):
         assert dl_values[0] == DLEntry2
         assert dl_values[1] == DLEntry3
 
-    @raises(KeyError)
     def test_add_twice(self):
         dl = DependenciesList()
 
         dl.add(DLEntry2)
-        dl.add(DLEntry2)
+        with pytest.raises(KeyError):
+            dl.add(DLEntry2)
 
     def test_get_by_class(self):
         dl = DependenciesList()
@@ -215,10 +216,11 @@ class TestDependenciesList(object):
         dl.add(DLEntry2)
         assert issubclass(dl.get(DLEntry2), DLEntry2)
 
-    @raises(ValueError)
     def test_get_by_invalid_type(self):
         dl = DependenciesList()
-        dl.get(5)
+
+        with pytest.raises(ValueError):
+            dl.get(5)
 
     def test_get_missing(self):
         dl = DependenciesList()
@@ -234,15 +236,17 @@ class TestDictionaryView(object):
         assert d['one'] == 1
         assert d.one == 1
 
-    @raises(AttributeError)
     def test_dictionary_view_missing_attr(self):
         d = DictionaryView({}, '')
-        d.missing
 
-    @raises(KeyError)
+        with pytest.raises(AttributeError):
+            d.missing
+
     def test_dictionary_view_missing_key(self):
         d = DictionaryView({}, '')
-        d['missing']
+
+        with pytest.raises(KeyError):
+            d['missing']
 
     def test_dictionary_set_attr(self):
         d = DictionaryView({}, 'test.')

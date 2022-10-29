@@ -1,8 +1,7 @@
+import pytest
 from tg import jsonify, lurl
 from datetime import datetime
 from decimal import Decimal
-from nose.tools import raises
-from nose import SkipTest
 from webob.multidict import MultiDict
 import json
 from tg.util import LazyString
@@ -27,11 +26,12 @@ def test_string():
     encoded = jsonify.encode(d)
     assert encoded == '"string"'
 
-@raises(jsonify.JsonEncodeError)
 def test_list():
     d = ['a', 1, 'b', 2]
-    encoded = jsonify.encode(d)
-    assert encoded == '["a", 1, "b", 2]'
+
+    with pytest.raises(jsonify.JsonEncodeError):
+        encoded = jsonify.encode(d)
+    #assert encoded == '["a", 1, "b", 2]'
 
 def test_list_allowed_iter():
     lists_encoder = jsonify.JSONEncoder(allow_lists=True)
@@ -39,11 +39,12 @@ def test_list_allowed_iter():
     encoded = jsonify.encode(d, lists_encoder)
     assert encoded == '["a", 1, "b", 2]'
 
-@raises(jsonify.JsonEncodeError)
 def test_list_iter():
     d = list(range(3))
-    encoded = jsonify.encode_iter(d)
-    assert ''.join(jsonify.encode_iter(d)) == jsonify.encode(d)
+
+    with pytest.raises(jsonify.JsonEncodeError):
+        encoded = jsonify.encode_iter(d)
+    #assert ''.join(jsonify.encode_iter(d)) == jsonify.encode(d)
 
 def test_list_allowed_iter():
     lists_encoder = jsonify.JSONEncoder(allow_lists=True)
@@ -57,26 +58,23 @@ def test_dictionary():
     expected = json.dumps(json.loads('{"a": 1, "b": 2}'))
     assert encoded == expected
 
-@raises(jsonify.JsonEncodeError)
+
 def test_nospecificjson():
     b = Baz()
-    try:
+
+    with pytest.raises(jsonify.JsonEncodeError):
         encoded = jsonify.encode(b)
-    except TypeError as e:
-        pass
-    assert  "is not JSON serializable" in e.message 
 
 def test_exlicitjson():
     b = Bar("bq")
     encoded = jsonify.encode(b)
     assert encoded == '"bar-bq"'
 
-@raises(jsonify.JsonEncodeError)
 def test_exlicitjson_in_list():
     b = Bar("bq")
     d = [b]
-    encoded = jsonify.encode(d)
-    assert encoded == '["bar-bq"]'
+    with pytest.raises(jsonify.JsonEncodeError):
+        encoded = jsonify.encode(d)
 
 def test_exlicitjson_in_dict():
     b = Bar("bq")

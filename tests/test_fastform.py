@@ -26,7 +26,7 @@ def build_env(path_info, qs='', SCRIPT_NAME=''):
 
 
 class TestFastFormPlugin(object):
-    def setup(self):
+    def setup_method(self):
         self.fform = FastFormPlugin('/login', '/login_handler', '/post_login', '/logout_handler',
                                     '/post_logout', 'cookie')
 

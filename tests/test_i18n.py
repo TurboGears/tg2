@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from nose.tools import raises
+import pytest
 from webtest import TestApp
 import gettext as _gettext
 
@@ -55,9 +55,8 @@ def test_formencode_gettext_nulltranslation():
     i18n.ugettext = nop_gettext
     assert i18n._formencode_gettext('something') == 'something'
     i18n.ugettext = prev_gettext
-    return 'OK'
 
-@raises(i18n.LanguageError)
+
 def test_get_unaccessible_translator():
     def _fake_find(*args, **kwargs):
         return '/fake_file'
@@ -65,8 +64,9 @@ def test_get_unaccessible_translator():
     real_find = _gettext.find
     _gettext.find = _fake_find
     try:
-        i18n._get_translator(['de'], tg_config={'localedir': '',
-                                                'package': _FakePackage()})
+        with pytest.raises(i18n.LanguageError):
+            i18n._get_translator(['de'], tg_config={'localedir': '',
+                                                    'package': _FakePackage()})
     finally:
         _gettext.find = real_find
 
@@ -114,7 +114,7 @@ class i18nRootController(TGController):
 
 
 class TestI18NStack(object):
-    def setup(self):
+    def setup_method(self):
         conf = AppConfig(minimal=True, root_controller=i18nRootController())
         conf['paths']['root'] = 'tests'
         conf['i18n.enabled'] = True
@@ -128,7 +128,7 @@ class TestI18NStack(object):
         app = conf.make_wsgi_app()
         self.app = TestApp(app)
 
-    def teardown(self):
+    def teardown_method(self):
         config.pop('tg.root_controller')
 
     def test_lazy_gettext(self):
@@ -166,9 +166,9 @@ class TestI18NStack(object):
         r = self.app.get('/fallback?force_lang=it&fallback=de')
         assert 'Dies ist' in r, r
 
-    @raises(i18n.LanguageError)
     def test_fallback_non_existing(self):
-        r = self.app.get('/fallback?force_lang=it&fallback=ko')
+        with pytest.raises(i18n.LanguageError):
+            r = self.app.get('/fallback?force_lang=it&fallback=ko')
 
     def test_fallback_fallback(self):
         r = self.app.get('/fallback?force_lang=it&fallback=ko&fallback-fallback=true')
@@ -201,7 +201,7 @@ class TestI18NStack(object):
 
 
 class TestI18NStackDefaultLang(object):
-    def setup(self):
+    def setup_method(self):
         conf = AppConfig(minimal=True, root_controller=i18nRootController())
         conf['paths']['root'] = 'tests'
         conf['i18n.enabled'] = True

@@ -10,13 +10,12 @@ this writing).
 """
 
 import os
-from unittest import TestCase
 try:
     from http.cookies import SimpleCookie
 except ImportError:
     from Cookie import SimpleCookie
 from shutil import rmtree
-from nose.tools import raises
+import pytest
 from webtest import TestApp
 
 from tg._compat import url_unquote
@@ -255,12 +254,12 @@ class ControllerWithAllowOnlyAttributeAndAuthzDenialHandler(TGController):
 #{ The tests themselves
 
 
-class BaseIntegrationTests(TestCase):
+class BaseIntegrationTests(object):
     """Base test case for the integration tests"""
 
     controller = RootController
 
-    def setUp(self):
+    def setup_method(self):
         # Creating the session dir:
         if not os.path.exists(session_dir):
             os.makedirs(session_dir)
@@ -268,7 +267,7 @@ class BaseIntegrationTests(TestCase):
         # Setting TG2 up:
         self.app = make_app(self.controller, {}, config_options=getattr(self, 'CONFIG_OPTIONS', {}))
 
-    def tearDown(self):
+    def teardown_method(self):
         # Removing the session dir:
         rmtree(session_dir, ignore_errors=True)
 
@@ -292,9 +291,9 @@ class TestLoginLogout(BaseIntegrationTests):
         assert 'authtkt="' in cookie
         assert 'developer' in cookie
 
-    @raises(TGConfigError)
     def test_user_login_without_identifier(self):
-        resp = self.app.get('/login_logout?username=developer&noidentifier=1')
+        with pytest.raises(TGConfigError):
+            resp = self.app.get('/login_logout?username=developer&noidentifier=1')
 
     def test_user_logout(self):
         AUTH_TOKEN = 'authtkt="f0657f514a6b960d50ea199aea76534d53cd0dd4developer%3Amanagers!"'
@@ -318,12 +317,12 @@ class TestRequire(BaseIntegrationTests):
     def test_authz_granted_in_root_controller(self):
         environ = {'REMOTE_USER': 'developer'}
         resp = self.app.get('/commit', extra_environ=environ, status=200)
-        self.assertEqual("you can commit", resp.body.decode('utf-8'))
+        assert "you can commit" == resp.body.decode('utf-8')
 
     def test_multiple_requirements_passed(self):
         environ = {'REMOTE_USER': 'developer:managers:commit'}
         resp = self.app.get('/force_commit', extra_environ=environ, status=200)
-        self.assertEqual("you can commit", resp.text)
+        assert "you can commit" == resp.text
 
     def test_multiple_requirements_blocked_1(self):
         environ = {'REMOTE_USER': 'tester:testing:commit'}
@@ -367,7 +366,7 @@ class TestRequire(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
+        assert "foo was just registered" == resp.body.decode('utf-8')
 
     def test_authz_denied_in_sub_controller(self):
         # As an anonymous user:
@@ -433,7 +432,7 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/cp/', extra_environ=environ, status=200)
-        self.assertEqual("you are in the panel", resp.body.decode('utf-8'))
+        assert "you are in the panel" == resp.body.decode('utf-8')
 
     def test_authz_denied_without_require(self):
         resp = self.app.get('/cp/', status=401)
@@ -444,7 +443,7 @@ class TestAllowOnlyDecoratorInSubController(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/cp/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
+        assert "foo was just registered" == resp.body.decode('utf-8')
 
     def test_authz_denied_with_require(self):
         resp = self.app.get('/cp/add_user/foo', status=401)
@@ -459,7 +458,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/', extra_environ=environ, status=200)
-        self.assertEqual("you can manage Human Resources", resp.body.decode('utf-8'))
+        assert "you can manage Human Resources" == resp.body.decode('utf-8')
 
     def test_authz_denied_without_require(self):
         # As an anonymous user:
@@ -476,7 +475,7 @@ class TestAllowOnlyAttributeInSubController(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hr/hire/gustavo', extra_environ=environ,
                             status=200)
-        self.assertEqual("gustavo was just hired", resp.body.decode('utf-8'))
+        assert "gustavo was just hired" == resp.body.decode('utf-8')
 
     def test_authz_denied_with_require(self):
         # As an anonymous user:
@@ -501,7 +500,7 @@ class TestAllowOnlyAttributeAndDefaultAuthzDenialHandler(BaseIntegrationTests):
     def test_authz_granted(self):
         environ = {'REMOTE_USER': 'foobar'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("Welcome back, foobar!", resp.body.decode('utf-8'))
+        assert "Welcome back, foobar!" == resp.body.decode('utf-8')
 
     def test_authz_denied(self):
         resp = self.app.get('/', status=402)
@@ -515,7 +514,7 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'someone'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("you are in the panel", resp.body.decode('utf-8'))
+        assert "you are in the panel" == resp.body.decode('utf-8')
 
     def test_authz_denied_without_require(self):
         resp = self.app.get('/', status=401)
@@ -526,7 +525,7 @@ class TestAppWideAuthzWithAllowOnlyDecorator(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'admin'}
         resp = self.app.get('/add_user/foo', extra_environ=environ,
                             status=200)
-        self.assertEqual("foo was just registered", resp.body.decode('utf-8'))
+        assert "foo was just registered" == resp.body.decode('utf-8')
 
     def test_authz_denied_with_require(self):
         resp = self.app.get('/add_user/foo', status=401)
@@ -542,7 +541,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
     def test_authz_granted_without_require(self):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/', extra_environ=environ, status=200)
-        self.assertEqual("you can manage Human Resources", resp.body.decode('utf-8'))
+        assert "you can manage Human Resources" == resp.body.decode('utf-8')
 
     def test_authz_denied_without_require(self):
         # As an anonymous user:
@@ -559,7 +558,7 @@ class TestAppWideAuthzWithAllowOnlyAttribute(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'hiring-manager'}
         resp = self.app.get('/hire/gustavo', extra_environ=environ,
                             status=200)
-        self.assertEqual("gustavo was just hired", resp.body.decode('utf-8'))
+        assert "gustavo was just hired" == resp.body.decode('utf-8')
 
     def test_authz_denied_with_require(self):
         # As an anonymous user:
@@ -580,7 +579,7 @@ class TestProtectedRESTContoller(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/rest/new', extra_environ=environ,
                             status=200)
-        self.assertEqual("new here", resp.body.decode('utf-8'))
+        assert "new here" == resp.body.decode('utf-8')
 
     def test_authz_denied(self):
         # As an anonymous user:
@@ -604,7 +603,7 @@ class TestProtectedWSGIApplication(BaseIntegrationTests):
         environ = {'REMOTE_USER': 'gustavo'}
         resp = self.app.get('/mounted_app/da-path', extra_environ=environ,
                             status=200)
-        self.assertEqual("Hello from /mounted_app/da-path", resp.body.decode('utf-8'))
+        assert "Hello from /mounted_app/da-path" == resp.body.decode('utf-8')
 
     def test_authz_denied(self):
         # As an anonymous user:
@@ -631,7 +630,7 @@ class DefaultLessTGController(TGController):
         return request.environ.get('repoze.who.identity')['repoze.who.userid']
 
 class TestLoggedErrorTGController(BaseIntegrationTests):
-    def setUp(self):
+    def setup_method(self):
         if not os.path.exists(session_dir):
             os.makedirs(session_dir)
 
@@ -662,6 +661,6 @@ class TestDiscardingIdentityWhenUserNone(BaseIntegrationTests):
     def test_user_is_kept_when_metadata_available(self):
         environ = {'REMOTE_USER': 'developer:managers:commit'}
         resp = self.app.get('/force_commit', extra_environ=environ, status=200)
-        self.assertEqual("you can commit", resp.body.decode('utf-8'))
+        assert "you can commit" == resp.body.decode('utf-8')
 
 #}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from wsgiref.validate import validator
-from nose.tools import raises
 
+import pytest
 from tests.test_validation import validators
 
 from webob import Response, Request
@@ -40,11 +40,11 @@ from tests.base import (
 config['renderers'] = ['genshi', 'mako', 'json']
 
 
-def setup():
+def setup_module():
     setup_session_dir()
 
 
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 
@@ -524,10 +524,10 @@ class BasicTGController(TGController):
 
 class TestNotFoundController(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.app = make_app(NotFoundController)
-
+        TestWSGIController.setup_method(self)
+        
     def test_not_found(self):
         r = self.app.get('/something', status=404)
         assert '404 Not Found' in r, r
@@ -542,9 +542,9 @@ class TestNotFoundController(TestWSGIController):
 
 class TestNotFoundWithIndexController(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         self.app = make_app(NotFoundWithIndexController)
+        TestWSGIController.setup_method(self)
 
     def test_not_found(self):
         r = self.app.get('/something', status=404)
@@ -553,9 +553,7 @@ class TestNotFoundWithIndexController(TestWSGIController):
 
 class TestWSGIAppController(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
-
+    def setup_method(self):
         def hello_app(environ, start_response):
             start_response("200 OK", [('Content-Type', 'text/plain')])
             return [b'Hello From: ',
@@ -571,6 +569,7 @@ class TestWSGIAppController(TestWSGIController):
         self.app = make_app(TestedWSGIAppController, config_options={
             'make_body_seekable': True
         })
+        TestWSGIController.setup_method(self)
 
     def test_valid_wsgi(self):
         try:
@@ -581,8 +580,7 @@ class TestWSGIAppController(TestWSGIController):
 
 class TestWSGIAppControllerNotHTML(TestWSGIController):
 
-    def __init__(self, *args, **kargs):
-        TestWSGIController.__init__(self, *args, **kargs)
+    def setup_method(self):
         class TestedWSGIAppController(WSGIAppController):
             def __init__(self):
                 def test_app(environ, start_response):
@@ -593,6 +591,7 @@ class TestWSGIAppControllerNotHTML(TestWSGIController):
         self.app = make_app(TestedWSGIAppController, config_options={
             'make_body_seekable': True
         })
+        TestWSGIController.setup_method(self)
 
     def test_right_wsgi_headers(self):
         r = self.app.get('/some_url')
@@ -601,8 +600,8 @@ class TestWSGIAppControllerNotHTML(TestWSGIController):
         assert r.content_type == 'text/plain'
 
 class TestTGController(TestWSGIController):
-    def setUp(self, *args, **kargs):
-        TestWSGIController.setUp(self, *args, **kargs)
+    def setup_method(self):
+        TestWSGIController.setup_method(self)
         self.app = make_app(BasicTGController, config_options={
             'make_body_seekable': True
         })
@@ -927,12 +926,12 @@ class TestTGController(TestWSGIController):
 
 
 class TestNestedWSGIAppWithoutSeekable(TestWSGIController):
-    def setUp(self, *args, **kargs):
-        TestWSGIController.setUp(self, *args, **kargs)
+    def setup_method(self, *args, **kargs):
+        TestWSGIController.setup_method(self)
         self.app = make_app(BasicTGController, config_options={
             'make_body_seekable': False
         })
 
-    @raises(RuntimeError)
     def test_missing_body_seekable_trapped(self):
-        self.app.get('/mounted_app')
+        with pytest.raises(RuntimeError):
+            self.app.get('/mounted_app')

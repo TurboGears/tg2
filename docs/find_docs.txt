@@ -1,7 +1,0 @@
-The source of the TurboGears 2.1 docs has been moved to: 
-
-https://bitbucket.org/turbogears/tg-docs
-
-and the online docs can always be found at: 
-
-http://turbogears.org/2.1/docs/

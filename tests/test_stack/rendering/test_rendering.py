@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from nose import SkipTest
 import shutil, os
 import json
+import pytest
 import tg
 from tg.configuration import milestones
 
@@ -296,7 +296,7 @@ def test_genshi_sub_inheritance_from_bottom():
 
 def test_chameleon_genshi_base():
     if ChameleonGenshiRenderer is None:
-        raise SkipTest()
+        pytest.skip()
 
     def add_chameleon_renderer(app_config):
         app_config.register_rendering_engine(ChameleonGenshiRenderer)
@@ -318,7 +318,7 @@ def test_chameleon_genshi_base():
 
 def test_chameleon_genshi_inheritance():
     if ChameleonGenshiRenderer is None:
-        raise SkipTest()
+        pytest.skip()
 
     def add_chameleon_renderer(app_config):
         app_config.register_rendering_engine(ChameleonGenshiRenderer)
@@ -375,13 +375,13 @@ def test_jinja_extensions():
                                        # to make sure inheritance works
                                        'use_dotted_templatenames': False,
                                        'renderers':['jinja'],
-                                       'jinja_extensions': ['jinja2.ext.do', 'jinja2.ext.i18n',
-                                                            'jinja2.ext.with_', 'jinja2.ext.autoescape'],
+                                       'jinja_extensions': ['jinja2.ext.do', 'jinja2.ext.i18n'],
                                        'use_toscawidgets': False,
                                        'use_toscawidgets2': False
                                        }
                              )
     app = app_from_config(base_config)
+    # This will crash with "Encountered unknown tag 'do'" if extensions didn't enable correctly.
     resp = app.get('/jinja_extensions')
     assert "<b>Autoescape Off</b>" in resp, resp
     assert "&lt;b&gt;Test Autoescape On&lt;/b&gt;" in resp, resp
@@ -672,7 +672,7 @@ def test_render_hooks():
 
 
 class TestEngineDetection(object):
-    def setUp(self):
+    def setup_method(self):
         self.app = setup_noDB(genshi_doctype='html', extra={
             'errorpage.enabled': False
         })
@@ -689,7 +689,7 @@ class TestEngineDetection(object):
 
 
 class TestTemplateCaching(object):
-    def setUp(self):
+    def setup_method(self):
         base_config = TestConfig(folder='rendering', values={
             'use_sqlalchemy': False,
             'use_legacy_renderer': False,
@@ -730,7 +730,7 @@ class TestTemplateCaching(object):
 
 
 class TestJSONRendering(object):
-    def setUp(self):
+    def setup_method(self):
         base_config = TestConfig(folder='rendering', values={
             'use_sqlalchemy': False,
             'use_legacy_renderer': False,
@@ -743,7 +743,7 @@ class TestJSONRendering(object):
         })
         self.app = app_from_config(base_config)
 
-    def teardown(self):
+    def teardown_method(self):
         milestones._reset_all()
 
     def test_jsonp(self):

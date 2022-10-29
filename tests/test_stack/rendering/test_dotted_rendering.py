@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
-import sys
-from nose import SkipTest
+# -*- coding: utf-8 -*-import sys
+import pytest
 from tests.test_stack import TestConfig, app_from_config
 from tg.util import Bunch, no_warn
 from webtest import TestApp
@@ -34,7 +32,7 @@ def setup_noDB(extra_init=None):
 
 def test_default_chameleon_genshi_renderer():
     if ChameleonGenshiRenderer is None:
-        raise SkipTest()
+        pytest.skip()
 
     def add_chameleon_renderer(app_config):
         app_config.register_rendering_engine(ChameleonGenshiRenderer)

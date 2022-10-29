@@ -2,30 +2,29 @@
 import tg
 from tg.controllers import *
 from tg.exceptions import HTTPFound
-from nose.tools import eq_
 from tests.base import setup_session_dir, teardown_session_dir
 from tg.util import no_warn
 from tg.util.webtest import test_context
 from tg._compat import u_, string_type
 
-def setup():
+def setup_module():
     setup_session_dir()
-def teardown():
+def teardown_module():
     teardown_session_dir()
 
 def test_create_request():
     with test_context(None, '/', { 'SCRIPT_NAME' : '/xxx' }):
-        eq_('http://localhost/xxx/hello', tg.request.relative_url('hello'))
-        eq_('http://localhost/xxx', tg.request.application_url)
+        assert 'http://localhost/xxx/hello' == tg.request.relative_url('hello')
+        assert 'http://localhost/xxx' == tg.request.application_url
 
 def test_approots():
     with test_context(None, '/subthing/',{ 'SCRIPT_NAME' : '/subthing' }):
-        eq_("foo", url("foo"))
-        eq_("/subthing/foo", url("/foo"))
+        assert "foo" == url("foo")
+        assert "/subthing/foo" == url("/foo")
 
 def test_lowerapproots():
     with test_context(None, '/subthing/subsubthing/',{ 'SCRIPT_NAME' : '/subthing/subsubthing' }):
-        eq_("/subthing/subsubthing/foo", url("/foo"))
+        assert "/subthing/subsubthing/foo" == url("/foo")
 
 
 @no_warn
@@ -44,9 +43,7 @@ def test_unicode():
     """url() can handle unicode parameters"""
     with test_context(None, '/'):
         unicodestring =  u_('àèìòù')
-        eq_(url('/', params=dict(x=unicodestring)),
-            '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
-            )
+        assert url('/', params=dict(x=unicodestring)) == '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
 
 
 @no_warn

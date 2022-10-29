@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+import os
 from datetime import datetime, timedelta
+
+import pytest
 
 import tg
 from tg.util import *
 from tg.configuration.utils import get_partial_dict
-from nose.tools import eq_, raises, assert_raises
-import os
 from tg.controllers.util import *
 from tg.util.dates import get_fixed_timezone, utctz, parse_datetime
 from tg.util.files import safe_filename
@@ -19,18 +20,17 @@ import tg._compat
 from tg._compat import u_
 
 path = None
-def setup():
+def setup_module():
     global path
     path = os.curdir
     os.chdir(os.path.abspath(os.path.dirname(os.path.dirname(tg.__file__))))
 
-def teardown():
+def teardown_module():
     global path
     os.chdir(path)
 
 def test_get_partial_dict():
-    eq_(get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3}),
-        {'xyz':1,'zyx':2})
+    assert get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3}) == {'xyz':1,'zyx':2}
 
 def test_compat_im_class():
     class FakeClass(object):
@@ -111,16 +111,16 @@ class TestBunch(object):
         del d.test_value
         assert not list(d.keys())
 
-    @raises(AttributeError)
     def test_del_entry_fail(self):
         d = Bunch()
-        del d.not_existing
+        with pytest.raises(AttributeError):
+            del d.not_existing
 
 
 class TestDottedNameFinder(object):
-    @raises(DottedFileLocatorError)
     def test_non_python_package(self):
-        DottedFileNameFinder().get_dotted_filename('this.is.not.a.python.package')
+        with pytest.raises(DottedFileLocatorError):
+            DottedFileNameFinder().get_dotted_filename('this.is.not.a.python.package')
 
     def test_local_file(self):
         abspath = os.path.abspath('this_should_be_my_template')
@@ -170,7 +170,7 @@ class TestLazyString(object):
 
 
 class TestAttribSafeContextObj(object):
-    def setup(self):
+    def setup_method(self):
         self.c = AttribSafeTemplateContext()
 
     def test_attribute_default_value(self):
@@ -258,9 +258,9 @@ class TestDatesUtils(object):
         naive_dt = dt.replace(tzinfo=None)
         assert naive_dt == expected_dt, naive_dt
 
-    @raises(ValueError)
     def test_parse_datetime_invalid_format(self):
-        parse_datetime('1997@07@16T19:20:30.45+01:00')
+        with pytest.raises(ValueError):
+            parse_datetime('1997@07@16T19:20:30.45+01:00')
 
 
 class TestHtmlUtils(object):
@@ -337,7 +337,8 @@ class TestMiscUtils(object):
         not5 = unless(lambda x: x % 5, 0)
         assert not5(6) == 1
 
-        assert_raises(ValueError, not5, 10)
+        with pytest.raises(ValueError):
+            not5(10)
 
     def test_unless_sqla(self):
         from sqlalchemy import (MetaData, Table, Column, Integer, String)
@@ -366,8 +367,11 @@ class TestMiscUtils(object):
         x = getunless(2)
         assert x.val == 'bobby', x
 
-        assert_raises(ValueError, getunless, 5)
-        assert_raises(TGValidationError, Convert(getunless).to_python, '5')
+        with pytest.raises(ValueError):
+            getunless(5)
+
+        with pytest.raises(TGValidationError):
+            Convert(getunless).to_python('5')
 
         x = Convert(getunless).to_python('1')
         assert x.val == 'bob', x

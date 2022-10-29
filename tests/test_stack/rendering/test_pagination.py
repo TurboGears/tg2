@@ -1,5 +1,5 @@
 import json
-from nose import SkipTest
+import pytest
 from tests.test_stack import TestConfig, app_from_config
 from tg.support.paginate import Page
 from tg.controllers.util import _urlencode
@@ -28,7 +28,7 @@ _data = '<ul id="data">%s</ul>' % ''.join(
 
 
 class TestPagination:
-    def setup(self):
+    def setup_method(self):
         self.app = setup_noDB()
 
     def test_basic_pagination(self):
@@ -246,7 +246,7 @@ test3.insert().execute({'id': 1, 'val': 'bob'})
 test4.insert().execute({'id': 1, 'val': 'alberto'})
 
 class TestPageSQLA(object):
-    def setup(self):
+    def setup_method(self):
         self.s = create_session()
 
     def test_relationship(self):
@@ -281,9 +281,9 @@ except ImportError:
 
 class TestPageMing(object):
     @classmethod
-    def setupClass(cls):
+    def setup_class(cls):
         if ming is None:
-            raise SkipTest('Ming not available...')
+            pytest.skip('Ming not available...')
 
         cls.basic_session = Session(create_datastore('mim:///testdb'))
         cls.s = ODMSession(cls.basic_session)
@@ -322,7 +322,7 @@ class TestPageMing(object):
         cls.s.flush()
         cls.s.clear()
 
-    def teardown(self):
+    def teardown_method(self):
         self.s.clear()
 
     def test_query(self):

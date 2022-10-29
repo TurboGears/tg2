@@ -13,8 +13,7 @@ if py_version < (2, 7):
 if py_version[0] == 3 and py_version < (3, 4):
     raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.4')
 
-test_requirements = ['nose',
-                     'zope.sqlalchemy >= 0.4',
+test_requirements = ['zope.sqlalchemy >= 0.4',
                      'repoze.who',
                      'repoze.who.plugins.sa >= 1.0.1',
                      'Genshi >= 0.5.1',
@@ -79,12 +78,8 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     extras_require={
-       # Used by Travis and Coverage due to setup.py nosetests
-       # causing a coredump when used with coverage
        'testing':test_requirements,
     },
-    test_suite='nose.collector',
-    tests_require = test_requirements,
     entry_points='''
     '''
 )

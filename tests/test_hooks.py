@@ -1,5 +1,5 @@
 import atexit
-from nose.tools import raises
+import pytest
 from tests.test_configuration import PackageWithModel
 from tg.configuration.utils import TGConfigError
 from webtest import TestApp
@@ -15,10 +15,10 @@ from tg.configuration.hooks import (
 
 
 class TestGlobalHooks:
-    def setup(self):
+    def setup_method(self):
         milestones._reset_all()
 
-    def teardown(self):
+    def teardown_method(self):
         milestones._reset_all()
         tg.hooks._clear()  # Reset hooks
 
@@ -102,31 +102,30 @@ class TestGlobalHooks:
         resp = app.get('/test')
         assert 'BOBO' in resp, resp
 
-    @raises(TGConfigError)
     def test_config_hooks_startup_on_controller(self):
         def f():
             pass
 
-        tg.hooks.register('startup', None, controller=f)
+        with pytest.raises(TGConfigError):
+            tg.hooks.register('startup', None, controller=f)
 
-    @raises(TGConfigError)
     def test_config_hooks_shutdown_on_controller(self):
         def f():
             pass
 
-        tg.hooks.register('shutdown', None, controller=f)
+        with pytest.raises(TGConfigError):
+            tg.hooks.register('shutdown', None, controller=f)
 
-    @raises(ValueError)
     def test_controller_wrapper_using_register(self):
         milestones.config_ready.reach()
-        tg.hooks.register('controller_wrapper', None)
+        with pytest.raises(ValueError):
+            tg.hooks.register('controller_wrapper', None)
 
     def test_global_controller_wrapper_after_milestone_reached(self):
         milestones.environment_loaded.reach()
         conf = AppConfig(minimal=True)
         conf.register_controller_wrapper(None)
 
-    @raises(TypeError)
     def test_dedicated_controller_wrapper_after_milestone_reached(self):
         conf = AppConfig(minimal=True)
 
@@ -134,7 +133,8 @@ class TestGlobalHooks:
             pass
 
         milestones.environment_loaded.reach()
-        conf.register_controller_wrapper(None, controller=f)
+        with pytest.raises(TypeError):
+            conf.register_controller_wrapper(None, controller=f)
 
     def test_startup_hook(self):
         executed = []

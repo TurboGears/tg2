@@ -1,4 +1,5 @@
-from nose.tools import assert_raises
+import pytest
+
 from tg import jsonify
 import json
 import datetime
@@ -122,7 +123,9 @@ else:
         # ensure it can be serialized now
         jsonify.encode(t)
         s.expunge(t)
-        assert_raises(ValueError, lambda: jsonify.encode(t))
+
+        with pytest.raises(ValueError):
+            jsonify.encode(t)
 
     def test_select_rows_datetime():
         s = create_session()
