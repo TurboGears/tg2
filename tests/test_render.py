@@ -111,10 +111,10 @@ class TestMakoLookup(object):
         assert mlookup.adjust_uri('this_template_should_pass_unaltered', None) == 'this_template_should_pass_unaltered'
 
         dotted_test = mlookup.adjust_uri('tests.test_stack.rendering.templates.mako_inherits_local', None)
-        assert dotted_test.endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
+        assert dotted_test.replace('\\', '/').endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
 
         dotted_test = mlookup.adjust_uri('local:test_stack.rendering.templates.mako_inherits_local', None)
-        assert dotted_test.endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
+        assert dotted_test.replace('\\', '/').endswith('tests/test_stack/rendering/templates/mako_inherits_local.mak')
 
     def test_local_lookup(self):
         render_mako = tg.config['render_functions']['mako']
