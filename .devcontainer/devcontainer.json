@@ -11,7 +11,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip3 install -e . && pip3 install tg.devtools && gearbox quickstart exampleapp && cd exampleapp && gearbox setup-app -c development.ini",
+	"postCreateCommand": "pip3 install -e . && pip3 install tg.devtools && gearbox quickstart exampleapp && cd exampleapp && pip install -e . && gearbox setup-app -c development.ini"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
