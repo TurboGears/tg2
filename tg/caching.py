@@ -5,6 +5,7 @@ from tg.support.converters import asbool
 from tg.support import NoDefault, EmptyContext
 from tg._compat import im_func, im_class
 from functools import wraps
+from crank.util import _getargspec
 
 
 class cached_property(object):
@@ -251,7 +252,7 @@ def create_cache_key(func, key_dict=None, self=None):
 def _make_dict_from_args(func, args, kwargs):
     """Inspects function for name of args"""
     args_keys = {}
-    for i, arg in enumerate(inspect.getargspec(func)[0]):
+    for i, arg in enumerate(_getargspec(func)[0]):
         if arg != "self":
             try:
                 args_keys[arg] = args[i]
