@@ -22,9 +22,8 @@ jobs:
           pip install git+https://github.com/TurboGears/backlash.git
           pip install git+https://github.com/TurboGears/Ming.git
           pip install repoze.who
-          pip install coverage
-          pip install -U --upgrade-strategy=eager --pre -e .[testing]
           pip install pytest-cov
+          pip install -U --upgrade-strategy=eager --pre -e .[testing]
       - name: Run Tests
         run: |
           pytest --cov=tg
