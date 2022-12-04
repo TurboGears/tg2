@@ -74,7 +74,7 @@ class controller_based_validate(validate):
         self.validators = Validators()
 
 class ColonValidator(validators.FancyValidator):
-    def validate_python(self, value, state):
+    def _validate_python(self, value, state):
         raise validators.Invalid('ERROR: Description', value, state)
 
 class ColonLessGenericValidator(object):

@@ -225,21 +225,21 @@ test4 = Table('test4', metadata,
 
 metadata.create_all(engine)
 
-class Test2(object):
+class MTest2(object):
     pass
-mapper_registry.map_imperatively(Test2, test2)
+mapper_registry.map_imperatively(MTest2, test2)
 
-class Test1(object):
+class MTest1(object):
     pass
-mapper_registry.map_imperatively(Test1, test1, properties={'test2s': relationship(Test2)})
+mapper_registry.map_imperatively(MTest1, test1, properties={'test2s': relationship(MTest2)})
 
-class Test3(object):
+class MTest3(object):
     pass
-mapper_registry.map_imperatively(Test3, test3)
+mapper_registry.map_imperatively(MTest3, test3)
 
-class Test4(object):
+class MTest4(object):
     pass
-mapper_registry.map_imperatively(Test4, test4)
+mapper_registry.map_imperatively(MTest4, test4)
 
 connection = engine.connect()
 connection.execute(test1.insert(), {'id': 1, 'val': 'bob'})
@@ -256,19 +256,19 @@ class TestPageSQLA(object):
         self.s = SQLASession(connection)
 
     def test_relationship(self):
-        t = self.s.query(Test1).get(1)
+        t = self.s.query(MTest1).get(1)
         p = Page(t.test2s, items_per_page=1, page=1)
         assert len(list(p)) == 1
         assert list(p)[0].val == 'fred', list(p)
 
     def test_query(self):
-        q = self.s.query(Test2)
+        q = self.s.query(MTest2)
         p = Page(q, items_per_page=1, page=1)
         assert len(list(p)) == 1
         assert list(p)[0].val == 'fred', list(p)
 
     def test_json_query(self):
-        q = self.s.query(Test2)
+        q = self.s.query(MTest2)
         p = Page(q, items_per_page=1, page=1)
         res = json.loads(json_encode(p))
         assert len(res['entries']) == 1

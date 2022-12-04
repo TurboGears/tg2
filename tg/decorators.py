@@ -20,7 +20,7 @@ from tg import tmpl_context, request, response
 from tg.util import Bunch
 from tg.configuration.sqla.balanced_session import force_request_engine
 from tg.flash import flash
-from tg.caching import beaker_cache, cached_property, _cached_call, create_cache_key
+from tg.caching import cached_property, _cached_call, create_cache_key
 from tg.predicates import NotAuthorizedError
 from tg._compat import default_im_func, unicode_text
 

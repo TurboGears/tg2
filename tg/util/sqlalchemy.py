@@ -12,7 +12,7 @@ try:  # sa>=1.4
     from sqlalchemy.engine import Row
     try:
         from sqlalchemy.engine import LegacyRow as RowProxy
-    except ImportError:
+    except ImportError:  # pragma: no cover
         RowProxy = None
 except ImportError:  # pragma: no cover
     Row = None

@@ -43,26 +43,26 @@ try:
 
     metadata.create_all(engine)
 
-    class Test2(object):
+    class MTest2(object):
         pass
-    mapper_registry.map_imperatively(Test2, test2)
+    mapper_registry.map_imperatively(MTest2, test2)
 
-    class Test1(object):
+    class MTest1(object):
         pass
-    mapper_registry.map_imperatively(Test1, test1, properties={'test2s': relationship(Test2)})
+    mapper_registry.map_imperatively(MTest1, test1, properties={'test2s': relationship(MTest2)})
 
-    class Test3(object):
+    class MTest3(object):
         def __json__(self):
             return {'id': self.id, 'val': self.val, 'customized': True}
-    mapper_registry.map_imperatively(Test3, test3)
+    mapper_registry.map_imperatively(MTest3, test3)
 
-    class Test4(object):
+    class MTest4(object):
         pass
-    mapper_registry.map_imperatively(Test4, test4)
+    mapper_registry.map_imperatively(MTest4, test4)
 
-    class Test5(object):
+    class MTest5(object):
         pass
-    mapper_registry.map_imperatively(Test5, test5)
+    mapper_registry.map_imperatively(MTest5, test5)
 
     connection = engine.connect()
     connection.execute(test1.insert(), {'id': 1, 'val': 'bob'})
@@ -81,7 +81,7 @@ else:
 
     def test_saobj():
         s = Session(engine)
-        t = s.query(Test1).get(1)
+        t = s.query(MTest1).get(1)
         assert t
         encoded = jsonify.encode(t)
         expected = json.loads('{"id": 1, "val": "bob"}')
@@ -90,7 +90,7 @@ else:
 
     def test_salist():
         s = Session(engine)
-        t = s.query(Test1).get(1)
+        t = s.query(MTest1).get(1)
         encoded = jsonify.encode(dict(results=t.test2s))
         expected = json.loads('''{"results": [{"test1id": 1, "id": 1, "val": "fred"}, {"test1id": 1, "id": 2, "val": "alice"}]}''')
         result = json.loads(encoded)
@@ -114,7 +114,7 @@ else:
 
     def test_explicit_saobj():
         s = Session(engine)
-        t = s.query(Test3).get(1)
+        t = s.query(MTest3).get(1)
         encoded = jsonify.encode(t)
         expected = json.loads('{"id": 1, "val": "bob", "customized": true}')
         result = json.loads(encoded)
@@ -122,7 +122,7 @@ else:
 
     def test_detached_saobj():
         s = Session(engine)
-        t = s.query(Test1).get(1)
+        t = s.query(MTest1).get(1)
         # ensure it can be serialized now
         jsonify.encode(t)
         s.expunge(t)

@@ -10,7 +10,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
 from ming import Session
-from ming.orm import ThreadLocalORMSession
+from ming.odm import ThreadLocalORMSession
 
 from tg.configurator.base import ConfigurationComponent, Configurator, BeforeConfigConfigurationAction
 from tg.configurator.components.app_globals import AppGlobalsConfigurationComponent
@@ -342,10 +342,10 @@ class TestConfigurator:
     def test_sa_auth_authmetadata_without_authenticate(self):
         cfg = FullStackApplicationConfigurator()
         class FakeAuthMetadata():
-            pass
+            authenticate = None
         cfg.update_blueprint({
             'root_controller': Bunch(index=lambda *args, **kwargs: 'HI'),
-            'auth_backend': 'authmetadata',
+            'sa_auth.enabled': True,
             'sa_auth.authmetadata': FakeAuthMetadata(),
             'sa_auth.cookie_secret': 'SECRET!'
         })
@@ -992,100 +992,6 @@ class TestAppConfig:
         assert dstore.bind._conn_args[0] == expected_url
         assert 'test' == dstore.bind._conn_kwargs.get('replicaSet'), dstore.bind._conn_kwargs
 
-    def test_setup_sqla_auth_repozesqla(self):
-        if PY3: pytest.skip()
-
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return str(request.environ)
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.auth_backend = 'sqlalchemy'
-        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
-                           'dbsession': None,
-                           'user_class': None,
-                           'cookie_secret': '12345'}
-        conf['sqlalchemy.url'] = 'sqlite://'
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert 'repoze.who.plugins' in resp, resp
-
-    def test_setup_sqla_auth(self):
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return str(request.environ)
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_sqlalchemy = True
-        conf.auth_backend = 'sqlalchemy'
-        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
-                           'dbsession': None,
-                           'user_class': None,
-                           'cookie_secret': '12345'}
-        conf['sqlalchemy.url'] = 'sqlite://'
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert 'repoze.who.plugins' in resp, resp
-
-    def test_setup_ming_auth_tgming(self):
-        if PY3: pytest.skip()
-
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return str(request.environ)
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_ming = True
-        conf.auth_backend = 'ming'
-        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadata(),
-                           'cookie_secret': '12345',
-                           'user_class': None}
-        conf['ming.url'] = 'mim:///testdb'
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert 'repoze.who.plugins' in resp, resp
-
-    def test_setup_ming_auth(self):
-        class RootController(TGController):
-            @expose()
-            def test(self):
-                return str(request.environ)
-
-        package = PackageWithModel()
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.package = package
-        conf.model = package.model
-        conf.use_ming = True
-        conf.auth_backend = 'ming'
-        conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
-                           'cookie_secret': '12345',
-                           'user_class': None}
-        conf['ming.url'] = 'mim:///testdb'
-        app = conf.make_wsgi_app()
-        app = TestApp(app)
-
-        resp = app.get('/test')
-        assert 'repoze.who.plugins' in resp, resp
-
     def test_setup_authtkt(self):
         class RootController(TGController):
             @expose()
@@ -1097,7 +1003,7 @@ class TestAppConfig:
         conf.package = package
         conf.model = package.model
         conf.use_sqlalchemy = True
-        conf.auth_backend = 'sqlalchemy'
+        conf["sa_auth.enabled"] = True
         conf['sa_auth'] = {'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                            'dbsession': None,
                            'user_class': None,
@@ -1444,7 +1350,7 @@ class TestAppConfig:
 
     def test_cookie_secret_required(self):
         conf = AppConfig(root_controller=RootController())
-        conf['auth_backend'] = 'sqlalchemy'
+        conf['sa_auth.enabled'] = True
         conf['sa_auth'] = {}
         try:
             conf.make_wsgi_app()
@@ -1452,81 +1358,6 @@ class TestAppConfig:
             assert str(e).startswith('You must provide a value for authentication cookies secret')
         else:
             assert False
-
-    def test_sqla_auth_middleware(self):
-        if PY3: pytest.skip()
-
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.auth_backend = 'sqlalchemy'
-        conf.skip_authentication = True
-        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                'dbsession': None,
-                                'user_class':None,
-                                'cookie_secret':'12345',
-                                'authenticators':UncopiableList([('default', None)])})
-        conf.make_wsgi_app()
-
-        authenticators = [x[0] for x in config['sa_auth.authenticators']]
-        assert 'cookie' in authenticators
-        assert 'sqlauth' in authenticators
-
-    def test_sqla_auth_middleware_using_translations(self):
-        if PY3: pytest.skip()
-
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.auth_backend = 'sqlalchemy'
-        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                'dbsession': None,
-                                'user_class':None,
-                                'translations': {'user_name':'SomethingElse'},
-                                'cookie_secret':'12345',
-                                'authenticators':UncopiableList([('default', None)])})
-        conf.make_wsgi_app()
-
-        authenticators = [x[0] for x in config['sa_auth.authenticators']]
-        assert 'cookie' in authenticators
-        assert 'sqlauth' in authenticators
-
-        auth = None
-        for authname, authobj in config['sa_auth.authenticators']:
-            if authname == 'sqlauth':
-                auth = authobj
-                break
-
-        assert auth is not None, config['sa_auth.authenticators']
-        assert auth.translations['user_name'] == 'SomethingElse', auth.translations
-
-    def test_sqla_auth_middleware_default_after(self):
-        if PY3: pytest.skip()
-
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.auth_backend = 'sqlalchemy'
-        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                  'cookie_secret':'12345',
-                                  'dbsession': None,
-                                  'user_class': None,
-                                  'authenticators':UncopiableList([('superfirst', None),
-                                                                   ('default', None)])})
-        conf.make_wsgi_app()
-
-        authenticators = [x[0] for x in config['sa_auth.authenticators']]
-        assert authenticators[1] == 'superfirst'
-        assert 'cookie' in authenticators
-        assert 'sqlauth' in authenticators
-
-    def test_sqla_auth_middleware_no_authenticators(self):
-        if PY3: pytest.skip()
-
-        conf = AppConfig(minimal=True, root_controller=RootController())
-        conf.auth_backend = 'sqlalchemy'
-        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                'dbsession': None,
-                                'user_class': None,
-                                'cookie_secret':'12345'})
-
-        # In this case we can just test it doesn't crash
-        # as the sa_auth dict doesn't have an authenticators key to check for
-        conf.make_wsgi_app()
 
     def test_sqla_auth_middleware_only_mine(self):
         class RootController(TGController):
@@ -1542,10 +1373,10 @@ class TestAppConfig:
         conf = AppConfig(minimal=True, root_controller=RootController())
         conf.package = package
         conf.model = package.model
-        conf.auth_backend = 'sqlalchemy'
         conf.use_sqlalchemy = True
         conf['sqlalchemy.url'] = 'sqlite://'
 
+        conf["sa_auth.enabled"] = True
         alwaysadmin = _AuthenticationForgerPlugin(fake_user_key='FAKE_USER')
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
                            'cookie_secret':'12345',
@@ -1572,10 +1403,10 @@ class TestAppConfig:
         conf = AppConfig(minimal=True, root_controller=None)
         conf.package = package
         conf.model = package.model
-        conf.auth_backend = 'sqlalchemy'
         conf.use_sqlalchemy = True
         conf['sqlalchemy.url'] = 'sqlite://'
 
+        conf["sa_auth.enabled"] = True
         alwaysadmin = _AuthenticationForgerPlugin(fake_user_key='FAKE_USER')
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
                                 'cookie_secret':'12345',
@@ -1599,24 +1430,9 @@ class TestAppConfig:
             # Ignore this error, as github actions don't allow to write temporary files.
             pytest.skip("GitHub doesn't allow to write temporary files")
 
-    def test_ming_auth_middleware(self):
-        if PY3: pytest.skip()
-
-        conf = AppConfig(root_controller=RootController(),
-                         auth_backend='ming')
-        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
-                                'user_class':None,
-                                'cookie_secret':'12345',
-                                'authenticators': UncopiableList([('default', None)])})
-        conf.make_wsgi_app()
-
-        authenticators = [x[0] for x in config['sa_auth.authenticators']]
-        assert 'cookie' in authenticators
-        assert 'mingauth' in authenticators
-
     def test_sqla_auth_middleware_no_backend(self):
         conf = AppConfig(root_controller=RootController())
-        conf.auth_backend = None
+        conf["sa_auth.enabled"] = False
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
                                 'cookie_secret':'12345'})
         conf.make_wsgi_app()
@@ -1626,9 +1442,20 @@ class TestAppConfig:
         #assert 'cookie' in authenticators
         #assert len(authenticators) == 1
 
+
+    def test_sqla_auth_no_authenticate_meth(self):
+        conf = AppConfig(root_controller=RootController())
+        conf["sa_auth.enabled"] = True
+        conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadata(),
+                                'cookie_secret':'12345'})
+
+        with pytest.raises(TGConfigError) as e:
+            conf.make_wsgi_app()
+        assert "missing authenticate" in str(e.value)
+
     def test_tgauthmetadata_auth_middleware(self):
-        conf = AppConfig(root_controller=RootController(),
-                         auth_backend='sqlalchemy')
+        conf = AppConfig(root_controller=RootController())
+        conf["sa_auth.enabled"] = True
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                                   'dbsession': None,
                                   'user_class':None,
@@ -1641,8 +1468,8 @@ class TestAppConfig:
         assert 'tgappauth' in authenticators
 
     def test_auth_setup_default_identifier(self):
-        conf = AppConfig(root_controller=RootController(),
-                         auth_backend='sqlalchemy')
+        conf = AppConfig(root_controller=RootController())
+        conf["sa_auth.enabled"] = True
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                                   'dbsession': None,
                                   'user_class':None,
@@ -1654,8 +1481,8 @@ class TestAppConfig:
         assert 'cookie' in identifiers
 
     def test_auth_setup_custom_identifier(self):
-        conf = AppConfig(root_controller=RootController(),
-                         auth_backend='sqlalchemy')
+        conf = AppConfig(root_controller=RootController())
+        conf["sa_auth.enabled"] = True
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                                 'dbsession': None,
                                 'user_class':None,
@@ -1669,8 +1496,8 @@ class TestAppConfig:
     def test_auth_middleware_doesnt_touch_authenticators(self):
         # Checks that the auth middleware process doesn't touch original authenticators
         # list, to prevent regressions on this.
-        conf = AppConfig(root_controller=RootController(),
-                         auth_backend='sqlalchemy')
+        conf = AppConfig(root_controller=RootController())
+        conf["sa_auth.enabled"] = True
         conf['sa_auth'].update({'authmetadata': ApplicationAuthMetadataWithAuthentication(),
                                 'dbsession': None,
                                 'user_class':None,

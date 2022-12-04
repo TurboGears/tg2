@@ -112,7 +112,7 @@ def make_app(controller_klass, environ=None, with_errors=False, config_options=N
     })
 
     config_options['skip_authentication'] = True
-    config_options['auth_backend'] = 'sqlalchemy'
+    config_options['sa_auth.enabled'] = True
     conf = base_make_app(controller_klass, with_errors=with_errors, config_options=config_options,
                          make_app=False)
     conf._configurator.register(ForceAuthenticatorComponent, after='sa_auth')

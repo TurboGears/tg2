@@ -5,7 +5,6 @@ from tg.support.converters import asbool
 from tg.support import NoDefault, EmptyContext
 from tg._compat import im_func, im_class
 from functools import wraps
-from crank.util import _getargspec
 
 
 class cached_property(object):
@@ -136,88 +135,6 @@ def _cached_call(func, args, kwargs, namespace, cache_key,
     return response['content']
 
 
-def beaker_cache(key="cache_default", expire="never", type=None,
-                 query_args=False,
-                 cache_headers=('content-type', 'content-length'),
-                 invalidate_on_startup=False,
-                 cache_response=True, **b_kwargs):
-    """Cache decorator utilizing Beaker. Caches a
-    function that returns a pickle-able object as a result.
-
-    Optional arguments:
-
-    ``key``
-        None - No variable key, uses function name as key
-        "cache_default" - Uses all function arguments as the key
-        string - Use kwargs[key] as key
-        list - Use [kwargs[k] for k in list] as key
-    ``expire``
-        Time in seconds before cache expires, or the string "never".
-        Defaults to "never"
-    ``type``
-        Type of cache to use: dbm, memory, file, memcached, or None for
-        Beaker's default
-    ``query_args``
-        Uses the query arguments as the key, defaults to False
-    ``cache_headers``
-        A tuple of header names indicating response headers that
-        will also be cached.
-    ``invalidate_on_startup``
-        If True, the cache will be invalidated each time the application
-        starts or is restarted.
-    ``cache_response``
-        Determines whether the response at the time beaker_cache is used
-        should be cached or not, defaults to True.
-
-        .. note::
-            When cache_response is set to False, the cache_headers
-            argument is ignored as none of the response is cached.
-
-    If cache.enabled is set to False in the .ini file, then cache is
-    disabled globally.
-
-    """
-    warnings.warn("@beaker_cache is deprecated, use @cached to cache controllers "
-                  "and tg.cache to cache functions.",
-                  DeprecationWarning)
-    
-    if invalidate_on_startup:
-        starttime = time.time()
-    else:
-        starttime = None
-    cache_headers = set(cache_headers)
-
-    def beaker_cache_decorate(func):
-        @wraps(func)
-        def beaker_cached_call(*args, **kwargs):
-            if key:
-                key_dict = kwargs.copy()
-                key_dict.update(_make_dict_from_args(func, args, kwargs))
-                if query_args:
-                    key_dict.update(tg.request.GET.mixed())
-
-                if key != 'cache_default':
-                    if isinstance(key, list):
-                        key_dict = dict((k, key_dict[k]) for k in key)
-                    else:
-                        key_dict = {key: key_dict[key]}
-            else:
-                key_dict = None
-
-            self = None
-            if args:
-                self = args[0]
-            namespace, cache_key = create_cache_key(func, key_dict, self)
-            return _cached_call(func, args, kwargs, namespace, cache_key,
-                                expire, type, starttime,
-                                cache_headers, cache_response,
-                                b_kwargs)
-
-        return beaker_cached_call
-
-    return beaker_cache_decorate
-
-
 def create_cache_key(func, key_dict=None, self=None):
     """Get a cache namespace and key used by the beaker_cache decorator.
 
@@ -247,15 +164,3 @@ def create_cache_key(func, key_dict=None, self=None):
         return '%s.%s' % (kls.__module__, kls.__name__), cache_key
     else:
         return func.__module__, cache_key
-
-
-def _make_dict_from_args(func, args, kwargs):
-    """Inspects function for name of args"""
-    args_keys = {}
-    for i, arg in enumerate(_getargspec(func)[0]):
-        if arg != "self":
-            try:
-                args_keys[arg] = args[i]
-            except IndexError:
-                args_keys[arg] = kwargs[arg]
-    return args_keys
