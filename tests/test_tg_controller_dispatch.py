@@ -143,10 +143,6 @@ class SubController(object):
         return "Why hello, %s!" % name
 
     @expose()
-    def get_controller_state(self):
-        return '/'.join([p[0] for p in tg.request.controller_state.controller_path])
-
-    @expose()
     def get_dispatch_state(self):
         return '/'.join([p[0] for p in tg.request.dispatch_state.controller_path])
 
@@ -511,7 +507,7 @@ class BasicTGController(TGController):
 
     @expose()
     def with_routing_args(self, **kw):
-        return str(tg.request._controller_state.routing_args)
+        return str(tg.request.dispatch_state.routing_args)
 
     @expose('json')
     def get_response_type(self):
@@ -880,11 +876,9 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/self_calling/a/b/c/method/a/b')
         assert "('a', 'b', {})" in resp.body.decode('utf-8'), resp
 
-    def test_controller_state(self):
-        resp_deprecated = self.app.get('/sub/get_controller_state')
+    def test_dispatch_state(self):
         resp = self.app.get('/sub/get_dispatch_state')
         assert '/sub' in resp
-        assert resp_deprecated.text == resp.text
 
     def test_response_type_json(self):
         resp = self.app.get('/get_response_type.json')

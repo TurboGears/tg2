@@ -69,10 +69,9 @@ class SimpleCachingController(TGController):
     
     @expose()
     def simple(self, a):
-        c = cache.get_cache("BasicTGController.index")
+        c = cache.get_cache("BasicTGController.index", type="memory")
         x = c.get_value(key=a, 
                         createfunc=lambda: "cached %s" % a,
-                        type="memory",
                         expiretime=3600)
         return x
     
@@ -82,10 +81,9 @@ class SimpleCachingController(TGController):
     @expose()
     def expiry(self, a):
         mockdb['expiry'] = a # inject a value into the context
-        c = cache.get_cache("BasicTGController.index")
+        c = cache.get_cache("BasicTGController.index", type="memory")
         x = c.get_value(key='test', 
                         createfunc=self.createfunc,
-                        type="memory",
                         expiretime=100)
         return x
 

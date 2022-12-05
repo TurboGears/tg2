@@ -763,7 +763,7 @@ class cached(object):
                 else:
                     key_dict = {}
 
-                namespace, cache_key = create_cache_key(func, key_dict, req.controller_state.controller)
+                namespace, cache_key = create_cache_key(func, key_dict, req.dispatch_state.controller)
                 req._fast_setattr('caching', Bunch(namespace=namespace,
                                                    key=cache_key))
 

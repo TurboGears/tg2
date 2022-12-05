@@ -27,7 +27,7 @@ from ..wsgiapp import TGApp
 
 
 def dispatched_controller():
-    state = tg.request._controller_state
+    state = tg.request._dispatch_state
     for location, cont in reversed(state.controller_path):
         if cont.mount_point:
             return cont
@@ -72,7 +72,7 @@ class CoreDispatcher(object):
         state = state.resolve()
 
         # Save the dispatch state for possible use within the controller methods
-        req._fast_setattr('_controller_state', state)
+        req._fast_setattr('_dispatch_state', state)
 
         if conf.get('enable_routing_args', False):
             state.routing_args.update(state.params)

@@ -1,5 +1,5 @@
 """TurboGears project related information"""
-version = "2.4.3"
+version = "2.5.0a0"
 description = "Next generation TurboGears"
 long_description="""
 TurboGears brings together a best of breed python tools
