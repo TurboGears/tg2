@@ -68,20 +68,6 @@ class Request(WebObRequest):
         return self.languages_best_match(self._language)
 
     @property
-    def language(self):
-        warnings.warn("request.language is now deprecated, use tg.config['i18n.lang'] to"
-                      "read application fallback language.",
-                      DeprecationWarning, stacklevel=2)
-        return self._language
-
-    @language.setter
-    def language(self, value):
-        warnings.warn("Setting request.language is now deprecated, use tg.i18n functions"
-                      "to change the fallback language.",
-                      DeprecationWarning, stacklevel=2)
-        self._language = value
-
-    @property
     def response_type(self):
         """Expected response content type when URL Extensions are enabled.
 

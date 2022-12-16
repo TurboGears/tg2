@@ -20,8 +20,7 @@ class TestRequest(object):
 
     def test_languages(self):
         r = Request({}, headers={'Accept-Language': 'en-gb;q=0.8, it;q=0.9, da'})
-        r.language = 'it'
-        assert r.language == 'it'
+        r._language = "it"  # Fake there was a tg.i18n["lang"] option set.
         bmatch = r.languages
         assert bmatch[:2] == ['da', 'it'], bmatch
         assert bmatch[-1] == 'it'

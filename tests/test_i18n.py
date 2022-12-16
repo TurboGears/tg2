@@ -75,7 +75,7 @@ class i18nRootController(TGController):
         if not tg.request.GET.get('skip_lang'):
             forced_lang = tg.request.GET.get('force_lang', 'de')
             forced_lang = forced_lang.split(',')
-            i18n.set_temporary_lang(forced_lang)
+            i18n.set_request_lang(forced_lang)
 
         if tg.request.GET.get('fallback'):
             i18n.add_fallback(tg.request.GET.get('fallback'),

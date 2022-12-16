@@ -248,12 +248,12 @@ class RootController(TGController):
 
     @expose('jinja:jinja_i18n.jinja')
     def jinja_i18n_en(self):
-        i18n.set_temporary_lang("en")
+        i18n.set_request_lang("en")
         return {}
 
     @expose('jinja:jinja_i18n.jinja')
     def jinja_i18n_de(self):
-        i18n.set_temporary_lang("de")
+        i18n.set_request_lang("de")
         return {}
 
     @expose('chameleon_genshi:index.html')
@@ -290,7 +290,7 @@ class RootController(TGController):
 
     @expose('kajiki:tests.test_stack.rendering.templates.kajiki_i18n')
     def kajiki_i18n_de(self):
-        i18n.set_temporary_lang("de")
+        i18n.set_request_lang("de")
         return {}
 
     @expose('kajiki:tests.test_stack.rendering.templates.index')

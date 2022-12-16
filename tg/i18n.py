@@ -296,12 +296,6 @@ def set_request_lang(languages, tgl=None):
         pass
 
 
-def set_temporary_lang(*args, **kwargs):
-    warnings.warn("i18n.set_temporary_lang has been deprecated in favor of"
-                  "i18n.set_request_lang and will be removed.", DeprecationWarning)
-    return set_request_lang(*args, **kwargs)
-
-
 def set_lang(languages, **kwargs):
     """Set the current language(s) used for translations
     in current call and session.
