@@ -333,7 +333,8 @@ class BasicTGController(TGController):
             output = ''
             validate_params = get_params_with_argspec(controller, {}, args)
             params = DecoratedController._perform_validate(controller,
-                                                           validate_params)
+                                                           validate_params,
+                                                           tg.request.environ["tg.locals"])
         except validation_errors as inv:
             handler, output = DecoratedController._handle_validation_errors(controller,
                                                                             args, {},

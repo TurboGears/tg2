@@ -138,7 +138,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         return response['response']
 
     @classmethod
-    def _perform_validate(cls, controller, params, context=None):
+    def _perform_validate(cls, controller, params, context):
         """Run validation for the controller with the given parameters.
 
         Validation is stored on the "validation" attribute of the controller's
@@ -159,12 +159,6 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         be FormEncode Invalid objects.
 
         """
-        if context is None:  # pragma: no cover
-            warnings.warn("Calling DecoratedController._perform_validate without a Context is now deprecated."
-                          " Please provide the context argument when calling it.",
-                          DeprecationWarning, stacklevel=2)
-            context = tg.request.environ['tg.locals']
-
         validations = controller.decoration.validations
         if not validations:
             return params
