@@ -228,12 +228,6 @@ class BasicTGController(TGController):
     def with_hooked_error_handler(self, *args, **kw):
         return dict(GOT_ERROR='NO ERROR')
 
-    @expose('json')
-    @validate({'v': validators.Int()})
-    def check_tmpl_context_compatibility(self, *args, **kw):
-        return dict(tmpl_errors=str(tg.tmpl_context.form_errors),
-                    errors=str(tg.request.validation.errors))
-
     @expose()
     def error_handler(self, *args, **kw):
         return 'ERROR HANDLER!'
@@ -576,11 +570,6 @@ class TestTGController(TestWSGIController):
     def test_hook_after_validation_error(self):
         resp = self.app.post('/with_hooked_error_handler?v=a')
         assert 'HOOKED' in resp, resp
-
-    def test_check_tmpl_context_compatibility(self):
-        resp = self.app.post('/check_tmpl_context_compatibility?v=a')
-        resp = resp.json
-        assert resp['errors'] == resp['tmpl_errors'], resp
 
     def test_validation_error_has_message(self):
         e = TGValidationError('This is a validation error')

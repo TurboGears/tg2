@@ -266,18 +266,6 @@ class TemplateContext(object):
             hex(id(self)),
             ','.join(parts))
 
-    def __getattr__(self, item):
-        if item in ('form_values', 'form_errors'):
-            warnings.warn('tmpl_context.form_values and tmpl_context.form_errors got deprecated '
-                          'use request.validation instead', DeprecationWarning)
-            return getattr(tg.request.validation, item[5:])
-        elif item == 'controller_url':
-            warnings.warn('tmpl_context.controller_url got deprecated, '
-                          'use request.controller_url instead', DeprecationWarning)
-            return tg.request.controller_url
-
-        raise AttributeError()
-
 
 class AttribSafeTemplateContext(TemplateContext):
     """The ``tg.tmpl_context`` object, with lax attribute access (

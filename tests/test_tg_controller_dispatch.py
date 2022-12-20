@@ -910,10 +910,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.get('/sub3/controller_url/false/a/b/c')
         assert resp.text == 'sub3/controller_url', resp.text
 
-    def test_controller_url_backward_compatibility(self):
-        resp = self.app.get('/sub3/controller_url/true/a/b/c')
-        assert resp.text == 'sub3/controller_url', resp.text
-
     def test_responded_response(self):
         resp = self.app.get('/response_responded')
         assert resp.text == 'Body Response', resp.text
