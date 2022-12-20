@@ -294,25 +294,6 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         return im_self(controller), error_handler, chain_validation
 
-    @classmethod
-    def _handle_validation_errors(cls, controller, remainder, params, exception, tgl=None):
-        """Handle validation errors.
-
-        Processes validation errors and call the error_handler,
-        this is not used by TurboGears itself and is mostly provided
-        for backward compatibility.
-        """
-        warnings.warn("DecoratedController._handle_validation_errors is deprecated and will be removed",
-                      DeprecationWarning)
-
-        if tgl is None:  # pragma: no cover
-            # compatibility with old code that didn't pass request locals explicitly
-            tgl = tg.request.environ['tg.locals']
-
-        obj, error_handler,_ = cls._process_validation_errors(controller, remainder, params,
-                                                              exception, tgl)
-        return error_handler, error_handler(obj, *remainder, **dict(params))
-
     def _check_security(self):
         requirement = getattr(self, 'allow_only', None)
         if requirement is None:

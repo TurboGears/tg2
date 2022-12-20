@@ -329,17 +329,18 @@ class BasicTGController(TGController):
 
         controller = self.__class__.validate_function
         args = (2, 'NaN')
+        context = tg.request.environ["tg.locals"]
         try:
             output = ''
             validate_params = get_params_with_argspec(controller, {}, args)
             params = DecoratedController._perform_validate(controller,
                                                            validate_params,
-                                                           tg.request.environ["tg.locals"])
+                                                           context)
         except validation_errors as inv:
-            handler, output = DecoratedController._handle_validation_errors(controller,
-                                                                            args, {},
-                                                                            inv, None)
-
+            obj, error_handler,_ = DecoratedController._process_validation_errors(
+                controller, args, {}, inv, context
+            )
+            output = error_handler(obj, *args)
         return output
 
     @expose(content_type='text/plain')
