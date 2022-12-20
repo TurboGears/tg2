@@ -661,15 +661,6 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/passthrough_validation', {'uid': 5})
         assert resp.text == '5', resp
 
-    def test_backward_compatibility_decorator(self):
-        deco = Decoration.get_decoration(BasicTGController.two_validators)
-
-        validated_params = sorted(list(deco.validation.validators.keys()))
-        assert validated_params == ["a", "someemail"], validated_params
-
-        deco = Decoration.get_decoration(BasicTGController.tw2form_error_handler)
-        assert deco.validation is None, deco.validation
-
     def test_convert_validation(self):
         resp = self.app.post('/post_pow2', {'num': '5'})
         assert resp.text == '25', resp

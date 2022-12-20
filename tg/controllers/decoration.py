@@ -79,26 +79,8 @@ class Decoration(object):
                 break
 
     @property
-    def requirement(self):  # pragma: no cover
-        warnings.warn("Decoration.requirement is deprecated, "
-                      "please use 'requirements' instead", DeprecationWarning, stacklevel=2)
-        try:
-            return self.requirements[0]
-        except IndexError:
-            return None
-
-    @property
     def exposed(self):
         return bool(self.engines) or bool(self.custom_engines)
-
-    @property
-    def validation(self):
-        warnings.warn("Decoration.validation is deprecated, "
-                      "please use 'validations' instead", DeprecationWarning, stacklevel=2)
-        try:
-            return self.validations[0]
-        except IndexError:
-            return None
 
     def merge(self, deco):
         # This merges already registered template engines
