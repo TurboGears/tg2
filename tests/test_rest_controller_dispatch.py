@@ -63,7 +63,7 @@ class LookupAlwaysHelper:
         return 'always go here'
 
     def _dispatch(self, state, remainder):
-        state.add_method(self.always, remainder)
+        state.set_action(self.always, remainder)
         return state
 
 
@@ -81,7 +81,7 @@ class CustomDispatchingSubController(TGController):
         return 'always go here'
 
     def _dispatch(self, state, remainder):
-        state.add_method(self.always, remainder)
+        state.set_action(self.always, remainder)
         return state
 
 

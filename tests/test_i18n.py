@@ -120,8 +120,8 @@ class TestI18NStack(object):
         conf['i18n.enabled'] = True
         conf['session.enabled'] = True
         conf['i18n.lang'] = None
-        conf['beaker.session.key'] = 'tg_test_session'
-        conf['beaker.session.secret'] = 'this-is-some-secret'
+        conf['session.key'] = 'tg_test_session'
+        conf['session.secret'] = 'this-is-some-secret'
         conf.renderers = ['json']
         conf.default_renderer = 'json'
         conf.package = _FakePackage()
@@ -207,8 +207,8 @@ class TestI18NStackDefaultLang(object):
         conf['i18n.enabled'] = True
         conf['session.enabled'] = True
         conf['i18n.lang'] = 'kr'
-        conf['beaker.session.key'] = 'tg_test_session'
-        conf['beaker.session.secret'] = 'this-is-some-secret'
+        conf['session.key'] = 'tg_test_session'
+        conf['session.secret'] = 'this-is-some-secret'
         conf.renderers = ['json']
         conf.default_renderer = 'json'
         conf.package = _FakePackage()
