@@ -36,7 +36,7 @@ class AppConfig(object):
             self._configurator.update_blueprint({
                 'i18n.enabled': False,
                 'session.enabled': False,
-                'auth_backend': None,
+                'sa_auth.enabled': False,
                 'cache.enabled': False,
                 'tw2.enabled': False,
                 'use_ming': False,

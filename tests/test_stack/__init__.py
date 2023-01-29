@@ -22,7 +22,7 @@ class TestConfig(AppConfig):
         self.package = tests.test_stack
         self.default_renderer = 'kajiki'
         self.globals = self
-        self.auth_backend = None
+        self["sa_auth.enabled"] = False
         self.auto_reload_templates = False
         self.use_legacy_renderer = False
         self.use_dotted_templatenames = False
