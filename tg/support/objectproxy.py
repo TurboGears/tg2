@@ -63,3 +63,5 @@ class TurboGearsObjectProxy(object):
     def __nonzero__(self):
         return bool(self._current_obj())
     __bool__ = __nonzero__
+
+    _is_coroutine = None

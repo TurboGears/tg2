@@ -2,6 +2,7 @@
 # This module is part of the Python Paste Project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 import inspect
+import asyncio
 import pytest
 from webtest import TestApp
 from tg.support.registry import RegistryManager, StackedObjectProxy, DispatchingConfig
@@ -190,6 +191,11 @@ def test_stacked_object_inspect():
 
     so = StackedObjectProxy()
     assert inspect.unwrap(so) is so
+
+
+def test_stacked_object_iscoroutinefunction():
+    so = StackedObjectProxy()
+    assert not asyncio.iscoroutinefunction(so)
 
 
 def test_simple():
