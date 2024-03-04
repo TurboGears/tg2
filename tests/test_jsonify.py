@@ -6,6 +6,7 @@ from webob.multidict import MultiDict
 import json
 from tg.util import LazyString
 from tg.util.webtest import test_context
+from tests.base import utcnow
 
 
 class Foo(object):
@@ -83,14 +84,14 @@ def test_exlicitjson_in_dict():
     assert encoded == '{"b": "bar-bq"}'
 
 def test_datetime():
-    d = datetime.utcnow()
+    d = utcnow()
     encoded = jsonify.encode({'date':d})
     assert str(d.year) in encoded, (str(d), encoded)
 
 def test_datetime_iso():
     isodates_encoder = jsonify.JSONEncoder(isodates=True)
 
-    d = datetime.utcnow()
+    d = utcnow()
     encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
 
     isoformat_without_millis = json.dumps({'date': d.isoformat()[:19]})
@@ -100,7 +101,7 @@ def test_datetime_iso():
 def test_date_iso():
     isodates_encoder = jsonify.JSONEncoder(isodates=True)
 
-    d = datetime.utcnow().date()
+    d = utcnow().date()
     encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
 
     isoformat_without_millis = json.dumps({'date': d.isoformat()})
@@ -110,14 +111,14 @@ def test_date_iso():
     assert len(loaded_date['date'].split('-')) == 3
 
 def test_datetime_time():
-    d = datetime.utcnow().time()
+    d = utcnow().time()
     encoded = jsonify.encode({'date':d})
     assert str(d.hour) in encoded, (str(d), encoded)
 
 def test_datetime_time_iso():
     isodates_encoder = jsonify.JSONEncoder(isodates=True)
 
-    d = datetime.utcnow().time()
+    d = utcnow().time()
     encoded = jsonify.encode({'date': d}, encoder=isodates_encoder)
 
     isoformat_without_millis = json.dumps({'date': d.isoformat()[:8]})

@@ -31,6 +31,14 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 session_dir = os.path.join(data_dir, 'session')
 cache_dir = os.path.join(data_dir, 'cache')
 
+try:
+    datetime.UTC
+except AttributeError:
+    utcnow = datetime.datetime.utcnow
+else:
+    utcnow = lambda: datetime.datetime.now(datetime.UTC)
+
+
 def setup_session_dir():
     if not os.path.exists(session_dir):
         os.makedirs(session_dir)

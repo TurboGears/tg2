@@ -44,7 +44,7 @@ from tg.support.converters import asint, asbool
 
 import tg.i18n
 from tg import TGController, expose, response, request, abort, MinimalApplicationConfigurator
-from tests.base import setup_session_dir, teardown_session_dir
+from tests.base import setup_session_dir, teardown_session_dir, utcnow
 from webtest import TestApp
 from tg.renderers.base import RendererFactory
 
@@ -1050,7 +1050,7 @@ class TestAppConfig:
             @expose('json')
             def test(self):
                 cache = tg.cache.get_cache('test_caching_enabled')
-                now = cache.get_value('test_cache_key', createfunc=datetime.utcnow)
+                now = cache.get_value('test_cache_key', createfunc=utcnow)
                 return dict(now=now)
 
         conf = AppConfig(minimal=True, root_controller=RootController())
