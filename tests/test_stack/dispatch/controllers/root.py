@@ -10,8 +10,8 @@ from tg.controllers import TGController
 from tg import dispatched_controller
 from tests.test_validation import validators
 from tg._compat import unicode_text, u_
+from tg.support.converters import asbool
 
-from paste.deploy.converters import asbool
 
 class NestedSubController(TGController):
     @expose()
