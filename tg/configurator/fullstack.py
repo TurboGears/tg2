@@ -15,7 +15,6 @@ from .components.auth import SimpleAuthenticationConfigurationComponent
 from .components.i18n import I18NConfigurationComponent
 from .components.caching import CachingConfigurationComponent
 from .components.session import SessionConfigurationComponent
-from .components.toscawidgets2 import ToscaWidgets2ConfigurationComponent
 from .components.statics import StaticsConfigurationComponent
 
 log = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         - Authentication
         - Sessions
         - Caching
-        - Widgets (ToscaWidgets2)
         - Databases (Ming and SQLAlchemy)
         - Transaction Manager
         - Custom Error Pages
@@ -56,11 +54,6 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         self.register(SessionConfigurationComponent)
         self.register(CachingConfigurationComponent)
 
-        # from here on, due to TW2, the response is a generator
-        # so any middleware that relies on the response to be
-        # a string needs to be applied before this point.
-        self.register(ToscaWidgets2ConfigurationComponent)
-
         self.register(MingConfigurationComponent)
         self.register(SQLAlchemyConfigurationComponent)
         self.register(TransactionManagerConfigurationComponent)
@@ -69,7 +62,7 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         self.register(SeekableRequestConfigurationComponent)
         self.register(SlowRequestsConfigurationComponent)
         self.register(ErrorReportingConfigurationComponent)
-        
+
         self.register(StaticsConfigurationComponent, after=True)
 
         # Place the debuggers after the registry so that we
