@@ -37,6 +37,8 @@ class StackedObjectProxy(TurboGearsObjectProxy):
     objects can be removed with _pop_object.
 
     """
+    _is_coroutine_marker = False # make sure inspect.iscoroutine doesn't crash
+
     def __init__(self, default=NoDefault, name="Default"):
         """Create a new StackedObjectProxy
 
@@ -60,6 +62,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
             objects = self.____local__.objects
         except AttributeError:
             objects = None
+
         if objects:
             return objects[-1][0]
         else:
