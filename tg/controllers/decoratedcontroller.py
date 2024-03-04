@@ -10,15 +10,14 @@ import warnings
 import tg
 from tg.controllers.util import abort
 from tg.predicates import NotAuthorizedError, not_anonymous
+from tg.configuration.utils import TGConfigError
 
 from crank.util import get_params_with_argspec, flatten_arguments
 
 from tg.flash import flash
 from tg.jsonify import JsonEncodeError
 from tg.render import render as tg_render
-from tg.validation import (_navigate_tw2form_children,
-                           _Tw2ValidationError, validation_errors,
-                           TGValidationError, _ValidationStatus)
+from tg.validation import _ValidationStatus
 
 from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
 from functools import partial
@@ -78,7 +77,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             context = tg.request.environ['tg.locals']
 
         hooks = tg.hooks
-        context_config = tg.config._current_obj()
+        context_config = context.config
         context.request._fast_setattr('validation', _ValidationStatus())
 
         # This is necessary to prevent spurious Content Type header which would
@@ -97,10 +96,11 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         validate_params = get_params_with_argspec(action, params, remainder)
         context.request.args_params = validate_params  # Update args_params with positional args
+        validation_exceptions = tuple(context_config.get('validation.exceptions', tuple()))
 
         try:
             params = self._perform_validate(action, validate_params, context)
-        except validation_errors as inv:
+        except validation_exceptions as inv:
             instance, error_handler, chain_validation = self._process_validation_errors(
                 action, remainder, params, inv, context=context
             )
@@ -109,7 +109,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                 # go on and validate the error_handler too.
                 try:
                     params = self._perform_validate(error_handler, validate_params, context)
-                except validation_errors as inv:
+                except validation_exceptions as inv:
                     instance, error_handler, chain_validation = self._process_validation_errors(
                         error_handler, remainder, params, inv, context=context
                     )
@@ -165,11 +165,12 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         req = context.request
         validation_status = req.validation
+        config = context.config
 
         validated_params = params
         for validation_intent in validations:
             validation_status.intent = validation_intent
-            validated_params = validation_intent.check(controller, validated_params)
+            validated_params = validation_intent.check(config, controller, validated_params)
         return validated_params
 
     def _render_response(self, tgl, controller, response):
@@ -253,21 +254,25 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
 
         """
         req = context.request
+        config = context.config
 
+        validation_explode = context.config.get('validation.explode', {})
         validation_status = req.validation
         validation_status.exception = exception
 
-        if isinstance(exception, _Tw2ValidationError):
-            # Fetch all the children and grandchildren of a widget
-            widget = exception.widget
-            widget_children = _navigate_tw2form_children(widget.child)
+        if isinstance(exception, tuple(validation_explode.keys())):
+            exception_class = exception.__class__
+            explode = None
+            for supported_class in validation_explode:
+                if issubclass(exception_class, supported_class):
+                    explode = validation_explode[supported_class]
 
-            errors = dict((child.compound_key, child.error_msg) for child in widget_children)
-            validation_status.errors = errors
-            validation_status.values = widget.child.value
-        elif isinstance(exception, TGValidationError):
-            validation_status.errors = exception.error_dict
-            validation_status.values = exception.value
+            if explode is None:
+                raise TGConfigError(f"No validation explode function found for: {exception_class}")
+
+            exploded_validation = explode(exception)
+            validation_status.errors = exploded_validation['errors']
+            validation_status.values = exploded_validation['values']
         else:
             # Most Invalid objects come back with a list of errors in the format:
             # "fieldname1: error\nfieldname2: error"

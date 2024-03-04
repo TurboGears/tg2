@@ -11,14 +11,6 @@ import datetime
 
 from webob.exc import HTTPForbidden
 
-import tw2.forms as tw2f
-import tw2.core as tw2c
-class TW2MovieForm(tw2f.TableForm):
-    title = tw2f.TextField(validator=tw2c.Required)
-    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
-
-tw2_movie_form = TW2MovieForm()
-
 
 class IntValidator(object):
     def to_python(self, value):
@@ -147,14 +139,10 @@ class RootController(TGController):
     def explicit_doctype_xhtml(self):
         return {}
 
-    @expose('kajiki:kajiki_form.xhtml')
-    def tw2form(self):
-        return dict(form=tw2_movie_form)
-
     @expose('kajiki:kajiki_foreign.xhtml')
     def foreign(self):
         return {}
-    
+
     @expose()
     @paginate('testdata')
     def paginated_text(self):

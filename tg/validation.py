@@ -5,18 +5,9 @@ from tg._compat import unicode_text
 from .i18n import _formencode_gettext, lazy_ugettext
 
 try:
-    from tw2.core import ValidationError as _Tw2ValidationError
-except ImportError: #pragma: no cover
-    class _Tw2ValidationError(Exception):
-        """ToscaWidgets2 Validation Error"""
-
-try:
-    from formencode.api import Invalid as _FormEncodeValidationError
     from formencode.api import Validator as _FormEncodeValidator
     from formencode import Schema as _FormEncodeSchema
 except ImportError: #pragma: no cover
-    class _FormEncodeValidationError(Exception):
-        """FormEncode Invalid"""
     class _FormEncodeValidator(object):
         """FormEncode Validator"""
     class _FormEncodeSchema(object):
@@ -63,10 +54,12 @@ class _ValidationIntent(object):
         self.error_handler = error_handler
         self.chain_validation = chain_validation
 
-    def check(self, method, params):
+    def check(self, config, method, params):
         validators = self.validators
         if not validators:
             return params
+
+        validation_exceptions = tuple(config['validation.exceptions'])
 
         # An object used by FormEncode to get translator function
         formencode_state = type('state', (), {'_': staticmethod(_formencode_gettext)})
@@ -87,7 +80,7 @@ class _ValidationIntent(object):
                     else:
                         validated_params[field] = validator.to_python(params.get(field))
                 # catch individual validation errors into the errors dictionary
-                except validation_errors as inv:
+                except validation_exceptions as inv:
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -116,21 +109,6 @@ class _ValidationIntent(object):
             validated_params = validators.validate(params, formencode_state)
 
         return validated_params
-
-
-def _navigate_tw2form_children(w):
-    if getattr(w, 'compound_key', None):
-        # If we have a compound_key it's a leaf widget with form values
-        yield w
-    else:
-        child = getattr(w, 'child', None)
-        if child:
-            # Widgets with "child" don't have children, but their child has
-            w = child
-
-        for c in getattr(w, 'children', []):
-            for cc in _navigate_tw2form_children(c):
-                yield cc
 
 
 class TGValidationError(Exception):
@@ -192,6 +170,3 @@ class Convert(object):
             return self._func(value)
         except:
             raise TGValidationError(self._msg, value)
-
-
-validation_errors = (_Tw2ValidationError, _FormEncodeValidationError, TGValidationError)

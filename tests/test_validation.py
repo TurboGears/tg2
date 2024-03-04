@@ -16,43 +16,9 @@ from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.validation import TGValidationError, validation_errors, _ValidationStatus, Convert
+from tg.validation import TGValidationError, _ValidationStatus, Convert
 from tg.i18n import lazy_ugettext as l_
 from formencode import validators, Schema
-
-import tw2.core as tw2c
-import tw2.forms as tw2f
-
-
-class MovieForm(tw2f.TableForm):
-    title = tw2f.TextField(validator=tw2c.Required)
-    year = tw2f.TextField(size=4, validator=tw2c.IntValidator)
-movie_form = MovieForm(action='save_movie')
-
-class Pwd(Schema):
-    pwd1 = validators.String(not_empty=True)
-    pwd2 = validators.String(not_empty=True)
-    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
-
-class FormWithFieldSet(tw2f.TableForm):
-    class fields1(tw2f.ListFieldSet):
-        f1 = tw2f.TextField(validator=tw2c.Required)
-
-    class fields2(tw2f.ListFieldSet):
-        f2 = tw2f.TextField(validator=tw2c.IntValidator)
-
-if not PY3:
-    from tw.forms import TableForm, TextField
-    from tw.api import WidgetsList
-
-    class MyForm(TableForm):
-        class fields(WidgetsList):
-            """This WidgetsList is just a container."""
-            title=TextField(validator = validators.NotEmpty())
-            year = TextField(size=4, validator=validators.Int())
-    myform = MyForm("my_form", action='create')
-else:
-    myform = None
 
 
 def setup_module():
@@ -60,6 +26,12 @@ def setup_module():
 
 def teardown_module():
     teardown_session_dir()
+
+
+class Pwd(Schema):
+    pwd1 = validators.String(not_empty=True)
+    pwd2 = validators.String(not_empty=True)
+    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
 
 
 class controller_based_validate(validate):
@@ -163,46 +135,10 @@ class BasicTGController(TGController):
         }
 
     @expose()
-    def display_form(self, **kwargs):
-        return str(myform.render(values=kwargs))
-
-    @expose('json:')
-    @validate(form=myform)
-    def process_form(self, **kwargs):
-        kwargs['errors'] = tg.request.validation.errors
-        return dict(kwargs)
-
-    @expose('json:')
-    @validate(form=myform, error_handler=process_form)
-    def send_to_error_handler(self, **kwargs):
-        kwargs['errors'] = tg.request.validation.errors
-        return dict(kwargs)
-
-    @expose('json')
-    def tw2form_error_handler(self, **kwargs):
-        return dict(errors=tg.request.validation.errors)
-
-    @expose('json:')
-    @validate(form=movie_form, error_handler=tw2form_error_handler)
-    def send_tw2_to_error_handler(self, **kwargs):
-        return 'passed validation'
-
-    @expose()
-    @validate({'param': tw2c.IntValidator()},
-              error_handler=validation_errors_response)
-    def tw2_dict_validation(self, **kwargs):
-        return 'NO_ERROR'
-
-    @expose()
     @validate({'param': validators.Int()},
               error_handler=validation_errors_response)
     def formencode_dict_validation(self, **kwargs):
         return 'NO_ERROR'
-
-    @expose('text/plain')
-    @validate(form=FormWithFieldSet, error_handler=tw2form_error_handler)
-    def tw2_fieldset_submit(self, **kwargs):
-        return 'passed validation'
 
     @expose()
     def set_lang(self, lang=None):
@@ -256,8 +192,8 @@ class BasicTGController(TGController):
         return 'HUH'
 
     @expose()
-    @validate({'uid': tw2c.IntValidator(),
-               'num': tw2c.IntValidator()},
+    @validate({'uid': validators.Int(),
+               'num': validators.Int()},
               error_handler=error_handler_function)
     def validate_function(self, uid, num):
         return 'HUH'
@@ -336,7 +272,7 @@ class BasicTGController(TGController):
             params = DecoratedController._perform_validate(controller,
                                                            validate_params,
                                                            context)
-        except validation_errors as inv:
+        except TGValidationError as inv:
             obj, error_handler,_ = DecoratedController._process_validation_errors(
                 controller, args, {}, inv, context
             )
@@ -468,61 +404,9 @@ class TestTGController(TestWSGIController):
         assert 'someemail' in errors, \
             'The email was invalid and should have been reported in the errors'
 
-    def test_tw1form_validation(self):
-        """Check @validate's handing of ToscaWidget forms instances"""
-        if PY3: raise pytest.skip()
-
-        form_values = {'title': 'Razer', 'year': "2007"}
-        resp = self.app.post('/process_form', form_values)
-        values = loads(resp.body.decode('utf-8'))
-        assert values['year'] == 2007
-
     def test_error_with_colon(self):
         resp = self.app.post('/error_with_colon', {'e':"fakeparam"})
         assert 'Description' in str(resp.body), resp.body
-
-    def test_tw1form_render(self):
-        """Test that myform renders properly"""
-        if PY3: raise pytest.skip()
-
-        resp = self.app.post('/display_form')
-        assert 'id="my_form_title.label"' in resp, resp
-        assert 'class="fieldlabel required"' in resp, resp
-        assert "Title" in resp, resp
-
-    def test_tw1form_validation_error(self):
-        """Test form validation with error message"""
-        if PY3: raise pytest.skip()
-
-        form_values = {'title': 'Razer', 'year': "t007"}
-        resp = self.app.post('/process_form', form_values)
-        values = loads(resp.body.decode('utf-8'))
-        assert "Please enter an integer value" in values['errors']['year'], \
-            'Error message not found: %r' % values['errors']
-
-    def test_tw1form_validation_redirect(self):
-        """Test form validation error message with redirect"""
-        if PY3: raise pytest.skip()
-
-        form_values = {'title': 'Razer', 'year': "t007"}
-        resp = self.app.post('/send_to_error_handler', form_values)
-        values = loads(resp.body.decode('utf-8'))
-        assert "Please enter an integer value" in values['errors']['year'], \
-            'Error message not found: %r' % values['errors']
-
-    def test_tw2form_validation(self):
-        form_values = {'title': 'Razer', 'year': "t007"}
-        resp = self.app.post('/send_tw2_to_error_handler', form_values)
-        values = loads(resp.body.decode('utf-8'))
-        assert "Must be an integer" in values['errors']['year'],\
-        'Error message not found: %r' % values['errors']
-
-    def test_tw2dict_validation(self):
-        resp = self.app.post('/tw2_dict_validation', {'param': "7"})
-        assert 'NO_ERROR' in str(resp.body)
-
-        resp = self.app.post('/tw2_dict_validation', {'param': "hello"}, status=412)
-        assert 'Must be an integer' in str(resp.body)
 
     def test_formencode_dict_validation(self):
         resp = self.app.post('/formencode_dict_validation', {'param': "7"})
@@ -530,30 +414,6 @@ class TestTGController(TestWSGIController):
 
         resp = self.app.post('/formencode_dict_validation', {'param': "hello"}, status=412)
         assert 'Please enter an integer value' in str(resp.body), resp
-
-    def test_tw1form_validation_translation(self):
-        if PY3: raise pytest.skip()
-
-        """Test translation of form validation error messages"""
-        form_values = {'title': 'Razer', 'year': "t007"}
-        # check with language set in request header
-        resp = self.app.post('/process_form', form_values,
-            headers={'Accept-Language': 'de,ru,it'})
-        values = loads(resp.body.decode('utf-8'))
-        assert "Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
-            'No German error message: %r' % values['errors']
-        resp = self.app.post('/process_form', form_values,
-            headers={'Accept-Language': 'ru,de,it'})
-        values = loads(resp.body.decode('utf-8'))
-        assert u_("Введите числовое значение") in values['errors']['year'], \
-            'No Russian error message: %r' % values['errors']
-        # check with language set in session
-        self.app.post('/set_lang/de')
-        resp = self.app.post('/process_form', form_values,
-            headers={'Accept-Language': 'ru,it'})
-        values = loads(resp.body.decode('utf-8'))
-        assert "Bitte eine ganze Zahl eingeben" in values['errors']['year'], \
-            'No German error message: %r' % values['errors']
 
     def test_form_validation_error(self):
         """Test schema validation"""
@@ -576,14 +436,6 @@ class TestTGController(TestWSGIController):
     def test_validation_error_has_message(self):
         e = TGValidationError('This is a validation error')
         assert str(e) == 'This is a validation error'
-
-    def test_tw2_fieldset(self):
-        form_values = {'fields1:f1': 'Razer', 'fields2:f2': "t007"}
-        resp = self.app.post('/tw2_fieldset_submit', form_values)
-        values = loads(resp.body.decode('utf-8'))
-
-        assert "Must be an integer" in values['errors'].get('fields2:f2', ''),\
-        'Error message not found: %r' % values['errors']
 
     def test_validate_partial(self):
         resp = self.app.post('/validate_partial', {'num': 'NaN'})

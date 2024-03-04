@@ -10,6 +10,7 @@ from .components.helpers import HelpersConfigurationComponent
 from .components.dispatch import DispatchConfigurationComponent
 from .components.rendering import TemplateRenderingConfigurationComponent
 from .components.registry import RegistryConfigurationComponent
+from .components.validation import ValidationConfigurationComponent
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class MinimalApplicationConfigurator(ApplicationConfigurator):
         self.register(HelpersConfigurationComponent)
         self.register(TemplateRenderingConfigurationComponent)
         self.register(RegistryConfigurationComponent, after=True)
+        self.register(ValidationConfigurationComponent)
 
 
 
