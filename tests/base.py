@@ -36,7 +36,7 @@ try:
 except AttributeError:
     utcnow = datetime.datetime.utcnow
 else:
-    utcnow = lambda: datetime.datetime.now(datetime.UTC)
+    utcnow = lambda: datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
 
 
 def setup_session_dir():
