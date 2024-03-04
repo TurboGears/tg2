@@ -81,7 +81,7 @@ else:
 
     def test_saobj():
         s = Session(engine)
-        t = s.query(MTest1).get(1)
+        t = s.get(MTest1, 1)
         assert t
         encoded = jsonify.encode(t)
         expected = json.loads('{"id": 1, "val": "bob"}')
@@ -90,7 +90,7 @@ else:
 
     def test_salist():
         s = Session(engine)
-        t = s.query(MTest1).get(1)
+        t = s.get(MTest1, 1)
         encoded = jsonify.encode(dict(results=t.test2s))
         expected = json.loads('''{"results": [{"test1id": 1, "id": 1, "val": "fred"}, {"test1id": 1, "id": 2, "val": "alice"}]}''')
         result = json.loads(encoded)
@@ -114,7 +114,7 @@ else:
 
     def test_explicit_saobj():
         s = Session(engine)
-        t = s.query(MTest3).get(1)
+        t = s.get(MTest3, 1)
         encoded = jsonify.encode(t)
         expected = json.loads('{"id": 1, "val": "bob", "customized": true}')
         result = json.loads(encoded)
@@ -122,7 +122,7 @@ else:
 
     def test_detached_saobj():
         s = Session(engine)
-        t = s.query(MTest1).get(1)
+        t = s.get(MTest1, 1)
         # ensure it can be serialized now
         jsonify.encode(t)
         s.expunge(t)
