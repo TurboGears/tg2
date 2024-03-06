@@ -47,15 +47,6 @@ class TestSanitizeLanguage():
     def test_sanitize_language_code_numeric_variant(self):
         assert i18n.sanitize_language_code('de-CH-1996') == 'de_CH'
 
-def test_formencode_gettext_nulltranslation():
-    prev_gettext = i18n.ugettext
-    def nop_gettext(v):
-        return v
-
-    i18n.ugettext = nop_gettext
-    assert i18n._formencode_gettext('something') == 'something'
-    i18n.ugettext = prev_gettext
-
 
 def test_get_unaccessible_translator():
     def _fake_find(*args, **kwargs):

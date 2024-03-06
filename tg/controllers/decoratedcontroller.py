@@ -5,7 +5,7 @@ call the methods can be expressed using expose, validate, and other
 decorators to effect a rendered page.
 """
 
-import inspect, operator
+import inspect
 import warnings
 import tg
 from tg.controllers.util import abort
@@ -21,8 +21,6 @@ from tg.validation import _ValidationStatus
 
 from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
 from functools import partial
-
-strip_string = operator.methodcaller('strip')
 
 
 class _DecoratedControllerMeta(type):
@@ -274,21 +272,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             validation_status.errors = exploded_validation['errors']
             validation_status.values = exploded_validation['values']
         else:
-            # Most Invalid objects come back with a list of errors in the format:
-            # "fieldname1: error\nfieldname2: error"
-            error_list = exception.__str__().split('\n')
-            for error in error_list:
-                field_value = list(map(strip_string, error.split(':', 1)))
-
-                #if the error has no field associated with it,
-                #return the error as a global form error
-                if len(field_value) == 1:
-                    validation_status.errors['_the_form'] = field_value[0]
-                    continue
-
-                validation_status.errors[field_value[0]] = field_value[1]
-
-            validation_status.values = getattr(exception, 'value', {})
+            raise TGConfigError(f"No validation explode function found for: {exception}")
 
         # Get the error handler associated to the current validation status.
         error_handler = validation_status.error_handler

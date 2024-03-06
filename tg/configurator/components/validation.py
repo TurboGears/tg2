@@ -10,6 +10,13 @@ class ValidationConfigurationComponent(ConfigurationComponent):
 
         - ``validation.exceptions`` -> ``list`` of exception classes that needs to be considered
            validation errors. ``TGValidationError`` is always included.
+        - ``validation.explode`` -> ``dict`` of exception classes with associated callabe
+          ``callable(exc) -> {'errors': {str: str}, 'values': {str: Any}}``. This is used to
+          expand validation errors when one occurs.
+        - ``validation.validators`` -> ``dict`` of schema classes with associate callables
+          ``callable(schema: Any, params: dict) -> {str: Any}`` returning the parameters after
+          validation and conversion. In case of validation failure it must raise one of the
+          ``validation.exceptions``.
 
     """
     id = 'validation'
@@ -17,7 +24,9 @@ class ValidationConfigurationComponent(ConfigurationComponent):
     def get_defaults(self):
         return {
             'validation.exceptions': [],
-            'validation.explode': {}
+            'validation.explode': {},
+            'validation.validators': {}
+
         }
 
     def get_actions(self):
@@ -32,14 +41,6 @@ class ValidationConfigurationComponent(ConfigurationComponent):
         from tg.validation import TGValidationError
         if TGValidationError not in validation_exceptions:
             validation_exceptions.append(TGValidationError)
-
-        try:
-            from formencode.api import Invalid as _FormEncodeValidationError
-        except ImportError:
-            pass
-        else:
-            if _FormEncodeValidationError not in validation_exceptions:
-                validation_exceptions.append(_FormEncodeValidationError)
 
     def _configure_explode(self, conf, app):
         validation_explode = conf['validation.explode']

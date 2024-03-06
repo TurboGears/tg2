@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
+import re
+import datetime
 import json
+from json import loads
 from functools import partial
 import pytest
 from crank.util import get_params_with_argspec
 
-import tg
 import tests
-from json import loads
-import datetime
 
+import tg
 from tg.controllers import TGController, DecoratedController, abort
 from tg.controllers.util import validation_errors_response
 from tg.decorators import expose, validate, before_render, before_call, Decoration
+from tg.support.converters import asbool, asint
 from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
 from tg.validation import TGValidationError, _ValidationStatus, Convert
 from tg.i18n import lazy_ugettext as l_
-from formencode import validators, Schema
 
 
 def setup_module():
@@ -28,35 +29,37 @@ def teardown_module():
     teardown_session_dir()
 
 
-class Pwd(Schema):
-    pwd1 = validators.String(not_empty=True)
-    pwd2 = validators.String(not_empty=True)
-    chained_validators = [validators.FieldsMatch('pwd1', 'pwd2')]
-
-
 class controller_based_validate(validate):
     def __init__(self, error_handler=None, *args, **kw):
         self.error_handler = error_handler
         self.needs_controller = True
 
         class Validators(object):
-            def validate(self, controller, params, state):
+            def validate(self, controller, params):
                 return params
 
         self.validators = Validators()
 
-class ColonValidator(validators.FancyValidator):
-    def _validate_python(self, value, state):
-        raise validators.Invalid('ERROR: Description', value, state)
+BoolValidator = Convert(asbool)
+IntValidator = Convert(asint, msg="Please enter an integer value")
+
+class EmailValidator:
+    RE = re.compile(r"\w+@\w+\.\w+")
+
+    @staticmethod
+    def to_python(value):
+        if not EmailValidator.RE.match(value):
+            raise TGValidationError("Not an email address")
+        return value
 
 class ColonLessGenericValidator(object):
-    def validate(self, value, state=None):
-        raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
+    def validate(self, value):
+        raise TGValidationError('Unknown Error', value, {'_the_form':'Unknown Error'})
 
 class ThrowAwayValidationIntentValidator(object):
-    def validate(self, value, state=None):
+    def validate(self, value):
         tg.request.validation.intent = None
-        raise validators.Invalid('Unknown Error', value, {'_the_form':'Unknown Error'})
+        raise TGValidationError('Unknown Error', value, {'_the_form':'Unknown Error'})
 
 def error_handler_function(controller_instance, uid, num):
     return 'UID: %s' % uid
@@ -80,13 +83,13 @@ class BasicTGController(TGController):
         return tg.request.validation.errors['_the_form']
 
     @expose('json:')
-    @validate(validators={"some_int": validators.Int()})
+    @validate(validators={"some_int": IntValidator})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
 
     @expose('json:')
-    @validate(validators={"a": validators.Int()})
+    @validate(validators={"a": IntValidator})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode_text)
@@ -98,15 +101,15 @@ class BasicTGController(TGController):
         return 'ok'
 
     @expose('json:')
-    @validate(validators={"a": validators.Int(), "someemail": validators.Email()})
+    @validate(validators={"a": IntValidator, "someemail": EmailValidator})
     def two_validators(self, a=None, someemail=None, *args):
         errors = tg.request.validation.errors
         values = tg.request.validation.values
         return dict(a=a, someemail=someemail,
-                errors=str(errors), values=str(values))
+                    errors=str(errors), values=str(values))
 
     @expose('json:')
-    @validate(validators={"a": validators.Int()})
+    @validate(validators={"a": IntValidator})
     def with_default_shadow(self, a, b=None ):
         """A default value should not cause the validated value to disappear"""
         assert isinstance( a, int ), type(a)
@@ -115,14 +118,8 @@ class BasicTGController(TGController):
         }
 
     @expose('json:')
-    @validate(validators={"e": ColonValidator()})
-    def error_with_colon(self, e):
-        errors = tg.request.validation.errors
-        return dict(errors=str(errors))
-
-    @expose('json:')
     @validate(validators={
-        "a": validators.Int(),"b":validators.Int(),"c":validators.Int(),"d":validators.Int()
+        "a": IntValidator,"b":IntValidator,"c":IntValidator,"d":IntValidator
     })
     def with_default_shadow_long(self, a, b=None,c=None,d=None ):
         """A default value should not cause the validated value to disappear"""
@@ -135,24 +132,10 @@ class BasicTGController(TGController):
         }
 
     @expose()
-    @validate({'param': validators.Int()},
-              error_handler=validation_errors_response)
-    def formencode_dict_validation(self, **kwargs):
-        return 'NO_ERROR'
-
-    @expose()
     def set_lang(self, lang=None):
         tg.session['tg_lang'] = lang
         tg.session.save()
         return 'ok'
-
-    @expose()
-    @validate(validators=Pwd())
-    def password(self, pwd1, pwd2):
-        if tg.request.validation.errors:
-            return "There was an error"
-        else:
-            return "Password ok!"
 
     @expose('json:')
     @before_render(lambda rem,params,output:output.update({'GOT_ERROR':'HOOKED'}))
@@ -160,7 +143,7 @@ class BasicTGController(TGController):
         return dict(GOT_ERROR='MISSED HOOK')
 
     @expose()
-    @validate({'v':validators.Int()}, error_handler=hooked_error_handler)
+    @validate({'v':IntValidator}, error_handler=hooked_error_handler)
     def with_hooked_error_handler(self, *args, **kw):
         return dict(GOT_ERROR='NO ERROR')
 
@@ -169,7 +152,7 @@ class BasicTGController(TGController):
         return 'ERROR HANDLER!'
 
     @expose('json:')
-    @validate(validators={"some_int": validators.Int()},
+    @validate(validators={"some_int": IntValidator},
               error_handler=error_handler)
     def validate_other_error_handler(self, some_int):
         return dict(response=some_int)
@@ -178,49 +161,49 @@ class BasicTGController(TGController):
         return 'UID: %s' % uid
 
     @expose()
-    @validate({'uid': validators.Int(),
-               'num': validators.Int()},
+    @validate({'uid': IntValidator,
+               'num': IntValidator},
               error_handler=unexposed_error_handler)
     def validate_unexposed(self, uid, num):
         return 'HUH'
 
     @expose()
-    @validate({'num': validators.Int()},
+    @validate({'num': IntValidator},
               error_handler=partial(unexposed_error_handler,
                                     uid=5))
     def validate_partial(self, num):
         return 'HUH'
 
     @expose()
-    @validate({'uid': validators.Int(),
-               'num': validators.Int()},
+    @validate({'uid': IntValidator,
+               'num': IntValidator},
               error_handler=error_handler_function)
     def validate_function(self, uid, num):
         return 'HUH'
 
     @expose()
-    @validate({'uid': validators.Int(),
-               'num': validators.Int()},
+    @validate({'uid': IntValidator,
+               'num': IntValidator},
               error_handler=ErrorHandlerCallable())
     def validate_callable(self, uid, num):
         return 'HUH'
 
     @expose()
-    @validate({'uid': validators.Int()},
+    @validate({'uid': IntValidator},
               error_handler=ErrorHandlerCallable())
-    @validate({'num': validators.Int()},
+    @validate({'num': IntValidator},
               error_handler=abort(412, error_handler=True))
     def validate_multi(self, uid, num):
         return str(uid+num)
 
     @expose()
-    @validate({'uid': validators.Int()},
+    @validate({'uid': IntValidator},
               error_handler=abort(412, error_handler=True))
     def abort_error_handler(self):
         return 'HUH'
 
     @expose()
-    @validate({'uid': validators.Int()},
+    @validate({'uid': IntValidator},
               error_handler=validation_errors_response)
     def validate_json_errors(self):
         return 'HUH'
@@ -249,7 +232,7 @@ class BasicTGController(TGController):
         return str(uid)
 
     @expose()
-    @validate({'uid': validators.Int()},
+    @validate({'uid': IntValidator},
               error_handler=hooked_error_handler)
     def validate_hooked(self, uid):
         return 'HUH'
@@ -344,7 +327,9 @@ class TestTGController(TestWSGIController):
         })
 
         self.app = make_app(BasicTGController, config_options={
-            'i18n.enabled': True
+            'i18n.enabled': True,
+            'trace_errors.enable': False,
+            'errorpage.enabled': False
         })
         TestWSGIController.setup_method(self)
 
@@ -403,26 +388,6 @@ class TestTGController(TestWSGIController):
         assert errors, 'There should have been at least one error'
         assert 'someemail' in errors, \
             'The email was invalid and should have been reported in the errors'
-
-    def test_error_with_colon(self):
-        resp = self.app.post('/error_with_colon', {'e':"fakeparam"})
-        assert 'Description' in str(resp.body), resp.body
-
-    def test_formencode_dict_validation(self):
-        resp = self.app.post('/formencode_dict_validation', {'param': "7"})
-        assert 'NO_ERROR' in str(resp.body), resp
-
-        resp = self.app.post('/formencode_dict_validation', {'param': "hello"}, status=412)
-        assert 'Please enter an integer value' in str(resp.body), resp
-
-    def test_form_validation_error(self):
-        """Test schema validation"""
-        form_values = {'pwd1': 'me', 'pwd2': 'you'}
-        resp = self.app.post('/password', form_values)
-        assert "There was an error" in resp, resp
-        form_values = {'pwd1': 'you', 'pwd2': 'you'}
-        resp = self.app.post('/password', form_values)
-        assert "Password ok!" in resp, resp
 
     def test_controller_based_validator(self):
         """Test controller based validation"""

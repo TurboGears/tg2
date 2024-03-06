@@ -497,29 +497,6 @@ def https(remainder, params):
     raise HTTPMethodNotAllowed(headers=dict(Allow='GET'))
 
 
-_variabledecode = None
-@before_validate
-def variable_decode(remainder, params):
-    """Best-effort formencode.variabledecode on the params before validation.
-
-    If any exceptions are raised due to invalid parameter names, they are
-    silently ignored, hopefully to be caught by the actual validator.
-    Note that this decorator will *add* parameters to the method, not remove.
-    So for instance a method will move from {'foo-1':'1', 'foo-2':'2'}
-    to {'foo-1':'1', 'foo-2':'2', 'foo':['1', '2']}.
-
-    """
-    global _variabledecode
-    if _variabledecode is None:
-        from formencode import variabledecode as _variabledecode
-
-    try:
-        new_params = _variabledecode.variable_decode(params)
-        params.update(new_params)
-    except:
-        pass
-
-
 @before_validate
 def without_trailing_slash(remainder, params):
     """This decorator allows you to ensure that the URL does not end in "/".

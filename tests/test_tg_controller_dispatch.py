@@ -2,7 +2,7 @@
 from wsgiref.validate import validator
 
 import pytest
-from tests.test_validation import validators
+from tests.test_validation import IntValidator, BoolValidator
 
 from webob import Response, Request
 from tg._compat import unicode_text, u_
@@ -289,8 +289,8 @@ class DefaultWithArgsAndValidatorsController(TGController):
         return "failure"
 
     @expose()
-    @validate(dict(a=validators.Int(), b=validators.StringBool()),
-        error_handler=failure)
+    @validate(dict(a=IntValidator),
+                   error_handler=failure)
     def _default(self, a, b=None, **kw):
         return "default with args and validators %s %s"%(a, b)
 
@@ -436,13 +436,13 @@ class BasicTGController(TGController):
         return tg.get_flash()
 
     @expose('json')
-    @validate(validators=dict(some_int=validators.Int()))
+    @validate(validators=dict(some_int=IntValidator))
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
 
     @expose('json')
-    @validate(validators=dict(a=validators.Int()))
+    @validate(validators=dict(a=IntValidator))
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode_text)
@@ -453,7 +453,7 @@ class BasicTGController(TGController):
         return 'validation error handler'
 
     @expose('json')
-    @validate(validators=dict(a=validators.Int()),
+    @validate(validators=dict(a=IntValidator),
         error_handler=error_handler)
     def validated_with_error_handler(self, a, b):
         assert isinstance(a, int)
@@ -461,7 +461,7 @@ class BasicTGController(TGController):
         return dict(int=a,str=b)
 
     @expose('json')
-    @validate(validators=dict(a=validators.Int()),
+    @validate(validators=dict(a=IntValidator),
         error_handler=error_controller.errors_here)
     def validated_with_remote_error_handler(self, a, b):
         assert isinstance(a, int)
@@ -523,7 +523,7 @@ class TestNotFoundController(TestWSGIController):
     def setup_method(self):
         self.app = make_app(NotFoundController)
         TestWSGIController.setup_method(self)
-        
+
     def test_not_found(self):
         r = self.app.get('/something', status=404)
         assert '404 Not Found' in r, r
@@ -782,7 +782,7 @@ class TestTGController(TestWSGIController):
         assert "default with args and validators 66 None" in  r.body.decode('utf-8'), r
 
     def test_default_with_validator_fail2(self):
-        r =self.app.get('/sub5/default_with_args/True/more')
+        r =self.app.get('/sub5/default_with_args/notanint/more')
         assert "failure" in  r.body.decode('utf-8'), r
 
     def test_custom_content_type_in_controller(self):

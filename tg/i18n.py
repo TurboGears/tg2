@@ -283,17 +283,15 @@ def set_request_lang(languages, tgl=None):
     tgl.translator = _get_translator(languages, tgl=tgl, fallback=True)
 
     # If the application has a set of supported translation
-    # limit the formencode translations to those so that
+    # limit the translations to those so that
     # we don't get the application in a language and
     # the errors in another one
     supported_languages = get_lang(all=False)
     if supported_languages:
         languages = supported_languages
 
-    try:
-        set_formencode_translation(languages, tgl=tgl)
-    except LanguageError:
-        pass
+    # Trap exceptions because the listeners might not support the requested language
+    tg.hooks.notify("set_request_lang", (languages, ), trap_exceptions=True)
 
 
 def set_lang(languages, **kwargs):
@@ -311,57 +309,6 @@ def set_lang(languages, **kwargs):
     if tgl.session:
         tgl.session[tgl.config.get('lang_session_key', 'tg_lang')] = languages
         tgl.session.save()
-
-FormEncodeMissing = '_MISSING_FORMENCODE'
-formencode = None
-_localdir = None
-
-def set_formencode_translation(languages, tgl=None):
-    """Set request specific translation of FormEncode."""
-    global formencode, _localdir
-    if formencode is FormEncodeMissing:  # pragma: no cover
-        return
-
-    if formencode is None:
-        try:
-            import formencode
-            _localdir = formencode.api.get_localedir()
-        except ImportError:  # pragma: no cover
-            formencode = FormEncodeMissing
-            return
-
-    if not tgl:  # pragma: no cover
-        tgl = tg.request_local.context._current_obj()
-
-    try:
-        formencode_translation = _gettext.translation('FormEncode',
-                                                      languages=languages,
-                                                      localedir=_localdir)
-    except IOError as error:
-        raise LanguageError('IOError: %s' % error)
-    tgl.translator._formencode_translation = formencode_translation
-
-
-# Idea stolen from Pylons
-def _formencode_gettext(value):
-    trans = ugettext(value)
-    # Translation failed, try formencode
-    if trans == value:
-        try:
-            fetrans = tg.translator._formencode_translation
-        except (AttributeError, TypeError):
-            # the translator was not set in the TG context
-            # we are certainly in the test framework
-            # let's make sure won't return something that is ok with the caller
-            fetrans = None
-
-        if not fetrans:
-            fetrans = NullTranslations()
-
-        translator_gettext = getattr(fetrans, 'ugettext', fetrans.gettext)
-        trans = translator_gettext(value)
-
-    return trans
 
 
 __all__ = [

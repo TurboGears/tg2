@@ -3,12 +3,12 @@ import json
 
 import tg
 from tg.controllers import TGController
-from tg.decorators import expose, validate, https, variable_decode, with_trailing_slash, \
+from tg.decorators import expose, validate, https, with_trailing_slash, \
     without_trailing_slash, with_engine
 from tg import expose, redirect, config
 from tg.controllers import TGController
 from tg import dispatched_controller
-from tests.test_validation import validators
+from tests.test_validation import IntValidator
 from tg._compat import unicode_text, u_
 from tg.support.converters import asbool
 
@@ -29,7 +29,7 @@ class NestedSubController(TGController):
 
 class SubController(TGController):
     nested = NestedSubController()
-    
+
     @expose()
     def foo(self,):
         return 'sub_foo'
@@ -64,7 +64,7 @@ class SubController(TGController):
 
 class LookupController(TGController):
     nested = NestedSubController()
-    
+
     @expose()
     def findme(self, *args, **kw):
         return 'got to lookup'
@@ -172,13 +172,13 @@ class RootController(TGController):
         return tg.flash.message
 
     @expose('json')
-    @validate(validators={"some_int": validators.Int()})
+    @validate(validators={"some_int": IntValidator})
     def validated_int(self, some_int):
         assert isinstance(some_int, int)
         return dict(response=some_int)
 
     @expose('json')
-    @validate(validators={"a":validators.Int()})
+    @validate(validators={"a":IntValidator})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
         assert isinstance(b, unicode_text)
@@ -223,11 +223,6 @@ class RootController(TGController):
     @expose()
     def test_https(self, **kw):
         return ''
-
-    @expose('json')
-    @variable_decode
-    def test_vardec(self, **kw):
-        return kw
 
     @expose('mako:echo.mak')
     def echo(self):

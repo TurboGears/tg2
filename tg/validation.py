@@ -2,16 +2,7 @@ import warnings
 
 from tg._compat import unicode_text
 
-from .i18n import _formencode_gettext, lazy_ugettext
-
-try:
-    from formencode.api import Validator as _FormEncodeValidator
-    from formencode import Schema as _FormEncodeSchema
-except ImportError: #pragma: no cover
-    class _FormEncodeValidator(object):
-        """FormEncode Validator"""
-    class _FormEncodeSchema(object):
-        """FormEncode Schema"""
+from .i18n import lazy_ugettext
 
 
 class _ValidationStatus(object):
@@ -60,27 +51,22 @@ class _ValidationIntent(object):
             return params
 
         validation_exceptions = tuple(config['validation.exceptions'])
-
-        # An object used by FormEncode to get translator function
-        formencode_state = type('state', (), {'_': staticmethod(_formencode_gettext)})
+        validation_validators = config['validation.validators']
         validated_params = {}
 
-        # The validator may be a dictionary, a FormEncode Schema object, or any
-        # object with a "validate" method.
+        # The validator may be a dictionary, on of the registered validators or
+        # any object with a "validate" method.
         if isinstance(validators, dict):
-            # TG developers can pass in a dict of param names and FormEncode
-            # validators.  They are applied one by one and builds up a new set
+            # TG developers can pass in a dict of param names and validators.
+            # They are applied one by one and builds up a new set
             # of validated params.
 
             errors = {}
             for field, validator in validators.items():
                 try:
-                    if isinstance(validator, _FormEncodeValidator):
-                        validated_params[field] = validator.to_python(params.get(field), formencode_state)
-                    else:
-                        validated_params[field] = validator.to_python(params.get(field))
-                # catch individual validation errors into the errors dictionary
+                    validated_params[field] = validator.to_python(params.get(field))
                 except validation_exceptions as inv:
+                    # catch individual validation errors into the errors dictionary
                     errors[field] = inv
 
             # Parameters that don't have validators are returned verbatim
@@ -95,18 +81,26 @@ class _ValidationIntent(object):
                                         value=params,
                                         error_dict=errors)
 
-        elif isinstance(validators, _FormEncodeSchema):
-            # A FormEncode Schema object - to_python converts the incoming
-            # parameters to sanitized Python values
-            validated_params = validators.to_python(params, formencode_state)
+        elif isinstance(validators, tuple(validation_validators.keys())):
+            schema_class = validators.__class__
+            validation_function = None
+            for supported_class in validation_validators:
+                if issubclass(schema_class, supported_class):
+                    validation_function = validation_validators[supported_class]
+
+            if validation_function is None:
+                raise TGConfigError(f"No validation validator function found for: {exception_class}")
+
+            validated_params = validation_function(validators, params)
 
         elif hasattr(validators, 'validate') and getattr(self, 'needs_controller', False):
             # An object with a "validate" method - call it with the parameters
-            validated_params = validators.validate(method, params, formencode_state)
+            validated_params = validators.validate(method, params)
 
         elif hasattr(validators, 'validate'):
             # An object with a "validate" method - call it with the parameters
-            validated_params = validators.validate(params, formencode_state)
+            validated_params = validators.validate(params)
+
 
         return validated_params
 
