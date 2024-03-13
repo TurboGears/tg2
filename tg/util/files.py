@@ -2,8 +2,10 @@ import contextlib
 import os, sys
 import re
 import uuid
+import importlib.resources
 
-from pkg_resources import resource_filename, resource_stream, get_default_cache
+from pkg_resources import get_default_cache
+
 from .._compat import unicode_text, PY2
 
 
@@ -74,25 +76,30 @@ class DottedFileNameFinder(object):
                 package = template_name[:divider]
                 basename = template_name[divider + 1:]
                 resourcename = basename + template_extension
+
                 try:
-                    result = resource_filename(package, resourcename)
-                except ImportError as e:
+                    exists = os.path.exists(importlib.import_module(package).__file__)
+                    with importlib.resources.as_file(
+                        importlib.resources.files(package).joinpath(resourcename)
+                    ) as f:
+                        if exists:
+                            result = str(f)
+                        else:
+                            # importing from a zipfile or py2exe
+                            if not hasattr(self, '__temp_dir'):
+                                self.__temp_dir = os.path.join(get_default_cache(),
+                                                               'tgdf-%s' % uuid.uuid1())
+
+                            result = os.path.join(self.__temp_dir, package, resourcename)
+                            if not os.path.isdir(os.path.dirname(result)):
+                                os.makedirs(os.path.dirname(result))
+
+                            with open(result, 'wb') as result_f:
+                                result_f.write(f.read_bytes())
+                except ModuleNotFoundError as e:
                     raise DottedFileLocatorError(
                         "%s. Perhaps you have forgotten an __init__.py in that folder." % e
                     )
-                except NotImplementedError:
-                    # Cope with zipped files or py2exe apps
-                    if not hasattr(self, '__temp_dir'):
-                        self.__temp_dir = os.path.join(get_default_cache(),
-                                                       'tgdf-%s' % uuid.uuid1())
-
-                    result = os.path.join(self.__temp_dir, package, resourcename)
-                    if not os.path.isdir(os.path.dirname(result)):
-                        os.makedirs(os.path.dirname(result))
-
-                    with contextlib.closing(resource_stream(package, resourcename)) as rd:
-                        with open(result, 'wb') as result_f:
-                            result_f.write(rd.read())
             else:
                 result = template_name
 
