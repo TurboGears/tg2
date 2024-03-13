@@ -2,9 +2,8 @@ import contextlib
 import os, sys
 import re
 import uuid
+import tempfile
 import importlib.resources
-
-from pkg_resources import get_default_cache
 
 from .._compat import unicode_text, PY2
 
@@ -87,8 +86,7 @@ class DottedFileNameFinder(object):
                         else:
                             # importing from a zipfile or py2exe
                             if not hasattr(self, '__temp_dir'):
-                                self.__temp_dir = os.path.join(get_default_cache(),
-                                                               'tgdf-%s' % uuid.uuid1())
+                                self.__temp_dir = tempfile.mkdtemp()
 
                             result = os.path.join(self.__temp_dir, package, resourcename)
                             if not os.path.isdir(os.path.dirname(result)):
