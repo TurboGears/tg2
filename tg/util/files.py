@@ -101,7 +101,7 @@ class DottedFileNameFinder(object):
 
                             with open(result, 'wb') as result_f:
                                 result_f.write(f.read_bytes())
-                except ModuleNotFoundError as e:
+                except (ModuleNotFoundError, FileNotFoundError) as e:
                     raise DottedFileLocatorError(
                         "%s. Perhaps you have forgotten an __init__.py in that folder." % e
                     )
