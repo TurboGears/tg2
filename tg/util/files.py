@@ -78,9 +78,16 @@ class DottedFileNameFinder(object):
 
                 try:
                     exists = os.path.exists(importlib.import_module(package).__file__)
-                    with importlib.resources.as_file(
-                        importlib.resources.files(package).joinpath(resourcename)
-                    ) as f:
+                    if hasattr(importlib.resources, "as_file"):
+                        as_file_context = importlib.resources.as_file(
+                            importlib.resources.files(package).joinpath(resourcename)
+                        )
+                    else:
+                        # Compatibility with Python < 3.9
+                        as_file_context = importlib.resources.path(
+                            package, resourcename
+                        )
+                    with as_file_context as f:
                         if exists:
                             result = str(f)
                         else:
