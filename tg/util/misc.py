@@ -13,7 +13,7 @@ def unless(func, check=None):
     to fail validation when querying objects from the database
     if they do not exist::
 
-        Convert(unless(DBSession.query(User).get))
+        Convert(unless(lambda uid: DBSession.get(User, uid)))
 
     """
     @wraps(func)

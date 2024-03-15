@@ -256,7 +256,7 @@ class TestPageSQLA(object):
         self.s = SQLASession(connection)
 
     def test_relationship(self):
-        t = self.s.query(MTest1).get(1)
+        t = self.s.get(MTest1, 1)
         p = Page(t.test2s, items_per_page=1, page=1)
         assert len(list(p)) == 1
         assert list(p)[0].val == 'fred', list(p)

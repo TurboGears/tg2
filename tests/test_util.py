@@ -362,7 +362,7 @@ class TestMiscUtils(object):
             connection.execute(testtable.insert(), {'id': 3, 'val': 'alberto'})
 
             sess = Session(connection)
-            getunless = unless(sess.query(Test).get)
+            getunless = unless(lambda x: sess.get(Test, x))
 
             x = getunless(1)
             assert x.val == 'bob', x

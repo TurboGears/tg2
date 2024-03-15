@@ -403,7 +403,8 @@ def test_stacked_object_twice():
 
     try:
         next(resp)
-    except:
+        next(resp)
+    except AssertionError:
         # Looping again will crash because we already popped
         # The registered object and cleanup will fail.
         pass
