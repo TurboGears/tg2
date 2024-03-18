@@ -158,9 +158,44 @@ class Convert(object):
         self._default = default
 
     def to_python(self, value, state=None):
-        value = value or self._default
+        if RequireValue.is_empty(value):
+            if self._default is None:
+                raise TGValidationError(self._msg, value)
+            return self._default
 
         try:
             return self._func(value)
         except:
             raise TGValidationError(self._msg, value)
+
+
+class RequireValue(object):
+    """Mark a value as required during validation.
+
+    This is meant to be used when a value is required,
+    but not conversion needs to happen.
+    This is usually common for string values.
+
+    In case conversion has to happen, use :class:`Convert`
+    which will already fail if no value is provided.
+
+    Example::
+
+        @expose()
+        @validate({
+            'num': RequireValue('you must provide a number')
+        }, error_handler=insert_number)
+        def post_pow2(self, num):
+            return str(num*num)
+    """
+    def __init__(self, msg=lazy_ugettext('Required')):
+        self._msg = msg
+
+    @staticmethod
+    def is_empty(value):
+        return value in (None, '', b'', [], {}, tuple())
+
+    def to_python(self, value, state=None):
+        if self.is_empty(value):
+            raise TGValidationError(self._msg, value)
+        return value
