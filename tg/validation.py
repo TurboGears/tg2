@@ -1,5 +1,6 @@
 import warnings
 
+from tg.configuration.utils import TGConfigError
 from tg._compat import unicode_text
 
 from .i18n import lazy_ugettext
@@ -89,7 +90,7 @@ class _ValidationIntent(object):
                     validation_function = validation_validators[supported_class]
 
             if validation_function is None:
-                raise TGConfigError(f"No validation validator function found for: {exception_class}")
+                raise TGConfigError(f"No validation validator function found for: {schema_class}")
 
             validated_params = validation_function(validators, params)
 

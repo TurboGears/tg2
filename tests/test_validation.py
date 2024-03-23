@@ -18,7 +18,7 @@ from tests.base import (TestWSGIController, data_dir,
     make_app, setup_session_dir, teardown_session_dir)
 
 from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.validation import TGValidationError, _ValidationStatus, Convert
+from tg.validation import TGValidationError, _ValidationStatus, Convert, RequireValue
 from tg.i18n import lazy_ugettext as l_
 
 
@@ -318,6 +318,13 @@ class BasicTGController(TGController):
     def chain_validation_begin(self, val):
         return '>3'
 
+    @expose(content_type='text/plain')
+    @validate({
+        'val': RequireValue(msg=l_("Value is required"))
+    }, error_handler=validation_errors_response)
+    def require_value(self, val=None):
+        return val
+
 
 class TestTGController(TestWSGIController):
     def setup_method(self):
@@ -504,6 +511,13 @@ class TestTGController(TestWSGIController):
     def test_validation_errors_lazy_unicode(self):
         resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
         assert resp.json['errors']['num'] == u_('àèìòù'), resp.json
+
+    def test_requirevalue_validation(self):
+        resp = self.app.post('/require_value', {"val": "hello"})
+        assert resp.text == 'hello', resp
+
+        resp = self.app.post('/require_value', {}, status=412)
+        assert resp.json["errors"]["val"] == 'Value is required', resp
 
 
 class TestChainValidation(TestWSGIController):
