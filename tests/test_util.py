@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from datetime import datetime, timedelta
+from unittest import mock
 
 import pytest
 
@@ -144,6 +145,21 @@ class TestDottedNameFinder(object):
             template = t.read()
             assert template == '<p>Your application is now running</p>', template
 
+    def test_py38_support(self):
+        importlib_resources = mock.MagicMock(spec=["path"])
+        importlib_resources.path = mock.MagicMock(
+            return_value=mock.MagicMock(__enter__=mock.MagicMock(return_value="THISFILE"))
+        )
+        with mock.patch("importlib.resources", new=importlib_resources):
+            res = DottedFileNameFinder().get_dotted_filename('tg.tests_tests_py38_support')
+        assert res == os.path.abspath('THISFILE')
+
+    def test_filenotfound(self):
+        exc = FileNotFoundError()
+        exc.filename = "FILENAME"
+        with mock.patch("importlib.resources.as_file", side_effect=exc):
+            res = DottedFileNameFinder().get_dotted_filename('tg.tests_test_filenotfound')
+        assert res == os.path.abspath("FILENAME")
 
 class TestLazyString(object):
     def test_lazy_string_to_str(self):
