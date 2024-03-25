@@ -157,7 +157,7 @@ class TestDottedNameFinder(object):
     def test_filenotfound(self):
         exc = FileNotFoundError()
         exc.filename = "FILENAME"
-        with mock.patch("importlib.resources.as_file", side_effect=exc):
+        with mock.patch("importlib.resources.as_file", create=True, side_effect=exc):
             res = DottedFileNameFinder().get_dotted_filename('tg.tests_test_filenotfound')
         assert res == os.path.abspath("FILENAME")
 
