@@ -272,7 +272,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             validation_status.errors = exploded_validation['errors']
             validation_status.values = exploded_validation['values']
         else:
-            raise TGConfigError(f"No validation explode function found for: {exception}")
+            raise TGConfigError(f"No validation explode function found for: {exception.__class__}")
 
         # Get the error handler associated to the current validation status.
         error_handler = validation_status.error_handler

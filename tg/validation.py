@@ -81,8 +81,13 @@ class _ValidationIntent(object):
                 raise TGValidationError(TGValidationError.make_compound_message(errors),
                                         value=params,
                                         error_dict=errors)
-
-        elif isinstance(validators, tuple(validation_validators.keys())):
+        elif hasattr(validators, 'validate') and getattr(self, 'needs_controller', False):
+            # An object with a "validate" method - call it with the parameters
+            validated_params = validators.validate(method, params)
+        elif hasattr(validators, 'validate'):
+            # An object with a "validate" method - call it with the parameters
+            validated_params = validators.validate(params)
+        else:
             schema_class = validators.__class__
             validation_function = None
             for supported_class in validation_validators:
@@ -93,15 +98,6 @@ class _ValidationIntent(object):
                 raise TGConfigError(f"No validation validator function found for: {schema_class}")
 
             validated_params = validation_function(validators, params)
-
-        elif hasattr(validators, 'validate') and getattr(self, 'needs_controller', False):
-            # An object with a "validate" method - call it with the parameters
-            validated_params = validators.validate(method, params)
-
-        elif hasattr(validators, 'validate'):
-            # An object with a "validate" method - call it with the parameters
-            validated_params = validators.validate(params)
-
 
         return validated_params
 

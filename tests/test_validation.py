@@ -10,6 +10,8 @@ from crank.util import get_params_with_argspec
 import tests
 
 import tg
+from tg.configuration.utils import TGConfigError
+from tg.configurator.fullstack import FullStackApplicationConfigurator
 from tg.controllers import TGController, DecoratedController, abort
 from tg.controllers.util import validation_errors_response
 from tg.decorators import expose, validate, before_render, before_call, Decoration
@@ -20,6 +22,8 @@ from tests.base import (TestWSGIController, data_dir,
 from tg._compat import PY3, unicode_text, u_, default_im_func
 from tg.validation import TGValidationError, _ValidationStatus, Convert, RequireValue
 from tg.i18n import lazy_ugettext as l_
+
+from webtest import TestApp
 
 
 def setup_module():
@@ -551,3 +555,118 @@ class TestChainValidation(TestWSGIController):
     def test_last_chain_validation(self):
         res = self.app.get('/chain_validation_begin', params={'val': 0}, status=412)
         assert res.json == json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}')
+
+
+class TestValidationConfiguration:
+    def create_app(self, root_controller, options=None):
+        cfg = FullStackApplicationConfigurator()
+        cfg.update_blueprint({'root_controller': root_controller})
+        cfg.update_blueprint(options or {})
+
+        app = TestApp(cfg.make_wsgi_app({
+            'debug': False,
+            'errorpage.enabled': False,
+            'trace_errors.enable': False
+        }, {}))
+        return app
+
+    def test_no_validation_function(self):
+        class FakeSchema:
+            pass
+
+        class RootController(TGController):
+            @validate(FakeSchema())
+            @expose("text/plain")
+            def test(self, **kwargs):
+                return "HI"
+
+        app = self.create_app(RootController())
+
+        with pytest.raises(TGConfigError) as exc_info:
+            app.get("/test", {"value": 5})
+        assert "No validation validator function found for" in str(exc_info.value)
+        assert "FakeSchema" in str(exc_info.value)
+
+    def test_custom_validation(self):
+        class FakeSchema:
+            pass
+
+        def validate_fake_schema(schema, params):
+            if params.get("fail"):
+                raise TGValidationError("Invalid params", value=params,
+                                        error_dict={"fail": "Fail is true"})
+            return params
+
+        class RootController(TGController):
+            @validate(FakeSchema())
+            @expose("text/plain")
+            def test(self, **kwargs):
+                if tg.request.validation.errors:
+                    return str(tg.request.validation.errors)
+                return "HI"
+
+        app = self.create_app(RootController(), {
+            "validation.validators": {FakeSchema: validate_fake_schema}
+        })
+
+        resp = app.get("/test", {"value": 5})
+        assert resp.text == "HI"
+
+        resp = app.get("/test", {"fail": 1})
+        assert "Fail is true" in resp.text
+
+    def test_custom_validation_error(self):
+        class FakeSchema:
+            pass
+
+        def validate_fake_schema(schema, params):
+            if params.get("fail"):
+                raise FakeError()
+            return params
+
+        class FakeError(Exception):
+            pass
+
+        def explode_fake_error(error):
+            return {"values": {"fail": True}, "errors": "fail was true"}
+
+        class RootController(TGController):
+            @validate(FakeSchema())
+            @expose("text/plain")
+            def test(self, **kwargs):
+                if tg.request.validation.errors:
+                    return str(tg.request.validation.errors)
+                return "HI"
+
+        app = self.create_app(RootController(), {
+            "validation.validators": {FakeSchema: validate_fake_schema},
+            "validation.exceptions": [FakeError],
+            "validation.explode": {FakeError: explode_fake_error}
+        })
+
+        resp = app.get("/test", {"value": 5})
+        assert resp.text == "HI"
+
+        resp = app.get("/test", {"fail": 1})
+        assert "fail was true" in resp.text
+
+        # Do not provide explode function
+        app = self.create_app(RootController(), {
+            "validation.validators": {FakeSchema: validate_fake_schema},
+            "validation.exceptions": [FakeError]
+        })
+        with pytest.raises(TGConfigError) as exc_info:
+            resp = app.get("/test", {"fail": 1})
+        assert "No validation explode function found for" in str(exc_info.value)
+        assert "FakeError" in str(exc_info.value)
+
+        # Do not provide missing explode function
+        app = self.create_app(RootController(), {
+            "validation.validators": {FakeSchema: validate_fake_schema},
+            "validation.exceptions": [FakeError],
+            "validation.explode": {FakeError: None}
+        })
+        with pytest.raises(TGConfigError) as exc_info:
+            resp = app.get("/test", {"fail": 1})
+        assert "No validation explode function found for" in str(exc_info.value)
+        assert "FakeError" in str(exc_info.value)
