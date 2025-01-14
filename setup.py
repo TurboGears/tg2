@@ -7,11 +7,8 @@ from setuptools import find_packages, setup
 import sys
 py_version = sys.version_info[:2]
 
-if py_version < (2, 7):
-    raise RuntimeError('TurboGears2 requires Python 2.7 or better')
-
-if py_version[0] == 3 and py_version < (3, 4):
-    raise RuntimeError('When using Python3 TurboGears2 requires at least Python3.4')
+if py_version < (3, 7):
+    raise RuntimeError('TurboGears2 requires Python 3.7 or better')
 
 test_requirements = ['pytest',
                      'zope.sqlalchemy >= 0.4',
@@ -27,18 +24,9 @@ test_requirements = ['pytest',
                      'jinja2',
                      'typing;python_version<"3.5"',
                      'ming >= 0.8.0',
-                     'Kajiki >= 0.4.4']
+                     'Kajiki >= 0.4.4',
+                     'formencode>=1.3.0a1',]
 
-if py_version[0] == 3 and py_version < (3, 6):
-    test_requirements.extend(["formencode<2.0"])
-else:
-    test_requirements.extend(['formencode>=1.3.0a1'])
-
-
-if py_version[0] == 2:
-    test_requirements.extend(['TurboKid >= 1.0.4',
-                              'tgming',
-                              'tw.forms'])
 
 install_requires=[
     'WebOb >= 1.8.0, < 1.10.0',
@@ -56,11 +44,13 @@ setup(
         'Intended Audience :: Developers',
         'Environment :: Web Environment',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: WSGI',
     ],
