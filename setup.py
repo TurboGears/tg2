@@ -7,8 +7,8 @@ from setuptools import find_packages, setup
 import sys
 py_version = sys.version_info[:2]
 
-if py_version < (3, 7):
-    raise RuntimeError('TurboGears2 requires Python 3.7 or better')
+if py_version < (3, 8):
+    raise RuntimeError('TurboGears2 requires Python 3.8 or better')
 
 test_requirements = ['pytest',
                      'zope.sqlalchemy >= 0.4',
