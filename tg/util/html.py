@@ -1,7 +1,6 @@
 from ..jsonify import JSONEncoder
 from ..jsonify import encode as json_encode
 
-
 _script_json_encoder = JSONEncoder(isodates=True, allow_lists=True)
 
 

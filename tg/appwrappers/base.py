@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+
 from .._compat import with_metaclass
 from ..caching import cached_property
 

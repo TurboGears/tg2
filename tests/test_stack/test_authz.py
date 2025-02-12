@@ -10,28 +10,27 @@ this writing).
 """
 
 import os
+
 try:
     from http.cookies import SimpleCookie
 except ImportError:
     from Cookie import SimpleCookie
 from shutil import rmtree
+
 import pytest
+from webob import Request, Response
 from webtest import TestApp
 
+from tg import expose, request, require
 from tg._compat import url_unquote
+from tg.configuration.auth import TGAuthMetadata
 from tg.configuration.utils import TGConfigError
-
-from webob import Response, Request
-
-from tg import request, response, expose, require, redirect
-from tg.controllers import TGController, WSGIAppController, RestController
+from tg.controllers import RestController, TGController, WSGIAppController
 from tg.controllers.util import abort, auth_force_login, auth_force_logout
 from tg.decorators import Decoration
+from tg.predicates import has_permission, in_group, is_user, not_anonymous
 
 from ..base import make_app as base_make_app
-
-from tg.configuration.auth import TGAuthMetadata
-from tg.predicates import is_user, not_anonymous, in_group, has_permission
 
 #{ AUT's setup
 NOT_AUTHENTICATED = "The current user must have been authenticated"

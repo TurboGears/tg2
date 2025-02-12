@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from ...util import Bunch
-from ..._compat import import_module
-from ..base import (ConfigurationComponent,
-                    ConfigReadyConfigurationAction)
-
 from logging import getLogger
+
+from ..._compat import import_module
+from ...util import Bunch
+from ..base import ConfigReadyConfigurationAction, ConfigurationComponent
+
 log = getLogger(__name__)
 
 

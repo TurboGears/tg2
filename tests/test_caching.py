@@ -7,12 +7,18 @@ http://turbogears.org/2.1/docs/main/Caching.html
 For more details.
 """
 import tg
-from tg.controllers import TGController
-from tg.decorators import expose, cached
-from tg.caching import create_cache_key, cached_property
-from tg.controllers.util import etag_cache
+from tests.base import (
+    TestWSGIController,
+    make_app,
+    setup_session_dir,
+    teardown_session_dir,
+)
 from tg import cache
-from tests.base import TestWSGIController, make_app, setup_session_dir, teardown_session_dir
+from tg.caching import cached_property, create_cache_key
+from tg.controllers import TGController
+from tg.controllers.util import etag_cache
+from tg.decorators import cached, expose
+
 
 def setup_module():
     setup_session_dir()
@@ -38,6 +44,7 @@ class MockTime:
 
 mocktime = MockTime()
 import beaker.container
+
 beaker.container.time = mocktime
 
 class TestCachedProperty(object):

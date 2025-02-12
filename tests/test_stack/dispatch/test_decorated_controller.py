@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-import os, tg
-import pytest
+import tg
 from tests.test_stack import TestConfig, app_from_config
-from tg.configuration.hooks import _TGGlobalHooksNamespace
-from tg.decorators import Decoration
 from tg.configuration import milestones
-from tg.util import Bunch
+from tg.decorators import Decoration
 
 
 class TestHooks(object):

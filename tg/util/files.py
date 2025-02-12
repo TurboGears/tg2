@@ -1,11 +1,9 @@
-import contextlib
-import os, sys
-import re
-import uuid
-import tempfile
 import importlib.resources
+import os
+import re
+import tempfile
 
-from .._compat import unicode_text, PY2
+from .._compat import PY2, unicode_text
 
 
 class DottedFileLocatorError(Exception):

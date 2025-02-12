@@ -1,17 +1,19 @@
 import atexit
+
 import pytest
-from tests.test_configuration import PackageWithModel
-from tg.configuration.utils import TGConfigError
 from webtest import TestApp
-from tg.wsgiapp import TGApp
-from tg import expose, TGController, AppConfig
+
 import tg
+from tests.test_configuration import PackageWithModel
+from tg import AppConfig, TGController, expose
 from tg.configuration import milestones
 from tg.configuration.hooks import (
-    _TGGlobalHooksNamespace, 
-    _ApplicationHookRegistration, 
-    _ControllerHookRegistration
+    _ApplicationHookRegistration,
+    _ControllerHookRegistration,
+    _TGGlobalHooksNamespace,
 )
+from tg.configuration.utils import TGConfigError
+from tg.wsgiapp import TGApp
 
 
 class TestGlobalHooks:

@@ -2,14 +2,18 @@
 import json
 
 import tg
-from tg.controllers import TGController
-from tg.decorators import expose, validate, https, with_trailing_slash, \
-    without_trailing_slash, with_engine
-from tg import expose, redirect, config
-from tg.controllers import TGController
-from tg import dispatched_controller
 from tests.test_validation import IntValidator
-from tg._compat import unicode_text, u_
+from tg import dispatched_controller, expose
+from tg._compat import u_, unicode_text
+from tg.controllers import TGController
+from tg.decorators import (
+    expose,
+    https,
+    validate,
+    with_engine,
+    with_trailing_slash,
+    without_trailing_slash,
+)
 from tg.support.converters import asbool
 
 

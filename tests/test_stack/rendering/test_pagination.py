@@ -1,9 +1,11 @@
 import json
+
 import pytest
+
 from tests.test_stack import TestConfig, app_from_config
-from tg.support.paginate import Page
-from tg.controllers.util import _urlencode
 from tg import json_encode
+from tg.controllers.util import _urlencode
+from tg.support.paginate import Page
 from tg.util.webtest import test_context
 
 
@@ -196,11 +198,12 @@ class TestPage(object):
 
 
 try:
-    import sqlite3
+    pass
 except:
-    import pysqlite2
-from sqlalchemy import (create_engine, MetaData, Table, Column, ForeignKey, Integer, String)
-from sqlalchemy.orm import Session as SQLASession, registry, relationship
+    pass
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, create_engine
+from sqlalchemy.orm import Session as SQLASession
+from sqlalchemy.orm import registry, relationship
 
 engine = create_engine("sqlite:///:memory:")
 mapper_registry = registry()
@@ -278,8 +281,14 @@ class TestPageSQLA(object):
 
 try:
     import ming
-    from ming import create_datastore, Session, schema, ASCENDING
-    from ming.odm import ODMSession, FieldProperty, ForeignIdProperty, RelationProperty, Mapper
+    from ming import ASCENDING, Session, create_datastore, schema
+    from ming.odm import (
+        FieldProperty,
+        ForeignIdProperty,
+        Mapper,
+        ODMSession,
+        RelationProperty,
+    )
     from ming.odm.declarative import MappedClass
 except ImportError:
     ming = None

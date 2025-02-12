@@ -1,6 +1,8 @@
 import logging
+
 from tg.configuration.utils import coerce_config
-from tg.support.converters import asbool, asint
+from tg.support.converters import asbool
+
 from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)

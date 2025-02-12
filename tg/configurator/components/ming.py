@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from ..base import (ConfigurationComponent, BeforeConfigConfigurationAction, ConfigReadyConfigurationAction,
-                    AppReadyConfigurationAction)
-from ...configuration.utils import get_partial_dict, TGConfigError
+
+from ...configuration.utils import TGConfigError, get_partial_dict
 from ...support.converters import asbool, asint
+from ..base import (
+    AppReadyConfigurationAction,
+    BeforeConfigConfigurationAction,
+    ConfigReadyConfigurationAction,
+    ConfigurationComponent,
+)
 
 
 class MingConfigurationComponent(ConfigurationComponent):
@@ -108,8 +113,9 @@ class MingConfigurationComponent(ConfigurationComponent):
         if not conf['ming.enabled']:
             return app
 
-        from tg.support.middlewares import MingSessionRemoverMiddleware
         from ming.odm import ThreadLocalODMSession
+
+        from tg.support.middlewares import MingSessionRemoverMiddleware
         return MingSessionRemoverMiddleware(ThreadLocalODMSession, app)
 
     def _get_models(self, conf):

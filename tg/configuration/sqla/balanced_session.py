@@ -1,5 +1,7 @@
+import logging
+import random
+
 import tg
-import random, logging
 
 try:
     from sqlalchemy.orm import Session

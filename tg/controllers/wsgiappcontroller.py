@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """This module contains the main WSGI controller implementation."""
 import tg
-
-from tg.decorators import expose
-
 from tg.controllers.tgcontroller import TGController
 from tg.controllers.util import redirect
+from tg.decorators import expose
 
 
 class WSGIAppController(TGController):

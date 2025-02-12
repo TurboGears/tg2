@@ -6,19 +6,18 @@ from unittest import mock
 import pytest
 
 import tg
-from tg.util import *
+import tg._compat
+from tg._compat import u_
 from tg.configuration.utils import get_partial_dict
 from tg.controllers.util import *
-from tg.util.dates import get_fixed_timezone, utctz, parse_datetime
+from tg.util import *
+from tg.util.dates import get_fixed_timezone, parse_datetime, utctz
 from tg.util.files import safe_filename
 from tg.util.html import script_json_encode
 from tg.util.misc import unless
 from tg.util.webtest import test_context
 from tg.validation import Convert, TGValidationError
-from tg.wsgiapp import TemplateContext, AttribSafeTemplateContext
-
-import tg._compat
-from tg._compat import u_
+from tg.wsgiapp import AttribSafeTemplateContext, TemplateContext
 
 path = None
 def setup_module():
@@ -323,6 +322,7 @@ class TestWebTestUtilities(object):
 
     def test_test_context_broken_app(self):
         from webtest import TestApp
+
         from tg import AppConfig, config
         from tg.request_local import context
 
@@ -359,8 +359,14 @@ class TestMiscUtils(object):
             not5(10)
 
     def test_unless_sqla(self):
-        from sqlalchemy import (create_engine, MetaData, Table, Column, ForeignKey, Integer, String)
-        from sqlalchemy.orm import Session, registry, relationship
+        from sqlalchemy import (
+            Column,
+            Integer,
+            String,
+            Table,
+            create_engine,
+        )
+        from sqlalchemy.orm import Session, registry
 
         engine = create_engine("sqlite:///:memory:")
         mapper_registry = registry()

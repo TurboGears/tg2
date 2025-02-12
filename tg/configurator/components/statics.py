@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-from ...support.converters import asbool
-from ..base import (ConfigurationComponent,
-                    BeforeConfigConfigurationAction,
-                    AppReadyConfigurationAction)
-
 from logging import getLogger
+
+from ...support.converters import asbool
+from ..base import (
+    AppReadyConfigurationAction,
+    BeforeConfigConfigurationAction,
+    ConfigurationComponent,
+)
+
 log = getLogger(__name__)
 
 

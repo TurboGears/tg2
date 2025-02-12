@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import warnings
+
+import logging
 
 from webob.acceptparse import create_accept_header
 
-from tg.configuration import milestones
-from tg.configuration import config
+from tg.configuration import config, milestones
 
-import logging
 log = logging.getLogger(__name__)
 
 

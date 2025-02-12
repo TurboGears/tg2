@@ -1,12 +1,14 @@
 from __future__ import absolute_import
 
 from markupsafe import Markup
+
+import tg
 from tg.configuration.utils import coerce_config
-from tg.support.converters import asint, asbool
 from tg.i18n import ugettext
 from tg.render import cached_template
+from tg.support.converters import asbool, asint
+
 from .base import RendererFactory
-import tg
 
 try:
     import genshi
@@ -14,9 +16,9 @@ except ImportError:  # pragma: no cover
     genshi = None
 
 if genshi is not None:
-    from genshi.template import TemplateLoader as GenshiTemplateLoader
-    from genshi.filters import Translator
     from genshi import HTML, XML
+    from genshi.filters import Translator
+    from genshi.template import TemplateLoader as GenshiTemplateLoader
 else:  # pragma: no cover
     class GenshiTemplateLoader(object): pass
 

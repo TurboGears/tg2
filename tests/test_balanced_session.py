@@ -1,8 +1,13 @@
-from tg.configuration.sqla.balanced_session import BalancedSession, UsingEngineContext, force_request_engine
+import tg
+from tg import request_local
+from tg.configuration.sqla.balanced_session import (
+    BalancedSession,
+    UsingEngineContext,
+    force_request_engine,
+)
 from tg.util import Bunch
 from tg.wsgiapp import RequestLocals
-from tg import request_local
-import tg
+
 
 class TestBalancedSession(object):
     def setup_method(self):

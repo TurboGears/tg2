@@ -1,6 +1,7 @@
-import os
-from tests.test_stack import TestConfig
 from webtest import TestApp
+
+from tests.test_stack import TestConfig
+
 
 def setup_noDB():
     global_config = {'debug': 'true', 

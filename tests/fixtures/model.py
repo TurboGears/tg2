@@ -2,14 +2,15 @@
 
 from datetime import datetime
 
-from zope.sqlalchemy import ZopeTransactionExtension
-from sqlalchemy import Table, ForeignKey, Column
-from sqlalchemy.orm import scoped_session, sessionmaker, relation, backref, \
-                           synonym
+from sqlalchemy import Column
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import String, Unicode, UnicodeText, Integer, DateTime, \
-                             Boolean, Float
-
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.types import (
+    DateTime,
+    Integer,
+    Unicode,
+)
+from zope.sqlalchemy import ZopeTransactionExtension
 
 # Global session manager.  DBSession() returns the session object
 # appropriate for the current web request.

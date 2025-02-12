@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import tg
+from tests.base import setup_session_dir, teardown_session_dir
+from tg._compat import string_type, u_
 from tg.controllers import *
 from tg.exceptions import HTTPFound
-from tests.base import setup_session_dir, teardown_session_dir
 from tg.util import no_warn
 from tg.util.webtest import test_context
-from tg._compat import u_, string_type
+
 
 def setup_module():
     setup_session_dir()

@@ -1,9 +1,12 @@
-import pytest
-from webtest import TestApp
-from webob import Request
-from tg.support.statics import StaticsMiddleware, FileServeApp
-from webob.exc import HTTPBadRequest, HTTPForbidden
 from datetime import datetime
+
+import pytest
+from webob import Request
+from webob.exc import HTTPBadRequest
+from webtest import TestApp
+
+from tg.support.statics import FileServeApp, StaticsMiddleware
+
 
 def FakeApp(environ, start_response):
     return ['APP']

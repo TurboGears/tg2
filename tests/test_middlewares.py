@@ -1,6 +1,9 @@
 from webtest import TestApp
-from tg.support.middlewares import DBSessionRemoverMiddleware
-from tg.support.middlewares import MingSessionRemoverMiddleware
+
+from tg.support.middlewares import (
+    DBSessionRemoverMiddleware,
+    MingSessionRemoverMiddleware,
+)
 
 
 def FakeApp(environ, start_response):

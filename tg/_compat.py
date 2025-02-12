@@ -1,4 +1,5 @@
-import platform, sys
+import platform
+import sys
 
 if platform.system() == 'Windows': # pragma: no cover
     WIN = True
@@ -14,10 +15,6 @@ if PY3: # pragma: no cover
     string_type = str
     unicode_text = str
     byte_string = bytes
-    from urllib.parse import urlencode as url_encode
-    from urllib.parse import quote as url_quote
-    from urllib.parse import unquote as url_unquote
-    from urllib.request import url2pathname
 
     def u_(s):
         return str(s)
@@ -28,10 +25,6 @@ else: # pragma: no cover
     string_type = basestring
     unicode_text = unicode
     byte_string = str
-    from urllib import urlencode as url_encode
-    from urllib import quote as url_quote
-    from urllib import unquote as url_unquote
-    from urllib import url2pathname
 
     def u_(s):
         return unicode(s, 'utf-8')

@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-from tg.configuration import milestones
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction, \
-    EnvironmentLoadedConfigurationAction
-
 from logging import getLogger
+
+from tg.configuration import milestones
+
+from ..base import (
+    BeforeConfigConfigurationAction,
+    ConfigurationComponent,
+    EnvironmentLoadedConfigurationAction,
+)
+
 log = getLogger(__name__)
 
 

@@ -1,8 +1,9 @@
 import logging
-from ..i18n import sanitize_language_code, set_request_lang
+
 from .._compat import string_type
-from ..support.converters import asbool
 from ..configuration.utils import coerce_config
+from ..i18n import sanitize_language_code, set_request_lang
+from ..support.converters import asbool
 from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)

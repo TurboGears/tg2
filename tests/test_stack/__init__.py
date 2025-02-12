@@ -1,11 +1,13 @@
 import os
+
 from webtest import TestApp
-import tg
+
 import tests
-from tg.util import DottedFileNameFinder
+import tg
 from tg import AppConfig
-from tg.configuration import milestones
 from tg._compat import PY3
+from tg.configuration import milestones
+from tg.util import DottedFileNameFinder
 
 
 class TestConfig(AppConfig):

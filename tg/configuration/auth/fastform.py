@@ -1,20 +1,20 @@
 from tg.controllers.util import _build_url
 
 try:
-    from urlparse import urlparse, urlunparse, parse_qs
+    from urlparse import parse_qs, urlparse, urlunparse
 except ImportError: #pragma: no cover
-    from urllib.parse import urlparse, urlunparse, parse_qs
+    from urllib.parse import parse_qs
 
 try:
     from urllib import urlencode
 except ImportError: #pragma: no cover
     from urllib.parse import urlencode
 
+from repoze.who.interfaces import IChallenger, IIdentifier
 from webob import Request
 from webob.exc import HTTPFound, HTTPUnauthorized
 from zope.interface import implementer
 
-from repoze.who.interfaces import IChallenger, IIdentifier
 
 @implementer(IChallenger, IIdentifier)
 class FastFormPlugin(object):

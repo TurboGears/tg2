@@ -1,14 +1,12 @@
 """
 Testing for TG2 Configuration
 """
-import sys, os
-from datetime import datetime
+import os
+import sys
 
 import pytest
-
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 try:
     import ming
@@ -18,7 +16,31 @@ except ImportError:
 else:
     import ming.odm
 
-from tg.configurator.base import ConfigurationComponent, Configurator, BeforeConfigConfigurationAction
+from webtest import TestApp
+
+import tg.i18n
+from tests.base import setup_session_dir, teardown_session_dir, utcnow
+from tg import (
+    MinimalApplicationConfigurator,
+    TGController,
+    abort,
+    expose,
+    request,
+    response,
+)
+from tg.appwrappers.mingflush import MingApplicationWrapper
+from tg.configuration import config, milestones
+from tg.configuration.app_config import AppConfig
+from tg.configuration.auth import _AuthenticationForgerPlugin
+from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
+from tg.configuration.tgconfig import _init_default_global_config
+from tg.configuration.utils import TGConfigError, coerce_config, coerce_options
+from tg.configurator import ApplicationConfigurator, FullStackApplicationConfigurator
+from tg.configurator.base import (
+    BeforeConfigConfigurationAction,
+    ConfigurationComponent,
+    Configurator,
+)
 from tg.configurator.components.app_globals import AppGlobalsConfigurationComponent
 from tg.configurator.components.auth import SimpleAuthenticationConfigurationComponent
 from tg.configurator.components.caching import CachingConfigurationComponent
@@ -28,34 +50,16 @@ from tg.configurator.components.i18n import I18NConfigurationComponent
 from tg.configurator.components.ming import MingConfigurationComponent
 from tg.configurator.components.paths import PathsConfigurationComponent
 from tg.configurator.components.registry import RegistryConfigurationComponent
-from tg.configurator.components.rendering import \
-    TemplateRenderingConfigurationComponent
+from tg.configurator.components.rendering import TemplateRenderingConfigurationComponent
 from tg.configurator.components.session import SessionConfigurationComponent
 from tg.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
-from tg.configurator.components.transactions import \
-    TransactionManagerConfigurationComponent
-from tg.configuration.tgconfig import _init_default_global_config
-from tg.appwrappers.mingflush import MingApplicationWrapper
-
-from tg.util import Bunch
-from tg.configuration import config
-from tg.configurator import FullStackApplicationConfigurator
-from tg.configurator import ApplicationConfigurator
-from tg.configuration.app_config import AppConfig
-from tg.configuration.auth import _AuthenticationForgerPlugin
-from tg.configuration.auth.metadata import _AuthMetadataAuthenticator
-from tg.configuration.utils import coerce_config, coerce_options, TGConfigError
-from tg.configuration import milestones
-from tg.support.converters import asint, asbool
-
-import tg.i18n
-from tg import TGController, expose, response, request, abort, MinimalApplicationConfigurator
-from tests.base import setup_session_dir, teardown_session_dir, utcnow
-from webtest import TestApp
+from tg.configurator.components.transactions import (
+    TransactionManagerConfigurationComponent,
+)
 from tg.renderers.base import RendererFactory
-
+from tg.support.converters import asbool, asint
+from tg.util import Bunch
 from tg.wsgiapp import TGApp
-from tg._compat import PY3
 
 
 def setup_module():
@@ -143,6 +147,8 @@ class FakeTransaction:
         self.doomed = True
 
 from tg.configuration.auth import TGAuthMetadata
+
+
 class ApplicationAuthMetadata(TGAuthMetadata):
     def get_user(self, identity, userid):
         return {'name':'None'}

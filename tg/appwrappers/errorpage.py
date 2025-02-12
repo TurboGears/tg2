@@ -1,8 +1,9 @@
 import logging
 import sys
+
 from ..configuration.utils import coerce_config
-from ..support.converters import asbool, aslist, asint
 from ..request_local import Response
+from ..support.converters import asbool, asint, aslist
 from .base import ApplicationWrapper
 
 log = logging.getLogger(__name__)

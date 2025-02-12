@@ -5,10 +5,11 @@ combines controller decoration for TG-Controller behavior.
 """
 
 from crank.restdispatcher import RestDispatcher
+
+from tg.controllers.decoratedcontroller import DecoratedController
+from tg.controllers.dispatcher import CoreDispatcher
 from tg.decorators import expose
 
-from tg.controllers.dispatcher import CoreDispatcher
-from tg.controllers.decoratedcontroller import DecoratedController
 
 class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
     """A Decorated Controller that dispatches in a RESTful Manner.

@@ -1,5 +1,7 @@
 from webob.exc import HTTPFound, HTTPUnauthorized
+
 from tg.configuration.auth.fastform import FastFormPlugin
+
 
 class FakeCookieAuth(object):
     def remember(self, *args, **kw):

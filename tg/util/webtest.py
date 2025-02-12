@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
+from ..request_local import Response, config, context, request
 from ..support.registry import Registry
-from ..request_local import request, Response, config, context
 from ..wsgiapp import TGApp
 
 

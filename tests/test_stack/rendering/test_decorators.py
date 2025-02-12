@@ -1,11 +1,12 @@
+
 import pytest
-from tests.test_stack import TestConfig, app_from_config
-from tg.util import no_warn
-from tg.configuration import config
-from tg.configuration import milestones
-from tg.decorators import Decoration, decode_params
+
 import tg
-import json
+from tests.test_stack import TestConfig, app_from_config
+from tg.configuration import config, milestones
+from tg.decorators import Decoration, decode_params
+from tg.util import no_warn
+
 
 def make_app():
     base_config = TestConfig(folder = 'rendering',

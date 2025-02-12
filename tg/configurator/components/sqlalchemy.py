@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ..base import ConfigurationComponent, ConfigReadyConfigurationAction, AppReadyConfigurationAction
 from ...configuration.utils import TGConfigError
 from ...support.middlewares import DBSessionRemoverMiddleware
+from ..base import (
+    AppReadyConfigurationAction,
+    ConfigReadyConfigurationAction,
+    ConfigurationComponent,
+)
 
 
 class SQLAlchemyConfigurationComponent(ConfigurationComponent):

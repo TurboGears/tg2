@@ -6,13 +6,13 @@ Provides a consistent API to register and execute hooks.
 
 """
 import atexit
-from .utils import TGConfigError
-from .milestones import config_ready, renderers_ready
-from ..controllers.decoration import Decoration
-from .._compat import default_im_func
-
-
 from logging import getLogger
+
+from .._compat import default_im_func
+from ..controllers.decoration import Decoration
+from .milestones import config_ready, renderers_ready
+from .utils import TGConfigError
+
 log = getLogger(__name__)
 
 

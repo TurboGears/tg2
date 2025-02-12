@@ -69,3 +69,10 @@ zip-safe = false
 
 [tool.pytest.ini_options]
 addopts = "--cov=tg --cov-report lcov --cov-report term --cov-append"
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+output-format = "grouped"
+lint.select = ["E4", "E7", "E9", "F", "I001"]
+exclude = ["build", "dist", ".venv", "venv", "env", "__pycache__"]

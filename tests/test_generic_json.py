@@ -1,7 +1,8 @@
-from tg.jsonify import encode, JSONEncoder
 from datetime import date
-
 from json import loads
+
+from tg.jsonify import JSONEncoder, encode
+
 
 class Person(object):
     def __init__(self, first_name, last_name):

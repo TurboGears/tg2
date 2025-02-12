@@ -1,7 +1,8 @@
 """Main Controller"""
 
-from tg import expose, redirect, config
+from tg import config, expose
 from tg.controllers import TGController
+
 
 class RootController(TGController):
     @expose()

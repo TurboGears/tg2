@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
-import os
 import logging
+import os
 import stat
+
 from tg.configuration.utils import coerce_config
 
 try:
@@ -11,7 +12,9 @@ except ImportError: #pragma: no cover
     import dummy_threading as threading
 
 from markupsafe import Markup
+
 from tg.render import cached_template
+
 from .base import RendererFactory
 
 try:
@@ -20,9 +23,9 @@ except ImportError:  # pragma: no cover
     mako = None
 
 if mako is not None:
-    from mako.template import Template
     from mako import exceptions
     from mako.lookup import TemplateLookup
+    from mako.template import Template
 
 __all__ = ['MakoRenderer']
 
@@ -196,7 +199,7 @@ class DottedTemplateLookup(object):
             # support dotted names also in the inheritance.
             result = self.find_template_file(uri)
 
-            if not uri in self.template_filenames_cache:
+            if uri not in self.template_filenames_cache:
                 # feed our filename cache if needed.
                 self.template_filenames_cache[uri] = result
 

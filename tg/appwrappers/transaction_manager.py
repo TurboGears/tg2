@@ -1,7 +1,8 @@
-import sys
 import logging
-from ..configuration.utils import coerce_config
+import sys
+
 from .._compat import reraise
+from ..configuration.utils import coerce_config
 from ..support.converters import asbool, asint
 from .base import ApplicationWrapper
 

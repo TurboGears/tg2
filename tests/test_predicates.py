@@ -18,10 +18,9 @@
 ##############################################################################
 import pytest
 from webtest import TestApp
-from tg._compat import u_, unicode_text
 
-from tg import predicates, TGController, expose, config
-from tg import AppConfig
+from tg import AppConfig, TGController, config, expose, predicates
+from tg._compat import u_, unicode_text
 
 
 class BasePredicateTester(object):

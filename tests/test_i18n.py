@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-import pytest
-from webtest import TestApp
 import gettext as _gettext
 
+import pytest
+from webtest import TestApp
+
 import tg
-from tg import i18n, expose, TGController, config, AppConfig
+from tg import AppConfig, TGController, config, expose, i18n
+from tg._compat import unicode_text
 from tg.configurator import FullStackApplicationConfigurator
 
-from tg._compat import unicode_text, u_
 
 class _FakePackage:
     __name__ = 'tests'

@@ -1,10 +1,11 @@
-from datetime import datetime
-from email.utils import parsedate_tz, mktime_tz
 import mimetypes
+from datetime import datetime
+from email.utils import mktime_tz, parsedate_tz
+from os.path import getmtime, getsize, isfile, join, normcase, normpath
 from time import gmtime, time
-from os.path import normcase, normpath, join, isfile, getmtime, getsize
-from webob.exc import HTTPNotFound, HTTPForbidden, HTTPBadRequest
+
 from repoze.lru import LRUCache
+from webob.exc import HTTPBadRequest, HTTPForbidden, HTTPNotFound
 
 _BLOCK_SIZE = 4096 * 64 # 256K
 

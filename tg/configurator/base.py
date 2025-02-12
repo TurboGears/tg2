@@ -2,7 +2,12 @@
 import logging
 import weakref
 
-from ..configuration.utils import DependenciesList, coerce_options, DictionaryView, copyoption
+from ..configuration.utils import (
+    DependenciesList,
+    DictionaryView,
+    coerce_options,
+    copyoption,
+)
 
 log = logging.getLogger(__name__)
 

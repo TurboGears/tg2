@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from tests.test_stack import TestConfig, app_from_config
-from tg.util import no_warn
 from tg._compat import u_
+from tg.util import no_warn
+
 
 def setup_noDB(html_flash=False):
     config = {'use_sqlalchemy': False,

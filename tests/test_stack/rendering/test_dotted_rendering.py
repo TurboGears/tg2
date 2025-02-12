@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-import sys
 import pytest
+
 from tests.test_stack import TestConfig, app_from_config
-from tg.util import Bunch, no_warn
-from webtest import TestApp
-from tg._compat import PY3, u_, im_func
-from tg.configuration import milestones
 from tg import expose
-from tg.decorators import Decoration
+from tg._compat import im_func, u_
+from tg.configuration import milestones
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer

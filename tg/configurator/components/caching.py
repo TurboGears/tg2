@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 
-from ...support.converters import asbool
 from ...configuration.utils import TGConfigError
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
+from ...support.converters import asbool
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
 class CachingConfigurationComponent(ConfigurationComponent):

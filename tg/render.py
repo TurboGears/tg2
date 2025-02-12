@@ -3,8 +3,6 @@ try:
 except ImportError: #pragma: no cover
     from urllib.parse import quote_plus
 
-from tg.support.converters import asbool
-from markupsafe import Markup
 
 import tg
 from tg import predicates

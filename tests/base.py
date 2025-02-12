@@ -1,29 +1,21 @@
 # -*- coding: utf-8 -*-
 import datetime
-import os, shutil
-from tg.appwrappers.caching import CacheApplicationWrapper
-from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
-from tg.appwrappers.i18n import I18NApplicationWrapper
-from tg.appwrappers.identity import IdentityApplicationWrapper
-from tg.appwrappers.session import SessionApplicationWrapper
-from tg.configuration.utils import DependenciesList
+import os
+import shutil
 
 try:
-    from xmlrpclib import loads, dumps
+    from xmlrpclib import dumps, loads
 except ImportError:
-    from xmlrpc.client import loads, dumps
+    pass
 import warnings
-
-from tg.support.registry import Registry, RegistryManager
 
 from webtest import TestApp
 
 import tg
-from tg import tmpl_context, request_local, AppConfig
+from tg import AppConfig, request_local
 from tg.configuration import milestones
-
-from tg.wsgiapp import TemplateContext, TGApp, RequestLocals
 from tg.controllers import TGController
+from tg.wsgiapp import RequestLocals, TemplateContext
 
 from .test_stack.baseutils import ControllerWrap, default_config
 

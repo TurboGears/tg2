@@ -2,12 +2,14 @@
 from __future__ import absolute_import
 
 import logging
-import warnings
 
-from ..base import (ConfigurationComponent, AppReadyConfigurationAction,
-                    BeforeConfigConfigurationAction)
 from ...configuration.utils import TGConfigError, get_partial_dict
 from ...support.converters import asbool, aslogger
+from ..base import (
+    AppReadyConfigurationAction,
+    BeforeConfigConfigurationAction,
+    ConfigurationComponent,
+)
 
 
 class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):

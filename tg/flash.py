@@ -2,14 +2,15 @@
 Flash messaging system for sending info to the user in a non-obtrusive way
 """
 import json
-import warnings
-from tg.request_local import response, request
-from tg._compat import unicode_text, url_quote, url_unquote
-from tg.configuration.utils import GlobalConfigurable
-from tg.support import converters
-from markupsafe import escape_silent as escape
 from logging import getLogger
 from string import Template
+
+from markupsafe import escape_silent as escape
+
+from tg._compat import unicode_text, url_quote, url_unquote
+from tg.configuration.utils import GlobalConfigurable
+from tg.request_local import request, response
+from tg.support import converters
 
 log = getLogger(__name__)
 

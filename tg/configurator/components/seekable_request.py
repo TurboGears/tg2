@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from tg.support.converters import asbool
-from ..base import ConfigurationComponent, AppReadyConfigurationAction
+
+from ..base import AppReadyConfigurationAction, ConfigurationComponent
 
 
 class SeekableRequestConfigurationComponent(ConfigurationComponent):

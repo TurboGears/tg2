@@ -1,18 +1,28 @@
+import datetime
+import json
+
 import pytest
 
 from tg import jsonify
-import json
-import datetime
-
 
 try:
     try:
         import sqlite3
     except:
         import pysqlite2
-    from sqlalchemy import (MetaData, create_engine, Table, Column, ForeignKey,
-        Integer, String, DateTime, Date, Time)
-    from sqlalchemy.orm import Session, mapper, relationship, registry
+    from sqlalchemy import (
+        Column,
+        Date,
+        DateTime,
+        ForeignKey,
+        Integer,
+        MetaData,
+        String,
+        Table,
+        Time,
+        create_engine,
+    )
+    from sqlalchemy.orm import Session, mapper, registry, relationship
 
     engine = create_engine("sqlite:///:memory:")
     mapper_registry = registry()

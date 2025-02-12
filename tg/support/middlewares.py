@@ -1,6 +1,7 @@
-from tg.request_local import Request, Response
-
 import logging
+
+from tg.request_local import Request
+
 log = logging.getLogger(__name__)
 
 

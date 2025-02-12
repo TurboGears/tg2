@@ -1,7 +1,6 @@
-import warnings
 
-from tg.configuration.utils import TGConfigError
 from tg._compat import unicode_text
+from tg.configuration.utils import TGConfigError
 
 from .i18n import lazy_ugettext
 

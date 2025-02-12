@@ -1,7 +1,8 @@
 import tg
-from tg.jsonify import encode, JSONEncoder
-from .base import RendererFactory
 from tg.exceptions import HTTPBadRequest
+from tg.jsonify import JSONEncoder, encode
+
+from .base import RendererFactory
 
 __all__ = ['JSONRenderer']
 

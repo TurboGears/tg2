@@ -1,29 +1,32 @@
 # -*- coding: utf-8 -*-
-import re
 import datetime
 import json
-from json import loads
+import re
 from functools import partial
+from json import loads
+
 import pytest
 from crank.util import get_params_with_argspec
+from webtest import TestApp
 
 import tests
-
 import tg
+from tests.base import (
+    TestWSGIController,
+    data_dir,
+    make_app,
+    setup_session_dir,
+    teardown_session_dir,
+)
+from tg._compat import u_, unicode_text
 from tg.configuration.utils import TGConfigError
 from tg.configurator.fullstack import FullStackApplicationConfigurator
-from tg.controllers import TGController, DecoratedController, abort
+from tg.controllers import DecoratedController, TGController, abort
 from tg.controllers.util import validation_errors_response
-from tg.decorators import expose, validate, before_render, before_call, Decoration
-from tg.support.converters import asbool, asint
-from tests.base import (TestWSGIController, data_dir,
-    make_app, setup_session_dir, teardown_session_dir)
-
-from tg._compat import PY3, unicode_text, u_, default_im_func
-from tg.validation import TGValidationError, _ValidationStatus, Convert, RequireValue
+from tg.decorators import Decoration, before_call, before_render, expose, validate
 from tg.i18n import lazy_ugettext as l_
-
-from webtest import TestApp
+from tg.support.converters import asbool, asint
+from tg.validation import Convert, RequireValue, TGValidationError
 
 
 def setup_module():

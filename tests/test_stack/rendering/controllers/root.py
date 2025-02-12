@@ -1,15 +1,30 @@
 """Main Controller"""
-import tg
-from tg import expose, redirect, config, validate, override_template, response, render_template, tmpl_context
-from tg import cache, i18n, request
-from tg.decorators import paginate, use_custom_format, with_trailing_slash, Decoration, before_render, decode_params
-from tg.controllers import TGController
-from tg.validation import TGValidationError
-from tg._compat import PY3
-from tg.render import _get_tg_vars, cached_template
 import datetime
 
 from webob.exc import HTTPForbidden
+
+import tg
+from tg import (
+    cache,
+    expose,
+    i18n,
+    override_template,
+    render_template,
+    response,
+    tmpl_context,
+    validate,
+)
+from tg.controllers import TGController
+from tg.decorators import (
+    Decoration,
+    before_render,
+    decode_params,
+    paginate,
+    use_custom_format,
+    with_trailing_slash,
+)
+from tg.render import _get_tg_vars, cached_template
+from tg.validation import TGValidationError
 
 
 class IntValidator(object):

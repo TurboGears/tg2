@@ -9,26 +9,26 @@ needed to support these decorators.
 
 """
 import copy
+import logging
 import time
 from functools import partial
-from .exceptions import HTTPUnauthorized, HTTPMethodNotAllowed, HTTPMovedPermanently
+
+from tg import request, response, tmpl_context
+from tg._compat import default_im_func, unicode_text
+from tg.caching import _cached_call, create_cache_key
+from tg.configuration import config
+from tg.configuration.sqla.balanced_session import force_request_engine
+from tg.controllers.util import abort, redirect
+from tg.flash import flash
+from tg.predicates import NotAuthorizedError
 from tg.support import NoDefault
 from tg.support.paginate import Page
-from tg.configuration import config
-from tg.controllers.util import abort, redirect
-from tg import tmpl_context, request, response
 from tg.util import Bunch
-from tg.configuration.sqla.balanced_session import force_request_engine
-from tg.flash import flash
-from tg.caching import cached_property, _cached_call, create_cache_key
-from tg.predicates import NotAuthorizedError
-from tg._compat import default_im_func, unicode_text
 
 from .controllers.decoration import Decoration
+from .exceptions import HTTPMethodNotAllowed, HTTPMovedPermanently
 from .validation import _ValidationIntent
 
-
-import logging
 log = logging.getLogger(__name__)
 
 
@@ -475,7 +475,7 @@ class paginate(object):
             paginator.paginate_params[self.items_per_page_param] = items_per_page
 
     def before_render(self, remainder, params, output):
-        if not isinstance(output, dict) or not self.name in output:
+        if not isinstance(output, dict) or self.name not in output:
             return
 
         paginator = request.paginators[self.name]

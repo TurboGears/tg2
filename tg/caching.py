@@ -1,10 +1,9 @@
 """Caching decorator, took as is from pylons"""
-import warnings
-import tg, inspect, time
+
+import tg
+from tg._compat import im_class, im_func
+from tg.support import EmptyContext, NoDefault
 from tg.support.converters import asbool
-from tg.support import NoDefault, EmptyContext
-from tg._compat import im_func, im_class
-from functools import wraps
 
 
 class cached_property(object):

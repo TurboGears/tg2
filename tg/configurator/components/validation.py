@@ -1,6 +1,6 @@
 
 __all__ = ('ValidationConfigurationComponent', )
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
 class ValidationConfigurationComponent(ConfigurationComponent):

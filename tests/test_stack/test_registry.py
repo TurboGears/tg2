@@ -1,11 +1,13 @@
 # (c) 2005 Ben Bangert
 # This module is part of the Python Paste Project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
-import inspect
 import asyncio
+import inspect
+
 import pytest
 from webtest import TestApp
-from tg.support.registry import RegistryManager, StackedObjectProxy, DispatchingConfig
+
+from tg.support.registry import DispatchingConfig, RegistryManager, StackedObjectProxy
 from tg.util import Bunch
 
 regobj = StackedObjectProxy()

@@ -1,6 +1,8 @@
-import os, sys, logging
-import warnings
 import inspect
+import logging
+import os
+import sys
+
 from webob.exc import HTTPNotFound
 
 import tg

@@ -10,6 +10,7 @@ original "identity" framework of TurboGears 1, plus others.
 """
 
 from __future__ import unicode_literals
+
 from tg import request
 from tg._compat import unicode_text
 

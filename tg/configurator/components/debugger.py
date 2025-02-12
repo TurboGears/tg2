@@ -2,7 +2,8 @@
 import logging
 
 from tg.support.converters import asbool
-from ..base import ConfigurationComponent, AppReadyConfigurationAction
+
+from ..base import AppReadyConfigurationAction, ConfigurationComponent
 
 log = logging.getLogger(__name__)
 

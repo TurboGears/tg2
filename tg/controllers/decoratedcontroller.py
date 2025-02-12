@@ -6,21 +6,24 @@ decorators to effect a rendered page.
 """
 
 import inspect
-import warnings
+from functools import partial
+
+from crank.util import flatten_arguments, get_params_with_argspec
+
 import tg
-from tg.controllers.util import abort
-from tg.predicates import NotAuthorizedError, not_anonymous
+from tg._compat import (
+    default_im_func,
+    im_self,
+    unicode_text,
+    url2pathname,
+    with_metaclass,
+)
 from tg.configuration.utils import TGConfigError
-
-from crank.util import get_params_with_argspec, flatten_arguments
-
+from tg.controllers.util import abort
 from tg.flash import flash
-from tg.jsonify import JsonEncodeError
+from tg.predicates import NotAuthorizedError, not_anonymous
 from tg.render import render as tg_render
 from tg.validation import _ValidationStatus
-
-from tg._compat import unicode_text, with_metaclass, im_self, url2pathname, default_im_func
-from functools import partial
 
 
 class _DecoratedControllerMeta(type):

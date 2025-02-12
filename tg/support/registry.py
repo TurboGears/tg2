@@ -8,10 +8,10 @@ global objects for TurboGears2.
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 """
 
-from tg.support.objectproxy import TurboGearsObjectProxy
-from tg.support import NoDefault
-import itertools, time
 import threading as threadinglocal
+
+from tg.support import NoDefault
+from tg.support.objectproxy import TurboGearsObjectProxy
 
 __all__ = ['StackedObjectProxy', 'RegistryManager']
 

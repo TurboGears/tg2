@@ -1,9 +1,12 @@
 from __future__ import absolute_import
 
 from os.path import exists, getmtime
+
+from markupsafe import Markup
+
 from tg.i18n import ugettext, ungettext
 from tg.render import cached_template
-from markupsafe import Markup
+
 from .base import RendererFactory
 
 try:
@@ -12,10 +15,10 @@ except ImportError:  # pragma: no cover
     jinja2 = None
 
 if jinja2 is not None:
-    from jinja2.loaders import FileSystemLoader
     from jinja2 import ChoiceLoader, Environment
-    from jinja2.filters import FILTERS
     from jinja2.exceptions import TemplateNotFound
+    from jinja2.filters import FILTERS
+    from jinja2.loaders import FileSystemLoader
 else:  # pragma: no cover
     class FileSystemLoader(object): pass
 
@@ -42,14 +45,14 @@ class JinjaRenderer(RendererFactory):
             TemplateLoader = FileSystemLoader
             template_loader_args = {}
 
-        if not 'jinja_extensions' in config:
+        if 'jinja_extensions' not in config:
             config['jinja_extensions'] = []
 
         # Add i18n extension by default
-        if not "jinja2.ext.i18n" in config['jinja_extensions']:
+        if "jinja2.ext.i18n" not in config['jinja_extensions']:
             config['jinja_extensions'].append("jinja2.ext.i18n")
 
-        if not 'jinja_filters' in config:
+        if 'jinja_filters' not in config:
             config['jinja_filters'] = {}
 
         loader = ChoiceLoader(

@@ -1,4 +1,5 @@
 import pytest
+
 from tg._compat import im_self
 from tg.configuration.milestones import _ConfigMilestoneTracker, config_ready
 from tg.configuration.utils import GlobalConfigurable, TGConfigError

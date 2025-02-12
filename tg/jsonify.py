@@ -2,18 +2,20 @@
 
 import datetime
 import decimal
+import logging
 import types
-
 from json import JSONEncoder as _JSONEncoder
-from tg.support.converters import asbool
 
 from webob.multidict import MultiDict
+
 from tg._compat import string_type
 from tg.configuration.utils import GlobalConfigurable
-from tg.util.sqlalchemy import dictify as dictify_sqla, is_saobject, is_query_result, is_query_row
-from tg.util.ming import dictify as dictify_ming, is_mingobject, is_objectid
+from tg.support.converters import asbool
+from tg.util.ming import dictify as dictify_ming
+from tg.util.ming import is_mingobject, is_objectid
+from tg.util.sqlalchemy import dictify as dictify_sqla
+from tg.util.sqlalchemy import is_query_result, is_query_row, is_saobject
 
-import logging
 log = logging.getLogger(__name__)
 
 

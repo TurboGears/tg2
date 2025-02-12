@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from tg.appwrappers.errorpage import ErrorPageApplicationWrapper
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
+
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
 class ErrorPagesConfigurationComponent(ConfigurationComponent):

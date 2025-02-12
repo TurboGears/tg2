@@ -1,6 +1,5 @@
-from datetime import timedelta, tzinfo, datetime
 import re
-
+from datetime import datetime, timedelta, tzinfo
 
 TIMEDELTA_ZERO = timedelta(0)
 DATETIME_RE = re.compile(

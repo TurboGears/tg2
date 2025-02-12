@@ -1,5 +1,5 @@
 import logging
-import warnings
+
 from ..support.converters import asbool
 from .base import ApplicationWrapper
 

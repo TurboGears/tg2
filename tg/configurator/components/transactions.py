@@ -2,8 +2,9 @@
 from __future__ import absolute_import
 
 from tg.support.converters import asbool
-from ..base import ConfigurationComponent
+
 from ...configuration.utils import TGConfigError
+from ..base import ConfigurationComponent
 
 
 class TransactionManagerConfigurationComponent(ConfigurationComponent):

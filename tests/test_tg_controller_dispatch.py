@@ -2,10 +2,10 @@
 from wsgiref.validate import validator
 
 import pytest
-from tests.test_validation import IntValidator, BoolValidator
+from webob import Request, Response
 
-from webob import Response, Request
-from tg._compat import unicode_text, u_
+from tests.test_validation import IntValidator
+from tg._compat import u_, unicode_text
 
 try:
     from pylons.controllers.xmlrpc import XMLRPCController
@@ -28,14 +28,16 @@ except ImportError:
 
 
 import tg
+from tests.base import (
+    TestWSGIController,
+    make_app,
+    setup_session_dir,
+    teardown_session_dir,
+)
 from tg import config, tmpl_context
-from tg.controllers import (TGController, WSGIAppController)
+from tg.controllers import TGController, WSGIAppController
 from tg.decorators import expose, validate
 from tg.util import no_warn
-
-from tests.base import (
-    TestWSGIController, make_app, setup_session_dir, teardown_session_dir)
-
 
 config['renderers'] = ['genshi', 'mako', 'json']
 

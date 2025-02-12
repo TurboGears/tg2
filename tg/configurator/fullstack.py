@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from .components.auth import SimpleAuthenticationConfigurationComponent
+from .components.caching import CachingConfigurationComponent
 from .components.debugger import DebuggerConfigurationComponent
-from .components.seekable_request import SeekableRequestConfigurationComponent
-from .minimal import MinimalApplicationConfigurator
-
 from .components.error_pages import ErrorPagesConfigurationComponent
 from .components.error_reporting import ErrorReportingConfigurationComponent
+from .components.i18n import I18NConfigurationComponent
 from .components.ming import MingConfigurationComponent
+from .components.seekable_request import SeekableRequestConfigurationComponent
+from .components.session import SessionConfigurationComponent
 from .components.slow_requests import SlowRequestsConfigurationComponent
 from .components.sqlalchemy import SQLAlchemyConfigurationComponent
-from .components.transactions import TransactionManagerConfigurationComponent
-from .components.auth import SimpleAuthenticationConfigurationComponent
-from .components.i18n import I18NConfigurationComponent
-from .components.caching import CachingConfigurationComponent
-from .components.session import SessionConfigurationComponent
 from .components.statics import StaticsConfigurationComponent
+from .components.transactions import TransactionManagerConfigurationComponent
+from .minimal import MinimalApplicationConfigurator
 
 log = logging.getLogger(__name__)
 

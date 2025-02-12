@@ -4,15 +4,20 @@ New TurboGears2 identification, authentication and authorization setup.
 This aims to provide an easier way to setup auth layer in TurboGears2
 and removes the dependency from repoze.what.
 """
-import sys, logging, re
-from tg.support.converters import asbool
-from ..utils import get_partial_dict
-from zope.interface import implementer
-from repoze.who.middleware import PluggableAuthenticationMiddleware
-from repoze.who.interfaces import IIdentifier, IAuthenticator, IChallenger
+import logging
+import re
+import sys
+
 from repoze.who.classifiers import default_challenge_decider, default_request_classifier
 from repoze.who.config import _LEVELS
+from repoze.who.interfaces import IAuthenticator, IChallenger, IIdentifier
+from repoze.who.middleware import PluggableAuthenticationMiddleware
 from webob.exc import HTTPUnauthorized
+from zope.interface import implementer
+
+from tg.support.converters import asbool
+
+from ..utils import get_partial_dict
 
 log = logging.getLogger(__name__)
 

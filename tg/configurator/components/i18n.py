@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+from logging import getLogger
 
 from ...configuration.utils import TGConfigError
 from ...support.converters import aslist
-from ..base import (ConfigurationComponent,
-                    BeforeConfigConfigurationAction)
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
-from logging import getLogger
 log = getLogger(__name__)
 
 

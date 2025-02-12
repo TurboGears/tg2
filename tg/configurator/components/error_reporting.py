@@ -3,7 +3,12 @@ import logging
 
 from tg.configuration.utils import coerce_config
 from tg.support.converters import asbool, asint
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction, AppReadyConfigurationAction
+
+from ..base import (
+    AppReadyConfigurationAction,
+    BeforeConfigConfigurationAction,
+    ConfigurationComponent,
+)
 
 log = logging.getLogger(__name__)
 

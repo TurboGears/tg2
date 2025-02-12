@@ -2,8 +2,8 @@
 
 from crank.objectdispatcher import ObjectDispatcher
 
-from tg.controllers.dispatcher import CoreDispatcher
 from tg.controllers.decoratedcontroller import DecoratedController
+from tg.controllers.dispatcher import CoreDispatcher
 
 
 class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):

@@ -1,7 +1,6 @@
 import inspect
-from collections import deque
-
 import itertools
+from collections import deque
 
 from .milestones import config_ready
 

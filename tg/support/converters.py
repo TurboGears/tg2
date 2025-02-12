@@ -2,9 +2,10 @@
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 #
 # Adapted to TurboGears 2.3
-from tg._compat import string_type
-from string import Template
 import logging
+from string import Template
+
+from tg._compat import string_type
 
 
 def asbool(obj):

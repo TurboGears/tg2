@@ -1,12 +1,15 @@
 from __future__ import absolute_import
+
 import os
 
-from tg.render import cached_template
 from markupsafe import Markup
-from .base import RendererFactory
+
+from tg.render import cached_template
+
 from ..configuration.utils import coerce_config
-from ..support.converters import asbool, aslist
 from ..i18n import ugettext
+from ..support.converters import asbool, aslist
+from .base import RendererFactory
 
 try:
     import kajiki

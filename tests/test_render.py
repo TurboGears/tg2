@@ -2,14 +2,13 @@
 Testing for TG2 Configuration
 """
 import pytest
+from mako.exceptions import TemplateLookupException
 from webtest import TestApp
 
 import tg
-from tg.render import MissingRendererError, _get_tg_vars
 from tests.base import setup_session_dir, teardown_session_dir
-
 from tg import AppConfig
-from mako.exceptions import TemplateLookupException
+from tg.render import MissingRendererError, _get_tg_vars
 from tg.util.webtest import test_context
 
 
@@ -160,7 +159,8 @@ class TestMakoLookup(object):
         t = mlookup.get_template(template_path)
         assert t.output_encoding == 'FAKE_ENCODING'
 
-        import os, stat
+        import os
+        import stat
         def fake_os_stat(o):
             return {stat.ST_MTIME:t.module._modified_time+1}
 
@@ -185,7 +185,8 @@ class TestMakoLookup(object):
         t = mlookup.get_template(template_path)
         assert t.output_encoding == 'FAKE_ENCODING'
 
-        import os, stat
+        import os
+        import stat
         def fake_os_stat(o):
             return {stat.ST_MTIME:t.module._modified_time+1}
 

@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 import mimetypes
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
+
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
 class MimeTypesConfigurationComponent(ConfigurationComponent):

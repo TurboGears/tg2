@@ -1,5 +1,6 @@
-import hmac, base64, binascii
-import warnings
+import base64
+import binascii
+import hmac
 
 try:
     import cPickle as pickle
@@ -13,13 +14,14 @@ except ImportError: #pragma: no cover
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
+from webob.compat import bytes_ as webob_bytes_
+from webob.compat import url_quote as webob_url_quote
 from webob.request import PATH_SAFE
-from webob.compat import url_quote as webob_url_quote, bytes_ as webob_bytes_
 
-from tg._compat import unicode_text, PY2
-from tg.support.objectproxy import TurboGearsObjectProxy
-from tg.support.registry import StackedObjectProxy, DispatchingConfig
+from tg._compat import PY2, unicode_text
 from tg.caching import cached_property
+from tg.support.objectproxy import TurboGearsObjectProxy
+from tg.support.registry import DispatchingConfig, StackedObjectProxy
 
 
 class Request(WebObRequest):

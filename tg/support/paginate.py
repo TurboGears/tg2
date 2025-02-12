@@ -1,9 +1,11 @@
-import re, string
-from tg import request
-from tg.controllers.util import url
+import re
+import string
 
 from markupsafe import Markup
 from markupsafe import escape_silent as escape
+
+from tg import request
+from tg.controllers.util import url
 
 try:
     import sqlalchemy

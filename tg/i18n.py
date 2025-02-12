@@ -1,11 +1,12 @@
 import copy
-import logging, os
 import gettext as _gettext
-from gettext import NullTranslations, GNUTranslations
-import warnings
+import logging
+import os
+from gettext import GNUTranslations, NullTranslations
+
 import tg
+from tg._compat import PY3
 from tg.util import lazify
-from tg._compat import PY3, string_type
 
 log = logging.getLogger(__name__)
 

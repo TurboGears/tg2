@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 import copy
+from logging import getLogger
 
 from tg.configuration import milestones
 from tg.configuration.utils import TGConfigError
 from tg.support.converters import asbool
-from ..base import (ConfigurationComponent, BeforeConfigConfigurationAction,
-                    ConfigReadyConfigurationAction)
 
-from logging import getLogger
+from ..base import (
+    BeforeConfigConfigurationAction,
+    ConfigReadyConfigurationAction,
+    ConfigurationComponent,
+)
+
 log = getLogger(__name__)
 
 __all__ = ('TemplateRenderingConfigurationComponent', )
@@ -67,9 +71,9 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
         )
 
     def on_bind(self, configurator):
-        from ...renderers.json import JSONRenderer
         from ...renderers.genshi import GenshiRenderer
         from ...renderers.jinja import JinjaRenderer
+        from ...renderers.json import JSONRenderer
         from ...renderers.kajiki import KajikiRenderer
         from ...renderers.mako import MakoRenderer
 

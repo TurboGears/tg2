@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from ..util import Bunch
-from .base import Configurator
-from .base import EnvironmentLoadedConfigurationAction, AppReadyConfigurationAction
-from ..configuration.hooks import hooks
 from .. import milestones
-from ..wsgiapp import TGApp
+from ..configuration.hooks import hooks
 from ..configuration.utils import DependenciesList
 from ..request_local import config as reqlocal_config
-
+from ..util import Bunch
+from ..wsgiapp import TGApp
+from .base import (
+    AppReadyConfigurationAction,
+    Configurator,
+    EnvironmentLoadedConfigurationAction,
+)
 
 log = logging.getLogger(__name__)
 

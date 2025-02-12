@@ -5,15 +5,14 @@ URL definition and browser redirection are defined here.
 
 """
 import re
-import warnings
+
 from webob.exc import status_map
 
 import tg
-
-from tg._compat import string_type, url_encode, unicode_text, bytes_, byte_string
-from tg.exceptions import HTTPFound
-from tg.request_local import request, response, Response
+from tg._compat import byte_string, bytes_, string_type, unicode_text, url_encode
 from tg.configuration.utils import TGConfigError
+from tg.exceptions import HTTPFound
+from tg.request_local import Response, request, response
 
 
 def _smart_str(s):

@@ -2,7 +2,8 @@
 import os
 
 from tg.util import Bunch
-from ..base import ConfigurationComponent, BeforeConfigConfigurationAction
+
+from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
 class PathsConfigurationComponent(ConfigurationComponent):

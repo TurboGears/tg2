@@ -2,14 +2,13 @@
 import logging
 
 from .application import ApplicationConfigurator
-
+from .components.app_globals import AppGlobalsConfigurationComponent
+from .components.dispatch import DispatchConfigurationComponent
+from .components.helpers import HelpersConfigurationComponent
 from .components.mimetypes import MimeTypesConfigurationComponent
 from .components.paths import PathsConfigurationComponent
-from .components.app_globals import AppGlobalsConfigurationComponent
-from .components.helpers import HelpersConfigurationComponent
-from .components.dispatch import DispatchConfigurationComponent
-from .components.rendering import TemplateRenderingConfigurationComponent
 from .components.registry import RegistryConfigurationComponent
+from .components.rendering import TemplateRenderingConfigurationComponent
 from .components.validation import ValidationConfigurationComponent
 
 log = logging.getLogger(__name__)

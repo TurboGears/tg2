@@ -1,7 +1,8 @@
 import logging
 
 import pytest
-from tg.support.converters import asbool, asint, aslist, astemplate, aslogger
+
+from tg.support.converters import asbool, asint, aslist, aslogger, astemplate
 
 
 class TestAsBool(object):

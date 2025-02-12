@@ -1,12 +1,13 @@
-import pytest
-from tg import jsonify, lurl
-from datetime import datetime
-from decimal import Decimal
-from webob.multidict import MultiDict
 import json
+from decimal import Decimal
+
+import pytest
+from webob.multidict import MultiDict
+
+from tests.base import utcnow
+from tg import jsonify, lurl
 from tg.util import LazyString
 from tg.util.webtest import test_context
-from tests.base import utcnow
 
 
 class Foo(object):

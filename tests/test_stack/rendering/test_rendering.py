@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-import shutil, os
 import json
-import pytest
-import tg
-from tg.configuration import milestones
-
-from tests.test_stack import TestConfig, app_from_config
-from tg.configuration.hooks import _TGGlobalHooksNamespace
-from tg.util import Bunch
-from tg._compat import PY3, im_func
-from tg.renderers.genshi import GenshiRenderer
-from tg import expose
+import os
+import shutil
 from datetime import datetime
+
+import pytest
+
+import tg
+from tests.test_stack import TestConfig, app_from_config
+from tg import expose
+from tg._compat import im_func
+from tg.configuration import milestones
+from tg.configuration.hooks import _TGGlobalHooksNamespace
+from tg.renderers.genshi import GenshiRenderer
+from tg.util import Bunch
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer
@@ -58,6 +60,7 @@ def test_default_genshi_renderer():
 
 def test_genshi_nameconstant():
     from genshi.template.astutil import ASTCodeGenerator, parse
+
     from tg.renderers.genshi import GenshiRenderer
 
     # This checks genshi gets monkeypatched to fix it on Py34 if option is provided

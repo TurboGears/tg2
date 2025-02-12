@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from webob import Response, Request
-
-from tg.controllers import TGController, RestController
-from tg.decorators import expose
-from tg.util import no_warn
+from webob import Request, Response
 
 from tests.base import (
-    TestWSGIController, make_app, setup_session_dir, teardown_session_dir)
+    TestWSGIController,
+    make_app,
+    setup_session_dir,
+    teardown_session_dir,
+)
+from tg.controllers import RestController, TGController
+from tg.decorators import expose
+from tg.util import no_warn
 
 
 def setup_module():

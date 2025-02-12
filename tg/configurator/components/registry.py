@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from logging import getLogger
+
 from tg.support.converters import asbool
 from tg.support.registry import RegistryManager
-from ..base import (ConfigurationComponent, AppReadyConfigurationAction)
 
-from logging import getLogger
+from ..base import AppReadyConfigurationAction, ConfigurationComponent
+
 log = getLogger(__name__)
 
 __all__ = ('RegistryConfigurationComponent', )
