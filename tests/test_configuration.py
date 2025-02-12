@@ -9,8 +9,14 @@ import pytest
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
-from ming import Session
-from ming.odm import ThreadLocalORMSession
+
+try:
+    import ming
+except ImportError:
+    # Ming is not supported on Python 3.8 
+    ming = None
+else:
+    import ming.odm
 
 from tg.configurator.base import ConfigurationComponent, Configurator, BeforeConfigConfigurationAction
 from tg.configurator.components.app_globals import AppGlobalsConfigurationComponent
@@ -565,14 +571,15 @@ class TestAppConfig:
         with pytest.raises(TGConfigError):
             app = conf.make_wsgi_app()
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_minimal_app_with_ming(self):
         class RootController(TGController):
             @expose()
             def test(self):
                 return 'HI!'
 
-        mainsession = Session()
-        DBSession = ThreadLocalORMSession(mainsession)
+        mainsession = ming.Session()
+        DBSession = ming.odm.ThreadLocalORMSession(mainsession)
 
         def init_model(engine):
             mainsession.bind = engine
@@ -587,6 +594,7 @@ class TestAppConfig:
         app = TestApp(app)
         assert 'HI!' in app.get('/test')
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_ming_without_models(self):
         class RootController(TGController):
             @expose()
@@ -794,6 +802,7 @@ class TestAppConfig:
         with pytest.raises(TGConfigError):
             conf.make_wsgi_app()
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance(self):
         class RootController(TGController):
             @expose()
@@ -838,6 +847,7 @@ class TestAppConfig:
 
         assert ming_handler.ThreadLocalODMSession.actions == ['FLUSH']
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_closes_on_failure(self):
         class RootController(TGController):
             @expose()
@@ -885,6 +895,7 @@ class TestAppConfig:
         else:
             assert False, 'Should have raised exception'
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_with_url_alone(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -901,6 +912,7 @@ class TestAppConfig:
         # Looks like ming has empty dstore.name when using MIM.
         assert dstore_name == '', dstore
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_sqla_and_ming_both(self):
         package = PackageWithModel()
         base_config = AppConfig(minimal=True, root_controller=None)
@@ -922,6 +934,7 @@ class TestAppConfig:
 
         assert config['DBSession'] is config['SQLASession'], config
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_with_url_and_db(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -938,6 +951,7 @@ class TestAppConfig:
         dstore_name = dstore.name
         assert dstore_name == 'realinmemdb', dstore
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_advanced_options(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)
@@ -950,6 +964,7 @@ class TestAppConfig:
         app = conf.make_wsgi_app()
         assert app is not None
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_replica_set(self):
         if sys.version_info[:2] == (2, 6):
             pytest.skip()
@@ -972,6 +987,7 @@ class TestAppConfig:
         assert expected_db == dstore.name, dstore.name
         assert dstore.bind._conn_args[0] == expected_url
 
+    @pytest.mark.skipif(ming is None, reason="Ming not supported on this system")
     def test_setup_ming_persistance_replica_set_option(self):
         package = PackageWithModel()
         conf = AppConfig(minimal=True, root_controller=None)

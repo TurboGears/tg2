@@ -132,8 +132,8 @@ def test_decimal():
 def test_objectid():
     try:
         from bson import ObjectId
-    except:
-        raise SkipTest()
+    except ImportError:
+        raise pytest.skip("MongoDB not supported on this system")
 
     d = ObjectId('507f1f77bcf86cd799439011')
     encoded = jsonify.encode({'oid':d})
