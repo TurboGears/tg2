@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TurboGears2"
+version = "2.5.0a0"
+description = "Next generation TurboGears"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+requires-python = ">=3.8"
+keywords = ["python", "web", "framework", "wsgi", "full-stack", "mvc", "mongodb", "sqlalchemy"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Environment :: Web Environment",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+]
+authors = [
+    { name = "Alessandro Molina", email = "alessandro@molina.fyi" },
+    { name = "Mark Ramm" },
+    { name = "Christopher Perkins" },
+    { name = "Jonathan LaCour" },
+    { name = "Rick Copland" },
+    { name = "Alberto Valverde" },
+    { name = "Michael Pedersen" }
+]
+license = { text = "MIT" }
+urls = { Homepage = "http://www.turbogears.org/" }
+dependencies = [
+    "WebOb>=1.8.9,<1.10.0",
+    "crank>=0.8.0,<0.9.0",
+    "repoze.lru",
+    "MarkupSafe"
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest",
+    "zope.sqlalchemy>=0.4",
+    "repoze.who",
+    "repoze.who.plugins.sa>=1.0.1",
+    "Genshi>=0.5.1",
+    "Mako",
+    "WebTest",
+    "backlash>=0.3.0",
+    "raven",
+    "Beaker",
+    "sqlalchemy",
+    "jinja2",
+    "ming>=0.8.0",
+    "Kajiki>=0.4.4",
+    "formencode>=1.3.0a1"
+]
+
+[tool.setuptools.packages.find]
+exclude = ["ez_setup", "examples", "tests", "tests.*"]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false

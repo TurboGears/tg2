@@ -55,7 +55,6 @@ from tg.configurator import (Configurator, ApplicationConfigurator,
                              FullStackApplicationConfigurator)
 from tg.wsgiapp import TGApp
 from tg.controllers import TGController, RestController, redirect, url, lurl, abort
-from tg.release import version
 from tg.decorators import (validate, expose, override_template, use_custom_format,
                            require, with_engine, cached, decode_params)
 
@@ -68,10 +67,7 @@ from tg.configuration.hooks import hooks
 
 from tg.request_local import Request, Response
 
-__version__ = version
-
-__all__ = ['__version__',
-           'app_globals', 'expose', 'override_template', 'request',
+__all__ = ['app_globals', 'expose', 'override_template', 'request',
            'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
            'use_wsgi_app', 'validate', 'i18n', 'json_encode', 'cache', 'url', 'lurl',
            'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',
