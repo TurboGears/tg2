@@ -19,7 +19,8 @@ except ImportError:  # pragma: no cover
 if kajiki is not None:
     from kajiki.loader import FileLoader
 else:  # pragma: no cover
-    class FileLoader(object): pass
+    class FileLoader(object): 
+        pass
 
 __all__ = ['KajikiRenderer']
 

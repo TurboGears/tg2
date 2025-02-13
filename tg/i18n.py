@@ -177,26 +177,28 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     native_lang = conf.get('i18n.native')  # Languages that requires no translation
 
     if not isinstance(lang, list):
-        lang = [lang]
+        langs = [lang]
+    else:
+        langs = lang
 
     mofiles = []
     supported_languages = []
-    for l in lang:
-        if native_lang and l in native_lang:
+    for lang in langs:
+        if native_lang and lang in native_lang:
             mo = _TGI18NIdentityTranslator()
         else:
-            mo = _gettext.find(app_domain, localedir=localedir, languages=[l], all=False)
+            mo = _gettext.find(app_domain, localedir=localedir, languages=[lang], all=False)
 
         if mo is not None:
             mofiles.append(mo)
-            supported_languages.append(l)
+            supported_languages.append(lang)
 
     try:
         translator = _translator_from_mofiles(app_domain, mofiles, **kwargs)
     except IOError as ioe:
         raise LanguageError('IOError: %s' % ioe)
 
-    translator.tg_lang = lang
+    translator.tg_lang = langs
     translator.tg_supported_lang = supported_languages
 
     return translator

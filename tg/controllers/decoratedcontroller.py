@@ -255,7 +255,7 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         req = context.request
         config = context.config
 
-        validation_explode = context.config.get('validation.explode', {})
+        validation_explode = config.get('validation.explode', {})
         validation_status = req.validation
         validation_status.exception = exception
 

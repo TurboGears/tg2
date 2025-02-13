@@ -69,7 +69,7 @@ class TGApp(object):
     def __call__(self, environ, start_response):
         """Serve a WSGI Request"""
         # Hide outer middlewares when crash inside application itself
-        __traceback_hide__ = 'before'
+        __traceback_hide__ = 'before'  # noqa: F841
 
         testmode, context, registry = self._setup_app_env(environ)
 
@@ -194,7 +194,7 @@ class TGApp(object):
                                     controller.split('/'))
 
         # Hide the traceback here if the import fails (bad syntax and such)
-        __traceback_hide__ = 'before_and_this'
+        __traceback_hide__ = 'before_and_this'  # noqa: F841
 
         __import__(full_module_name)
         module_name = controller.split('/')[-1]

@@ -136,11 +136,11 @@ def encode(obj, encoder=None, iterencode=False):
 
     if encoder._allow_lists is False:
         try:
-            value = obj['test']
+            obj['test']
         except TypeError:
             if not hasattr(obj, '__json__') and not is_saobject(obj) and not is_mingobject(obj):
                 raise JsonEncodeError('Your Encoded object must be dict-like.')
-        except:
+        except Exception:
             pass
 
     return encode_func(obj)

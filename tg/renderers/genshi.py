@@ -20,7 +20,8 @@ if genshi is not None:
     from genshi.filters import Translator
     from genshi.template import TemplateLoader as GenshiTemplateLoader
 else:  # pragma: no cover
-    class GenshiTemplateLoader(object): pass
+    class GenshiTemplateLoader(object):
+        pass
 
 
 __all__ = ['GenshiRenderer']

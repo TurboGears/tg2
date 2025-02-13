@@ -254,7 +254,7 @@ class RegistryManager(object):
 
         try:
             app_iter = self.application(environ, start_response)
-        except:
+        except Exception:
             reg.preserve()
             reg.cleanup()
             raise
@@ -272,7 +272,7 @@ class RegistryManager(object):
         try:
             for chunk in data:
                 yield chunk
-        except:
+        except Exception:
             reg.preserve()
             raise
         finally:

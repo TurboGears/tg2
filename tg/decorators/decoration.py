@@ -47,7 +47,7 @@ class Decoration(object):
     def get_decoration(cls, func):
         try:
             dec = func.decoration
-        except:
+        except Exception:
             dec = func.decoration = cls(func)
         return dec
 
@@ -197,7 +197,7 @@ class Decoration(object):
 
         try:
             render_custom_format = request._render_custom_format[self.controller]
-        except:
+        except Exception:
             render_custom_format = self.render_custom_format
 
         if render_custom_format:

@@ -32,7 +32,7 @@ class HooksNamespace(object):
     def _call_handler(self, hook_name, trap_exceptions, func, args, kwargs):
         try:
             return func(*args, **kwargs)
-        except:
+        except Exception:
             if trap_exceptions is True:
                 log.exception('Trapped Exception while handling %s -> %s', hook_name, func)
             else:

@@ -14,9 +14,6 @@ class LazyString(object):
     def eval(self):
         return self.func(*self.args, **self.kwargs)
 
-    def __unicode__(self):  # pragma: no cover
-        return unicode(self.eval())
-
     def __str__(self):
         return str(self.eval())
 

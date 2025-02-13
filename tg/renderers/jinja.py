@@ -20,7 +20,8 @@ if jinja2 is not None:
     from jinja2.filters import FILTERS
     from jinja2.loaders import FileSystemLoader
 else:  # pragma: no cover
-    class FileSystemLoader(object): pass
+    class FileSystemLoader(object): 
+        pass
 
 __all__ = ['JinjaRenderer']
 

@@ -40,7 +40,7 @@ class LazyUrl(object):
 
     @property
     def _id(self):
-        if self._decoded == None:
+        if self._decoded is None:
             self._decoded = url(self.base_url, params=self.params, **self.kwargs)
         return self._decoded
 

@@ -161,7 +161,7 @@ class Convert(object):
 
         try:
             return self._func(value)
-        except:
+        except Exception:
             raise TGValidationError(self._msg, value)
 
 

@@ -197,10 +197,15 @@ def test_ignore_parameters():
 
 def test_https_redirect():
     app = setup_noDB()
-    resp = app.get("/test_https?foo=bar&baz=bat")
+    resp = app.get("/test_https?foo=bar&baz=bat", status=302)
     assert 'https://' in resp, resp
     assert resp.location.endswith("/test_https?foo=bar&baz=bat")
     resp = app.post("/test_https?foo=bar&baz=bat", status=405)
+
+    # Already HTTPS, should not redirect
+    resp = app.get("/test_https?foo=bar&baz=bat", 
+                   extra_environ={"wsgi.url_scheme": "https"}, 
+                   status=200)
 
 def test_return_non_string():
     app = setup_noDB()

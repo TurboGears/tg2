@@ -3,8 +3,10 @@
 TurboGears http exceptions are inherited from WebOb http exceptions
 """
 import webob
-from webob.exc import *
+import webob.exc
+from webob.exc import *  # noqa: F403
 
+__all__ = webob.exc.__all__
 
 class _HTTPMoveLazyLocation(object):
     """

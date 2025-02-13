@@ -93,7 +93,7 @@ class TransactionApplicationWrapper(ApplicationWrapper):
             except AbortTransaction as e:
                 transaction_manager.abort()
                 return e.response
-            except:
+            except Exception:
                 exc_info = sys.exc_info()
                 log.debug('Error while running request, aborting transaction')
                 txn = transaction_manager.get()

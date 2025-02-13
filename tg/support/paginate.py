@@ -8,8 +8,6 @@ from ..request_local import request
 from ..support.url import url
 
 try:
-    import sqlalchemy
-    import sqlalchemy.orm
     from sqlalchemy.orm.query import Query as SQLAQuery
 except ImportError:  # pragma: no cover
     class SQLAQuery(object):

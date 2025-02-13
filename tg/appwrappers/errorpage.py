@@ -63,7 +63,7 @@ class ErrorPageApplicationWrapper(ApplicationWrapper):
     def __call__(self, controller, environ, context):
         try:
             resp = self.next_handler(controller, environ, context)
-        except:
+        except Exception:
             if self.handle_exceptions is False:
                 raise
             # Provide crash details to backlash

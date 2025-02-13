@@ -75,7 +75,7 @@ class MakoRenderer(RendererFactory):
             else:
                 try:
                     os.makedirs(compiled_dir)
-                except:
+                except Exception:
                     bad_path = compiled_dir
                     compiled_dir = None
             if bad_path:
@@ -272,7 +272,7 @@ class DottedTemplateLookup(object):
 
                 return self.template_cache[filename]
 
-            except:
+            except Exception:
                 self.template_cache.pop(filename, None)
                 raise
 

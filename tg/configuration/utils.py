@@ -5,7 +5,8 @@ from collections import deque
 from .milestones import config_ready
 
 
-class TGConfigError(Exception):pass
+class TGConfigError(Exception):
+    pass
 
 
 def coerce_options(options, converters):

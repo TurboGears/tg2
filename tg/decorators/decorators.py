@@ -283,7 +283,7 @@ def override_template(view, template):
     """
     try:
         engines = view.decoration.engines
-    except:
+    except Exception:
         return
 
     for content_type, content_engine in engines.items():
@@ -449,7 +449,7 @@ class paginate(object):
 
         try:
             paginators_data = request.paginators
-        except:
+        except Exception:
             paginators_data = request.paginators = {'_tg_paginators_params':{}}
 
         paginators_data['_tg_paginators_params'][self.page_param] = page_param
@@ -490,7 +490,8 @@ class paginate(object):
 @before_validate
 def https(remainder, params):
     """Ensure that the decorated method is always called with https."""
-    if request.scheme.lower() == 'https': return
+    if request.scheme.lower() == 'https': 
+        return
     if request.method.upper() == 'GET':
         redirect('https' + request.url[len(request.scheme):])
     raise HTTPMethodNotAllowed(headers=dict(Allow='GET'))

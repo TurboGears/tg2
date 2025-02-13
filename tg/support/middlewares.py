@@ -1,6 +1,7 @@
 import logging
 
-from tg.request_local import Request
+from ..request_local import Request
+from .statics import StaticsMiddleware
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class DBSessionRemoverMiddleware(object):
     def __call__(self, environ, start_response):
         try:
             return self._stream_response(self.app(environ, start_response))
-        except:
+        except Exception:
             log.debug("Removing DBSession from current thread")
             self.DBSession.remove()
             raise
@@ -65,13 +66,11 @@ class MingSessionRemoverMiddleware(object):
     def __call__(self, environ, start_response):
         try:
             return self._stream_response(self.app(environ, start_response))
-        except:
+        except Exception:
             log.debug("Removing ThreadLocalODMSession from current thread")
             self.ThreadLocalODMSession.close_all()
             raise
 
-
-from .statics import StaticsMiddleware
 
 __all__ = ['StaticsMiddleware', 'SeekableRequestBodyMiddleware',
            'DBSessionRemoverMiddleware', 'MingSessionRemoverMiddleware']

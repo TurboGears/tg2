@@ -2,6 +2,8 @@
 
 Support modules implement components that are used by TurboGears
 to provide the user level API. The support modules will usually 
+rely on TurboGears specific objects and modules to provide their
+functionality.
 """
 
 class NoDefault(object):

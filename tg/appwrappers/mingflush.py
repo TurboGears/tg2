@@ -52,7 +52,7 @@ class MingApplicationWrapper(ApplicationWrapper):
 
         try:
             resp = self.next_handler(controller, environ, context)
-        except:
+        except Exception:
             session.close_all()
             raise
 
