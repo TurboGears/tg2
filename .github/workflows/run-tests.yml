@@ -11,8 +11,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - name: Run ruff
+      - name: Run ruff checks
         uses: astral-sh/ruff-action@v3
+      - name: Check formatting
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
