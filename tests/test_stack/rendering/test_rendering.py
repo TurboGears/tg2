@@ -9,11 +9,11 @@ import pytest
 import tg
 from tests.test_stack import TestConfig, app_from_config
 from tg import expose
-from tg._compat import im_func
 from tg.configuration import milestones
-from tg.configuration.hooks import _TGGlobalHooksNamespace
 from tg.renderers.genshi import GenshiRenderer
+from tg.support.hooks import _TGGlobalHooksNamespace
 from tg.util import Bunch
+from tg.util.instance_method import im_func
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer

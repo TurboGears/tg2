@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from .._compat import reraise
 from ..configuration.utils import coerce_config
 from ..support.converters import asbool, asint
 from .base import ApplicationWrapper
@@ -105,6 +104,6 @@ class TransactionApplicationWrapper(ApplicationWrapper):
                         can_retry = transaction_manager._retryable(*exc_info[:-1])
                     txn.abort()
                     if (attempts_left <= 0) or (not can_retry):
-                        reraise(*exc_info)
+                        raise
                 finally:
                     del exc_info

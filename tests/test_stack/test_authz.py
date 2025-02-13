@@ -10,19 +10,15 @@ this writing).
 """
 
 import os
-
-try:
-    from http.cookies import SimpleCookie
-except ImportError:
-    from Cookie import SimpleCookie
+from http.cookies import SimpleCookie
 from shutil import rmtree
+from urllib.parse import unquote as url_unquote
 
 import pytest
 from webob import Request, Response
 from webtest import TestApp
 
 from tg import expose, request, require
-from tg._compat import url_unquote
 from tg.configuration.auth import TGAuthMetadata
 from tg.configuration.utils import TGConfigError
 from tg.controllers import RestController, TGController, WSGIAppController

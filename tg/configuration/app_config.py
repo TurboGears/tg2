@@ -2,8 +2,6 @@
 import logging
 import warnings
 
-import tg
-
 log = logging.getLogger(__name__)
 
 
@@ -30,6 +28,7 @@ class AppConfig(object):
 
     def __init__(self, **kwargs):
         from ..configurator import FullStackApplicationConfigurator
+        from ..support.hooks import hooks as tg_hooks
         self._configurator = FullStackApplicationConfigurator()
 
         if kwargs.pop('minimal', False):
@@ -53,19 +52,19 @@ class AppConfig(object):
 
         def _on_config_ready(_, conf):
             self.after_init_config(conf)
-        tg.hooks.register('initialized_config', _on_config_ready)
+        tg_hooks.register('initialized_config', _on_config_ready)
 
         def _startup_hook(*args, **kwargs):
-            tg.hooks.notify('startup', trap_exceptions=True)
-        tg.hooks.register('initialized_config', _startup_hook)
+            tg_hooks.notify('startup', trap_exceptions=True)
+        tg_hooks.register('initialized_config', _startup_hook)
 
         def _before_config_hook(app):
-            return tg.hooks.notify_with_value('before_config', app)
-        tg.hooks.register('before_wsgi_middlewares', _before_config_hook)
+            return tg_hooks.notify_with_value('before_config', app)
+        tg_hooks.register('before_wsgi_middlewares', _before_config_hook)
 
         def _after_config_hook(app):
-            return tg.hooks.notify_with_value('after_config', app)
-        tg.hooks.register('after_wsgi_middlewares', _after_config_hook)
+            return tg_hooks.notify_with_value('after_config', app)
+        tg_hooks.register('after_wsgi_middlewares', _after_config_hook)
 
     def after_init_config(self, conf):
         """
@@ -119,7 +118,8 @@ class AppConfig(object):
             raise AttributeError(item)
 
     def register_hook(self, hookname, handler, controller=None):
-        tg.hooks.register(hookname, handler, controller=controller)
+        from ..support.hooks import hooks as tg_hooks
+        tg_hooks.register(hookname, handler, controller=controller)
 
     def register_wrapper(self, wrapper, after=None):
         self._configurator.register_application_wrapper(wrapper, after)

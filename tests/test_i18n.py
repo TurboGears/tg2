@@ -6,7 +6,7 @@ from webtest import TestApp
 
 import tg
 from tg import AppConfig, TGController, config, expose, i18n
-from tg._compat import unicode_text
+
 from tg.configurator import FullStackApplicationConfigurator
 
 
@@ -75,7 +75,7 @@ class i18nRootController(TGController):
 
     @expose('json')
     def lazy_hello(self, **kw):
-        return dict(text=unicode_text(i18n.lazy_ugettext('Your application is now running')))
+        return dict(text=str(i18n.lazy_ugettext('Your application is now running')))
 
     @expose('json')
     def get_lang(self, **kw):
@@ -87,7 +87,7 @@ class i18nRootController(TGController):
 
     @expose('json')
     def hello(self, **kw):
-        return dict(text=unicode_text(i18n.ugettext('Your application is now running')))
+        return dict(text=str(i18n.ugettext('Your application is now running')))
 
     @expose()
     def fallback(self, **kw):

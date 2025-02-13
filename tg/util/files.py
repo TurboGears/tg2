@@ -3,8 +3,6 @@ import os
 import re
 import tempfile
 
-from .._compat import PY2, unicode_text
-
 
 class DottedFileLocatorError(Exception):
     pass
@@ -151,11 +149,9 @@ def safe_filename(filename):
 
     The function might return an empty filename.  .
     """
-    if isinstance(filename, unicode_text):
+    if isinstance(filename, str):
         from unicodedata import normalize
-        filename = normalize('NFKD', filename).encode('ascii', 'ignore')
-        if not PY2:  # pragma: no cover
-            filename = filename.decode('ascii')
+        filename = normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
 
     for sep in os.path.sep, os.path.altsep:
         if sep:

@@ -18,7 +18,7 @@ from tests.base import (
     setup_session_dir,
     teardown_session_dir,
 )
-from tg._compat import u_, unicode_text
+
 from tg.configuration.utils import TGConfigError
 from tg.configurator.fullstack import FullStackApplicationConfigurator
 from tg.controllers import DecoratedController, TGController, abort
@@ -99,7 +99,7 @@ class BasicTGController(TGController):
     @validate(validators={"a": IntValidator})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode_text)
+        assert isinstance(b, str)
         return dict(int=a, str=b)
 
     @expose()
@@ -285,14 +285,14 @@ class BasicTGController(TGController):
 
     @expose(content_type='text/plain')
     @validate({
-        'num': Convert(int, u_('àèìòù'))
+        'num': Convert(int, str('àèìòù'))
     }, error_handler=validation_errors_response)
     def unicode_error_pow(self, num=-1):
         return str(num*num)
 
     @expose(content_type='text/plain')
     @validate({
-        'num': Convert(int, l_(u_('àèìòù')))
+        'num': Convert(int, l_(str('àèìòù')))
     }, error_handler=validation_errors_response)
     def lazy_unicode_error_pow(self, num=-1):
         return str(num * num)
@@ -513,11 +513,11 @@ class TestTGController(TestWSGIController):
 
     def test_validation_errors_unicode(self):
         resp = self.app.post('/unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
-        assert resp.json['errors']['num'] == u_('àèìòù'), resp.json
+        assert resp.json['errors']['num'] == str('àèìòù'), resp.json
 
     def test_validation_errors_lazy_unicode(self):
         resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
-        assert resp.json['errors']['num'] == u_('àèìòù'), resp.json
+        assert resp.json['errors']['num'] == str('àèìòù'), resp.json
 
     def test_requirevalue_validation(self):
         resp = self.app.post('/require_value', {"val": "hello"})

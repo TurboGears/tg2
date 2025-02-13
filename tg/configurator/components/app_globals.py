@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from logging import getLogger
 
-from ..._compat import import_module
+from importlib import import_module
 from ...util import Bunch, DottedFileNameFinder
 from ..base import ConfigReadyConfigurationAction, ConfigurationComponent
 

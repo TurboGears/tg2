@@ -1,4 +1,4 @@
-from tg._compat import u_
+
 from tg.request_local import Request, Response
 
 
@@ -53,7 +53,7 @@ class TestResponse(object):
     def test_content_type(self):
         r = Response()
 
-        r.content_type = u_('text/html')
+        r.content_type = str('text/html')
         # Verify it's a native string, and not unicode.
         assert type(r.content_type) == str
         assert r.content_type == 'text/html'

@@ -6,8 +6,7 @@ from unittest import mock
 import pytest
 
 import tg
-import tg._compat
-from tg._compat import u_
+
 from tg.configuration.utils import get_partial_dict
 from tg.controllers.util import *
 from tg.util import *
@@ -15,6 +14,7 @@ from tg.util.dates import get_fixed_timezone, parse_datetime, utctz
 from tg.util.files import safe_filename
 from tg.util.html import script_json_encode
 from tg.util.misc import unless
+from tg.util.instance_method import im_class
 from tg.util.webtest import test_context
 from tg.validation import Convert, TGValidationError
 from tg.wsgiapp import AttribSafeTemplateContext, TemplateContext
@@ -32,7 +32,7 @@ def teardown_module():
 def test_get_partial_dict():
     assert get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3}) == {'xyz':1,'zyx':2}
 
-def test_compat_im_class():
+def test_im_class():
     class FakeClass(object):
         def method(self):
             pass
@@ -41,19 +41,19 @@ def test_compat_im_class():
         pass
 
     o = FakeClass()
-    assert tg._compat.im_class(o.method) == FakeClass
-    assert tg._compat.im_class(func) == None
+    assert im_class(o.method) == FakeClass
+    assert im_class(func) == None
 
 
 class TestUrlMethod(object):
     def test_url_unicode(self):
         with test_context(None, '/'):
-            res = url('.', {'p1':u_('v1')})
+            res = url('.', {'p1':str('v1')})
             assert res == '.?p1=v1'
 
     def test_url_unicode_nonascii(self):
         with test_context(None, '/'):
-            res = url('.', {'p1':u_('àèìòù')})
+            res = url('.', {'p1':str('àèìòù')})
             assert res == '.?p1=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
 
     def test_url_nonstring(self):
@@ -78,7 +78,7 @@ class TestUrlMethod(object):
     def test_url_object_unicodeerror(self):
         class Object(object):
             def __str__(self):
-                return u_('àèìòù')
+                return str('àèìòù')
 
         with test_context(None, '/'):
             res = url('.', {'p1': Object()})
@@ -87,7 +87,7 @@ class TestUrlMethod(object):
     def test_url_object_exception(self):
         class SubException(Exception):
             def __str__(self):
-                return u_('àèìòù')
+                return str('àèìòù')
 
         with test_context(None, '/'):
             res = url('.', {'p1': SubException('a', 'b', 'c')})
@@ -283,7 +283,7 @@ class TestDatesUtils(object):
 class TestHtmlUtils(object):
     def test_script_json_encode(self):
         rv = script_json_encode('</script>')
-        assert rv == u_('"\\u003c/script\\u003e"')
+        assert rv == str('"\\u003c/script\\u003e"')
         rv = script_json_encode("<\0/script>")
         assert rv == '"\\u003c\\u0000/script\\u003e"'
         rv = script_json_encode("<!--<script>")
@@ -304,7 +304,7 @@ class TestFilesUtils(object):
     def test_safe_filename(self):
         assert safe_filename('My cool movie.mov') == 'My_cool_movie.mov'
         assert safe_filename('../../../etc/passwd') == 'etc_passwd'
-        assert safe_filename(u_('i contain cool ümläuts.txt')) == 'i_contain_cool_umlauts.txt'
+        assert safe_filename(str('i contain cool ümläuts.txt')) == 'i_contain_cool_umlauts.txt'
 
 
 class TestWebTestUtilities(object):

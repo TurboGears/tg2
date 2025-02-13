@@ -1,19 +1,11 @@
-from tg.controllers.util import _build_url
-
-try:
-    from urlparse import parse_qs, urlparse, urlunparse
-except ImportError: #pragma: no cover
-    from urllib.parse import parse_qs
-
-try:
-    from urllib import urlencode
-except ImportError: #pragma: no cover
-    from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode
 
 from repoze.who.interfaces import IChallenger, IIdentifier
 from webob import Request
 from webob.exc import HTTPFound, HTTPUnauthorized
 from zope.interface import implementer
+
+from ...util.urls import build_url
 
 
 @implementer(IChallenger, IIdentifier)
@@ -80,7 +72,7 @@ class FastFormPlugin(object):
             if self.login_counter_name is not None and self.login_counter_name in query:
                 params[self.login_counter_name] = query[self.login_counter_name]
 
-            destination = _build_url(environ, self.post_login_url, params=params)
+            destination = build_url(environ, self.post_login_url, params=params)
             environ['repoze.who.application'] = HTTPFound(location=destination)
             return credentials
 
@@ -88,7 +80,7 @@ class FastFormPlugin(object):
             query = self._get_form_data(environ)
             came_from = query.get('came_from')
             if came_from is None:
-                came_from = _build_url(environ, '/')
+                came_from = build_url(environ, '/')
 
             # set in environ for self.challenge() to find later
             environ['came_from'] = came_from
@@ -117,12 +109,12 @@ class FastFormPlugin(object):
             params = {}
             if 'came_from' in environ:
                 params.update({'came_from':environ['came_from']})
-            destination = _build_url(environ, self.post_logout_url, params=params)
+            destination = build_url(environ, self.post_logout_url, params=params)
 
         else:
             came_from_params = parse_qs(environ.get('QUERY_STRING', ''))
-            params = {'came_from': _build_url(environ, path_info, came_from_params)}
-            destination = _build_url(environ, self.login_form_url, params=params)
+            params = {'came_from': build_url(environ, path_info, came_from_params)}
+            destination = build_url(environ, self.login_form_url, params=params)
 
         return HTTPFound(location=destination, headers=headers)
 

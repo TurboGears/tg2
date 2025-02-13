@@ -1,27 +1,18 @@
 import base64
 import binascii
 import hmac
-
-try:
-    import cPickle as pickle
-except ImportError: #pragma: no cover
-    import pickle
-
-try:
-    from hashlib import sha1
-except ImportError: #pragma: no cover
-    import sha as sha1
+import pickle
+from hashlib import sha1
+import urllib.parse
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
-from webob.compat import bytes_ as webob_bytes_
-from webob.compat import url_quote as webob_url_quote
 from webob.request import PATH_SAFE
 
-from tg._compat import PY2, unicode_text
-from tg.caching import cached_property
-from tg.support.objectproxy import TurboGearsObjectProxy
-from tg.support.registry import DispatchingConfig, StackedObjectProxy
+
+from .caching import cached_property
+from .support.objectproxy import TurboGearsObjectProxy
+from .support.registry import DispatchingConfig, StackedObjectProxy
 
 
 class Request(WebObRequest):
@@ -138,8 +129,8 @@ class Request(WebObRequest):
     @property
     def quoted_path_info(self):
         """PATH used for dispatching the request."""
-        bpath = webob_bytes_(self.path_info, self.url_encoding)
-        return webob_url_quote(bpath, PATH_SAFE)
+        bpath = str(self.path_info).encode(self.url_encoding)
+        return urllib.parse.quote(bpath, PATH_SAFE)
 
     def disable_error_pages(self):
         """Disable custom error pages for the current request.
@@ -193,11 +184,6 @@ class Response(WebObResponse):
 
     @content_type.setter
     def content_type(self, value):
-        if PY2 and isinstance(value, unicode_text):  # pragma: no cover
-            # Workaround a WebOb 1.8 issue,
-            # where the content_type header is not
-            # properly encoded.
-            value = value.encode('latin-1')
         WebObResponse.content_type.__set__(self, value)
 
     @content_type.deleter

@@ -4,7 +4,7 @@ import json
 import tg
 from tests.test_validation import IntValidator
 from tg import dispatched_controller, expose
-from tg._compat import u_, unicode_text
+
 from tg.controllers import TGController
 from tg.decorators import (
     expose,
@@ -159,7 +159,7 @@ class RootController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash(u_("Привет, мир!"))
+        tg.flash(str("Привет, мир!"))
         tg.redirect("/flash_after_redirect")
 
     @expose()
@@ -185,7 +185,7 @@ class RootController(TGController):
     @validate(validators={"a":IntValidator})
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode_text)
+        assert isinstance(b, str)
         return dict(int=a,str=b)
 
     @expose()

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """This module contains the main WSGI controller implementation."""
-import tg
-from tg.controllers.tgcontroller import TGController
-from tg.controllers.util import redirect
-from tg.decorators import expose
+from ..configuration import config as tg_config
+from ..decorators import expose
+from ..request_local import request as tg_request
+from ..support.responses import redirect
+from .tgcontroller import TGController
 
 
 class WSGIAppController(TGController):
@@ -26,12 +27,12 @@ class WSGIAppController(TGController):
         WSGI app.
 
         """
-        body_is_seekable = tg.config.get('make_body_seekable', False)
+        body_is_seekable = tg_config.get('make_body_seekable', False)
         if not body_is_seekable:
             raise RuntimeError('Mounting nested WSGI apps requires make_body_seekable=True option')
 
         # Push into SCRIPT_NAME the path components that have been consumed,
-        request = tg.request._current_obj()
+        request = tg_request._current_obj()
         new_req = request.copy()
         to_pop = len(new_req.path_info.strip('/').split('/')) - len(args)
         for i in range(to_pop):

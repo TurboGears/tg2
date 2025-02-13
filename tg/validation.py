@@ -1,5 +1,5 @@
 
-from tg._compat import unicode_text
+
 from tg.configuration.utils import TGConfigError
 
 from .i18n import lazy_ugettext
@@ -115,15 +115,15 @@ class TGValidationError(Exception):
 
     @classmethod
     def make_compound_message(cls, error_dict):
-        return unicode_text('\n').join(
-            unicode_text("%s: %s") % errorinfo for errorinfo in error_dict.items()
+        return str('\n').join(
+            str("%s: %s") % errorinfo for errorinfo in error_dict.items()
         )
 
     def __str__(self):
         return str(self.msg)
 
     def __unicode__(self):  # pragma: no cover
-        return unicode_text(self.msg)
+        return str(self.msg)
 
 
 class Convert(object):

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from logging import getLogger
 
-from tg.configuration import milestones
-
+from ...configuration import milestones
 from ..base import (
     BeforeConfigConfigurationAction,
     ConfigurationComponent,

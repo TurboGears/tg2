@@ -20,7 +20,7 @@ import pytest
 from webtest import TestApp
 
 from tg import AppConfig, TGController, config, expose, predicates
-from tg._compat import u_, unicode_text
+
 
 
 class BasePredicateTester(object):
@@ -43,7 +43,7 @@ class BasePredicateTester(object):
             self.fail('Predicate must not be met; expected error: %s' %
                       expected_error)
         except predicates.NotAuthorizedError as error:
-            self.assertEqual(unicode_text(error), expected_error)
+            self.assertEqual(str(error), expected_error)
             # Testing is_met:
         self.assertEqual(p.is_met(environ), False)
 
@@ -70,7 +70,7 @@ class TestPredicate(BasePredicateTester):
         self.assertEqual(previous_msg, p.message)
 
     def test_unicode_messages(self):
-        unicode_msg = u_('请登陆')
+        unicode_msg = str('请登陆')
         p = EqualsTwo(msg=unicode_msg)
         environ = {'test_number': 3}
         self.eval_unmet_predicate(p, environ, unicode_msg)
@@ -93,24 +93,24 @@ class TestPredicate(BasePredicateTester):
         # This test is broken on Python 2.4 and 2.5 because the unicode()
         # function doesn't work when converting an exception into an unicode
         # string (this is, to extract its message).
-        unicode_msg = u_('请登陆')
+        unicode_msg = str('请登陆')
         environ = {'test_number': 3}
         p = EqualsFour(msg=unicode_msg)
         try:
             p.check_authorization(environ)
             self.fail('Authorization must have been rejected')
         except predicates.NotAuthorizedError as e:
-            self.assertEqual(unicode_text(e), unicode_msg)
+            self.assertEqual(str(e), unicode_msg)
 
     def test_custom_failure_message(self):
-        message = u_('This is a custom message whose id is: %(id_number)s')
+        message = str('This is a custom message whose id is: %(id_number)s')
         id_number = 23
         p = EqualsFour(msg=message)
         try:
             p.unmet(message, id_number=id_number)
             self.fail('An exception must have been raised')
         except predicates.NotAuthorizedError as e:
-            self.assertEqual(unicode_text(e), message % dict(id_number=id_number))
+            self.assertEqual(str(e), message % dict(id_number=id_number))
 
     def test_credentials_dict_when_anonymous(self):
         """The credentials must be a dict even if the user is anonymous"""

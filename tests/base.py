@@ -2,11 +2,6 @@
 import datetime
 import os
 import shutil
-
-try:
-    from xmlrpclib import dumps, loads
-except ImportError:
-    pass
 import warnings
 
 from webtest import TestApp

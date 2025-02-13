@@ -4,8 +4,8 @@ import pytest
 
 from tests.test_stack import TestConfig, app_from_config
 from tg import json_encode
-from tg.controllers.util import _urlencode
 from tg.support.paginate import Page
+from tg.util.urls import _urlencode
 from tg.util.webtest import test_context
 
 

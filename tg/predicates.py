@@ -8,11 +8,7 @@ This is module provides the predicate checkers that were present in the
 original "identity" framework of TurboGears 1, plus others.
 
 """
-
-from __future__ import unicode_literals
-
-from tg import request
-from tg._compat import unicode_text
+from .request_local import request
 
 __all__ = ['Predicate', 'CompoundPredicate', 'All', 'Any',
            'has_all_permissions', 'has_any_permission', 'has_permission',
@@ -56,7 +52,7 @@ except ImportError:
                 message = self.message
 
             # This enforces lazy strings resolution (lazy translation for example)
-            message = unicode_text(message)
+            message = str(message)
 
             # Include the predicate attributes in the placeholders:
             all_placeholders = self.__dict__.copy()
@@ -187,7 +183,7 @@ class Any(CompoundPredicate):
                 p.evaluate(environ, credentials)
                 return
             except NotAuthorizedError as exc:
-                errors.append(unicode_text(exc))
+                errors.append(str(exc))
         failed_predicates = ', '.join(errors)
         self.unmet(failed_predicates=failed_predicates)
 

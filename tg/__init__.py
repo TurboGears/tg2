@@ -46,19 +46,18 @@ assumptions about how things will work.
 
 """
 
-from tg.configuration import config, milestones
-from tg.configuration.app_config import AppConfig
-from tg.configuration.hooks import hooks
-from tg.configurator import (
+from .configuration import config, milestones
+from .configuration.app_config import AppConfig
+from .configurator import (
                               ApplicationConfigurator,
                               Configurator,
                               FullStackApplicationConfigurator,
                               MinimalApplicationConfigurator,
 )
-from tg.controllers import RestController, TGController, abort, lurl, redirect, url
-from tg.controllers.dispatcher import dispatched_controller
-from tg.controllers.util import *
-from tg.decorators import (
+from .controllers import RestController, TGController, abort, lurl, redirect, url
+from .controllers.dispatcher import dispatched_controller
+from .controllers.util import *
+from .decorators import (
                               cached,
                               decode_params,
                               expose,
@@ -68,10 +67,10 @@ from tg.decorators import (
                               validate,
                               with_engine,
 )
-from tg.flash import flash
-from tg.jsonify import encode as json_encode
-from tg.render import render as render_template
-from tg.request_local import (
+from .flash import flash
+from .jsonify import encode as json_encode
+from .render import render as render_template
+from .request_local import (
                               Request,
                               Response,
                               app_globals,
@@ -82,9 +81,10 @@ from tg.request_local import (
                               tmpl_context,
                               translator,
 )
-from tg.wsgiapp import TGApp
+from .support.hooks import hooks
+from .wsgiapp import TGApp
 
-__all__ = ['app_globals', 'expose', 'override_template', 'request',
+__all__ = ['app_globals', 'expose', 'override_template', 'request', 'hooks',
            'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
            'use_wsgi_app', 'validate', 'i18n', 'json_encode', 'cache', 'url', 'lurl',
            'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',

@@ -5,11 +5,11 @@
 import logging
 from string import Template
 
-from tg._compat import string_type
+
 
 
 def asbool(obj):
-    if isinstance(obj, string_type):
+    if isinstance(obj, str):
         obj = obj.strip().lower()
         if obj in ['true', 'yes', 'on', 'y', 't', '1']:
             return True
@@ -28,7 +28,7 @@ def asint(obj):
 
 
 def aslist(obj, sep=None, strip=True):
-    if isinstance(obj, string_type):
+    if isinstance(obj, str):
         lst = obj.split(sep)
         if strip:
             lst = [v.strip() for v in lst]
@@ -45,7 +45,7 @@ def astemplate(obj):
     if isinstance(obj, Template):
         return obj
 
-    if not isinstance(obj, string_type):
+    if not isinstance(obj, str):
         raise ValueError('Templates must be strings')
 
     return Template(obj)
@@ -55,7 +55,7 @@ def aslogger(val):
     if isinstance(val, logging.Logger):
         return val
 
-    if not isinstance(val, string_type):
+    if not isinstance(val, str):
         raise ValueError('Logger names must be strings')
 
     return logging.getLogger(val)

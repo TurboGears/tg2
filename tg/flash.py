@@ -2,12 +2,12 @@
 Flash messaging system for sending info to the user in a non-obtrusive way
 """
 import json
+import urllib.parse
 from logging import getLogger
 from string import Template
 
 from markupsafe import escape_silent as escape
 
-from tg._compat import unicode_text, url_quote, url_unquote
 from tg.configuration.utils import GlobalConfigurable
 from tg.request_local import request, response
 from tg.support import converters
@@ -107,7 +107,7 @@ class TGFlash(GlobalConfigurable):
     def __call__(self, message, status=None, **extra_payload):
         """Registers a flash message for display on current or next request."""
         # Force the message to be unicode so lazystrings, etc... are coerced
-        message = unicode_text(message)
+        message = str(message)
 
         payload = self._prepare_payload(message=message,
                                         status=status or self.default_status,
@@ -124,7 +124,7 @@ class TGFlash(GlobalConfigurable):
             raise ValueError('Flash value is too long (cookie would be >4k)')
 
     def _prepare_payload(self, **data):
-        return url_quote(json.dumps(data))
+        return urllib.parse.quote(json.dumps(data))
 
     def _get_message(self, payload):
         msg = payload.get('message','')
@@ -169,7 +169,7 @@ class TGFlash(GlobalConfigurable):
             payload = req.cookies.get(self.cookie_name, {})
 
         if payload:
-            payload = json.loads(url_unquote(payload))
+            payload = json.loads(urllib.parse.unquote(payload))
             if 'webflash.deleted_cookie' not in req.environ:
                 response.set_cookie(self.cookie_name, None, samesite="Strict")
                 req.environ['webflash.delete_cookie'] = True

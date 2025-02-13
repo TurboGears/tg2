@@ -1,9 +1,10 @@
 """Caching decorator, took as is from pylons"""
 
 import tg
-from tg._compat import im_class, im_func
-from tg.support import EmptyContext, NoDefault
-from tg.support.converters import asbool
+
+from .support import EmptyContext, NoDefault
+from .support.converters import asbool
+from .util.instance_method import im_class, im_func
 
 
 class cached_property(object):

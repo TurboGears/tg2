@@ -1,4 +1,35 @@
-from tg.configuration.utils import get_partial_dict
+def get_partial_dict(prefix, dictionary, container_type=dict, 
+                     ignore_missing=False, pop_keys=False):
+    """Given a dictionary and a prefix, return a Bunch, with just items
+    that start with prefix
+
+    The returned dictionary will have 'prefix.' stripped so::
+
+        get_partial_dict('prefix', {'prefix.xyz':1, 'prefix.zyx':2, 'xy':3})
+
+    would return::
+
+        {'xyz':1,'zyx':2}
+    """
+
+    match = prefix + "."
+    n = len(match)
+
+    new_dict = container_type(((key[n:], dictionary[key])
+                                for key in dictionary
+                                if key.startswith(match)))
+
+    if pop_keys:
+        for key in list(dictionary.keys()):
+            if key.startswith(match):
+                dictionary.pop(key, None)
+
+    if new_dict:
+        return new_dict
+    else:
+        if ignore_missing:
+            return {}
+        raise AttributeError(prefix)
 
 
 class Bunch(dict):

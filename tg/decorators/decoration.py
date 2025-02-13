@@ -4,7 +4,7 @@ import logging
 
 from webob.acceptparse import create_accept_header
 
-from tg.configuration import config, milestones
+from ..configuration import config, milestones
 
 log = logging.getLogger(__name__)
 

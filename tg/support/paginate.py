@@ -4,8 +4,8 @@ import string
 from markupsafe import Markup
 from markupsafe import escape_silent as escape
 
-from tg import request
-from tg.controllers.util import url
+from ..request_local import request
+from ..support.url import url
 
 try:
     import sqlalchemy

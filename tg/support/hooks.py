@@ -8,10 +8,10 @@ Provides a consistent API to register and execute hooks.
 import atexit
 from logging import getLogger
 
-from .._compat import default_im_func
-from ..controllers.decoration import Decoration
-from .milestones import config_ready, renderers_ready
-from .utils import TGConfigError
+from ..configuration.milestones import config_ready, renderers_ready
+from ..configuration.utils import TGConfigError
+from ..decorators import Decoration
+from ..util.instance_method import default_im_func
 
 log = getLogger(__name__)
 

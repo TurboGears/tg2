@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from tests.test_stack import TestConfig, app_from_config
-from tg._compat import u_
+
 from tg.util import no_warn
 
 
@@ -137,7 +137,7 @@ def test_flash_unicode():
     app = setup_noDB()
     resp = app.get('/flash_unicode').follow()
     content = resp.body.decode('utf8')
-    assert u_('Привет, мир!') in content, content
+    assert str('Привет, мир!') in content, content
 
 def test_flash_status():
     app = setup_noDB()

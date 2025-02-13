@@ -1,6 +1,5 @@
 import logging
 
-from .._compat import string_type
 from ..configuration.utils import coerce_config
 from ..i18n import sanitize_language_code, set_request_lang
 from ..support.converters import asbool
@@ -59,7 +58,7 @@ class I18NApplicationWrapper(ApplicationWrapper):
                 session_.__dict__['_sess'] = None
 
             if languages:
-                if isinstance(languages, string_type):
+                if isinstance(languages, str):
                     languages = [languages]
             else:
                 languages = []

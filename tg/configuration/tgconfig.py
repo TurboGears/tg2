@@ -1,14 +1,10 @@
 """Defines and initialises what is exposed as tg.config"""
+from collections.abc import MutableMapping as DictMixin
 from copy import deepcopy
 
-try:
-    from collections.abc import MutableMapping as DictMixin
-except ImportError:  # pragma: no cover
-    # for python versions below 3.3
-    from collections import MutableMapping as DictMixin
-from tg.configuration.utils import get_partial_dict
-from tg.request_local import config as reqlocal_config
-from tg.util import Bunch
+from ..request_local import config as reqlocal_config
+from ..util import Bunch
+from .utils import get_partial_dict
 
 
 class _DispatchingConfigWrapper(DictMixin):

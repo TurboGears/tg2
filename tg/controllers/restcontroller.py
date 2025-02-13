@@ -6,9 +6,9 @@ combines controller decoration for TG-Controller behavior.
 
 from crank.restdispatcher import RestDispatcher
 
-from tg.controllers.decoratedcontroller import DecoratedController
-from tg.controllers.dispatcher import CoreDispatcher
-from tg.decorators import expose
+from ..decorators import expose
+from .decoratedcontroller import DecoratedController
+from .dispatcher import CoreDispatcher
 
 
 class RestController(DecoratedController, CoreDispatcher, RestDispatcher):

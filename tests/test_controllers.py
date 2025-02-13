@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import tg
 from tests.base import setup_session_dir, teardown_session_dir
-from tg._compat import string_type, u_
+
 from tg.controllers import *
 from tg.exceptions import HTTPFound
 from tg.util import no_warn
@@ -43,7 +43,7 @@ def test_multi_values():
 def test_unicode():
     """url() can handle unicode parameters"""
     with test_context(None, '/'):
-        unicodestring =  u_('àèìòù')
+        unicodestring =  str('àèìòù')
         assert url('/', params=dict(x=unicodestring)) == '/?x=%C3%A0%C3%A8%C3%AC%C3%B2%C3%B9'
 
 
@@ -51,7 +51,7 @@ def test_unicode():
 def test_list():
     """url() can handle list parameters, with unicode too"""
     with test_context(None, '/'):
-        value = url('/', params=dict(foo=['bar', u_('à')])),
+        value = url('/', params=dict(foo=['bar', str('à')])),
         assert '/?foo=bar&foo=%C3%A0' in value, value
 
 
@@ -92,7 +92,7 @@ def test_lurl():
     """url() can handle list parameters, with unicode too"""
     with test_context(None, '/'):
         value = lurl('/lurl')
-        assert not isinstance(value, string_type)
+        assert not isinstance(value, str)
         assert value.startswith('/lurl')
         assert str(value) == repr(value) == value.id == value.encode('utf-8').decode('utf-8') == value.__html__()
 

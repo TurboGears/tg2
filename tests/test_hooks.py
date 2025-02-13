@@ -7,12 +7,12 @@ import tg
 from tests.test_configuration import PackageWithModel
 from tg import AppConfig, TGController, expose
 from tg.configuration import milestones
-from tg.configuration.hooks import (
+from tg.configuration.utils import TGConfigError
+from tg.support.hooks import (
     _ApplicationHookRegistration,
     _ControllerHookRegistration,
     _TGGlobalHooksNamespace,
 )
-from tg.configuration.utils import TGConfigError
 from tg.wsgiapp import TGApp
 
 

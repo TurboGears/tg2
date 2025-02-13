@@ -1,6 +1,6 @@
 import pytest
 
-from tg._compat import im_self
+
 from tg.configuration.milestones import _ConfigMilestoneTracker, config_ready
 from tg.configuration.utils import GlobalConfigurable, TGConfigError
 
@@ -64,7 +64,7 @@ class TestGlobalConfigurable(object):
 
     def teardown_method(self):
         for action in config_ready._keep_on_reset[:]:
-            default_object = im_self(action)
+            default_object = action.__self__
             if default_object and isinstance(default_object, TemporaryGlobalConfigurable):
                 config_ready._keep_on_reset.remove(action)
 

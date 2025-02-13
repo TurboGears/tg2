@@ -2,7 +2,7 @@
 import tg
 from tests.test_stack import TestConfig, app_from_config
 from tg.configuration import milestones
-from tg.decorators import Decoration
+from tg.decorators.decoration import Decoration
 
 
 class TestHooks(object):

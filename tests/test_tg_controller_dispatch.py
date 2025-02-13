@@ -5,7 +5,7 @@ import pytest
 from webob import Request, Response
 
 from tests.test_validation import IntValidator
-from tg._compat import u_, unicode_text
+
 
 try:
     from pylons.controllers.xmlrpc import XMLRPCController
@@ -359,7 +359,7 @@ class BasicTGController(TGController):
     @expose(content_type='application/rss+xml')
     def index_unicode(self):
         tg.response.charset = None
-        return u_('Hello World')
+        return str('Hello World')
 
     @expose()
     def _default(self, *remainder):
@@ -421,7 +421,7 @@ class BasicTGController(TGController):
 
     @expose()
     def flash_unicode(self):
-        tg.flash(u_("Привет, мир!"))
+        tg.flash(str("Привет, мир!"))
         tg.redirect("/flash_after_redirect")
 
     @expose()
@@ -447,7 +447,7 @@ class BasicTGController(TGController):
     @validate(validators=dict(a=IntValidator))
     def validated_and_unvalidated(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode_text)
+        assert isinstance(b, str)
         return dict(int=a,str=b)
 
     @expose()
@@ -459,7 +459,7 @@ class BasicTGController(TGController):
         error_handler=error_handler)
     def validated_with_error_handler(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode_text)
+        assert isinstance(b, str)
         return dict(int=a,str=b)
 
     @expose('json')
@@ -467,7 +467,7 @@ class BasicTGController(TGController):
         error_handler=error_controller.errors_here)
     def validated_with_remote_error_handler(self, a, b):
         assert isinstance(a, int)
-        assert isinstance(b, unicode_text)
+        assert isinstance(b, str)
         return dict(int=a,str=b)
 
     @expose()
@@ -739,7 +739,7 @@ class TestTGController(TestWSGIController):
     @no_warn
     def test_unicode_default_dispatch(self):
         r =self.app.get('/sub/%C3%A4%C3%B6')
-        assert u_("äö") in r.body.decode('utf-8'), r
+        assert str("äö") in r.body.decode('utf-8'), r
 
     def test_default_with_empty_second_arg(self):
         r =self.app.get('/sub4/default_with_args/a')
@@ -840,11 +840,11 @@ class TestTGController(TestWSGIController):
 
     def test_ticket_2412_with_ordered_arg(self):
         resp = self.app.get('/ticket2412/Abip%C3%B3n')
-        assert u_("""Abipón""") in resp.body.decode('utf-8'), resp
+        assert str("""Abipón""") in resp.body.decode('utf-8'), resp
 
     def test_ticket_2412_with_named_arg(self):
         resp = self.app.get('/ticket2412?arg1=Abip%C3%B3n')
-        assert u_("""Abipón""") in resp.body.decode('utf-8'), resp
+        assert str("""Abipón""") in resp.body.decode('utf-8'), resp
 
     def test_ticket_2351_bad_content_type(self):
         resp = self.app.get('/ticket2351', headers={'Accept':'text/html'})

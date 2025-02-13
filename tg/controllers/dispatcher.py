@@ -22,8 +22,7 @@ from crank.dispatchstate import DispatchState
 from webob.exc import HTTPException
 
 import tg
-from tg._compat import unicode_text
-from tg.decorators import cached_property
+from tg.caching import cached_property
 from tg.request_local import WebObResponse
 
 from ..wsgiapp import TGApp
@@ -135,7 +134,7 @@ class CoreDispatcher(object):
                 py_response.status_int = 204
         elif isinstance(response, bytes):
             py_response.body = response
-        elif isinstance(response, unicode_text):
+        elif isinstance(response, str):
             if not py_response.charset:
                 py_response.charset = 'utf-8'
             py_response.text = response

@@ -13,21 +13,20 @@ import logging
 import time
 from functools import partial
 
-from tg import request, response, tmpl_context
-from tg._compat import default_im_func, unicode_text
-from tg.caching import _cached_call, create_cache_key
-from tg.configuration import config
-from tg.configuration.sqla.balanced_session import force_request_engine
-from tg.controllers.util import abort, redirect
-from tg.flash import flash
-from tg.predicates import NotAuthorizedError
-from tg.support import NoDefault
-from tg.support.paginate import Page
-from tg.util import Bunch
-
-from .controllers.decoration import Decoration
-from .exceptions import HTTPMethodNotAllowed, HTTPMovedPermanently
-from .validation import _ValidationIntent
+from ..caching import _cached_call, cached_property, create_cache_key
+from ..configuration import config
+from ..configuration.sqla.balanced_session import force_request_engine
+from ..exceptions import HTTPMethodNotAllowed, HTTPMovedPermanently
+from ..flash import flash
+from ..predicates import NotAuthorizedError
+from ..request_local import request, response, tmpl_context
+from ..support import NoDefault
+from ..support.paginate import Page
+from ..support.responses import abort, redirect
+from ..util import Bunch
+from ..util.instance_method import default_im_func
+from ..validation import _ValidationIntent
+from .decoration import Decoration
 
 log = logging.getLogger(__name__)
 
@@ -592,7 +591,7 @@ class require(object):
         try:
             self.predicate.check_authorization(req.environ)
         except NotAuthorizedError as e:
-            reason = unicode_text(e)
+            reason = str(e)
             if req.environ.get('repoze.who.identity'):
                 # The user is authenticated.
                 code = 403

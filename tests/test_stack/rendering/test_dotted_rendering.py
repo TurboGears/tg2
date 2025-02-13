@@ -3,7 +3,7 @@ import pytest
 
 from tests.test_stack import TestConfig, app_from_config
 from tg import expose
-from tg._compat import im_func, u_
+from tg.util.instance_method import im_func
 from tg.configuration import milestones
 
 try:
@@ -59,12 +59,12 @@ def test_default_kajiki_renderer():
 def test_kajiki_i18n():
     app = setup_noDB()
     resp = app.get('/kajiki_i18n')
-    assert u_("Your application is now running") in resp
+    assert str("Your application is now running") in resp
 
 def test_kajiki_i18n_de():
     app = setup_noDB()
     resp = app.get('/kajiki_i18n_de')
-    assert u_("Ihre Anwendung läuft jetzt einwandfrei") in resp
+    assert str("Ihre Anwendung läuft jetzt einwandfrei") in resp
 
 def test_kajiki_missing_template():
     app = setup_noDB()
@@ -104,7 +104,7 @@ def test_jinja_i18n_en():
 def test_jinja_i18n_de():
     app = setup_noDB()
     resp = app.get('/jinja_i18n_de')
-    assert u_("Ihre Anwendung läuft jetzt einwandfrei") in resp
+    assert str("Ihre Anwendung läuft jetzt einwandfrei") in resp
 
 def test_default_genshi_renderer():
     app = setup_noDB()

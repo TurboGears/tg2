@@ -2,9 +2,9 @@
 import logging
 
 from .. import milestones
-from ..configuration.hooks import hooks
 from ..configuration.utils import DependenciesList
 from ..request_local import config as reqlocal_config
+from ..support.hooks import hooks
 from ..util import Bunch
 from ..wsgiapp import TGApp
 from .base import (

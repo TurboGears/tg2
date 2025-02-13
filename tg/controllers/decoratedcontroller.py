@@ -6,23 +6,20 @@ decorators to effect a rendered page.
 """
 
 import inspect
+import urllib.request
 from functools import partial
 
 from crank.util import flatten_arguments, get_params_with_argspec
 
 import tg
-from tg._compat import (
-    default_im_func,
-    im_self,
-    unicode_text,
-    url2pathname,
-    with_metaclass,
-)
 from tg.configuration.utils import TGConfigError
-from tg.controllers.util import abort
+from .util import abort
 from tg.flash import flash
 from tg.predicates import NotAuthorizedError, not_anonymous
 from tg.render import render as tg_render
+from tg.request_local import request as tg_request
+from tg.request_local import response as tg_response
+from tg.util.instance_method import default_im_func, im_self
 from tg.validation import _ValidationStatus
 
 
@@ -38,7 +35,7 @@ class _DecoratedControllerMeta(type):
                         value.decoration.merge(parent_method.decoration)
 
 
-class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
+class DecoratedController(object, metaclass=_DecoratedControllerMeta):
     """Decorated controller object.
 
     Creates an interface to hang decoration attributes on
@@ -75,7 +72,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         """
         if context is None: #pragma: no cover
             #compatibility with old code that didn't pass request locals explicitly
-            context = tg.request.environ['tg.locals']
+            context = tg_request.environ['tg.locals']
 
         hooks = tg.hooks
         context_config = context.config
@@ -89,7 +86,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
             resp_headers.pop('Content-Type', None)
 
         if remainder:
-            remainder = tuple(map(url2pathname, remainder or []))
+            remainder = tuple(map(urllib.request.url2pathname, remainder or []))
         else:
             remainder = tuple()
 
@@ -299,14 +296,14 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
         # It is directly a predicate, build the response ourselves
         predicate = requirement
         try:
-            predicate.check_authorization(tg.request.environ)
+            predicate.check_authorization(tg_request.environ)
         except NotAuthorizedError as e:
-            reason = unicode_text(e)
+            reason = str(e)
             if hasattr(self, '_failed_authorization'):
                 # Should shortcircuit the rest, but if not we will still
                 # deny authorization
                 self._failed_authorization(reason)
-            if not_anonymous().is_met(tg.request.environ):
+            if not_anonymous().is_met(tg_request.environ):
                 # The user is authenticated but not allowed.
                 code = 403
                 status = 'error'
@@ -314,7 +311,7 @@ class DecoratedController(with_metaclass(_DecoratedControllerMeta, object)):
                 # The user has not been not authenticated.
                 code = 401
                 status = 'warning'
-            tg.response.status = code
+            tg_response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
 

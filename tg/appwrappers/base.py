@@ -1,10 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
-from .._compat import with_metaclass
 from ..caching import cached_property
 
 
-class ApplicationWrapper(with_metaclass(ABCMeta)):
+class ApplicationWrapper(metaclass=ABCMeta):
     """Basic interface of the TurboGears Application Wrappers.
 
     Application wrappers are like WSGI middlewares but
