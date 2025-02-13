@@ -129,9 +129,6 @@ class TGValidationError(Exception):
     def __str__(self):
         return str(self.msg)
 
-    def __unicode__(self):  # pragma: no cover
-        return str(self.msg)
-
 
 class Convert(object):
     """Applies a conversion function as a validator.

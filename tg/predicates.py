@@ -28,85 +28,78 @@ __all__ = [
     "NotAuthorizedError",
 ]
 
-try:  # pragma: no cover
-    # If repoze.what is available use repoze.what Predicate and
-    # NotAuthorizedError adding booleanization support to the
-    # predicates
-    from repoze.what.predicates import NotAuthorizedError, Predicate
 
-    Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
-except ImportError:
+class NotAuthorizedError(Exception):
+    pass
 
-    class NotAuthorizedError(Exception):
-        pass
 
-    class Predicate(object):
-        def __init__(self, msg=None):
-            if msg:
-                self.message = msg
+class Predicate(object):
+    def __init__(self, msg=None):
+        if msg:
+            self.message = msg
 
-        def evaluate(self, environ, credentials):
-            raise NotImplementedError
+    def evaluate(self, environ, credentials):
+        raise NotImplementedError
 
-        def unmet(self, msg=None, **placeholders):
-            """
-            Raise an exception because this predicate is not met.
+    def unmet(self, msg=None, **placeholders):
+        """
+        Raise an exception because this predicate is not met.
 
-            :param msg: The error message to be used; overrides the predicate's
-                default one.
-            :type msg: str
-            :raises NotAuthorizedError: If the predicate is not met.
+        :param msg: The error message to be used; overrides the predicate's
+            default one.
+        :type msg: str
+        :raises NotAuthorizedError: If the predicate is not met.
 
-            ``placeholders`` represent the placeholders for the predicate message.
-            The predicate's attributes will also be taken into account while
-            creating the message with its placeholders.
-            """
-            if msg:
-                message = msg
-            else:
-                message = self.message
+        ``placeholders`` represent the placeholders for the predicate message.
+        The predicate's attributes will also be taken into account while
+        creating the message with its placeholders.
+        """
+        if msg:
+            message = msg
+        else:
+            message = self.message
 
-            # This enforces lazy strings resolution (lazy translation for example)
-            message = str(message)
+        # This enforces lazy strings resolution (lazy translation for example)
+        message = str(message)
 
-            # Include the predicate attributes in the placeholders:
-            all_placeholders = self.__dict__.copy()
-            all_placeholders.update(placeholders)
+        # Include the predicate attributes in the placeholders:
+        all_placeholders = self.__dict__.copy()
+        all_placeholders.update(placeholders)
 
-            raise NotAuthorizedError(message % all_placeholders)
+        raise NotAuthorizedError(message % all_placeholders)
 
-        def check_authorization(self, environ):
-            """
-            Evaluate the predicate and raise an exception if it's not met.
+    def check_authorization(self, environ):
+        """
+        Evaluate the predicate and raise an exception if it's not met.
 
-            :param environ: The WSGI environment.
-            :raise NotAuthorizedError: If it the predicate is not met.
-            """
-            credentials = environ.get("repoze.what.credentials", {})
-            try:
-                self.evaluate(environ, credentials)
-            except NotAuthorizedError:
-                raise
+        :param environ: The WSGI environment.
+        :raise NotAuthorizedError: If it the predicate is not met.
+        """
+        credentials = environ.get("repoze.what.credentials", {})
+        try:
+            self.evaluate(environ, credentials)
+        except NotAuthorizedError:
+            raise
 
-        def is_met(self, environ):
-            """
-            Find whether the predicate is met or not.
+    def is_met(self, environ):
+        """
+        Find whether the predicate is met or not.
 
-            :param environ: The WSGI environment.
-            :return: Whether the predicate is met or not.
-            :rtype: bool
-            """
-            credentials = environ.get("repoze.what.credentials", {})
-            try:
-                self.evaluate(environ, credentials)
-                return True
-            except NotAuthorizedError:
-                return False
+        :param environ: The WSGI environment.
+        :return: Whether the predicate is met or not.
+        :rtype: bool
+        """
+        credentials = environ.get("repoze.what.credentials", {})
+        try:
+            self.evaluate(environ, credentials)
+            return True
+        except NotAuthorizedError:
+            return False
 
-        def __nonzero__(self):
-            return self.is_met(request.environ)
+    def __nonzero__(self):
+        return self.is_met(request.environ)
 
-        __bool__ = __nonzero__
+    __bool__ = __nonzero__
 
 
 class CompoundPredicate(Predicate):
