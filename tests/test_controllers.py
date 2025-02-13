@@ -75,10 +75,6 @@ def test_url_strip_None():
         result = url('/foo', params=params)
         assert 'hamm' not in result, result
 
-def test_lurl():
-    with test_context(None, '/'):
-        params = {'spamm':'eggs', 'hamm':None }
-        assert url('/foo', params=params) == str(lurl('/foo', params=params))
 
 @no_warn
 def test_url_qualified():

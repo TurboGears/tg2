@@ -46,6 +46,7 @@ assumptions about how things will work.
 
 """
 
+from . import i18n
 from .configuration import config, milestones
 from .configuration.app_config import AppConfig
 from .configurator import (
@@ -54,9 +55,17 @@ from .configurator import (
                               FullStackApplicationConfigurator,
                               MinimalApplicationConfigurator,
 )
-from .controllers import RestController, TGController, abort, lurl, redirect, url
+from .controllers import RestController, TGController
 from .controllers.dispatcher import dispatched_controller
-from .controllers.util import *
+from .controllers.util import (
+                              abort,
+                              auth_force_login,
+                              auth_force_logout,
+                              etag_cache,
+                              redirect,
+                              use_wsgi_app,
+                              validation_errors_response,
+)
 from .decorators import (
                               cached,
                               decode_params,
@@ -82,11 +91,15 @@ from .request_local import (
                               translator,
 )
 from .support.hooks import hooks
+from .support.url import lurl, url
 from .wsgiapp import TGApp
 
-__all__ = ['app_globals', 'expose', 'override_template', 'request', 'hooks',
+__all__ = ('app_globals', 'expose', 'override_template', 'request', 'hooks', 'config',
+           'AppConfig', 'ApplicationConfigurator', 'Configurator', 'RestController',
+           'abort', 'flash', 'redirect', 'translator', 'validation_errors_response',
+           'auth_force_login', 'auth_force_logout', 'etag_cache', 'use_wsgi_app',
            'require', 'response', 'session', 'TGApp', 'TGController', 'tmpl_context',
            'use_wsgi_app', 'validate', 'i18n', 'json_encode', 'cache', 'url', 'lurl',
            'dispatched_controller', 'use_custom_format', 'with_engine', 'render_template',
            'Request', 'Response', 'cached', 'decode_params', 'milestones',
-           'MinimalApplicationConfigurator', 'FullStackApplicationConfigurator']
+           'MinimalApplicationConfigurator', 'FullStackApplicationConfigurator')

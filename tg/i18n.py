@@ -243,7 +243,7 @@ def sanitize_language_code(lang):
     """
     try:
         lang = sanitized_language_cache[lang]
-    except:
+    except Exception:
         orig_lang = lang
 
         try:
@@ -308,7 +308,7 @@ def set_lang(languages, **kwargs):
 
 __all__ = [
     "set_lang", "get_lang", "add_fallback",
-    "set_request_lang", "set_temporary_lang",
-    "ugettext", "lazy_ugettext", "ungettext", "lazy_ungettext"
+    "set_request_lang", "ugettext", "lazy_ugettext", 
+    "ungettext", "lazy_ungettext"
 ]
 

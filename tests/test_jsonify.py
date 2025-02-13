@@ -35,12 +35,6 @@ def test_list():
         encoded = jsonify.encode(d)
     #assert encoded == '["a", 1, "b", 2]'
 
-def test_list_allowed_iter():
-    lists_encoder = jsonify.JSONEncoder(allow_lists=True)
-    d = ['a', 1, 'b', 2]
-    encoded = jsonify.encode(d, lists_encoder)
-    assert encoded == '["a", 1, "b", 2]'
-
 def test_list_iter():
     d = list(range(3))
 

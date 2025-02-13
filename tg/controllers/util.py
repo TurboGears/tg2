@@ -51,5 +51,5 @@ def auth_force_logout():
 
 
 
-__all__ = ['url', 'lurl', 'redirect', 'etag_cache', 'abort', 'auth_force_logout',
-           'auth_force_login', 'validation_errors_response', 'use_wsgi_app']
+__all__ = ('url', 'lurl', 'redirect', 'etag_cache', 'abort', 'auth_force_logout',
+           'auth_force_login', 'validation_errors_response', 'use_wsgi_app')

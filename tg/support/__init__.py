@@ -1,3 +1,9 @@
+"""Support modules for TG features.
+
+Support modules implement components that are used by TurboGears
+to provide the user level API. The support modules will usually 
+"""
+
 class NoDefault(object):
     pass
 

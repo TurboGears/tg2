@@ -7,7 +7,6 @@ import tg
 from tg import AppConfig
 
 from tg.configuration import milestones
-from tg.util import DottedFileNameFinder
 
 
 class TestConfig(AppConfig):
