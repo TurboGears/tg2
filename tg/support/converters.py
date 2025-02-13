@@ -6,8 +6,6 @@ import logging
 from string import Template
 
 
-
-
 def asbool(obj):
     if isinstance(obj, str):
         obj = obj.strip().lower()

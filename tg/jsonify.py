@@ -8,7 +8,6 @@ from json import JSONEncoder as _JSONEncoder
 
 from webob.multidict import MultiDict
 
-
 from tg.configuration.utils import GlobalConfigurable
 from tg.support.converters import asbool
 from tg.util.ming import dictify as dictify_ming

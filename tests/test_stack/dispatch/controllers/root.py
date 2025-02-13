@@ -4,7 +4,6 @@ import json
 import tg
 from tests.test_validation import IntValidator
 from tg import dispatched_controller, expose
-
 from tg.controllers import TGController
 from tg.decorators import (
     expose,

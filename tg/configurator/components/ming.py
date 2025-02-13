@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ...configuration.utils import TGConfigError, get_partial_dict
+from ...configuration.utils import TGConfigError
 from ...support.converters import asbool, asint
+from ...util.bunch import get_partial_dict
 from ..base import (
     AppReadyConfigurationAction,
     BeforeConfigConfigurationAction,

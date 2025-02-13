@@ -2,13 +2,12 @@ import base64
 import binascii
 import hmac
 import pickle
-from hashlib import sha1
 import urllib.parse
+from hashlib import sha1
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
 from webob.request import PATH_SAFE
-
 
 from .caching import cached_property
 from .support.objectproxy import TurboGearsObjectProxy

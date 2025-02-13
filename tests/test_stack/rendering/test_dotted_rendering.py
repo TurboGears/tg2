@@ -3,8 +3,8 @@ import pytest
 
 from tests.test_stack import TestConfig, app_from_config
 from tg import expose
-from tg.util.instance_method import im_func
 from tg.configuration import milestones
+from tg.util.instance_method import im_func
 
 try:
     from tgext.chameleon_genshi import ChameleonGenshiRenderer

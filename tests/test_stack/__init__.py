@@ -5,7 +5,6 @@ from webtest import TestApp
 import tests
 import tg
 from tg import AppConfig
-
 from tg.configuration import milestones
 
 

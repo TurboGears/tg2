@@ -6,7 +6,6 @@ from webtest import TestApp
 
 import tg
 from tg import AppConfig, TGController, config, expose, i18n
-
 from tg.configurator import FullStackApplicationConfigurator
 
 

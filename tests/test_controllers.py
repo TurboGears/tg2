@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import tg
 from tests.base import setup_session_dir, teardown_session_dir
-
 from tg.controllers import *
 from tg.exceptions import HTTPFound
 from tg.util import no_warn

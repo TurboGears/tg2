@@ -13,7 +13,6 @@ from crank.util import flatten_arguments, get_params_with_argspec
 
 import tg
 from tg.configuration.utils import TGConfigError
-from .util import abort
 from tg.flash import flash
 from tg.predicates import NotAuthorizedError, not_anonymous
 from tg.render import render as tg_render
@@ -21,6 +20,8 @@ from tg.request_local import request as tg_request
 from tg.request_local import response as tg_response
 from tg.util.instance_method import default_im_func, im_self
 from tg.validation import _ValidationStatus
+
+from .util import abort
 
 
 class _DecoratedControllerMeta(type):

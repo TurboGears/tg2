@@ -17,7 +17,7 @@ from zope.interface import implementer
 
 from tg.support.converters import asbool
 
-from ..utils import get_partial_dict
+from ...util.bunch import get_partial_dict
 
 log = logging.getLogger(__name__)
 

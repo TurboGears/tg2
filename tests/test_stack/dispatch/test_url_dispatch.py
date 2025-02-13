@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from tests.test_stack import TestConfig, app_from_config
-
 from tg.util import no_warn
 
 

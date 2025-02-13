@@ -3,8 +3,7 @@ from collections.abc import MutableMapping as DictMixin
 from copy import deepcopy
 
 from ..request_local import config as reqlocal_config
-from ..util import Bunch
-from .utils import get_partial_dict
+from ..util.bunch import Bunch, get_partial_dict
 
 
 class _DispatchingConfigWrapper(DictMixin):

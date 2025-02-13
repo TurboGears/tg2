@@ -2,7 +2,6 @@ import inspect
 import itertools
 from collections import deque
 
-from ..util.bunch import get_partial_dict
 from .milestones import config_ready
 
 

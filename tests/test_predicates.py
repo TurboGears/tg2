@@ -22,7 +22,6 @@ from webtest import TestApp
 from tg import AppConfig, TGController, config, expose, predicates
 
 
-
 class BasePredicateTester(object):
     """Base test case for predicates."""
 

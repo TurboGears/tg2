@@ -1,10 +1,10 @@
+from ..caching import cached_property
 from .decoration import Decoration
 from .decorators import (
     before_call,
     before_render,
     before_validate,
     cached,
-    cached_property,
     decode_params,
     expose,
     https,

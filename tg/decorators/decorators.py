@@ -13,7 +13,7 @@ import logging
 import time
 from functools import partial
 
-from ..caching import _cached_call, cached_property, create_cache_key
+from ..caching import _cached_call, create_cache_key, cached_property
 from ..configuration import config
 from ..configuration.sqla.balanced_session import force_request_engine
 from ..exceptions import HTTPMethodNotAllowed, HTTPMovedPermanently

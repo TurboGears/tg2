@@ -6,7 +6,6 @@ from webob import Request, Response
 
 from tests.test_validation import IntValidator
 
-
 try:
     from pylons.controllers.xmlrpc import XMLRPCController
 except ImportError:

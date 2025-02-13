@@ -5,7 +5,6 @@ import os
 from gettext import GNUTranslations, NullTranslations
 
 import tg
-
 from tg.util import lazify
 
 log = logging.getLogger(__name__)

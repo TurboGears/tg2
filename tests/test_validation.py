@@ -18,7 +18,6 @@ from tests.base import (
     setup_session_dir,
     teardown_session_dir,
 )
-
 from tg.configuration.utils import TGConfigError
 from tg.configurator.fullstack import FullStackApplicationConfigurator
 from tg.controllers import DecoratedController, TGController, abort

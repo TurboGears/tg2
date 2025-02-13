@@ -3,8 +3,9 @@ from __future__ import absolute_import
 
 import logging
 
-from ...configuration.utils import TGConfigError, get_partial_dict
+from ...configuration.utils import TGConfigError
 from ...support.converters import asbool, aslogger
+from ...util.bunch import get_partial_dict
 from ..base import (
     AppReadyConfigurationAction,
     BeforeConfigConfigurationAction,

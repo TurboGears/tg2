@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from importlib import import_module
 from logging import getLogger
 
-from importlib import import_module
 from ...util import Bunch
 from ..base import ConfigReadyConfigurationAction, ConfigurationComponent
 
