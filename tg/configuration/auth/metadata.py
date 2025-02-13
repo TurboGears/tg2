@@ -11,6 +11,7 @@ class TGAuthMetadata(object):
     By default it returns empty lists for groups and permissions
     and None for the user.
     """
+
     def get_user(self, identity, userid):
         return None
 
@@ -29,14 +30,18 @@ class _AuthMetadataAuthenticator(object):
 
     # IAuthenticator
     def authenticate(self, environ, identity):
-        if self.using_password and not ('login' in identity and 'password' in identity):
+        if self.using_password and not ("login" in identity and "password" in identity):
             return None
         return self.tgmdprovider.authenticate(environ, identity)
 
 
-def create_default_authenticator(authmetadata,
-                                 using_password=True, translations=None,
-                                 user_class=None, dbsession=None,
-                                 **kept_params):
+def create_default_authenticator(
+    authmetadata,
+    using_password=True,
+    translations=None,
+    user_class=None,
+    dbsession=None,
+    **kept_params,
+):
     auth = _AuthMetadataAuthenticator(authmetadata, using_password)
     return kept_params, auth

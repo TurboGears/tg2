@@ -12,10 +12,11 @@ log = logging.getLogger(__name__)
 
 class LanguageError(Exception):
     """Exception raised when a problem occurs with changing languages"""
+
     pass
 
 
-def _parse_locale(identifier, sep='_'):
+def _parse_locale(identifier, sep="_"):
     """
     Took from Babel,
     Parse a locale identifier into a tuple of the form::
@@ -32,18 +33,18 @@ def _parse_locale(identifier, sep='_'):
 
     :see: `IETF RFC 4646 <http://www.ietf.org/rfc/rfc4646.txt>`_
     """
-    if '.' in identifier:
+    if "." in identifier:
         # this is probably the charset/encoding, which we don't care about
-        identifier = identifier.split('.', 1)[0]
-    if '@' in identifier:
+        identifier = identifier.split(".", 1)[0]
+    if "@" in identifier:
         # this is a locale modifier such as @euro, which we don't care about
         # either
-        identifier = identifier.split('@', 1)[0]
+        identifier = identifier.split("@", 1)[0]
 
     parts = identifier.split(sep)
     lang = parts.pop(0).lower()
     if not lang.isalpha():
-        raise ValueError('expected only letters, got %r' % lang)
+        raise ValueError("expected only letters, got %r" % lang)
 
     script = territory = variant = None
     if parts:
@@ -57,12 +58,16 @@ def _parse_locale(identifier, sep='_'):
             territory = parts.pop(0)
 
     if parts:
-        if len(parts[0]) == 4 and parts[0][0].isdigit() or\
-           len(parts[0]) >= 5 and parts[0][0].isalpha():
+        if (
+            len(parts[0]) == 4
+            and parts[0][0].isdigit()
+            or len(parts[0]) >= 5
+            and parts[0][0].isalpha()
+        ):
             variant = parts.pop()
 
     if parts:
-        raise ValueError('%r is not a valid locale identifier' % identifier)
+        raise ValueError("%r is not a valid locale identifier" % identifier)
 
     return lang, territory, script, variant
 
@@ -84,6 +89,8 @@ def ugettext(value):
 
     """
     return tg.translator.gettext(value)
+
+
 lazy_ugettext = lazify(ugettext)
 
 
@@ -103,6 +110,8 @@ def ungettext(singular, plural, n):
 
     """
     return tg.translator.ngettext(singular, plural, n)
+
+
 lazy_ungettext = lazify(ungettext)
 
 
@@ -116,6 +125,8 @@ class _TGI18NIdentityTranslator(NullTranslations):
 
 
 _TRANSLATORS_CACHE = {}
+
+
 def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
     """
     Adapted from python translation function in gettext module
@@ -127,11 +138,11 @@ def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
     if not mofiles:
         if fallback:
             return NullTranslations()
-        raise LanguageError('No translation file found for domain %s' % domain)
+        raise LanguageError("No translation file found for domain %s" % domain)
 
     result = None
     for mofile in mofiles:
-        if hasattr(mofile, 'gettext'):
+        if hasattr(mofile, "gettext"):
             # An instance of a translator was provided.
             # Use it instead of trying to load from disk.
             t = mofile
@@ -139,7 +150,7 @@ def _translator_from_mofiles(domain, mofiles, class_=None, fallback=False):
             key = (class_, os.path.abspath(mofile))
             t = _TRANSLATORS_CACHE.get(key)
             if t is None:
-                with open(mofile, 'rb') as fp:
+                with open(mofile, "rb") as fp:
                     # Cache Translator to avoid reading it again
                     t = _TRANSLATORS_CACHE.setdefault(key, class_(fp))
 
@@ -162,19 +173,19 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
         if tgl:
             conf = tgl.config
         else:  # pragma: no cover
-            #backward compatibility with explicit calls without
-            #specifying local context or config.
+            # backward compatibility with explicit calls without
+            # specifying local context or config.
             conf = tg.config.current_conf()
 
     if not lang:
         return NullTranslations()
 
     try:
-        localedir = conf['localedir']
+        localedir = conf["localedir"]
     except KeyError:  # pragma: no cover
-        localedir = os.path.join(conf['paths']['root'], 'i18n')
-    app_domain = conf['package'].__name__
-    native_lang = conf.get('i18n.native')  # Languages that requires no translation
+        localedir = os.path.join(conf["paths"]["root"], "i18n")
+    app_domain = conf["package"].__name__
+    native_lang = conf.get("i18n.native")  # Languages that requires no translation
 
     if not isinstance(lang, list):
         langs = [lang]
@@ -187,7 +198,9 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
         if native_lang and lang in native_lang:
             mo = _TGI18NIdentityTranslator()
         else:
-            mo = _gettext.find(app_domain, localedir=localedir, languages=[lang], all=False)
+            mo = _gettext.find(
+                app_domain, localedir=localedir, languages=[lang], all=False
+            )
 
         if mo is not None:
             mofiles.append(mo)
@@ -196,7 +209,7 @@ def _get_translator(lang, tgl=None, tg_config=None, **kwargs):
     try:
         translator = _translator_from_mofiles(app_domain, mofiles, **kwargs)
     except IOError as ioe:
-        raise LanguageError('IOError: %s' % ioe)
+        raise LanguageError("IOError: %s" % ioe)
 
     translator.tg_lang = langs
     translator.tg_supported_lang = supported_languages
@@ -216,8 +229,8 @@ def get_lang(all=True):
     all the languages preferred by the user are returned.
     """
     if all is False:
-        return getattr(tg.translator, 'tg_supported_lang', [])
-    return getattr(tg.translator, 'tg_lang', [])
+        return getattr(tg.translator, "tg_supported_lang", [])
+    return getattr(tg.translator, "tg_lang", [])
 
 
 def add_fallback(lang, **kwargs):
@@ -236,6 +249,8 @@ def add_fallback(lang, **kwargs):
 
 
 sanitized_language_cache = {}
+
+
 def sanitize_language_code(lang):
     """Sanitize the language code if the spelling is slightly wrong.
 
@@ -248,11 +263,11 @@ def sanitize_language_code(lang):
         orig_lang = lang
 
         try:
-            lang = '_'.join(filter(None, _parse_locale(lang)[:2]))
+            lang = "_".join(filter(None, _parse_locale(lang)[:2]))
         except ValueError:
-            if '-' in lang:
+            if "-" in lang:
                 try:
-                    lang = '_'.join(filter(None, _parse_locale(lang, sep='-')[:2]))
+                    lang = "_".join(filter(None, _parse_locale(lang, sep="-")[:2]))
                 except ValueError:
                     pass
 
@@ -287,7 +302,7 @@ def set_request_lang(languages, tgl=None):
         languages = supported_languages
 
     # Trap exceptions because the listeners might not support the requested language
-    tg.hooks.notify("set_request_lang", (languages, ), trap_exceptions=True)
+    tg.hooks.notify("set_request_lang", (languages,), trap_exceptions=True)
 
 
 def set_lang(languages, **kwargs):
@@ -303,13 +318,17 @@ def set_lang(languages, **kwargs):
     set_request_lang(languages, tgl)
 
     if tgl.session:
-        tgl.session[tgl.config.get('lang_session_key', 'tg_lang')] = languages
+        tgl.session[tgl.config.get("lang_session_key", "tg_lang")] = languages
         tgl.session.save()
 
 
 __all__ = [
-    "set_lang", "get_lang", "add_fallback",
-    "set_request_lang", "ugettext", "lazy_ugettext", 
-    "ungettext", "lazy_ungettext"
+    "set_lang",
+    "get_lang",
+    "add_fallback",
+    "set_request_lang",
+    "ugettext",
+    "lazy_ugettext",
+    "ungettext",
+    "lazy_ungettext",
 ]
-

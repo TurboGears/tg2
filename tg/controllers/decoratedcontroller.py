@@ -29,10 +29,10 @@ class _DecoratedControllerMeta(type):
         super(_DecoratedControllerMeta, cls).__init__(name, bases, attrs)
         for name, value in attrs.items():
             # Inherit decorations for methods exposed with inherit=True
-            if hasattr(value, 'decoration') and value.decoration.inherit:
+            if hasattr(value, "decoration") and value.decoration.inherit:
                 for pcls in reversed(bases):
                     parent_method = getattr(pcls, name, None)
-                    if parent_method and hasattr(parent_method, 'decoration'):
+                    if parent_method and hasattr(parent_method, "decoration"):
                         value.decoration.merge(parent_method.decoration)
 
 
@@ -43,9 +43,10 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
     controller methods for the purpose of rendering web content.
 
     """
+
     def _is_exposed(self, controller, name):
         method = getattr(controller, name, None)
-        if method and inspect.ismethod(method) and hasattr(method, 'decoration'):
+        if method and inspect.ismethod(method) and hasattr(method, "decoration"):
             return method.decoration.exposed
 
     def _call(self, action, params, remainder=None, context=None):
@@ -71,31 +72,35 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         rendering.
 
         """
-        if context is None: #pragma: no cover
-            #compatibility with old code that didn't pass request locals explicitly
-            context = tg_request.environ['tg.locals']
+        if context is None:  # pragma: no cover
+            # compatibility with old code that didn't pass request locals explicitly
+            context = tg_request.environ["tg.locals"]
 
         hooks = tg.hooks
         context_config = context.config
-        context.request._fast_setattr('validation', _ValidationStatus())
+        context.request._fast_setattr("validation", _ValidationStatus())
 
         # This is necessary to prevent spurious Content Type header which would
         # cause problems to paste.response.replace_header calls and cause
         # responses without content type to get out with a wrong content type
         resp_headers = context.response.headers
-        if not resp_headers.get('Content-Type'):
-            resp_headers.pop('Content-Type', None)
+        if not resp_headers.get("Content-Type"):
+            resp_headers.pop("Content-Type", None)
 
         if remainder:
             remainder = tuple(map(urllib.request.url2pathname, remainder or []))
         else:
             remainder = tuple()
 
-        hooks.notify('before_validate', args=(remainder, params), controller=action)
+        hooks.notify("before_validate", args=(remainder, params), controller=action)
 
         validate_params = get_params_with_argspec(action, params, remainder)
-        context.request.args_params = validate_params  # Update args_params with positional args
-        validation_exceptions = tuple(context_config.get('validation.exceptions', tuple()))
+        context.request.args_params = (
+            validate_params  # Update args_params with positional args
+        )
+        validation_exceptions = tuple(
+            context_config.get("validation.exceptions", tuple())
+        )
 
         try:
             params = self._perform_validate(action, validate_params, context)
@@ -107,10 +112,14 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
                 # The validation asked for chained validation,
                 # go on and validate the error_handler too.
                 try:
-                    params = self._perform_validate(error_handler, validate_params, context)
+                    params = self._perform_validate(
+                        error_handler, validate_params, context
+                    )
                 except validation_exceptions as inv:
-                    instance, error_handler, chain_validation = self._process_validation_errors(
-                        error_handler, remainder, params, inv, context=context
+                    instance, error_handler, chain_validation = (
+                        self._process_validation_errors(
+                            error_handler, remainder, params, inv, context=context
+                        )
                     )
                 else:
                     chain_validation = False
@@ -121,20 +130,24 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
             context.request.validation.values = params
             remainder, params = flatten_arguments(action, params, remainder)
 
-        hooks.notify('before_call', args=(remainder, params), controller=action)
+        hooks.notify("before_call", args=(remainder, params), controller=action)
 
         # call controller method with applied wrappers
         controller_caller = action.decoration.controller_caller
-        output = controller_caller(context_config, bound_controller_callable, remainder, params)
+        output = controller_caller(
+            context_config, bound_controller_callable, remainder, params
+        )
 
         # Render template
-        hooks.notify('before_render', args=(remainder, params, output), controller=action)
+        hooks.notify(
+            "before_render", args=(remainder, params, output), controller=action
+        )
 
         response = self._render_response(context, action, output)
 
-        hooks.notify('after_render', args=(response,), controller=action)
+        hooks.notify("after_render", args=(response,), controller=action)
 
-        return response['response']
+        return response["response"]
 
     @classmethod
     def _perform_validate(cls, controller, params, context):
@@ -169,7 +182,9 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         validated_params = params
         for validation_intent in validations:
             validation_status.intent = validation_intent
-            validated_params = validation_intent.check(config, controller, validated_params)
+            validated_params = validation_intent.check(
+                config, controller, validated_params
+            )
         return validated_params
 
     def _render_response(self, tgl, controller, response):
@@ -193,24 +208,33 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         req = tgl.request
         resp = tgl.response
 
-        (engine_content_type, engine_name, template_name,
-         exclude_names, render_params) = controller.decoration.lookup_template_engine(tgl)
+        (
+            engine_content_type,
+            engine_name,
+            template_name,
+            exclude_names,
+            render_params,
+        ) = controller.decoration.lookup_template_engine(tgl)
 
-        result = dict(response=response, content_type=engine_content_type,
-                      engine_name=engine_name, template_name=template_name)
+        result = dict(
+            response=response,
+            content_type=engine_content_type,
+            engine_name=engine_name,
+            template_name=template_name,
+        )
 
         if resp.content_type is None and engine_content_type is not None:
             # User didn't set a specific content type during controller
             # and template engine has a suggested one. Use template engine one.
-            resp.headers['Content-Type'] = engine_content_type
+            resp.headers["Content-Type"] = engine_content_type
 
-            content_type = resp.headers['Content-Type']
-            if 'charset' not in content_type and (
-                        content_type.startswith('text') or content_type in ('application/xhtml+xml',
-                                                                            'application/xml',
-                                                                            'application/json')
+            content_type = resp.headers["Content-Type"]
+            if "charset" not in content_type and (
+                content_type.startswith("text")
+                or content_type
+                in ("application/xhtml+xml", "application/xml", "application/json")
             ):
-                resp.content_type = content_type + '; charset=utf-8'
+                resp.content_type = content_type + "; charset=utf-8"
 
         # if it's a string return that string and skip all the stuff
         if not isinstance(response, dict):
@@ -224,23 +248,29 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
 
         # If we are in a test request put the namespace where it can be
         # accessed directly
-        if 'paste.testing' in req.environ:
-            testing_variables = req.environ['paste.testing_variables']
-            testing_variables['namespace'] = namespace
-            testing_variables['template_name'] = template_name
-            testing_variables['exclude_names'] = exclude_names
-            testing_variables['render_params'] = render_params
-            testing_variables['controller_output'] = response
+        if "paste.testing" in req.environ:
+            testing_variables = req.environ["paste.testing_variables"]
+            testing_variables["namespace"] = namespace
+            testing_variables["template_name"] = template_name
+            testing_variables["exclude_names"] = exclude_names
+            testing_variables["render_params"] = render_params
+            testing_variables["controller_output"] = response
 
         # Render the result.
-        rendered = tg_render(template_vars=namespace, template_engine=engine_name,
-                             template_name=template_name, **render_params)
+        rendered = tg_render(
+            template_vars=namespace,
+            template_engine=engine_name,
+            template_name=template_name,
+            **render_params,
+        )
 
-        result['response'] = rendered
+        result["response"] = rendered
         return result
 
     @classmethod
-    def _process_validation_errors(cls, controller, remainder, params, exception, context):
+    def _process_validation_errors(
+        cls, controller, remainder, params, exception, context
+    ):
         """Process validation errors.
 
         Sets up validation status and error tracking
@@ -255,7 +285,7 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         req = context.request
         config = context.config
 
-        validation_explode = config.get('validation.explode', {})
+        validation_explode = config.get("validation.explode", {})
         validation_status = req.validation
         validation_status.exception = exception
 
@@ -267,13 +297,17 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
                     explode = validation_explode[supported_class]
 
             if explode is None:
-                raise TGConfigError(f"No validation explode function found for: {exception_class}")
+                raise TGConfigError(
+                    f"No validation explode function found for: {exception_class}"
+                )
 
             exploded_validation = explode(exception)
-            validation_status.errors = exploded_validation['errors']
-            validation_status.values = exploded_validation['values']
+            validation_status.errors = exploded_validation["errors"]
+            validation_status.values = exploded_validation["values"]
         else:
-            raise TGConfigError(f"No validation explode function found for: {exception.__class__}")
+            raise TGConfigError(
+                f"No validation explode function found for: {exception.__class__}"
+            )
 
         # Get the error handler associated to the current validation status.
         error_handler = validation_status.error_handler
@@ -285,11 +319,11 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         return im_self(controller), error_handler, chain_validation
 
     def _check_security(self):
-        requirement = getattr(self, 'allow_only', None)
+        requirement = getattr(self, "allow_only", None)
         if requirement is None:
             return True
 
-        if hasattr(requirement, 'predicate'):
+        if hasattr(requirement, "predicate"):
             # It is a full requirement, let it build the response
             requirement._check_authorization()
             return True
@@ -300,20 +334,21 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
             predicate.check_authorization(tg_request.environ)
         except NotAuthorizedError as e:
             reason = str(e)
-            if hasattr(self, '_failed_authorization'):
+            if hasattr(self, "_failed_authorization"):
                 # Should shortcircuit the rest, but if not we will still
                 # deny authorization
                 self._failed_authorization(reason)
             if not_anonymous().is_met(tg_request.environ):
                 # The user is authenticated but not allowed.
                 code = 403
-                status = 'error'
+                status = "error"
             else:
                 # The user has not been not authenticated.
                 code = 401
-                status = 'warning'
+                status = "warning"
             tg_response.status = code
             flash(reason, status=status)
             abort(code, comment=reason)
 
-__all__ = ['DecoratedController']
+
+__all__ = ["DecoratedController"]

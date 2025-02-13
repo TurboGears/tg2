@@ -1,4 +1,5 @@
 """Defines and initialises what is exposed as tg.config"""
+
 from collections.abc import MutableMapping as DictMixin
 from copy import deepcopy
 
@@ -22,7 +23,7 @@ class _DispatchingConfigWrapper(DictMixin):
 
     def __init__(self, dict_to_wrap):
         """Initialize the object by passing in config to be wrapped"""
-        self.__dict__['config_proxy'] = dict_to_wrap
+        self.__dict__["config_proxy"] = dict_to_wrap
 
     def __getitem__(self, key):
         return self.config_proxy.current_conf()[key]
@@ -69,7 +70,7 @@ class _DispatchingConfigWrapper(DictMixin):
         try:
             return repr(self.config_proxy.current_conf())
         except AttributeError:
-            return '<TGConfig: missing>'
+            return "<TGConfig: missing>"
 
     def keys(self):
         return self.config_proxy.keys()
@@ -77,11 +78,11 @@ class _DispatchingConfigWrapper(DictMixin):
 
 def _init_default_global_config():
     defaults = {
-        'debug': False,
-        'package': None,
-        'tg.app_globals': None,
-        'tg.strict_tmpl_context': True,
-        'i18n.lang': None
+        "debug": False,
+        "package": None,
+        "tg.app_globals": None,
+        "tg.strict_tmpl_context": True,
+        "i18n.lang": None,
     }
 
     # Push an empty config so all accesses to config at import time have something

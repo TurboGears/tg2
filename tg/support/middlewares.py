@@ -15,7 +15,7 @@ class SeekableRequestBodyMiddleware(object):
             for chunk in data:
                 yield chunk
         finally:
-            if hasattr(data, 'close'):  # pragma: no cover
+            if hasattr(data, "close"):  # pragma: no cover
                 data.close()
 
     def __call__(self, environ, start_response):
@@ -35,7 +35,7 @@ class DBSessionRemoverMiddleware(object):
                 yield chunk
         finally:
             log.debug("Removing DBSession from current thread")
-            if hasattr(data, 'close'):
+            if hasattr(data, "close"):
                 data.close()
             self.DBSession.remove()
 
@@ -59,7 +59,7 @@ class MingSessionRemoverMiddleware(object):
                 yield chunk
         finally:
             log.debug("Removing ThreadLocalODMSession from current thread")
-            if hasattr(data, 'close'):
+            if hasattr(data, "close"):
                 data.close()
             self.ThreadLocalODMSession.close_all()
 
@@ -72,5 +72,9 @@ class MingSessionRemoverMiddleware(object):
             raise
 
 
-__all__ = ['StaticsMiddleware', 'SeekableRequestBodyMiddleware',
-           'DBSessionRemoverMiddleware', 'MingSessionRemoverMiddleware']
+__all__ = [
+    "StaticsMiddleware",
+    "SeekableRequestBodyMiddleware",
+    "DBSessionRemoverMiddleware",
+    "MingSessionRemoverMiddleware",
+]

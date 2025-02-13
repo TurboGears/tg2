@@ -42,11 +42,14 @@ class FullStackApplicationConfigurator(MinimalApplicationConfigurator):
         - Interactive Debugger
 
     """
+
     def __init__(self):
         super(FullStackApplicationConfigurator, self).__init__()
-        self.update_blueprint({
-            'use_dotted_templatenames': True,
-        })
+        self.update_blueprint(
+            {
+                "use_dotted_templatenames": True,
+            }
+        )
 
         self.register(I18NConfigurationComponent)
         self.register(SimpleAuthenticationConfigurationComponent)

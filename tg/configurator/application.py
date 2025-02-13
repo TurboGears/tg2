@@ -29,6 +29,7 @@ class ApplicationConfigurator(Configurator):
 
     .. versionadded:: 2.4
     """
+
     def __init__(self):
         super(ApplicationConfigurator, self).__init__()
         self._application_wrappers = DependenciesList()
@@ -49,18 +50,20 @@ class ApplicationConfigurator(Configurator):
         conf = super(ApplicationConfigurator, self).configure(global_conf, app_conf)
 
         # Application wrapper are made available in the configuration for TGApp use.
-        conf['application_wrappers'] = self._application_wrappers
+        conf["application_wrappers"] = self._application_wrappers
 
         # Load conf dict into the global config object
         try:
             reqlocal_config.pop_process_config()
         except IndexError:  # pragma: no cover
-            log.warning('No global config in place, at least defaults should have been here')
+            log.warning(
+                "No global config in place, at least defaults should have been here"
+            )
         finally:
             reqlocal_config.push_process_config(conf)
 
         milestones.config_ready.reach()
-        hooks.notify('initialized_config', args=(self, conf))
+        hooks.notify("initialized_config", args=(self, conf))
         return conf
 
     def setup(self, conf):
@@ -73,7 +76,7 @@ class ApplicationConfigurator(Configurator):
         are resolved.
         """
         super(ApplicationConfigurator, self).setup(conf)
-        hooks.notify('config_setup', args=(self, conf))
+        hooks.notify("config_setup", args=(self, conf))
 
         # Trigger milestone here so that it gets triggered even when
         # websetup (setup-app command) is performed.
@@ -92,7 +95,7 @@ class ApplicationConfigurator(Configurator):
 
             ApplicationConfigurator.current().get('componentid')
         """
-        configurator = reqlocal_config['tg.configurator']()
+        configurator = reqlocal_config["tg.configurator"]()
         return configurator
 
     def _make_app(self, conf, wrap_app=None):
@@ -113,17 +116,17 @@ class ApplicationConfigurator(Configurator):
         """
         app = TGApp(conf)
 
-        hooks.notify('configure_new_app', args=(app,))
+        hooks.notify("configure_new_app", args=(app,))
 
         if wrap_app is not None:
             app = wrap_app(app)
 
-        app = hooks.notify_with_value('before_wsgi_middlewares', app)
+        app = hooks.notify_with_value("before_wsgi_middlewares", app)
 
         for _, step in self._components:
             app = step._apply(AppReadyConfigurationAction, conf, app)
 
-        app = hooks.notify_with_value('after_wsgi_middlewares', app)
+        app = hooks.notify_with_value("after_wsgi_middlewares", app)
 
         return app
 
@@ -169,11 +172,14 @@ class ApplicationConfigurator(Configurator):
             # Wrappers are consumed by TGApp constructor, and all the hooks available
             # after the milestone and that could register new wrappers are actually
             # called after TGApp constructors and so the wrappers wouldn't be applied.
-            log.warning('Application Wrapper %s registered after environment loaded '
-                        'milestone has been reached, the wrapper will be used only '
-                        'for future TGApp instances.', wrapper)
+            log.warning(
+                "Application Wrapper %s registered after environment loaded "
+                "milestone has been reached, the wrapper will be used only "
+                "for future TGApp instances.",
+                wrapper,
+            )
 
-        log.debug('Registering application wrapper: %s', wrapper)
+        log.debug("Registering application wrapper: %s", wrapper)
         self._application_wrappers.add(wrapper, after=after)
 
     def replace_application_wrapper(self, key, wrapper):

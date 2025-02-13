@@ -39,9 +39,9 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
     :meth:`.JSONEncoder.register_custom_encoder`.
 
     """
-    CONFIG_NAMESPACE = 'json.'
-    CONFIG_OPTIONS = {'isodates': asbool,
-                      'allow_lists': asbool}
+
+    CONFIG_NAMESPACE = "json."
+    CONFIG_OPTIONS = {"isodates": asbool, "allow_lists": asbool}
 
     def __init__(self, **kwargs):
         self._registered_types_map = {}
@@ -50,7 +50,9 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
         kwargs = self.configure(**kwargs)
         super(JSONEncoder, self).__init__(**kwargs)
 
-    def configure(self, isodates=False, custom_encoders=None, allow_lists=False, **kwargs):
+    def configure(
+        self, isodates=False, custom_encoders=None, allow_lists=False, **kwargs
+    ):
         """JSON encoder can be configured through :class:`.ApplicationConfigurator`
         (``app_cfg.base_config``) using the following options:
 
@@ -78,11 +80,13 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
 
         """
         if objtype in self._registered_types_map:
-            log.warning('%s type already registered for a custom encoder, replacing it', objtype)
+            log.warning(
+                "%s type already registered for a custom encoder, replacing it", objtype
+            )
 
         self._registered_types_map[objtype] = encoder
         # Append to head, so we find first the last registered types
-        self._registered_types_list = (objtype, ) + self._registered_types_list
+        self._registered_types_list = (objtype,) + self._registered_types_list
 
     def default(self, obj):
         if isinstance(obj, self._registered_types_list):
@@ -90,7 +94,7 @@ class JSONEncoder(_JSONEncoder, GlobalConfigurable):
             for type_, encoder in self._registered_types_map.items():
                 if isinstance(obj, type_):
                     return encoder(obj)
-        elif hasattr(obj, '__json__') and callable(obj.__json__):
+        elif hasattr(obj, "__json__") and callable(obj.__json__):
             return obj.__json__()
         elif isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
             if self._isodates:
@@ -136,10 +140,14 @@ def encode(obj, encoder=None, iterencode=False):
 
     if encoder._allow_lists is False:
         try:
-            obj['test']
+            obj["test"]
         except TypeError:
-            if not hasattr(obj, '__json__') and not is_saobject(obj) and not is_mingobject(obj):
-                raise JsonEncodeError('Your Encoded object must be dict-like.')
+            if (
+                not hasattr(obj, "__json__")
+                and not is_saobject(obj)
+                and not is_mingobject(obj)
+            ):
+                raise JsonEncodeError("Your Encoded object must be dict-like.")
         except Exception:
             pass
 

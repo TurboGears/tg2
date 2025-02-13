@@ -27,41 +27,44 @@ class TransactionApplicationWrapper(ApplicationWrapper):
           ``function(environ, status_code, headers) -> bool``.
 
     """
+
     def __init__(self, handler, config):
         super(TransactionApplicationWrapper, self).__init__(handler, config)
 
-        options = {
-            'enabled': False,
-            'attempts': 1,
-            'commit_veto': None
-        }
-        options.update(coerce_config(config, 'tm.',  {
-            'enabled': asbool,
-            'attempts': asint,
-        }))
+        options = {"enabled": False, "attempts": 1, "commit_veto": None}
+        options.update(
+            coerce_config(
+                config,
+                "tm.",
+                {
+                    "enabled": asbool,
+                    "attempts": asint,
+                },
+            )
+        )
 
-        self.enabled = options['enabled']
-        self.attempts = options['attempts']
-        self.commit_veto = options['commit_veto']
+        self.enabled = options["enabled"]
+        self.attempts = options["attempts"]
+        self.commit_veto = options["commit_veto"]
         self.manager = None
 
         if self.enabled:
             try:
                 import transaction
+
                 self.manager = transaction.manager
             except ImportError:  # pragma: no cover
-                log.exception('Unable to Enable Transaction Manager')
+                log.exception("Unable to Enable Transaction Manager")
                 self.enabled = False
 
-        log.debug('TransactionManager enabled: %s -> %s',
-                  self.enabled, options)
+        log.debug("TransactionManager enabled: %s -> %s", self.enabled, options)
 
     @property
     def injected(self):
         return self.enabled
 
     def __call__(self, controller, environ, context):
-        if 'repoze.tm.active' in environ:  # pragma: no cover
+        if "repoze.tm.active" in environ:  # pragma: no cover
             # Skip transaction manager if repoze.tm2 is enabled
             return self.next_handler(controller, environ, context)
 
@@ -73,29 +76,29 @@ class TransactionApplicationWrapper(ApplicationWrapper):
         while attempts_left:
             attempts_left -= 1
 
-            log.debug('Attempts Left %d (%d total)', attempts_left, total_attempts)
+            log.debug("Attempts Left %d (%d total)", attempts_left, total_attempts)
             transaction_manager.begin()
             try:
                 response = self.next_handler(controller, environ, context)
                 if transaction_manager.isDoomed():
-                    log.debug('Transaction doomed')
+                    log.debug("Transaction doomed")
                     raise AbortTransaction(response)
 
                 if commit_veto is not None:
                     veto = commit_veto(environ, response.status, response.headerlist)
                     if veto:
-                        log.debug('Transaction vetoed')
+                        log.debug("Transaction vetoed")
                         raise AbortTransaction(response)
 
                 transaction_manager.commit()
-                log.debug('Transaction committed!')
+                log.debug("Transaction committed!")
                 return response
             except AbortTransaction as e:
                 transaction_manager.abort()
                 return e.response
             except Exception:
                 exc_info = sys.exc_info()
-                log.debug('Error while running request, aborting transaction')
+                log.debug("Error while running request, aborting transaction")
                 txn = transaction_manager.get()
                 try:
                     try:

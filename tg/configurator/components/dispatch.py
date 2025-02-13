@@ -40,6 +40,7 @@ class DispatchConfigurationComponent(ConfigurationComponent):
         configurator.get_component('dispatch').register_controller_wrapper(wrapper)
 
     """
+
     id = "dispatch"
 
     def __init__(self):
@@ -47,19 +48,16 @@ class DispatchConfigurationComponent(ConfigurationComponent):
         self._controller_wrappers = []
 
     def get_defaults(self):
-        return {
-            'enable_routing_args': False,
-            'disable_request_extensions': False
-        }
+        return {"enable_routing_args": False, "disable_request_extensions": False}
 
     def get_actions(self):
         return (
             BeforeConfigConfigurationAction(self._configure_explicit_root_controller),
-            EnvironmentLoadedConfigurationAction(self._setup_controller_wrappers)
+            EnvironmentLoadedConfigurationAction(self._setup_controller_wrappers),
         )
 
     def _configure_explicit_root_controller(self, conf, app):
-        conf['tg.root_controller'] = conf.pop('root_controller', None)
+        conf["tg.root_controller"] = conf.pop("root_controller", None)
 
     def _setup_controller_wrappers(self, conf, app):
         # This trashes away the current config['controller_caller']
@@ -70,7 +68,7 @@ class DispatchConfigurationComponent(ConfigurationComponent):
         for wrapper in self._controller_wrappers:
             controller_caller = wrapper(controller_caller)
 
-        conf['controller_caller'] = controller_caller
+        conf["controller_caller"] = controller_caller
 
     def register_controller_wrapper(self, wrapper, controller=None):
         """Registers a TurboGears controller wrapper.
@@ -99,21 +97,27 @@ class DispatchConfigurationComponent(ConfigurationComponent):
             dispatch_component.register_controller_wrapper(controller_wrapper, controller=RootController.index)
         """
         if milestones.environment_loaded.reached:
-            log.warning('Controller Wrapper %s registered after environment loaded '
-                        'milestone has been reached, the wrapper will be used only '
-                        'for future TGApp instances.', wrapper)
+            log.warning(
+                "Controller Wrapper %s registered after environment loaded "
+                "milestone has been reached, the wrapper will be used only "
+                "for future TGApp instances.",
+                wrapper,
+            )
 
-        log.debug("Registering %s controller wrapper for controller: %s",
-                  wrapper, controller or 'ALL')
+        log.debug(
+            "Registering %s controller wrapper for controller: %s",
+            wrapper,
+            controller or "ALL",
+        )
 
         if controller is None:
             self._controller_wrappers.append(wrapper)
         else:
             from tg.decorators import Decoration
+
             deco = Decoration.get_decoration(controller)
             deco._register_controller_wrapper(wrapper)
 
 
 def _call_controller(tg_config, controller, remainder, params):
     return controller(*remainder, **params)
-

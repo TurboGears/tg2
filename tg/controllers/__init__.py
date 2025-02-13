@@ -5,7 +5,14 @@ from .tgcontroller import TGController
 from .util import abort, lurl, redirect, url
 from .wsgiappcontroller import WSGIAppController
 
-__all__ = ['abort', 'redirect', 'url', 'lurl',
-    'CoreDispatcher', 'DecoratedController', 'RestController',
-    'TGController', 'WSGIAppController']
-
+__all__ = [
+    "abort",
+    "redirect",
+    "url",
+    "lurl",
+    "CoreDispatcher",
+    "DecoratedController",
+    "RestController",
+    "TGController",
+    "WSGIAppController",
+]

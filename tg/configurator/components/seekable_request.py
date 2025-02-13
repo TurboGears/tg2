@@ -18,25 +18,21 @@ class SeekableRequestConfigurationComponent(ConfigurationComponent):
                                   By default this is disabled.
 
     """
+
     id = "seekable_request"
 
     def get_coercion(self):
-        return {
-            'make_body_seekable': asbool
-        }
+        return {"make_body_seekable": asbool}
 
     def get_defaults(self):
-        return {
-            'make_body_seekable': False
-        }
+        return {"make_body_seekable": False}
 
     def get_actions(self):
-        return (
-            AppReadyConfigurationAction(self._add_middleware),
-        )
+        return (AppReadyConfigurationAction(self._add_middleware),)
 
     def _add_middleware(self, conf, app):
-        if conf['make_body_seekable']:
+        if conf["make_body_seekable"]:
             from tg.support.middlewares import SeekableRequestBodyMiddleware
+
             return SeekableRequestBodyMiddleware(app)
         return app

@@ -1,4 +1,5 @@
 """Configuration Helpers for TurboGears 2"""
+
 import logging
 import warnings
 
@@ -19,52 +20,60 @@ class AppConfig(object):
     .. deprecated:: 2.4.0
         Use :class:`.FullStackApplicationConfigurator` instead.
     """
-    __slots__ = ('_configurator', )
+
+    __slots__ = ("_configurator",)
 
     # Attributes and properties that are automatically returned as a view
     # This mostly handles backward compatibility with some oddities of
     # TG<2.4 where some config properties where flat and some were subdicts.
-    VIEWS_ATTRIBUTES = set(('sa_auth', ))
+    VIEWS_ATTRIBUTES = set(("sa_auth",))
 
     def __init__(self, **kwargs):
         from ..configurator import FullStackApplicationConfigurator
         from ..support.hooks import hooks as tg_hooks
+
         self._configurator = FullStackApplicationConfigurator()
 
-        if kwargs.pop('minimal', False):
-            self._configurator.update_blueprint({
-                'i18n.enabled': False,
-                'session.enabled': False,
-                'sa_auth.enabled': False,
-                'cache.enabled': False,
-                'tw2.enabled': False,
-                'use_ming': False,
-                'use_sqlalchemy': False,
-                'tm.enabled': False,
-                'errorpage.enabled': False,
-                'make_body_seekable': False,
-                'trace_slowreqs.enable': False,
-                'trace_errors.enable': False,
-                'serve_static': False,
-                'debug': False
-            })
+        if kwargs.pop("minimal", False):
+            self._configurator.update_blueprint(
+                {
+                    "i18n.enabled": False,
+                    "session.enabled": False,
+                    "sa_auth.enabled": False,
+                    "cache.enabled": False,
+                    "tw2.enabled": False,
+                    "use_ming": False,
+                    "use_sqlalchemy": False,
+                    "tm.enabled": False,
+                    "errorpage.enabled": False,
+                    "make_body_seekable": False,
+                    "trace_slowreqs.enable": False,
+                    "trace_errors.enable": False,
+                    "serve_static": False,
+                    "debug": False,
+                }
+            )
         self._configurator.update_blueprint(kwargs)
 
         def _on_config_ready(_, conf):
             self.after_init_config(conf)
-        tg_hooks.register('initialized_config', _on_config_ready)
+
+        tg_hooks.register("initialized_config", _on_config_ready)
 
         def _startup_hook(*args, **kwargs):
-            tg_hooks.notify('startup', trap_exceptions=True)
-        tg_hooks.register('initialized_config', _startup_hook)
+            tg_hooks.notify("startup", trap_exceptions=True)
+
+        tg_hooks.register("initialized_config", _startup_hook)
 
         def _before_config_hook(app):
-            return tg_hooks.notify_with_value('before_config', app)
-        tg_hooks.register('before_wsgi_middlewares', _before_config_hook)
+            return tg_hooks.notify_with_value("before_config", app)
+
+        tg_hooks.register("before_wsgi_middlewares", _before_config_hook)
 
         def _after_config_hook(app):
-            return tg_hooks.notify_with_value('after_config', app)
-        tg_hooks.register('after_wsgi_middlewares', _after_config_hook)
+            return tg_hooks.notify_with_value("after_config", app)
+
+        tg_hooks.register("after_wsgi_middlewares", _after_config_hook)
 
     def after_init_config(self, conf):
         """
@@ -119,20 +128,19 @@ class AppConfig(object):
 
     def register_hook(self, hookname, handler, controller=None):
         from ..support.hooks import hooks as tg_hooks
+
         tg_hooks.register(hookname, handler, controller=controller)
 
     def register_wrapper(self, wrapper, after=None):
         self._configurator.register_application_wrapper(wrapper, after)
 
     def register_rendering_engine(self, factory):
-        self._configurator.get_component(
-            'rendering'
-        ).register_engine(factory)
+        self._configurator.get_component("rendering").register_engine(factory)
 
     def register_controller_wrapper(self, wrapper, controller=None):
-        self._configurator.get_component(
-            'dispatch'
-        ).register_controller_wrapper(wrapper, controller)
+        self._configurator.get_component("dispatch").register_controller_wrapper(
+            wrapper, controller
+        )
 
     def make_load_environment(self):
         """Return a load_environment function.
@@ -143,10 +151,12 @@ class AppConfig(object):
         if necessary.
 
         """
+
         def _load_environment(global_conf, app_conf):
             conf = self._configurator.configure(global_conf, app_conf)
             self._configurator.setup(conf)
             return conf
+
         return _load_environment
 
     def setup_tg_wsgi_app(self, load_environment=None):
@@ -163,17 +173,21 @@ class AppConfig(object):
             * ``**app_conf``: Keyword arguments that will be passed as configuration options.
 
         """
-        warnings.warn("Using AppConfig to create apps is deprecated in favor of "
-                      "tg.FullStackApplicationConfigurator and will be removed.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Using AppConfig to create apps is deprecated in favor of "
+            "tg.FullStackApplicationConfigurator and will be removed.",
+            DeprecationWarning,
+        )
 
         def make_base_app(global_conf=None, wrap_app=None, **app_conf):
             # Configure the Application environment
             init_config = load_environment
             if init_config is None:
                 init_config = self.make_load_environment()
-            return self._configurator._make_app(init_config(global_conf or {}, app_conf),
-                                                wrap_app)
+            return self._configurator._make_app(
+                init_config(global_conf or {}, app_conf), wrap_app
+            )
+
         return make_base_app
 
     def make_wsgi_app(self, **kwargs):
@@ -187,10 +201,12 @@ class AppConfig(object):
         application in addition to those specified in ``AppConfig`` itself.
 
         """
-        warnings.warn("Using AppConfig to create apps is deprecated in favor of "
-                      "tg.FullStackApplicationConfigurator and will be removed.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Using AppConfig to create apps is deprecated in favor of "
+            "tg.FullStackApplicationConfigurator and will be removed.",
+            DeprecationWarning,
+        )
 
         # wrap_app is an argument to make_wsgi_app, not a configuration option.
-        wrap_app = kwargs.pop('wrap_app', None)
+        wrap_app = kwargs.pop("wrap_app", None)
         return self._configurator.make_wsgi_app({}, kwargs, wrap_app=wrap_app)

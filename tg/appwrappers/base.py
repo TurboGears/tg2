@@ -23,6 +23,7 @@ class ApplicationWrapper(metaclass=ABCMeta):
     is the current application configuration.
 
     """
+
     def __init__(self, next_handler, config):
         self._next_handler = next_handler
 
@@ -68,4 +69,3 @@ class ApplicationWrapper(metaclass=ABCMeta):
 
         """
         raise NotImplementedError
-

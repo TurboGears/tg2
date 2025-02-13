@@ -10,21 +10,31 @@ from ..support.url import url
 try:
     from sqlalchemy.orm.query import Query as SQLAQuery
 except ImportError:  # pragma: no cover
+
     class SQLAQuery(object):
         pass
+
 
 try:
     from ming.odm.odmsession import ODMCursor as MingCursor
 except ImportError:  # pragma: no cover
+
     class MingCursor(object):
         pass
 
+
 def _format_attrs(**attrs):
-    strings = [' %s="%s"' % (attr, escape(value)) for attr, value in attrs.items() if value is not None]
+    strings = [
+        ' %s="%s"' % (attr, escape(value))
+        for attr, value in attrs.items()
+        if value is not None
+    ]
     return Markup("".join(strings))
 
+
 def _make_tag(template, text, **attrs):
-    return Markup(template % (_format_attrs(**attrs), escape(text))) 
+    return Markup(template % (_format_attrs(**attrs), escape(text)))
+
 
 class _SQLAlchemyQueryWrapper(object):
     def __init__(self, obj):
@@ -36,15 +46,17 @@ class _SQLAlchemyQueryWrapper(object):
     def __len__(self):
         return self.obj.count()
 
+
 class _MingQueryWrapper(object):
     def __init__(self, obj):
         self.obj = obj
 
     def __getitem__(self, range):
-        return self.obj.skip(range.start).limit(range.stop-range.start)
+        return self.obj.skip(range.start).limit(range.stop - range.start)
 
     def __len__(self):
         return self.obj.count()
+
 
 def _wrap_collection(col):
     if isinstance(col, SQLAQuery):
@@ -53,12 +65,14 @@ def _wrap_collection(col):
         return _MingQueryWrapper(col)
     return col
 
+
 class Page(object):
     """
     TurboGears Pagination support for @paginate decorator.
     It is based on a striped down version of the WebHelpers pagination class
     This represents a page inside a collection of items
     """
+
     def __init__(self, collection, page=1, items_per_page=20):
         """
         Create a "Page" instance.
@@ -88,7 +102,7 @@ class Page(object):
         self.item_count = len(self.collection)
 
         if not self.item_count:
-            #Empty collection, just set everything at empty
+            # Empty collection, just set everything at empty
             self.first_page = None
             self.page_count = 0
             self.last_page = None
@@ -98,7 +112,7 @@ class Page(object):
             self.next_page = None
             self.items = []
         else:
-            #Otherwise compute the actual pagination values
+            # Otherwise compute the actual pagination values
             self.first_page = 1
             self.page_count = ((self.item_count - 1) // self.items_per_page) + 1
             self.last_page = self.first_page + self.page_count - 1
@@ -118,28 +132,39 @@ class Page(object):
                 first = self.first_item - 1
                 last = self.last_item
                 self.items = list(self.collection[first:last])
-            except TypeError: #pragma: no cover
+            except TypeError:  # pragma: no cover
                 raise
 
             # Links to previous and next page
             if self.page > self.first_page:
-                self.previous_page = self.page-1
+                self.previous_page = self.page - 1
             else:
                 self.previous_page = None
 
             if self.page < self.last_page:
-                self.next_page = self.page+1
+                self.next_page = self.page + 1
             else:
                 self.next_page = None
 
-    def pager(self, format='~2~', page_param='page', partial_param='partial',
-              show_if_single_page=False, separator=' ', onclick=None,
-              symbol_first='<<', symbol_last='>>',
-              symbol_previous='<', symbol_next='>',
-              link_attr=None, curpage_attr=None, dotdot_attr=None,
-              page_link_template='<a%s>%s</a>',
-              page_plain_template='<span%s>%s</span>',
-              **kwargs):
+    def pager(
+        self,
+        format="~2~",
+        page_param="page",
+        partial_param="partial",
+        show_if_single_page=False,
+        separator=" ",
+        onclick=None,
+        symbol_first="<<",
+        symbol_last=">>",
+        symbol_previous="<",
+        symbol_next=">",
+        link_attr=None,
+        curpage_attr=None,
+        dotdot_attr=None,
+        page_link_template="<a%s>%s</a>",
+        page_plain_template="<span%s>%s</span>",
+        **kwargs,
+    ):
         """
         Return string with links to other pages (e.g. "1 2 [3] 4 5 6 7").
 
@@ -309,13 +334,13 @@ class Page(object):
         Additional keyword arguments are used as arguments in the links.
         """
         if link_attr is None:
-            link_attr = {'class': 'pager_link'}
+            link_attr = {"class": "pager_link"}
 
         if curpage_attr is None:
-            curpage_attr = {'class': 'pager_curpage'}
+            curpage_attr = {"class": "pager_curpage"}
 
         if dotdot_attr is None:
-            dotdot_attr = {'class': 'pager_dotdot'}
+            dotdot_attr = {"class": "pager_dotdot"}
 
         self.curpage_attr = curpage_attr
         self.separator = separator
@@ -330,30 +355,36 @@ class Page(object):
 
         # Don't show navigator if there is no more than one page
         if self.page_count == 0 or (self.page_count == 1 and not show_if_single_page):
-            return ''
+            return ""
 
         # Replace ~...~ in token format by range of pages
-        result = re.sub(r'~(\d+)~', self._range, format)
+        result = re.sub(r"~(\d+)~", self._range, format)
 
         # Interpolate '%' variables
-        result = string.Template(result).safe_substitute({
-            'first_page': self.first_page,
-            'last_page': self.last_page,
-            'page': self.page,
-            'page_count': self.page_count,
-            'items_per_page': self.items_per_page,
-            'first_item': self.first_item,
-            'last_item': self.last_item,
-            'item_count': self.item_count,
-            'link_first': self.page>self.first_page and\
-                          self._pagerlink(self.first_page, symbol_first) or '',
-            'link_last': self.page<self.last_page and\
-                         self._pagerlink(self.last_page, symbol_last) or '',
-            'link_previous': self.previous_page and\
-                             self._pagerlink(self.previous_page, symbol_previous) or '',
-            'link_next': self.next_page and\
-                         self._pagerlink(self.next_page, symbol_next) or ''
-        })
+        result = string.Template(result).safe_substitute(
+            {
+                "first_page": self.first_page,
+                "last_page": self.last_page,
+                "page": self.page,
+                "page_count": self.page_count,
+                "items_per_page": self.items_per_page,
+                "first_item": self.first_item,
+                "last_item": self.last_item,
+                "item_count": self.item_count,
+                "link_first": self.page > self.first_page
+                and self._pagerlink(self.first_page, symbol_first)
+                or "",
+                "link_last": self.page < self.last_page
+                and self._pagerlink(self.last_page, symbol_last)
+                or "",
+                "link_previous": self.previous_page
+                and self._pagerlink(self.previous_page, symbol_previous)
+                or "",
+                "link_next": self.next_page
+                and self._pagerlink(self.next_page, symbol_next)
+                or "",
+            }
+        )
 
         return Markup(result)
 
@@ -379,42 +410,44 @@ class Page(object):
         # e.g. '1 .. 5 6 [7] 8 9 .. 12'
         # -> leftmost_page  = 5
         # -> rightmost_page = 9
-        leftmost_page = max(self.first_page, (self.page-radius))
-        rightmost_page = min(self.last_page, (self.page+radius))
+        leftmost_page = max(self.first_page, (self.page - radius))
+        rightmost_page = min(self.last_page, (self.page + radius))
 
         nav_items = []
 
         # Create a link to the first page (unless we are on the first page
         # or there would be no need to insert '..' spacers)
         if self.page != self.first_page and self.first_page < leftmost_page:
-            nav_items.append( self._pagerlink(self.first_page, self.first_page) )
+            nav_items.append(self._pagerlink(self.first_page, self.first_page))
 
         # Insert dots if there are pages between the first page
         # and the currently displayed page range
         if leftmost_page - self.first_page > 1:
             # Wrap in a SPAN tag if nolink_attr is set
-            text = '..'
+            text = ".."
             if self.dotdot_attr:
                 text = _make_tag(self.page_plain_template, text, **self.dotdot_attr)
             nav_items.append(text)
 
-        for thispage in range(leftmost_page, rightmost_page+1):
+        for thispage in range(leftmost_page, rightmost_page + 1):
             # Hilight the current page number and do not use a link
             if thispage == self.page:
-                text = '%s' % (thispage,)
+                text = "%s" % (thispage,)
                 # Wrap in a SPAN tag if nolink_attr is set
                 if self.curpage_attr:
-                    text = _make_tag(self.page_plain_template, text, **self.curpage_attr)
+                    text = _make_tag(
+                        self.page_plain_template, text, **self.curpage_attr
+                    )
                 nav_items.append(text)
             # Otherwise create just a link to that page
             else:
-                text = '%s' % (thispage,)
-                nav_items.append( self._pagerlink(thispage, text) )
+                text = "%s" % (thispage,)
+                nav_items.append(self._pagerlink(thispage, text))
 
         # Insert dots if there are pages between the displayed
         # page numbers and the end of the page range
         if self.last_page - rightmost_page > 1:
-            text = '..'
+            text = ".."
             # Wrap in a SPAN tag if nolink_attr is set
             if self.dotdot_attr:
                 text = _make_tag(self.page_plain_template, text, **self.dotdot_attr)
@@ -423,7 +456,7 @@ class Page(object):
         # Create a link to the very last page (unless we are on the last
         # page or there would be no need to insert '..' spacers)
         if self.page != self.last_page and rightmost_page < self.last_page:
-            nav_items.append( self._pagerlink(self.last_page, self.last_page) )
+            nav_items.append(self._pagerlink(self.last_page, self.last_page))
 
         return self.separator.join(nav_items)
 
@@ -447,23 +480,30 @@ class Page(object):
         link_params[self.page_param] = pagenr
 
         # Create the URL to load the page area part of a certain page (AJAX updates)
-        partial_url = link_params.pop('partial', '')
+        partial_url = link_params.pop("partial", "")
 
         # Create the URL to load a certain page
-        link_url = link_params.pop('link', request.path_info)
+        link_url = link_params.pop("link", request.path_info)
         link_url = Markup(url(link_url, params=link_params))
 
-        if self.onclick: # create link with onclick action for AJAX
-            try: # if '%s' is used in the 'onclick' parameter (backwards compatibility)
+        if self.onclick:  # create link with onclick action for AJAX
+            try:  # if '%s' is used in the 'onclick' parameter (backwards compatibility)
                 onclick_action = self.onclick % (partial_url,)
             except TypeError:
-                onclick_action = string.Template(self.onclick).safe_substitute({
-                  "partial_url": partial_url,
-                  "page": pagenr
-                })
-            return _make_tag(self.page_link_template, text, href=link_url, onclick=onclick_action, **self.link_attr)
-        else: # return static link
-            return _make_tag(self.page_link_template, text, href=link_url, **self.link_attr)
+                onclick_action = string.Template(self.onclick).safe_substitute(
+                    {"partial_url": partial_url, "page": pagenr}
+                )
+            return _make_tag(
+                self.page_link_template,
+                text,
+                href=link_url,
+                onclick=onclick_action,
+                **self.link_attr,
+            )
+        else:  # return static link
+            return _make_tag(
+                self.page_link_template, text, href=link_url, **self.link_attr
+            )
 
     def __iter__(self):
         return iter(self.items)
@@ -472,7 +512,9 @@ class Page(object):
         return len(self.items)
 
     def __json__(self):
-        return {'total':self.item_count, 
-                'page':self.page, 
-                'items_per_page':self.items_per_page, 
-                'entries':self.items}
+        return {
+            "total": self.item_count,
+            "page": self.page,
+            "items_per_page": self.items_per_page,
+            "entries": self.items,
+        }

@@ -11,18 +11,19 @@ log = logging.getLogger(__name__)
 
 def _decorated_controller_caller(tg_config, controller, remainder, params):
     try:
-        application_controller_caller = tg_config['controller_caller']
+        application_controller_caller = tg_config["controller_caller"]
     except KeyError:  # pragma: no cover
         # This should never happen as controller_caller is setup by MinimalApplicationConfigurator.
         from tg.configurator.components.dispatch import _call_controller
+
         application_controller_caller = _call_controller
 
     return application_controller_caller(tg_config, controller, remainder, params)
 
 
 class Decoration(object):
-    """ Simple class to support 'simple registration' type decorators
-    """
+    """Simple class to support 'simple registration' type decorators"""
+
     def __init__(self, controller):
         self.controller = controller
         self.controller_caller = _decorated_controller_caller
@@ -35,13 +36,12 @@ class Decoration(object):
         self.validations = []
         self.inherit = False
         self.requirements = []
-        self.hooks = dict(before_validate=[],
-                          before_call=[],
-                          before_render=[],
-                          after_render=[])
+        self.hooks = dict(
+            before_validate=[], before_call=[], before_render=[], after_render=[]
+        )
 
-    def __repr__(self): # pragma: no cover
-        return '<Decoration %s for %r>' % (id(self), self.controller)
+    def __repr__(self):  # pragma: no cover
+        return "<Decoration %s for %r>" % (id(self), self.controller)
 
     @classmethod
     def get_decoration(cls, func):
@@ -85,7 +85,9 @@ class Decoration(object):
         # This merges already registered template engines
         self.engines = dict(tuple(deco.engines.items()) + tuple(self.engines.items()))
         self.engines_keys = sorted(self.engines, reverse=True)
-        self.custom_engines = dict(tuple(deco.custom_engines.items()) + tuple(self.custom_engines.items()))
+        self.custom_engines = dict(
+            tuple(deco.custom_engines.items()) + tuple(self.custom_engines.items())
+        )
 
         # This merges yet to register template engines
         for exposition in reversed(deco._expositions):
@@ -99,8 +101,9 @@ class Decoration(object):
         # Inherit al validators registered on parent.
         self.validations = deco.validations + self.validations
 
-    def register_template_engine(self,
-            content_type, engine, template, exclude_names, render_params):
+    def register_template_engine(
+        self, content_type, engine, template, exclude_names, render_params
+    ):
         """Registers an engine on the controller.
 
         Multiple engines can be registered, but only one engine per
@@ -119,19 +122,26 @@ class Decoration(object):
         like the rendering method or the injected doctype.
 
         """
-        default_renderer = config.get('default_renderer')
-        available_renderers = config.get('renderers', [])
+        default_renderer = config.get("default_renderer")
+        available_renderers = config.get("renderers", [])
 
         if engine and not available_renderers:
-            log.warning('Renderers not registered yet while exposing template %s for engine %s, '
-                        'skipping engine availability check', template, engine)
+            log.warning(
+                "Renderers not registered yet while exposing template %s for engine %s, "
+                "skipping engine availability check",
+                template,
+                engine,
+            )
 
         if engine and available_renderers and engine not in available_renderers:
-            log.debug('Registering template %s for engine %s not available. Skipping it',
-                      template, engine)
+            log.debug(
+                "Registering template %s for engine %s not available. Skipping it",
+                template,
+                engine,
+            )
             return
 
-        content_type = content_type or '*/*'
+        content_type = content_type or "*/*"
 
         try:
             current_content_type_engine = self.engines[content_type][0]
@@ -142,7 +152,12 @@ class Decoration(object):
             # Avoid overwriting the default renderer when there is already a template registered
             return
 
-        self.engines[content_type] = (engine, template, exclude_names or [], render_params or {})
+        self.engines[content_type] = (
+            engine,
+            template,
+            exclude_names or [],
+            render_params or {},
+        )
 
         # Avoid engine lookup if we have only one engine registered
         if len(self.engines) == 1:
@@ -157,8 +172,15 @@ class Decoration(object):
         # should make text/html the first choice when no other better choices are available.
         self.engines_keys = sorted(self.engines, reverse=True)
 
-    def register_custom_template_engine(self, custom_format,
-            content_type, engine, template, exclude_names, render_params):
+    def register_custom_template_engine(
+        self,
+        custom_format,
+        content_type,
+        engine,
+        template,
+        exclude_names,
+        render_params,
+    ):
         """Registers a custom engine on the controller.
 
         Multiple engines can be registered, but only one engine per
@@ -182,7 +204,12 @@ class Decoration(object):
         """
 
         self.custom_engines[custom_format or '"*/*"'] = (
-            content_type, engine, template, exclude_names, render_params or {})
+            content_type,
+            engine,
+            template,
+            exclude_names,
+            render_params or {},
+        )
 
     def lookup_template_engine(self, tgl):
         """Return the template engine data.
@@ -201,8 +228,9 @@ class Decoration(object):
             render_custom_format = self.render_custom_format
 
         if render_custom_format:
-            (content_type, engine, template, exclude_names, render_params
-                ) = self.custom_engines[render_custom_format]
+            (content_type, engine, template, exclude_names, render_params) = (
+                self.custom_engines[render_custom_format]
+            )
         else:
             if self.default_engine:
                 content_type = self.default_engine
@@ -217,22 +245,26 @@ class Decoration(object):
                     accept_types = request.accept
 
                 best_matches = (
-                    accept_types.acceptable_offers(self.engines_keys) or
+                    accept_types.acceptable_offers(self.engines_keys)
+                    or
                     # If none of the available engines matches with the
                     # available options, just suggest usage of the first engine.
-                    ((self.engines_keys[0], None), )
+                    ((self.engines_keys[0], None),)
                 )
                 content_type = best_matches[0][0]
             else:
-                content_type = 'text/html'
+                content_type = "text/html"
 
             # check for overridden templates
             try:
                 cnt_override_mapping = request._override_mapping[self.controller]
-                engine, template, exclude_names, render_params = cnt_override_mapping[content_type.split(";")[0]]
+                engine, template, exclude_names, render_params = cnt_override_mapping[
+                    content_type.split(";")[0]
+                ]
             except (AttributeError, KeyError):
-                (engine, template, exclude_names, render_params
-                    ) = self.engines.get(content_type, (None,) * 4)
+                (engine, template, exclude_names, render_params) = self.engines.get(
+                    content_type, (None,) * 4
+                )
 
         return content_type, engine, template, exclude_names, render_params
 
@@ -251,7 +283,7 @@ class Decoration(object):
         self.hooks.setdefault(hook_name, []).append(func)
 
     def _register_requirement(self, requirement):
-        self._register_hook('before_call', requirement._check_authorization)
+        self._register_hook("before_call", requirement._check_authorization)
         self.requirements.append(requirement)
 
     def _register_controller_wrapper(self, wrapper):

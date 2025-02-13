@@ -35,6 +35,5 @@ __all__ = (
     "with_engine",
     "with_trailing_slash",
     "without_trailing_slash",
-    "cached_property"
+    "cached_property",
 )
-

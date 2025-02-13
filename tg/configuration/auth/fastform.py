@@ -15,14 +15,22 @@ class FastFormPlugin(object):
     FriendlyForm plugin. The FastForm version works only with UTF-8
     content which is the default for new WebOb versions.
     """
+
     classifications = {
         IIdentifier: ["browser"],
         IChallenger: ["browser"],
-        }
+    }
 
-    def __init__(self, login_form_url, login_handler_path, post_login_url,
-                 logout_handler_path, post_logout_url, rememberer_name,
-                 login_counter_name=None):
+    def __init__(
+        self,
+        login_form_url,
+        login_handler_path,
+        post_login_url,
+        logout_handler_path,
+        post_logout_url,
+        rememberer_name,
+        login_counter_name=None,
+    ):
         """
         :param login_form_url: The URL/path where the login form is located.
         :type login_form_url: str
@@ -49,71 +57,73 @@ class FastFormPlugin(object):
         self.rememberer_name = rememberer_name
 
         if not login_counter_name:
-            login_counter_name = '__logins'
+            login_counter_name = "__logins"
         self.login_counter_name = login_counter_name
 
     # IIdentifier
     def identify(self, environ):
-        path_info = environ['PATH_INFO']
+        path_info = environ["PATH_INFO"]
 
         if path_info == self.login_handler_path:
             query = self._get_form_data(environ)
 
             try:
-                credentials = {'login': query['login'],
-                               'password': query['password'],
-                               'max_age':query.get('remember')}
+                credentials = {
+                    "login": query["login"],
+                    "password": query["password"],
+                    "max_age": query.get("remember"),
+                }
             except KeyError:
                 credentials = None
 
             params = {}
-            if 'came_from' in query:
-                params['came_from'] = query['came_from']
+            if "came_from" in query:
+                params["came_from"] = query["came_from"]
             if self.login_counter_name is not None and self.login_counter_name in query:
                 params[self.login_counter_name] = query[self.login_counter_name]
 
             destination = build_url(environ, self.post_login_url, params=params)
-            environ['repoze.who.application'] = HTTPFound(location=destination)
+            environ["repoze.who.application"] = HTTPFound(location=destination)
             return credentials
 
         elif path_info == self.logout_handler_path:
             query = self._get_form_data(environ)
-            came_from = query.get('came_from')
+            came_from = query.get("came_from")
             if came_from is None:
-                came_from = build_url(environ, '/')
+                came_from = build_url(environ, "/")
 
             # set in environ for self.challenge() to find later
-            environ['came_from'] = came_from
-            environ['repoze.who.application'] = HTTPUnauthorized()
+            environ["came_from"] = came_from
+            environ["repoze.who.application"] = HTTPUnauthorized()
 
         elif path_info in (self.login_form_url, self.post_login_url):
             query = self._get_form_data(environ)
-            environ['repoze.who.logins'] = 0
+            environ["repoze.who.logins"] = 0
 
             if self.login_counter_name is not None and self.login_counter_name in query:
-                environ['repoze.who.logins'] = int(query[self.login_counter_name])
+                environ["repoze.who.logins"] = int(query[self.login_counter_name])
                 del query[self.login_counter_name]
-                environ['QUERY_STRING'] = urlencode(query, doseq=True)
+                environ["QUERY_STRING"] = urlencode(query, doseq=True)
 
         return None
 
     # IChallenger
     def challenge(self, environ, status, app_headers, forget_headers):
-        path_info = environ['PATH_INFO']
+        path_info = environ["PATH_INFO"]
 
         # Configuring the headers to be set:
-        cookies = [(h,v) for (h,v) in app_headers if h.lower() == 'set-cookie']
+        cookies = [(h, v) for (h, v) in app_headers if h.lower() == "set-cookie"]
         headers = forget_headers + cookies
 
         if path_info == self.logout_handler_path:
             params = {}
-            if 'came_from' in environ:
-                params.update({'came_from':environ['came_from']})
+            if "came_from" in environ:
+                params.update({"came_from": environ["came_from"]})
             destination = build_url(environ, self.post_logout_url, params=params)
 
         else:
-            came_from_params = parse_qs(environ.get('QUERY_STRING', ''))
-            params = {'came_from': build_url(environ, path_info, came_from_params)}
+            came_from_params = parse_qs(environ.get("QUERY_STRING", ""))
+            params = {"came_from": build_url(environ, path_info, came_from_params)}
             destination = build_url(environ, self.login_form_url, params=params)
 
         return HTTPFound(location=destination, headers=headers)
@@ -129,7 +139,7 @@ class FastFormPlugin(object):
         return rememberer.forget(environ, identity)
 
     def _get_rememberer(self, environ):
-        rememberer = environ['repoze.who.plugins'][self.rememberer_name]
+        rememberer = environ["repoze.who.plugins"][self.rememberer_name]
         return rememberer
 
     def _get_form_data(self, environ):
@@ -139,4 +149,8 @@ class FastFormPlugin(object):
         return query
 
     def __repr__(self):
-        return '<%s:%s %s>' % (self.__class__.__name__, self.login_handler_path, id(self))
+        return "<%s:%s %s>" % (
+            self.__class__.__name__,
+            self.login_handler_path,
+            id(self),
+        )

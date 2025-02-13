@@ -5,6 +5,7 @@ Utilities for TurboGears hooks management.
 Provides a consistent API to register and execute hooks.
 
 """
+
 import atexit
 from logging import getLogger
 
@@ -18,6 +19,7 @@ log = getLogger(__name__)
 
 class HooksNamespace(object):
     """Manages hooks registrations and notifications"""
+
     def __init__(self):
         self._hooks = dict()
         atexit.register(self._atexit)
@@ -26,7 +28,7 @@ class HooksNamespace(object):
         self._hooks.clear()
 
     def _atexit(self):
-        for func in self._hooks.get('shutdown', tuple()):
+        for func in self._hooks.get("shutdown", tuple()):
             func()
 
     def _call_handler(self, hook_name, trap_exceptions, func, args, kwargs):
@@ -34,7 +36,9 @@ class HooksNamespace(object):
             return func(*args, **kwargs)
         except Exception:
             if trap_exceptions is True:
-                log.exception('Trapped Exception while handling %s -> %s', hook_name, func)
+                log.exception(
+                    "Trapped Exception while handling %s -> %s", hook_name, func
+                )
             else:
                 raise
 
@@ -52,20 +56,29 @@ class HooksNamespace(object):
             tg.hooks.register('startup', startup_function)
 
         """
-        if controller is not None and hook_name in ('startup', 'shutdown',
-                                                    'initialized_config',
-                                                    'before_wsgi_middlewares',
-                                                    'after_wsgi_middlewares'):
-            raise TGConfigError('Startup and Shutdown hooks cannot be registered on controllers')
+        if controller is not None and hook_name in (
+            "startup",
+            "shutdown",
+            "initialized_config",
+            "before_wsgi_middlewares",
+            "after_wsgi_middlewares",
+        ):
+            raise TGConfigError(
+                "Startup and Shutdown hooks cannot be registered on controllers"
+            )
 
-        if hook_name == 'controller_wrapper':
-            raise ValueError('dispatch component must be used to register controller wrappers')
+        if hook_name == "controller_wrapper":
+            raise ValueError(
+                "dispatch component must be used to register controller wrappers"
+            )
 
         if controller is None:
             config_ready.register(_ApplicationHookRegistration(self, hook_name, func))
         else:
             controller = default_im_func(controller)
-            renderers_ready.register(_ControllerHookRegistration(controller, hook_name, func))
+            renderers_ready.register(
+                _ControllerHookRegistration(controller, hook_name, func)
+            )
 
     def disconnect(self, hook_name, func, controller=None):
         """Disconnect an hook.
@@ -83,8 +96,9 @@ class HooksNamespace(object):
         except ValueError:
             pass
 
-    def notify(self, hook_name, args=None, kwargs=None, controller=None,
-               trap_exceptions=False):
+    def notify(
+        self, hook_name, args=None, kwargs=None, controller=None, trap_exceptions=False
+    ):
         """Notifies a TurboGears hook.
 
         Each function registered for the given hook will be executed,
@@ -155,11 +169,12 @@ class _ApplicationHookRegistration(object):
         self.hooks_namespace = hooks_namespace
 
     def __repr__(self):
-        return '<ApplicationHookRegistration: %r %r>' % (self.hook_name, self.func)
+        return "<ApplicationHookRegistration: %r %r>" % (self.hook_name, self.func)
 
     def __call__(self):
-        log.debug("Registering %s for application wide hook %s",
-                  self.func, self.hook_name)
+        log.debug(
+            "Registering %s for application wide hook %s", self.func, self.hook_name
+        )
         hooks = self.hooks_namespace._hooks
         hooks.setdefault(self.hook_name, []).append(self.func)
 
@@ -171,16 +186,21 @@ class _ControllerHookRegistration(object):
         self.func = func
 
     def __repr__(self):
-        return '<ControllerHookRegistration: %r %r>' % (self.hook_name, self.func)
+        return "<ControllerHookRegistration: %r %r>" % (self.hook_name, self.func)
 
     def __call__(self):
-        log.debug("Registering %s for hook %s on controller %s",
-                  self.func, self.hook_name, self.controller)
+        log.debug(
+            "Registering %s for hook %s on controller %s",
+            self.func,
+            self.hook_name,
+            self.controller,
+        )
         deco = Decoration.get_decoration(self.controller)
         deco._register_hook(self.hook_name, self.func)
 
 
 class _TGGlobalHooksNamespace(HooksNamespace):
     pass
+
 
 hooks = _TGGlobalHooksNamespace()

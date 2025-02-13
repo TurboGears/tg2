@@ -16,11 +16,12 @@ def unless(func, check=None):
         Convert(unless(lambda uid: DBSession.get(User, uid)))
 
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         v = func(*args, **kwargs)
         if v == check:
-            raise ValueError('{} == {}'.format(v, check))
+            raise ValueError("{} == {}".format(v, check))
         return v
-    return wrapper
 
+    return wrapper

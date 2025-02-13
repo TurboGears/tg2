@@ -1,4 +1,3 @@
-
 class RendererFactory(object):
     """
     Factory that creates one or multiple rendering engines

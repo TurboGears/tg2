@@ -18,6 +18,7 @@ class _ConfigMilestoneTracker(object):
     and required options are correctly initialized
 
     """
+
     def __init__(self, name):
         self.name = name
         self._actions = dict()
@@ -38,10 +39,10 @@ class _ConfigMilestoneTracker(object):
             self._keep_on_reset.append(action)
 
         if self._reached:
-            log.debug('%s milestone passed, calling %s directly', self.name, action)
+            log.debug("%s milestone passed, calling %s directly", self.name, action)
             action()
         else:
-            log.debug('Register %s to be called when %s reached', action, self.name)
+            log.debug("Register %s to be called when %s reached", action, self.name)
             self._actions[id(action)] = action
 
     def reach(self):
@@ -51,7 +52,7 @@ class _ConfigMilestoneTracker(object):
         method multiple times should lead to nothing.
 
         """
-        log.debug('%s milestone reached', self.name)
+        log.debug("%s milestone reached", self.name)
 
         try:
             while True:
@@ -71,9 +72,9 @@ class _ConfigMilestoneTracker(object):
             self.register(action)
 
 
-config_ready = _ConfigMilestoneTracker('config_ready')
-renderers_ready = _ConfigMilestoneTracker('renderers_ready')
-environment_loaded = _ConfigMilestoneTracker('environment_loaded')
+config_ready = _ConfigMilestoneTracker("config_ready")
+renderers_ready = _ConfigMilestoneTracker("renderers_ready")
+environment_loaded = _ConfigMilestoneTracker("environment_loaded")
 
 
 def _reset_all():

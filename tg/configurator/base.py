@@ -29,6 +29,7 @@ class Configurator(object):
 
     .. versionadded:: 2.4
     """
+
     def __init__(self):
         self._initialized = False
         self._blueprint = {}
@@ -52,7 +53,9 @@ class Configurator(object):
         try:
             return self._blueprint[name]
         except KeyError:
-            raise KeyError("Configuration Blueprint does not provide a '{0}' option".format(name))
+            raise KeyError(
+                "Configuration Blueprint does not provide a '{0}' option".format(name)
+            )
 
     def get_blueprint_view(self, key):
         """A view is a subset of the blueprint options.
@@ -67,14 +70,16 @@ class Configurator(object):
         of ``section`` and get back a dictionary like object
         that contains ``option1`` and ``option2``.
         """
-        if key.endswith('.'):
-            raise ValueError('A Blueprint key cannot end with a .')
+        if key.endswith("."):
+            raise ValueError("A Blueprint key cannot end with a .")
         return DictionaryView(self._blueprint, key)
 
     def register(self, component_type, after=None):
         """Registers a new configuration component to be performed by the Configurator"""
         if not issubclass(component_type, ConfigurationComponent):
-            raise ValueError('Configuration component must inherit ConfigurationComponent')
+            raise ValueError(
+                "Configuration component must inherit ConfigurationComponent"
+            )
 
         component = component_type()
         component._prepare_blueprint(self._blueprint)
@@ -98,7 +103,9 @@ class Configurator(object):
         created after it was replaced.
         """
         if not issubclass(new_component_type, ConfigurationComponent):
-            raise ValueError('Configuration component must inherit ConfigurationComponent')
+            raise ValueError(
+                "Configuration component must inherit ConfigurationComponent"
+            )
 
         component = new_component_type()
         component._prepare_blueprint(self._blueprint)
@@ -124,7 +131,7 @@ class Configurator(object):
 
         # Let track of the configurator that generated the configuration
         # into the configuration itself.
-        conf['tg.configurator'] = weakref.ref(self)
+        conf["tg.configurator"] = weakref.ref(self)
 
         # Convert the loaded options according to the coercion functions
         # registered by each configuration component.
@@ -133,7 +140,7 @@ class Configurator(object):
         for _, component in self._components:
             component._apply(BeforeConfigConfigurationAction, conf)
 
-        log.debug("Initializing configuration, package: '%s'", conf.get('package_name'))
+        log.debug("Initializing configuration, package: '%s'", conf.get("package_name"))
         return conf
 
     def setup(self, conf):
@@ -158,10 +165,13 @@ class ConfigurationComponent(object):
 
     .. versionadded:: 2.4
     """
+
     def __init__(self):
-        if not hasattr(self, 'id'):
-            raise ValueError('ConfigurationComponent must provide an id class attribute '
-                             'to uniquely identify the component.')
+        if not hasattr(self, "id"):
+            raise ValueError(
+                "ConfigurationComponent must provide an id class attribute "
+                "to uniquely identify the component."
+            )
 
         self._actions = {}
         for action in self.get_actions():
@@ -216,17 +226,17 @@ class ConfigurationComponent(object):
 
     def _prepare_blueprint(self, blueprint):
         defaults = self.get_defaults()
-        for k,v in defaults.items():
+        for k, v in defaults.items():
             blueprint.setdefault(k, v)
 
     def _prepare_coercion(self, coercion):
         defaults = self.get_coercion()
-        for k,v in defaults.items():
+        for k, v in defaults.items():
             coercion.setdefault(k, v)
 
     def _apply(self, action_type, conf, app=None):
         for action in self._actions.get(action_type.__name__, []):
-            log.debug('%s applying %s', self.__class__.__name__, action)
+            log.debug("%s applying %s", self.__class__.__name__, action)
             app = action(conf, app)
         return app
 
@@ -241,11 +251,12 @@ class _ConfigurationAction(object):
 
     .. versionadded:: 2.4
     """
+
     def __init__(self, perform=None):
         self.perform = perform
 
     def __repr__(self):
-        return '<%s: %r>' % (self.__class__.__name__, self.perform)
+        return "<%s: %r>" % (self.__class__.__name__, self.perform)
 
     def __call__(self, conf, app):
         return self.perform(conf, app)
@@ -253,16 +264,19 @@ class _ConfigurationAction(object):
 
 class BeforeConfigConfigurationAction(_ConfigurationAction):
     """An action to be executed before the app configuration is initialised."""
+
     pass
 
 
 class ConfigReadyConfigurationAction(_ConfigurationAction):
     """An action to be executed once the configuration is loaded and ready."""
+
     pass
 
 
 class EnvironmentLoadedConfigurationAction(_ConfigurationAction):
     """An action to be executed once the environment needed to create the app is ready."""
+
     pass
 
 
@@ -272,4 +286,5 @@ class AppReadyConfigurationAction(_ConfigurationAction):
     It's typically the best time where to wrap WSGI middlewares
     around the application.
     """
+
     pass

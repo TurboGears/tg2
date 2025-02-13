@@ -29,40 +29,42 @@ class AppGlobalsConfigurationComponent(ConfigurationComponent):
       application global object instead of getting it from the application package.
 
     """
-    id = 'app_globals'
+
+    id = "app_globals"
 
     def get_defaults(self):
         return {
-            'app_globals': None,
+            "app_globals": None,
         }
 
     def get_actions(self):
-        return (
-            ConfigReadyConfigurationAction(self._setup_app_globals),
-        )
+        return (ConfigReadyConfigurationAction(self._setup_app_globals),)
 
     def _setup_app_globals(self, conf, app):
         # Setup AppGlobals
-        gclass = conf.pop('app_globals', None)
+        gclass = conf.pop("app_globals", None)
         if gclass is None:
             try:
-                gclass = conf['package'].lib.app_globals.Globals
+                gclass = conf["package"].lib.app_globals.Globals
             except AttributeError:
                 pass
 
         if gclass is None:
             try:
-                app_globals_mod = import_module('.lib.app_globals',
-                                                package=conf['package'].__name__)
-                gclass = getattr(app_globals_mod, 'Globals')
+                app_globals_mod = import_module(
+                    ".lib.app_globals", package=conf["package"].__name__
+                )
+                gclass = getattr(app_globals_mod, "Globals")
             except (ImportError, AttributeError):
                 pass
 
         if gclass is None:
-            log.warning('app_globals not provided and lib.app_globals.Globals is not available.')
+            log.warning(
+                "app_globals not provided and lib.app_globals.Globals is not available."
+            )
             gclass = Bunch
 
         g = gclass()
 
         g.dotted_filename_finder = DottedFileNameFinder()
-        conf['tg.app_globals'] = g
+        conf["tg.app_globals"] = g

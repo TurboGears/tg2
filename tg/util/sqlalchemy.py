@@ -10,6 +10,7 @@ except ImportError:  # pragma: no cover
 
 try:  # sa>=1.4
     from sqlalchemy.engine import Row
+
     try:
         from sqlalchemy.engine import LegacyRow as RowProxy
     except ImportError:  # pragma: no cover
@@ -24,7 +25,7 @@ except ImportError:  # pragma: no cover
 
 def is_saobject(obj):
     """Checks if the provided object is a SQLAlchemy model instance"""
-    return sqlalchemy is not None and hasattr(obj, '_sa_class_manager')
+    return sqlalchemy is not None and hasattr(obj, "_sa_class_manager")
 
 
 def is_query_result(values):
@@ -33,21 +34,25 @@ def is_query_result(values):
 
 def is_query_row(obj):
     return (
-        RowProxy is not None and isinstance(obj, RowProxy)
-        or Row is not None and isinstance(obj, Row)
+        RowProxy is not None
+        and isinstance(obj, RowProxy)
+        or Row is not None
+        and isinstance(obj, Row)
     )
 
 
 def dictify(obj):
     """Converts a SQLAlchemy model instance to a dictionary"""
     if sqlalchemy is None:  # pragma: no cover
-        raise RuntimeError('SQLAlchemy not available')
+        raise RuntimeError("SQLAlchemy not available")
 
     if sqlalchemy.inspect(obj).detached:
-        raise ValueError("SQLAlchemy instance '%r' must be attached to a session." % obj)
+        raise ValueError(
+            "SQLAlchemy instance '%r' must be attached to a session." % obj
+        )
 
     props = {}
     for key in obj.__dict__:
-        if not key.startswith('_sa_'):
+        if not key.startswith("_sa_"):
             props[key] = getattr(obj, key)
     return props

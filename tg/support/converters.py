@@ -9,9 +9,9 @@ from string import Template
 def asbool(obj):
     if isinstance(obj, str):
         obj = obj.strip().lower()
-        if obj in ['true', 'yes', 'on', 'y', 't', '1']:
+        if obj in ["true", "yes", "on", "y", "t", "1"]:
             return True
-        elif obj in ['false', 'no', 'off', 'n', 'f', '0']:
+        elif obj in ["false", "no", "off", "n", "f", "0"]:
             return False
         else:
             raise ValueError("String is not true/false: %r" % obj)
@@ -44,7 +44,7 @@ def astemplate(obj):
         return obj
 
     if not isinstance(obj, str):
-        raise ValueError('Templates must be strings')
+        raise ValueError("Templates must be strings")
 
     return Template(obj)
 
@@ -54,6 +54,6 @@ def aslogger(val):
         return val
 
     if not isinstance(val, str):
-        raise ValueError('Logger names must be strings')
+        raise ValueError("Logger names must be strings")
 
     return logging.getLogger(val)

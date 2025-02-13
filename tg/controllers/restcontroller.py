@@ -75,12 +75,12 @@ class RestController(DecoratedController, CoreDispatcher, RestDispatcher):
     def options(self, *args, **kw):
         """The OPTIONS http verb is automatically sent by the browser when doing cross origin requests.
 
-        This default method was added to prevent receiving 404 HTTP Not found error. 
-        It returns None which translates to 204 No Content for HTTP. 
+        This default method was added to prevent receiving 404 HTTP Not found error.
+        It returns None which translates to 204 No Content for HTTP.
         You can use the _before hook to set up your CORS headers.
-        
+
         """
         return None
-        
 
-__all__ = ['RestController']
+
+__all__ = ["RestController"]

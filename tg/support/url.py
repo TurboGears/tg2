@@ -2,7 +2,7 @@ from ..request_local import request as tg_request
 from ..util.urls import build_url
 
 
-def url(base_url='/', params=None, qualified=False, scheme=None):
+def url(base_url="/", params=None, qualified=False, scheme=None):
     """Generate an absolute URL that's specific to this application.
 
     The URL function takes a string (base_url) and, appends the
@@ -13,15 +13,15 @@ def url(base_url='/', params=None, qualified=False, scheme=None):
     create an url with the given scheme.
 
     """
-    if not isinstance(base_url, str) and hasattr(base_url, '__iter__'):
-        base_url = '/'.join(base_url)
+    if not isinstance(base_url, str) and hasattr(base_url, "__iter__"):
+        base_url = "/".join(base_url)
 
     req = tg_request._current_obj()
     base_url = build_url(req.environ, base_url, params)
     if qualified:
         base_url = req.host_url + base_url
         if scheme is not None:
-            base_url = scheme + base_url[len(req.scheme):]
+            base_url = scheme + base_url[len(req.scheme) :]
 
     return base_url
 

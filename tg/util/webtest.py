@@ -25,9 +25,10 @@ def test_context(app, url=None, environ=None):
     if app is None:
         app = _BareTGAppMaker().make()
 
-    url = url or '/'
+    url = url or "/"
 
     from webob.request import environ_from_url
+
     wsgienviron = environ_from_url(url)
     wsgienviron.update(environ or {})
 
@@ -36,11 +37,13 @@ def test_context(app, url=None, environ=None):
     else:
         return _WebTestTGTestContextManager(app, wsgienviron)
 
+
 test_context.__test__ = False  # Prevent nose from detecting this as a test.
 
 
 class _BareTGAppMaker(object):
     """Makes a new TGApp and returns it without any surrounding middleware."""
+
     def __init__(self):
         self.app = None
 
@@ -50,22 +53,24 @@ class _BareTGAppMaker(object):
 
     def make(self):
         from ..configurator import MinimalApplicationConfigurator
+
         configurator = MinimalApplicationConfigurator()
-        configurator.update_blueprint({
-            'root_controller': lambda *args: Response('HELLO')
-        })
+        configurator.update_blueprint(
+            {"root_controller": lambda *args: Response("HELLO")}
+        )
         configurator.make_wsgi_app(wrap_app=self.set_app)
         return self.app
 
 
 class _TGTestContextManager(object):
     """Provides a context manager to setup thread local context for a TGApp"""
+
     def __init__(self, app, environ):
         self._app = app
         self._environ = environ
         self._registry = Registry()
         self._registry.prepare()
-        self._environ['paste.registry'] = self._registry
+        self._environ["paste.registry"] = self._registry
 
     def __enter__(self):
         self._app._setup_app_env(self._environ)
@@ -77,12 +82,13 @@ class _TGTestContextManager(object):
 
 class _WebTestTGTestContextManager(object):
     """Provides a context manager to setup thread local context for a WebTest TG app."""
+
     def __init__(self, app, environ):
         self._app = app
         self._environ = environ
 
     def __enter__(self):
-        self._app.get('/_test_vars')
+        self._app.get("/_test_vars")
         request.environ.update(self._environ)
         return self._app
 

@@ -27,22 +27,16 @@ class DebuggerConfigurationComponent(ConfigurationComponent):
     id = "debugger"
 
     def get_defaults(self):
-        return {
-            'debug': False
-        }
+        return {"debug": False}
 
     def get_coercion(self):
-        return {
-            'debug': asbool
-        }
+        return {"debug": asbool}
 
     def get_actions(self):
-        return (
-            AppReadyConfigurationAction(self._add_middleware),
-        )
+        return (AppReadyConfigurationAction(self._add_middleware),)
 
     def _add_middleware(self, conf, app):
-        if asbool(conf.get('debug')):
+        if asbool(conf.get("debug")):
             try:
                 import backlash
             except ImportError:  # pragma: no cover
@@ -55,5 +49,5 @@ class DebuggerConfigurationComponent(ConfigurationComponent):
 
 
 def _turbogears_backlash_context(environ):
-    tgl = environ.get('tg.locals')
-    return {'request': getattr(tgl, 'request', None)}
+    tgl = environ.get("tg.locals")
+    return {"request": getattr(tgl, "request", None)}

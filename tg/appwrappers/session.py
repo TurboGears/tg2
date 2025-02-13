@@ -25,32 +25,39 @@ class SessionApplicationWrapper(ApplicationWrapper):
           https://beaker.readthedocs.org/en/latest/configuration.html#session-options
 
     """
+
     def __init__(self, handler, config):
         super(SessionApplicationWrapper, self).__init__(handler, config)
 
         if SessionObject is None:  # pragma: no cover
-            log.debug('Beaker not available, session disabled')
+            log.debug("Beaker not available, session disabled")
             self.enabled = False
             return
 
         # Load up the default params
-        self.options = dict(invalidate_corrupt=True, type=None,
-                            data_dir=None, key='beaker.session.id',
-                            timeout=None, secret=None, log_file=None)
+        self.options = dict(
+            invalidate_corrupt=True,
+            type=None,
+            data_dir=None,
+            key="beaker.session.id",
+            timeout=None,
+            secret=None,
+            log_file=None,
+        )
 
         # Pull out any config args meant for beaker session. if there are any
         for key, val in config.items():
-            if key.startswith('session.'):
+            if key.startswith("session."):
                 self.options[key[8:]] = val
 
         # Coerce and validate session params
         from beaker.util import coerce_session_params
+
         coerce_session_params(self.options)
 
-        self.enabled = asbool(self.options.pop('enabled', True))
+        self.enabled = asbool(self.options.pop("enabled", True))
 
-        log.debug('Sessions enabled: %s -> %s',
-                  self.enabled, self.options)
+        log.debug("Sessions enabled: %s -> %s", self.enabled, self.options)
 
     @property
     def injected(self):
@@ -58,21 +65,21 @@ class SessionApplicationWrapper(ApplicationWrapper):
 
     def __call__(self, controller, environ, context):
         context.session = session = SessionObject(environ, **self.options)
-        environ['beaker.session'] = session
-        environ['beaker.get_session'] = self._get_session
+        environ["beaker.session"] = session
+        environ["beaker.get_session"] = self._get_session
 
-        if 'paste.testing_variables' in environ:
-            environ['paste.testing_variables']['session'] = session
+        if "paste.testing_variables" in environ:
+            environ["paste.testing_variables"]["session"] = session
 
         response = self.next_handler(controller, environ, context)
 
         if session.accessed():
             session.persist()
-            session_headers = session.__dict__['_headers']
-            if session_headers['set_cookie']:
-                cookie = session_headers['cookie_out']
+            session_headers = session.__dict__["_headers"]
+            if session_headers["set_cookie"]:
+                cookie = session_headers["cookie_out"]
                 if cookie:
-                    response.headers.extend((('Set-cookie', cookie),))
+                    response.headers.extend((("Set-cookie", cookie),))
 
         return response
 

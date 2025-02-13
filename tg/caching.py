@@ -27,6 +27,7 @@ class cached_property(object):
             my_property.context = Lock()
 
     """
+
     def __init__(self, func):
         self.__name__ = func.__name__
         self.__module__ = func.__module__
@@ -49,10 +50,19 @@ class cached_property(object):
             return self._get_value(obj)
 
 
-def _cached_call(func, args, kwargs, namespace, cache_key,
-                 expire="never", type=None, starttime=None,
-                 cache_headers=('content-type', 'content-length'),
-                 cache_response=True, cache_extra_args=None):
+def _cached_call(
+    func,
+    args,
+    kwargs,
+    namespace,
+    cache_key,
+    expire="never",
+    type=None,
+    starttime=None,
+    cache_headers=("content-type", "content-length"),
+    cache_response=True,
+    cache_extra_args=None,
+):
     """
     Optional arguments:
 
@@ -91,7 +101,7 @@ def _cached_call(func, args, kwargs, namespace, cache_key,
     disabled globally.
     """
 
-    tg_locals = tg.request.environ['tg.locals']
+    tg_locals = tg.request.environ["tg.locals"]
     enabled = asbool(tg_locals.config.get("cache.enabled", True))
 
     if not enabled:
@@ -100,11 +110,11 @@ def _cached_call(func, args, kwargs, namespace, cache_key,
     cache_extra_args = cache_extra_args or {}
 
     if type:
-        cache_extra_args['type'] = type
+        cache_extra_args["type"] = type
 
-    cache_obj = getattr(tg_locals, 'cache', None)
+    cache_obj = getattr(tg_locals, "cache", None)
     if not cache_obj:  # pragma: no cover
-        raise Exception('TurboGears Cache object not found, ensure cache.enabled=True')
+        raise Exception("TurboGears Cache object not found, ensure cache.enabled=True")
 
     my_cache = cache_obj.get_cache(namespace, **cache_extra_args)
 
@@ -118,21 +128,24 @@ def _cached_call(func, args, kwargs, namespace, cache_key,
         glob_response = tg_locals.response
         headers = glob_response.headerlist
         status = glob_response.status
-        full_response = dict(headers=headers, status=status,
-                             cookies=None, content=result)
+        full_response = dict(
+            headers=headers, status=status, cookies=None, content=result
+        )
         return full_response
 
-    response = my_cache.get_value(cache_key,
-                                  createfunc=create_func,
-                                  expiretime=cache_expire,
-                                  starttime=starttime)
+    response = my_cache.get_value(
+        cache_key, createfunc=create_func, expiretime=cache_expire, starttime=starttime
+    )
     if cache_response:
         glob_response = tg_locals.response
-        glob_response.headerlist = [header for header in response['headers']
-                                    if header[0].lower() in cache_headers]
-        glob_response.status = response['status']
+        glob_response.headerlist = [
+            header
+            for header in response["headers"]
+            if header[0].lower() in cache_headers
+        ]
+        glob_response.status = response["status"]
 
-    return response['content']
+    return response["content"]
 
 
 def create_cache_key(func, key_dict=None, self=None):
@@ -154,13 +167,12 @@ def create_cache_key(func, key_dict=None, self=None):
     else:
         cache_key = func.__name__
     if key_dict:
-        cache_key += " " + " ".join("%s=%s" % (k, v)
-                                    for k, v in key_dict.items())
+        cache_key += " " + " ".join("%s=%s" % (k, v) for k, v in key_dict.items())
 
     if not kls and self:
-        kls = getattr(self, '__class__', None)
+        kls = getattr(self, "__class__", None)
 
     if kls:
-        return '%s.%s' % (kls.__module__, kls.__name__), cache_key
+        return "%s.%s" % (kls.__module__, kls.__name__), cache_key
     else:
         return func.__module__, cache_key

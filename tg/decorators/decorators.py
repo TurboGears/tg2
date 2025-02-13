@@ -8,6 +8,7 @@ the functions they wrap, and then the DecoratedController provides the hooks
 needed to support these decorators.
 
 """
+
 import copy
 import logging
 import time
@@ -41,9 +42,9 @@ class _hook_decorator(object):
     hook_name = None
 
     def __init__(self, hook_func):
-        if hasattr(hook_func, '__name__'):
+        if hasattr(hook_func, "__name__"):
             self.__name__ = hook_func.__name__
-        if hasattr(hook_func, '__doc__'):
+        if hasattr(hook_func, "__doc__"):
             self.__doc__ = hook_func.__doc__
         self.hook_func = hook_func
 
@@ -56,19 +57,19 @@ class _hook_decorator(object):
 class before_validate(_hook_decorator):
     """A list of callables to be run before validation is performed."""
 
-    hook_name = 'before_validate'
+    hook_name = "before_validate"
 
 
 class before_call(_hook_decorator):
     """A list of callables to be run before the controller method is called."""
 
-    hook_name = 'before_call'
+    hook_name = "before_call"
 
 
 class before_render(_hook_decorator):
     """A list of callables to be run before the template is rendered."""
 
-    hook_name = 'before_render'
+    hook_name = "before_render"
 
 
 class after_render(_hook_decorator):
@@ -78,7 +79,7 @@ class after_render(_hook_decorator):
 
     """
 
-    hook_name = 'after_render'
+    hook_name = "after_render"
 
 
 class expose(object):
@@ -157,9 +158,15 @@ class expose(object):
 
     """
 
-    def __init__(self, template='', content_type=None, exclude_names=None,
-                 custom_format=None, render_params=None, inherit=False):
-
+    def __init__(
+        self,
+        template="",
+        content_type=None,
+        exclude_names=None,
+        custom_format=None,
+        render_params=None,
+        inherit=False,
+    ):
         self.engine = None
         self.template = template
         self.content_type = content_type
@@ -192,24 +199,24 @@ class expose(object):
         if exclude_names is None:
             exclude_names = []
 
-        if template in config.get('renderers', []):
-            engine, template = template, ''
-        elif ':' in template:
-            engine, template = template.split(':', 1)
+        if template in config.get("renderers", []):
+            engine, template = template, ""
+        elif ":" in template:
+            engine, template = template.split(":", 1)
         elif template:
             # Use the default templating engine from the config
-            engine = config.get('default_renderer')
+            engine = config.get("default_renderer")
         else:
             engine, template = None, None
 
         if content_type is None:
-            all_engines_options = config.get('rendering_engines_options', {})
+            all_engines_options = config.get("rendering_engines_options", {})
             engine_options = all_engines_options.get(engine, {})
-            content_type = engine_options.get('content_type', 'text/html')
+            content_type = engine_options.get("content_type", "text/html")
 
-        engines_without_vars = config.get('rendering_engines_without_vars', [])
-        if engine in engines_without_vars and 'tmpl_context' not in exclude_names:
-            exclude_names.append('tmpl_context')
+        engines_without_vars = config.get("rendering_engines_without_vars", [])
+        if engine in engines_without_vars and "tmpl_context" not in exclude_names:
+            exclude_names.append("tmpl_context")
 
         self.engine = engine
         self.template = template
@@ -224,7 +231,7 @@ class expose(object):
     def _apply(self):
         """Applies an exposition for real"""
         if self._func is None:
-            log.error('Applying an exposition with no decorated function!')
+            log.error("Applying an exposition with no decorated function!")
             return
 
         self._resolve_options()
@@ -237,12 +244,21 @@ class expose(object):
 
         if self.custom_format:
             deco.register_custom_template_engine(
-                self.custom_format, self.content_type, self.engine,
-                self.template, self.exclude_names, self.render_params)
+                self.custom_format,
+                self.content_type,
+                self.engine,
+                self.template,
+                self.exclude_names,
+                self.render_params,
+            )
         else:
             deco.register_template_engine(
-                self.content_type, self.engine,
-                self.template, self.exclude_names, self.render_params)
+                self.content_type,
+                self.engine,
+                self.template,
+                self.exclude_names,
+                self.render_params,
+            )
 
 
 def use_custom_format(controller, custom_format):
@@ -287,13 +303,15 @@ def override_template(view, template):
         return
 
     for content_type, content_engine in engines.items():
-        tmpl = template.split(':', 1)
+        tmpl = template.split(":", 1)
         tmpl.extend(content_engine[2:])
         try:
             override_mapping = request._override_mapping
         except AttributeError:
             override_mapping = request._override_mapping = {}
-        override_mapping.setdefault(default_im_func(view), {}).update({content_type: tmpl})
+        override_mapping.setdefault(default_im_func(view), {}).update(
+            {content_type: tmpl}
+        )
 
 
 class validate(_ValidationIntent):
@@ -314,8 +332,13 @@ class validate(_ValidationIntent):
     a FormEncode schema validator, or a callable which acts like a FormEncode
     validator.
     """
-    def __init__(self, validators=None, error_handler=None, form=None, chain_validation=False):
-        super(validate, self).__init__(validators or form, error_handler, chain_validation)
+
+    def __init__(
+        self, validators=None, error_handler=None, form=None, chain_validation=False
+    ):
+        super(validate, self).__init__(
+            validators or form, error_handler, chain_validation
+        )
 
     def __call__(self, func):
         deco = Decoration.get_decoration(func)
@@ -328,23 +351,23 @@ class decode_params(object):
 
     By default the arguments are parsed in **JSON** format (which is
     currently the only supported format).
-    
+
     This should be used like:
         Image you are posting a payload of type ``application/json`` like:
-        
+
         .. code-block:: javascript
-        
+
             {
                 "ticketlist_id": 2,
                 "typology": "Xmas Discount",
                 "quantity": 3,
                 "price": 4.75
             }
-        
+
         Your controller's method will be something like
-        
+
         .. code-block:: python
-        
+
             @expose('json')
             @decode_params(format='json')
             def create(
@@ -355,26 +378,27 @@ class decode_params(object):
                 print('*' * 60)
                 print('ticket', typology, quantity, price, ticketlist_id)
                 ...do stuff...
-                return dict(ticket=something)       
+                return dict(ticket=something)
     """
-    def __init__(self, format='json'):
-        if format not in ('json', ):
-            raise ValueError('Currently only JSON format is supported')
+
+    def __init__(self, format="json"):
+        if format not in ("json",):
+            raise ValueError("Currently only JSON format is supported")
 
         self._format = format
 
     def run_hook(self, remainder, params):
-        if self._format == 'json' and request.content_type == 'application/json':
+        if self._format == "json" and request.content_type == "application/json":
             try:
                 params.update(request.json_body)
             except ValueError:
                 # Invalid JSON provided, nothing to decode
-                log.debug('Invalid JSON provided to decode_params')
+                log.debug("Invalid JSON provided to decode_params")
                 pass
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration._register_hook('before_validate', self.run_hook)
+        decoration._register_hook("before_validate", self.run_hook)
         return func
 
 
@@ -420,19 +444,18 @@ class paginate(object):
 
     """
 
-    def __init__(self, name, use_prefix=False,
-        items_per_page=10, max_items_per_page=0):
+    def __init__(self, name, use_prefix=False, items_per_page=10, max_items_per_page=0):
         self.name = name
-        prefix = use_prefix and name + '_' or ''
-        self.page_param = prefix + 'page'
-        self.items_per_page_param = prefix + 'items_per_page'
+        prefix = use_prefix and name + "_" or ""
+        self.page_param = prefix + "page"
+        self.items_per_page_param = prefix + "items_per_page"
         self.items_per_page = items_per_page
         self.max_items_per_page = max_items_per_page
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration._register_hook('before_validate', self.before_validate)
-        decoration._register_hook('before_render', self.before_render)
+        decoration._register_hook("before_validate", self.before_validate)
+        decoration._register_hook("before_render", self.before_render)
         return func
 
     def before_validate(self, remainder, params):
@@ -450,17 +473,16 @@ class paginate(object):
         try:
             paginators_data = request.paginators
         except Exception:
-            paginators_data = request.paginators = {'_tg_paginators_params':{}}
+            paginators_data = request.paginators = {"_tg_paginators_params": {}}
 
-        paginators_data['_tg_paginators_params'][self.page_param] = page_param
+        paginators_data["_tg_paginators_params"][self.page_param] = page_param
         paginators_data[self.name] = paginator = Bunch()
 
         paginator.paginate_page = page or 1
         items_per_page = params.pop(self.items_per_page_param, None)
         if items_per_page:
             try:
-                items_per_page = min(
-                    int(items_per_page), self.max_items_per_page)
+                items_per_page = min(int(items_per_page), self.max_items_per_page)
                 if items_per_page < 1:
                     raise ValueError
             except ValueError:
@@ -469,7 +491,7 @@ class paginate(object):
             items_per_page = self.items_per_page
         paginator.paginate_items_per_page = items_per_page
         paginator.paginate_params = params.copy()
-        paginator.paginate_params.update(paginators_data['_tg_paginators_params'])
+        paginator.paginate_params.update(paginators_data["_tg_paginators_params"])
         if items_per_page != self.items_per_page:
             paginator.paginate_params[self.items_per_page_param] = items_per_page
 
@@ -479,22 +501,25 @@ class paginate(object):
 
         paginator = request.paginators[self.name]
         collection = output[self.name]
-        page = Page(collection, paginator.paginate_page, paginator.paginate_items_per_page)
+        page = Page(
+            collection, paginator.paginate_page, paginator.paginate_items_per_page
+        )
         page.kwargs = paginator.paginate_params
-        if self.page_param != 'name':
+        if self.page_param != "name":
             page.pager = partial(page.pager, page_param=self.page_param)
-        if not getattr(tmpl_context, 'paginators', None):
+        if not getattr(tmpl_context, "paginators", None):
             tmpl_context.paginators = Bunch()
         tmpl_context.paginators[self.name] = output[self.name] = page
+
 
 @before_validate
 def https(remainder, params):
     """Ensure that the decorated method is always called with https."""
-    if request.scheme.lower() == 'https': 
+    if request.scheme.lower() == "https":
         return
-    if request.method.upper() == 'GET':
-        redirect('https' + request.url[len(request.scheme):])
-    raise HTTPMethodNotAllowed(headers=dict(Allow='GET'))
+    if request.method.upper() == "GET":
+        redirect("https" + request.url[len(request.scheme) :])
+    raise HTTPMethodNotAllowed(headers=dict(Allow="GET"))
 
 
 @before_validate
@@ -519,7 +544,12 @@ def without_trailing_slash(remainder, params):
 
     """
     req = request._current_obj()
-    if req.method == 'GET' and req.path.endswith('/') and not(req._response_type) and len(req.params)==0:
+    if (
+        req.method == "GET"
+        and req.path.endswith("/")
+        and not (req._response_type)
+        and len(req.params) == 0
+    ):
         redirect(request.url[:-1], redirect_with=HTTPMovedPermanently)
 
 
@@ -545,8 +575,13 @@ def with_trailing_slash(remainder, params):
 
     """
     req = request._current_obj()
-    if (req.method == 'GET' and not(req.path.endswith('/')) and not(req._response_type) and len(req.params)==0):
-        redirect(request.url+'/', redirect_with=HTTPMovedPermanently)
+    if (
+        req.method == "GET"
+        and not (req.path.endswith("/"))
+        and not (req._response_type)
+        and len(req.params) == 0
+    ):
+        redirect(request.url + "/", redirect_with=HTTPMovedPermanently)
 
 
 class require(object):
@@ -573,12 +608,13 @@ class require(object):
     Use ``allow_only`` property of ``TGController`` for controller-wide authorization.
 
     """
+
     def __init__(self, predicate, denial_handler=None, smart_denial=False):
         self.predicate = predicate
         self.denial_handler = denial_handler or self.default_denial_handler
 
         if smart_denial is True:
-            smart_denial = ('application/json', 'text/xml')
+            smart_denial = ("application/json", "text/xml")
         self.smart_denial = smart_denial
 
     def __call__(self, func):
@@ -593,7 +629,7 @@ class require(object):
             self.predicate.check_authorization(req.environ)
         except NotAuthorizedError as e:
             reason = str(e)
-            if req.environ.get('repoze.who.identity'):
+            if req.environ.get("repoze.who.identity"):
                 # The user is authenticated.
                 code = 403
             else:
@@ -611,12 +647,12 @@ class require(object):
             if response_type in self.smart_denial:
                 # It's an API response, use a pass-through abort
                 passthrough_abort = True
-                if response_type == 'application/json':
-                    passthrough_abort = 'json'
+                if response_type == "application/json":
+                    passthrough_abort = "json"
 
         if passthrough_abort is False:
             # Plain HTML page
-            status = 'warning' if response.status_int == 401 else 'error'
+            status = "warning" if response.status_int == 401 else "error"
             flash(reason, status=status)
 
         abort(response.status_int, reason, passthrough=passthrough_abort)
@@ -643,7 +679,7 @@ class with_engine(object):
         if master_params is None:
             master_params = {}
 
-        if not hasattr(master_params, 'keys'):
+        if not hasattr(master_params, "keys"):
             master_params = dict((p, True) for p in master_params)
 
         self.master_params = master_params
@@ -658,12 +694,12 @@ class with_engine(object):
                     v = params.get(p)
 
                 if v:
-                    force_request_engine('master')
+                    force_request_engine("master")
                     break
 
     def __call__(self, func):
         decoration = Decoration.get_decoration(func)
-        decoration._register_hook('before_validate', self.before_validate)
+        decoration._register_hook("before_validate", self.before_validate)
         return func
 
 
@@ -706,11 +742,18 @@ class cached(object):
             When cache_response is set to False, the cache_headers
             argument is ignored as none of the response is cached.
     """
-    def __init__(self, key=NoDefault, expire="never", type=None,
-                 query_args=None,  # Backward compatibility, actually ignored
-                 cache_headers=('content-type', 'content-length'),
-                 invalidate_on_startup=False, cache_response=True,
-                 **b_kwargs):
+
+    def __init__(
+        self,
+        key=NoDefault,
+        expire="never",
+        type=None,
+        query_args=None,  # Backward compatibility, actually ignored
+        cache_headers=("content-type", "content-length"),
+        invalidate_on_startup=False,
+        cache_response=True,
+        **b_kwargs,
+    ):
         self.key = key
         self.expire = expire
         self.type = type
@@ -740,16 +783,24 @@ class cached(object):
                 else:
                     key_dict = {}
 
-                namespace, cache_key = create_cache_key(func, key_dict, req.dispatch_state.controller)
-                req._fast_setattr('caching', Bunch(namespace=namespace,
-                                                   key=cache_key))
+                namespace, cache_key = create_cache_key(
+                    func, key_dict, req.dispatch_state.controller
+                )
+                req._fast_setattr("caching", Bunch(namespace=namespace, key=cache_key))
 
-                return _cached_call(next_caller, (tg_config, controller, remainder, params), {},
-                                    namespace, cache_key,
-                                    expire=self.expire, type=self.type,
-                                    starttime=starttime, cache_headers=self.cache_headers,
-                                    cache_response=self.cache_response,
-                                    cache_extra_args=self.beaker_options)
+                return _cached_call(
+                    next_caller,
+                    (tg_config, controller, remainder, params),
+                    {},
+                    namespace,
+                    cache_key,
+                    expire=self.expire,
+                    type=self.type,
+                    starttime=starttime,
+                    cache_headers=self.cache_headers,
+                    cache_response=self.cache_response,
+                    cache_extra_args=self.beaker_options,
+                )
 
             return cached_call_controller
 

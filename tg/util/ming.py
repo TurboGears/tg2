@@ -19,7 +19,7 @@ def is_objectid(value):
 
 def is_mingobject(obj):
     """Checks if the provided object is a Ming model instance"""
-    return ming is not None and hasattr(obj, '__ming__')
+    return ming is not None and hasattr(obj, "__ming__")
 
 
 def dictify(obj):
@@ -27,8 +27,11 @@ def dictify(obj):
     if ming is None:  # pragma: no cover
         raise RuntimeError("Ming is not available")
 
-    prop_names = [prop.name for prop in ming.odm.mapper(obj).properties
-                  if isinstance(prop, ming.odm.property.FieldProperty)]
+    prop_names = [
+        prop.name
+        for prop in ming.odm.mapper(obj).properties
+        if isinstance(prop, ming.odm.property.FieldProperty)
+    ]
     props = {}
     for key in prop_names:
         props[key] = getattr(obj, key)

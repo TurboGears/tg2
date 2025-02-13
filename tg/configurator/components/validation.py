@@ -1,5 +1,4 @@
-
-__all__ = ('ValidationConfigurationComponent', )
+__all__ = ("ValidationConfigurationComponent",)
 from ..base import BeforeConfigConfigurationAction, ConfigurationComponent
 
 
@@ -19,36 +18,38 @@ class ValidationConfigurationComponent(ConfigurationComponent):
           ``validation.exceptions``.
 
     """
-    id = 'validation'
+
+    id = "validation"
 
     def get_defaults(self):
         return {
-            'validation.exceptions': [],
-            'validation.explode': {},
-            'validation.validators': {}
-
+            "validation.exceptions": [],
+            "validation.explode": {},
+            "validation.validators": {},
         }
 
     def get_actions(self):
         return (
             BeforeConfigConfigurationAction(self._configure_validation),
-            BeforeConfigConfigurationAction(self._configure_explode)
+            BeforeConfigConfigurationAction(self._configure_explode),
         )
 
     def _configure_validation(self, conf, app):
-        validation_exceptions = conf['validation.exceptions']
+        validation_exceptions = conf["validation.exceptions"]
 
         from tg.validation import TGValidationError
+
         if TGValidationError not in validation_exceptions:
             validation_exceptions.append(TGValidationError)
 
     def _configure_explode(self, conf, app):
-        validation_explode = conf['validation.explode']
+        validation_explode = conf["validation.explode"]
 
         from tg.validation import TGValidationError
+
         if TGValidationError not in validation_explode:
             validation_explode[TGValidationError] = _explode_tgvalidationerror
 
 
 def _explode_tgvalidationerror(exception):
-    return {'errors': exception.error_dict, 'values': exception.value}
+    return {"errors": exception.error_dict, "values": exception.value}

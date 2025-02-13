@@ -4,6 +4,7 @@ New TurboGears2 identification, authentication and authorization setup.
 This aims to provide an easier way to setup auth layer in TurboGears2
 and removes the dependency from repoze.what.
 """
+
 import logging
 import re
 import sys
@@ -21,6 +22,7 @@ from ...util.bunch import get_partial_dict
 
 log = logging.getLogger(__name__)
 
+
 @implementer(IIdentifier, IAuthenticator, IChallenger)
 class _AuthenticationForgerPlugin(object):
     """
@@ -32,39 +34,41 @@ class _AuthenticationForgerPlugin(object):
     Has been made internal part of TG to make
     possible to switch to repoze.who v2
     """
-    _HTTP_STATUS_PATTERN = re.compile(r'^(?P<code>[0-9]{3}) (?P<reason>.*)$')
 
-    def __init__(self, fake_user_key='REMOTE_USER',
-                 remote_user_key='repoze.who.testutil.userid'):
+    _HTTP_STATUS_PATTERN = re.compile(r"^(?P<code>[0-9]{3}) (?P<reason>.*)$")
+
+    def __init__(
+        self, fake_user_key="REMOTE_USER", remote_user_key="repoze.who.testutil.userid"
+    ):
         self.fake_user_key = fake_user_key
         self.remote_user_key = remote_user_key
 
     def identify(self, environ):
         if self.fake_user_key in environ:
-            identity = {'fake-userid': environ[self.fake_user_key]}
+            identity = {"fake-userid": environ[self.fake_user_key]}
             return identity
 
-    def remember(self, environ, identity): #pragma: no cover
+    def remember(self, environ, identity):  # pragma: no cover
         pass
 
-    def forget(self, environ, identity): #pragma: no cover
+    def forget(self, environ, identity):  # pragma: no cover
         pass
 
     def authenticate(self, environ, identity):
-        if 'fake-userid' in identity:
-            environ[self.remote_user_key] = identity.pop('fake-userid')
+        if "fake-userid" in identity:
+            environ[self.remote_user_key] = identity.pop("fake-userid")
             return environ[self.remote_user_key]
 
     def challenge(self, environ, status, app_headers, forget_headers):
         """Return a 401 page unconditionally."""
         headers = app_headers + forget_headers
-        #remove content-length header
-        headers = filter(lambda h:h[0].lower() != 'content-length', headers)
+        # remove content-length header
+        headers = filter(lambda h: h[0].lower() != "content-length", headers)
 
         # The HTTP status code and reason may not be the default ones:
         status_parts = self._HTTP_STATUS_PATTERN.search(status)
-        reason = status_parts.group('reason')
-        code = int(status_parts.group('code'))
+        reason = status_parts.group("reason")
+        code = int(status_parts.group("code"))
 
         response = HTTPUnauthorized(headers=headers)
         response.title = reason
@@ -73,9 +77,19 @@ class _AuthenticationForgerPlugin(object):
 
 
 class _AuthenticationForgerMiddleware(PluggableAuthenticationMiddleware):
-    def __init__(self, app, identifiers, authenticators, challengers,
-                 mdproviders, classifier, challenge_decider, log_stream=None,
-                 log_level=logging.INFO, remote_user_key='REMOTE_USER'):
+    def __init__(
+        self,
+        app,
+        identifiers,
+        authenticators,
+        challengers,
+        mdproviders,
+        classifier,
+        challenge_decider,
+        log_stream=None,
+        log_level=logging.INFO,
+        remote_user_key="REMOTE_USER",
+    ):
         """
         Took from repoze.who_testutil.
         This is meant for internal use only to setup tests with fake
@@ -85,31 +99,48 @@ class _AuthenticationForgerMiddleware(PluggableAuthenticationMiddleware):
 
         self.actual_remote_user_key = remote_user_key
         forger = _AuthenticationForgerPlugin(fake_user_key=remote_user_key)
-        forger = ('auth_forger', forger)
+        forger = ("auth_forger", forger)
         identifiers.insert(0, forger)
         authenticators = [forger]
         challengers = [forger]
 
         # Calling the parent's constructor:
         init = super(_AuthenticationForgerMiddleware, self).__init__
-        init(app, identifiers, authenticators, challengers, mdproviders,
-            classifier, challenge_decider, log_stream, log_level,
-            'repoze.who.testutil.userid')
+        init(
+            app,
+            identifiers,
+            authenticators,
+            challengers,
+            mdproviders,
+            classifier,
+            challenge_decider,
+            log_stream,
+            log_level,
+            "repoze.who.testutil.userid",
+        )
 
 
 def turbogears_challenge_decider(environ, status, headers):
-    if 'tg.skip_auth_challenge' in environ:
+    if "tg.skip_auth_challenge" in environ:
         return None
 
     return default_challenge_decider(environ, status, headers)
 
 
-def setup_auth(app, form_plugin=None, form_identifies=True,
-               cookie_secret='secret', cookie_name='authtkt',
-               login_url='/login', login_handler='/login_handler',
-               post_login_url=None, logout_handler='/logout_handler',
-               post_logout_url=None, login_counter_name=None,
-               **who_args):
+def setup_auth(
+    app,
+    form_plugin=None,
+    form_identifies=True,
+    cookie_secret="secret",
+    cookie_name="authtkt",
+    login_url="/login",
+    login_handler="/login_handler",
+    post_login_url=None,
+    logout_handler="/logout_handler",
+    post_logout_url=None,
+    login_counter_name=None,
+    **who_args,
+):
     """
     Sets :mod:`repoze.who` up with the provided authenticators and
     options to create FriendlyFormPlugin/FastFormPlugin.
@@ -118,79 +149,86 @@ def setup_auth(app, form_plugin=None, form_identifies=True,
     authentication and authorization in a way that is compatible
     with repoze.who and repoze.what.
     """
-    if 'charset' in who_args: #pragma: no cover
-        log.warning('charset argument in authentication setup is ignored')
-        who_args.pop('charset')
+    if "charset" in who_args:  # pragma: no cover
+        log.warning("charset argument in authentication setup is ignored")
+        who_args.pop("charset")
 
     # If no identifiers are provided in repoze setup arguments
     # then create a default one using AuthTktCookiePlugin.
-    identifiers = who_args.setdefault('identifiers', [('default', None)])
+    identifiers = who_args.setdefault("identifiers", [("default", None)])
     try:
-        default_identifier_index = identifiers.index(('default', None))
+        default_identifier_index = identifiers.index(("default", None))
     except ValueError:
         pass
     else:
-        authtkt_options = get_partial_dict('authtkt', who_args,
-                                           ignore_missing=True,
-                                           pop_keys=True)
+        authtkt_options = get_partial_dict(
+            "authtkt", who_args, ignore_missing=True, pop_keys=True
+        )
 
         # default identifier included.
         from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
+
         cookie = AuthTktCookiePlugin(cookie_secret, cookie_name, **authtkt_options)
-        who_args['identifiers'][default_identifier_index] = ('cookie', cookie)
-        who_args.setdefault('authenticators', [])
-        who_args['authenticators'].insert(0, ('cookie', cookie))
+        who_args["identifiers"][default_identifier_index] = ("cookie", cookie)
+        who_args.setdefault("authenticators", [])
+        who_args["authenticators"].insert(0, ("cookie", cookie))
 
     # If no form plugin is provided then create a default
     # one using the provided options.
     if form_plugin is None:
         from tg.configuration.auth.fastform import FastFormPlugin
-        form = FastFormPlugin(login_url, login_handler, post_login_url,
-                              logout_handler, post_logout_url,
-                              rememberer_name='cookie',
-                              login_counter_name=login_counter_name)
+
+        form = FastFormPlugin(
+            login_url,
+            login_handler,
+            post_login_url,
+            logout_handler,
+            post_logout_url,
+            rememberer_name="cookie",
+            login_counter_name=login_counter_name,
+        )
     else:
         form = form_plugin
 
     if form_identifies:
-        who_args['identifiers'].insert(0, ('main_identifier', form))
+        who_args["identifiers"].insert(0, ("main_identifier", form))
 
     # Setting the repoze.who challengers:
-    if 'challengers' not in who_args:
-        who_args['challengers'] = []
-    who_args['challengers'].append(('form', form))
+    if "challengers" not in who_args:
+        who_args["challengers"] = []
+    who_args["challengers"].append(("form", form))
 
     # Including logging
-    log_file = who_args.pop('log_file', None)
+    log_file = who_args.pop("log_file", None)
     if log_file is not None:
-        if log_file.lower() == 'stdout':
+        if log_file.lower() == "stdout":
             log_stream = sys.stdout
-        elif log_file.lower() == 'stderr':
+        elif log_file.lower() == "stderr":
             log_stream = sys.stderr
         else:
-            log_stream = open(log_file, 'wb')
-        who_args['log_stream'] = log_stream
+            log_stream = open(log_file, "wb")
+        who_args["log_stream"] = log_stream
 
-    log_level = who_args.get('log_level', None)
+    log_level = who_args.get("log_level", None)
     if log_level is None:
         log_level = logging.INFO
     else:
         log_level = _LEVELS[log_level.lower()]
-    who_args['log_level'] = log_level
+    who_args["log_level"] = log_level
 
     # Setting up the metadata provider for the user information
-    if 'mdproviders' not in who_args:
-        who_args['mdproviders'] = []
+    if "mdproviders" not in who_args:
+        who_args["mdproviders"] = []
 
     # Set up default classifier
-    if 'classifier' not in who_args:
-        who_args['classifier'] = default_request_classifier
+    if "classifier" not in who_args:
+        who_args["classifier"] = default_request_classifier
 
     # Set up default challenger decider
-    if 'challenge_decider' not in who_args:
-        who_args['challenge_decider'] = turbogears_challenge_decider
+    if "challenge_decider" not in who_args:
+        who_args["challenge_decider"] = turbogears_challenge_decider
 
-    skip_authn = who_args.pop('skip_authentication', False)
+    skip_authn = who_args.pop("skip_authentication", False)
     if asbool(skip_authn):
         return _AuthenticationForgerMiddleware(app, **who_args)
     else:

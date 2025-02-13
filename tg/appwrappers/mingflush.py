@@ -19,29 +19,36 @@ class MingApplicationWrapper(ApplicationWrapper):
         - ``ming.autoflush``: Whenever to flush session at end of request if no exceptions happened.
 
     """
+
     def __init__(self, handler, config):
         super(MingApplicationWrapper, self).__init__(handler, config)
 
         options = {
-            'autoflush': False,
+            "autoflush": False,
         }
-        options.update(coerce_config(config, 'ming.',  {
-            'autoflush': asbool,
-        }))
+        options.update(
+            coerce_config(
+                config,
+                "ming.",
+                {
+                    "autoflush": asbool,
+                },
+            )
+        )
 
         self.ThreadLocalODMSession = None
-        self.enabled = options['autoflush']
+        self.enabled = options["autoflush"]
 
         if self.enabled:
             try:
                 from ming.odm import ThreadLocalODMSession
+
                 self.ThreadLocalODMSession = ThreadLocalODMSession
             except ImportError:  # pragma: no cover
-                log.exception('Unable to Enable Ming Application Wrapper')
+                log.exception("Unable to Enable Ming Application Wrapper")
                 self.enabled = False
 
-        log.debug('MingSessionFlush enabled: %s -> %s',
-                  self.enabled, options)
+        log.debug("MingSessionFlush enabled: %s -> %s", self.enabled, options)
 
     @property
     def injected(self):
@@ -56,6 +63,6 @@ class MingApplicationWrapper(ApplicationWrapper):
             session.close_all()
             raise
 
-        log.debug('MingSessionFlush flushing changes...')
+        log.debug("MingSessionFlush flushing changes...")
         session.flush_all()
         return resp

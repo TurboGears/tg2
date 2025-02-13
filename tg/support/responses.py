@@ -10,7 +10,7 @@ from ..request_local import response as tg_response
 from ..support.url import url
 
 
-def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None):
+def redirect(base_url="/", params=None, redirect_with=HTTPFound, scheme=None):
     """Generate an HTTP redirect.
 
     The function raises an exception internally,
@@ -30,6 +30,8 @@ def redirect(base_url='/', params=None, redirect_with=HTTPFound, scheme=None):
 
 
 IF_NONE_MATCH = re.compile(r'(?:W/)?(?:"([^"]*)",?\s*)')
+
+
 def etag_cache(key=None):
     """Use the HTTP Entity Tag cache for Browser side caching
 
@@ -39,18 +41,26 @@ def etag_cache(key=None):
 
     Otherwise, the ETag header will be added to the response headers.
     """
-    if_none_matches = IF_NONE_MATCH.findall(tg_request.environ.get('HTTP_IF_NONE_MATCH', ''))
+    if_none_matches = IF_NONE_MATCH.findall(
+        tg_request.environ.get("HTTP_IF_NONE_MATCH", "")
+    )
     response = tg_response._current_obj()
     response.etag = key
     if str(key) in if_none_matches:
-        response.headers.pop('Content-Type', None)
-        response.headers.pop('Cache-Control', None)
-        response.headers.pop('Pragma', None)
+        response.headers.pop("Content-Type", None)
+        response.headers.pop("Cache-Control", None)
+        response.headers.pop("Pragma", None)
         raise status_map[304]()
 
 
-def abort(status_code=None, detail="", headers=None, comment=None,
-          passthrough=False, error_handler=False):
+def abort(
+    status_code=None,
+    detail="",
+    headers=None,
+    comment=None,
+    passthrough=False,
+    error_handler=False,
+):
     """Aborts the request immediately by returning an HTTP exception
 
     In the event that the status_code is a 300 series error, the detail
@@ -84,19 +94,19 @@ def abort(status_code=None, detail="", headers=None, comment=None,
                 return dict(team=team)
 
     """
-    exc = status_map[status_code](detail=detail, headers=headers,
-                                  comment=comment)
+    exc = status_map[status_code](detail=detail, headers=headers, comment=comment)
 
-    if passthrough == 'json':
-        exc.content_type = 'application/json'
-        exc.charset = 'utf-8'
-        exc.body = json_encode(dict(status=status_code,
-                                    detail=str(exc))).encode('utf-8')
+    if passthrough == "json":
+        exc.content_type = "application/json"
+        exc.charset = "utf-8"
+        exc.body = json_encode(dict(status=status_code, detail=str(exc))).encode(
+            "utf-8"
+        )
 
     def _abortion(*args, **kwargs):
         if passthrough:
-            tg_request.environ['tg.status_code_redirect'] = False
-            tg_request.environ['tg.skip_auth_challenge'] = True
+            tg_request.environ["tg.status_code_redirect"] = False
+            tg_request.environ["tg.skip_auth_challenge"] = True
         raise exc
 
     if error_handler is False:
@@ -128,11 +138,11 @@ def validation_errors_response(*args, **kwargs):
     )
     values = req.validation.values
     try:
-        return Response(status=412, json_body={'errors': errors,
-                                               'values': values})
+        return Response(status=412, json_body={"errors": errors, "values": values})
     except TypeError:
         # values cannot be encoded to JSON, this might happen after
         # validation passed and validators converted them to complex objects.
         # In this case use request params, instead of controller params.
-        return Response(status=412, json_body={'errors': errors,
-                                               'values': req.args_params})
+        return Response(
+            status=412, json_body={"errors": errors, "values": req.args_params}
+        )

@@ -1,5 +1,3 @@
-
-
 from tg.configuration.utils import TGConfigError
 
 from .i18n import lazy_ugettext
@@ -11,7 +9,8 @@ class _ValidationStatus(object):
     Keeps track of currently validated values, errors and
     the ValidationIntent that caused the validation process.
     """
-    __slots__ = ('errors', 'values', 'exception', 'intent')
+
+    __slots__ = ("errors", "values", "exception", "intent")
 
     def __init__(self, errors=None, values=None, exception=None, intent=None):
         self.errors = errors or {}
@@ -40,6 +39,7 @@ class _ValidationIntent(object):
     validation itself on the parameters for a given
     controller method.
     """
+
     def __init__(self, validators, error_handler, chain_validation):
         self.validators = validators
         self.error_handler = error_handler
@@ -50,8 +50,8 @@ class _ValidationIntent(object):
         if not validators:
             return params
 
-        validation_exceptions = tuple(config['validation.exceptions'])
-        validation_validators = config['validation.validators']
+        validation_exceptions = tuple(config["validation.exceptions"])
+        validation_validators = config["validation.validators"]
         validated_params = {}
 
         # The validator may be a dictionary, on of the registered validators or
@@ -77,13 +77,17 @@ class _ValidationIntent(object):
             # If there are errors, create a compound validation error based on
             # the errors dictionary, and raise it as an exception
             if errors:
-                raise TGValidationError(TGValidationError.make_compound_message(errors),
-                                        value=params,
-                                        error_dict=errors)
-        elif hasattr(validators, 'validate') and getattr(self, 'needs_controller', False):
+                raise TGValidationError(
+                    TGValidationError.make_compound_message(errors),
+                    value=params,
+                    error_dict=errors,
+                )
+        elif hasattr(validators, "validate") and getattr(
+            self, "needs_controller", False
+        ):
             # An object with a "validate" method - call it with the parameters
             validated_params = validators.validate(method, params)
-        elif hasattr(validators, 'validate'):
+        elif hasattr(validators, "validate"):
             # An object with a "validate" method - call it with the parameters
             validated_params = validators.validate(params)
         else:
@@ -94,7 +98,9 @@ class _ValidationIntent(object):
                     validation_function = validation_validators[supported_class]
 
             if validation_function is None:
-                raise TGConfigError(f"No validation validator function found for: {schema_class}")
+                raise TGConfigError(
+                    f"No validation validator function found for: {schema_class}"
+                )
 
             validated_params = validation_function(validators, params)
 
@@ -107,6 +113,7 @@ class TGValidationError(Exception):
     The constructor can be passed a short message with
     the reason of the failed validation.
     """
+
     def __init__(self, msg, value=None, error_dict=None):
         super(TGValidationError, self).__init__(msg)
         self.msg = msg
@@ -115,7 +122,7 @@ class TGValidationError(Exception):
 
     @classmethod
     def make_compound_message(cls, error_dict):
-        return str('\n').join(
+        return str("\n").join(
             str("%s: %s") % errorinfo for errorinfo in error_dict.items()
         )
 
@@ -148,7 +155,8 @@ class Convert(object):
         def post_pow2(self, num):
             return str(num*num)
     """
-    def __init__(self, func, msg=lazy_ugettext('Invalid'), default=None):
+
+    def __init__(self, func, msg=lazy_ugettext("Invalid"), default=None):
         self._func = func
         self._msg = msg
         self._default = default
@@ -184,12 +192,13 @@ class RequireValue(object):
         def post_pow2(self, num):
             return str(num*num)
     """
-    def __init__(self, msg=lazy_ugettext('Required')):
+
+    def __init__(self, msg=lazy_ugettext("Required")):
         self._msg = msg
 
     @staticmethod
     def is_empty(value):
-        return value in (None, '', b'', [], {}, tuple())
+        return value in (None, "", b"", [], {}, tuple())
 
     def to_python(self, value, state=None):
         if self.is_empty(value):

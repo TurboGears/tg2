@@ -20,22 +20,25 @@ class TransactionManagerConfigurationComponent(ConfigurationComponent):
     Refer to :class:`.TransactionApplicationWrapper` for list of
     supported options.
     """
+
     id = "transaction_manager"
 
     def get_defaults(self):
-        return {
-            'tm.enabled': True
-        }
+        return {"tm.enabled": True}
 
     def get_coercion(self):
-        return {
-            'tm.enabled': asbool
-        }
+        return {"tm.enabled": asbool}
 
     def on_bind(self, configurator):
         from ..application import ApplicationConfigurator
+
         if not isinstance(configurator, ApplicationConfigurator):
-            raise TGConfigError('Transactions Support only works on an ApplicationConfigurator')
+            raise TGConfigError(
+                "Transactions Support only works on an ApplicationConfigurator"
+            )
 
         from ...appwrappers.transaction_manager import TransactionApplicationWrapper
-        configurator.register_application_wrapper(TransactionApplicationWrapper, after=True)
+
+        configurator.register_application_wrapper(
+            TransactionApplicationWrapper, after=True
+        )

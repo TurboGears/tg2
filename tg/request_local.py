@@ -22,6 +22,7 @@ class Request(WebObRequest):
     compatibility with paste.wsgiwrappers.WSGIRequest.
 
     """
+
     def _fast_setattr(self, name, value):
         object.__setattr__(self, name, value)
 
@@ -47,7 +48,7 @@ class Request(WebObRequest):
     def controller_url(self):
         """Url of the current controller."""
         state = self._dispatch_state
-        return '/'.join(state.path[:-len(state.remainder)])
+        return "/".join(state.path[: -len(state.remainder)])
 
     @cached_property
     def plain_languages(self):
@@ -96,7 +97,7 @@ class Request(WebObRequest):
         if not cookie:
             return
 
-        secret = secret.encode('ascii')
+        secret = secret.encode("ascii")
         try:
             # Keep base64.decodestring for backward compatibility.
             # In the past Response.signed_cookie used base64.encodestring which could
@@ -106,8 +107,8 @@ class Request(WebObRequest):
                 base64decode = base64.decodebytes
             except AttributeError:  # pragma: no cover
                 base64decode = base64.decodestring
-            sig, pickled = cookie[:40], base64decode(cookie[40:].encode('ascii'))
-        except binascii.Error: #pragma: no cover
+            sig, pickled = cookie[:40], base64decode(cookie[40:].encode("ascii"))
+        except binascii.Error:  # pragma: no cover
             # Badly formed data can make base64 die
             return
 
@@ -136,7 +137,7 @@ class Request(WebObRequest):
 
         This will forward your response as is bypassing the :class:`.ErrorPageApplicationWrapper`
         """
-        self.environ['tg.status_code_redirect'] = False
+        self.environ["tg.status_code_redirect"] = False
 
     def disable_auth_challenger(self):
         """Disable authentication challenger for current request.
@@ -144,18 +145,23 @@ class Request(WebObRequest):
         This will forward your response as is in case of 401 bypassing any
         repoze.who challenger.
         """
-        self.environ['tg.skip_auth_challenge'] = True
+        self.environ["tg.skip_auth_challenge"] = True
 
 
 class Response(WebObResponse):
     """WebOb Response subclass"""
-    _DEFAULT_RESPONSE_OPTIONS = dict(content_type='text/html',
-                                     charset='utf-8',
-                                     headers={'Cache-Control': 'no-cache',
-                                              'Pragma': 'no-cache',
-                                              'Content-Type': None,
-                                              'Content-Length': '0'})
-                                                     
+
+    _DEFAULT_RESPONSE_OPTIONS = dict(
+        content_type="text/html",
+        charset="utf-8",
+        headers={
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "Content-Type": None,
+            "Content-Length": "0",
+        },
+    )
+
     content = WebObResponse.body
 
     def wsgi_response(self):
@@ -170,10 +176,10 @@ class Response(WebObResponse):
         cookie value.
 
         """
-        secret = secret.encode('ascii')
+        secret = secret.encode("ascii")
 
         pickled = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
-        sig = hmac.new(secret, pickled, sha1).hexdigest().encode('ascii')
+        sig = hmac.new(secret, pickled, sha1).hexdigest().encode("ascii")
         cookie_value = sig + base64.b64encode(pickled)
         self.set_cookie(name, cookie_value, **kwargs)
 
@@ -203,7 +209,7 @@ class TurboGearsContextMember(TurboGearsObjectProxy):
     """
 
     def __init__(self, name):
-        self.__dict__['name'] = name
+        self.__dict__["name"] = name
 
     def _current_obj(self):
         return getattr(context, self.name)
@@ -218,5 +224,14 @@ tmpl_context = TurboGearsContextMember(name="tmpl_context")
 url = TurboGearsContextMember(name="url")
 translator = TurboGearsContextMember(name="translator")
 
-__all__ = ['app_globals', 'request', 'response', 'tmpl_context', 'session',
-           'cache', 'translator', 'url', 'config']
+__all__ = [
+    "app_globals",
+    "request",
+    "response",
+    "tmpl_context",
+    "session",
+    "cache",
+    "translator",
+    "url",
+    "config",
+]

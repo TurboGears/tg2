@@ -2,19 +2,20 @@
 
 TurboGears http exceptions are inherited from WebOb http exceptions
 """
+
 import webob
 import webob.exc
 from webob.exc import *  # noqa: F403
 
 __all__ = webob.exc.__all__
 
+
 class _HTTPMoveLazyLocation(object):
-    """
-    
-    """
+    """ """
+
     def __init__(self, *args, **kw):
         try:
-            kw['location'] = str(kw['location'])
+            kw["location"] = str(kw["location"])
         except KeyError:
             pass
         super(_HTTPMoveLazyLocation, self).__init__(*args, **kw)

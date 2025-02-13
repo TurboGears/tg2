@@ -53,15 +53,10 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
     id = "error_reporting"
 
     def get_defaults(self):
-        return {
-            'debug': False,
-            'trace_errors.enable': True
-        }
+        return {"debug": False, "trace_errors.enable": True}
 
     def get_coercion(self):
-        return {
-            'debug': asbool
-        }
+        return {"debug": asbool}
 
     def get_actions(self):
         return (
@@ -70,41 +65,51 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
         )
 
     def _configure_backlash(self, conf, app):
-        trace_errors_config = coerce_config(conf, 'trace_errors.', {
-            'enable': asbool,
-            'smtp_use_tls': asbool,
-            'dump_request_size': asint,
-            'dump_request': asbool,
-            'dump_local_frames': asbool,
-            'dump_local_frames_count': asint
-        })
+        trace_errors_config = coerce_config(
+            conf,
+            "trace_errors.",
+            {
+                "enable": asbool,
+                "smtp_use_tls": asbool,
+                "dump_request_size": asint,
+                "dump_request": asbool,
+                "dump_local_frames": asbool,
+                "dump_local_frames_count": asint,
+            },
+        )
 
-        trace_errors_config.setdefault('debug', conf.get('debug', False))
-        trace_errors_config.setdefault('error_subject_prefix', 'WebApp Error: ')
-        trace_errors_config.setdefault('error_message', 'An internal server error occurred')
-        conf['tg.errorware'] = trace_errors_config
+        trace_errors_config.setdefault("debug", conf.get("debug", False))
+        trace_errors_config.setdefault("error_subject_prefix", "WebApp Error: ")
+        trace_errors_config.setdefault(
+            "error_message", "An internal server error occurred"
+        )
+        conf["tg.errorware"] = trace_errors_config
 
     def _add_middleware(self, conf, app):
-        errorware = conf['tg.errorware']
-        if errorware.get('enable', True) and not asbool(conf.get('debug')):
+        errorware = conf["tg.errorware"]
+        if errorware.get("enable", True) and not asbool(conf.get("debug")):
             reporters = []
 
-            if errorware.get('error_email'):
+            if errorware.get("error_email"):
                 from backlash.tracing.reporters.mail import EmailReporter
+
                 reporters.append(EmailReporter(**errorware))
 
-            if errorware.get('sentry_dsn'):
+            if errorware.get("sentry_dsn"):
                 from backlash.tracing.reporters.sentry import SentryReporter
+
                 reporters.append(SentryReporter(**errorware))
 
-            if errorware.get('reporters', []):
-                for reporter in errorware['reporters']:
+            if errorware.get("reporters", []):
+                for reporter in errorware["reporters"]:
                     reporters.append(reporter)
 
             try:
                 import backlash
             except ImportError:  # pragma: no cover
-                log.warning("backlash not installed, email tracebacks won't be available")
+                log.warning(
+                    "backlash not installed, email tracebacks won't be available"
+                )
             else:
                 return backlash.TraceErrorsMiddleware(
                     app, reporters, context_injectors=[_turbogears_backlash_context]
@@ -113,5 +118,5 @@ class ErrorReportingConfigurationComponent(ConfigurationComponent):
 
 
 def _turbogears_backlash_context(environ):
-    tgl = environ.get('tg.locals')
-    return {'request': getattr(tgl, 'request', None)}
+    tgl = environ.get("tg.locals")
+    return {"request": getattr(tgl, "request", None)}

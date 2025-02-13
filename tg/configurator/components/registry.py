@@ -8,7 +8,7 @@ from ..base import AppReadyConfigurationAction, ConfigurationComponent
 
 log = getLogger(__name__)
 
-__all__ = ('RegistryConfigurationComponent', )
+__all__ = ("RegistryConfigurationComponent",)
 
 
 class RegistryConfigurationComponent(ConfigurationComponent):
@@ -30,25 +30,24 @@ class RegistryConfigurationComponent(ConfigurationComponent):
                      the state of the request that caused the exception.
 
     """
-    id = 'registry'
+
+    id = "registry"
 
     def get_coercion(self):
-        return {
-            'registry_streaming': asbool,
-            'debug': asbool
-        }
+        return {"registry_streaming": asbool, "debug": asbool}
 
     def get_defaults(self):
         return {
-            'registry_streaming': True,
+            "registry_streaming": True,
         }
 
     def get_actions(self):
-        return (
-            AppReadyConfigurationAction(self._add_registry_middleware),
-        )
+        return (AppReadyConfigurationAction(self._add_registry_middleware),)
 
     def _add_registry_middleware(self, conf, app):
         # Establish the registry for this application
-        return RegistryManager(app, streaming=conf.get('registry_streaming', True),
-                               preserve_exceptions=conf.get('debug', False))
+        return RegistryManager(
+            app,
+            streaming=conf.get("registry_streaming", True),
+            preserve_exceptions=conf.get("debug", False),
+        )

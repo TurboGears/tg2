@@ -14,7 +14,7 @@ from ..base import (
 
 log = getLogger(__name__)
 
-__all__ = ('TemplateRenderingConfigurationComponent', )
+__all__ = ("TemplateRenderingConfigurationComponent",)
 
 
 class TemplateRenderingConfigurationComponent(ConfigurationComponent):
@@ -36,7 +36,8 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
 
     Refer to each template engine renderer for specific configuration options.
     """
-    id = 'rendering'
+
+    id = "rendering"
 
     def __init__(self):
         super(TemplateRenderingConfigurationComponent, self).__init__()
@@ -46,28 +47,28 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
 
     def get_coercion(self):
         return {
-            'auto_reload_templates': asbool,
-            'use_dotted_templatenames': asbool,
-            'tg.strict_tmpl_context': asbool,
+            "auto_reload_templates": asbool,
+            "use_dotted_templatenames": asbool,
+            "tg.strict_tmpl_context": asbool,
         }
 
     def get_defaults(self):
         return {
-            'tg.strict_tmpl_context': True,
-            'auto_reload_templates': True,
-            'use_dotted_templatenames': False,
-            'renderers': [],
-            'default_renderer': 'kajiki',
-            'render_functions': {},
-            'rendering_engines': {},
-            'rendering_engines_without_vars': set(),
-            'rendering_engines_options': {}
+            "tg.strict_tmpl_context": True,
+            "auto_reload_templates": True,
+            "use_dotted_templatenames": False,
+            "renderers": [],
+            "default_renderer": "kajiki",
+            "render_functions": {},
+            "rendering_engines": {},
+            "rendering_engines_without_vars": set(),
+            "rendering_engines_options": {},
         }
 
     def get_actions(self):
         return (
             BeforeConfigConfigurationAction(self._configure_rendering),
-            ConfigReadyConfigurationAction(self._setup_renderers)
+            ConfigReadyConfigurationAction(self._setup_renderers),
         )
 
     def on_bind(self, configurator):
@@ -98,35 +99,44 @@ class TemplateRenderingConfigurationComponent(ConfigurationComponent):
 
     def _configure_rendering(self, conf, app):
         """Provides default configurations for renderers"""
-        if 'json' not in conf['renderers']:
-            conf['renderers'].append('json')
+        if "json" not in conf["renderers"]:
+            conf["renderers"].append("json")
 
-        if conf['default_renderer'] not in conf['renderers']:
-            first_renderer = conf['renderers'][0]
-            log.warning('Default renderer not in renders, '
-                        'automatically switching to %s' % first_renderer)
-            conf['default_renderer'] = first_renderer
+        if conf["default_renderer"] not in conf["renderers"]:
+            first_renderer = conf["renderers"][0]
+            log.warning(
+                "Default renderer not in renders, "
+                "automatically switching to %s" % first_renderer
+            )
+            conf["default_renderer"] = first_renderer
 
-        conf['rendering_engines'] = copy.copy(self.rendering_engines)
-        conf['rendering_engines_options'] = copy.copy(self.rendering_engines_options)
-        conf['rendering_engines_without_vars'] = copy.copy(self.rendering_engines_without_vars)
+        conf["rendering_engines"] = copy.copy(self.rendering_engines)
+        conf["rendering_engines_options"] = copy.copy(self.rendering_engines_options)
+        conf["rendering_engines_without_vars"] = copy.copy(
+            self.rendering_engines_without_vars
+        )
 
     def _setup_renderers(self, conf, app):
-        renderers = conf['renderers']
-        rendering_engines = conf['rendering_engines']
+        renderers = conf["renderers"]
+        rendering_engines = conf["rendering_engines"]
 
         for renderer in renderers[:]:
             if renderer in rendering_engines:
                 rendering_engine = rendering_engines[renderer]
-                engines = rendering_engine.create(conf, conf['tg.app_globals'])
+                engines = rendering_engine.create(conf, conf["tg.app_globals"])
                 if engines is None:
-                    log.error('Failed to initialize %s template engine, removing it...' % renderer)
+                    log.error(
+                        "Failed to initialize %s template engine, removing it..."
+                        % renderer
+                    )
                     renderers.remove(renderer)
                 else:
-                    log.debug('Enabling renderer %s', renderer)
-                    conf['render_functions'].update(engines)
+                    log.debug("Enabling renderer %s", renderer)
+                    conf["render_functions"].update(engines)
             else:
-                raise TGConfigError('This configuration object does '
-                                    'not support the %s renderer' % renderer)
+                raise TGConfigError(
+                    "This configuration object does "
+                    "not support the %s renderer" % renderer
+                )
 
         milestones.renderers_ready.reach()

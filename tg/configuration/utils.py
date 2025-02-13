@@ -43,8 +43,11 @@ def coerce_config(configuration, prefix, converters):
         })
     """
 
-    options = dict((key[len(prefix):], configuration[key])
-                    for key in configuration if key.startswith(prefix))
+    options = dict(
+        (key[len(prefix) :], configuration[key])
+        for key in configuration
+        if key.startswith(prefix)
+    )
     options.update(coerce_options(options, converters))
     return options
 
@@ -65,6 +68,7 @@ class GlobalConfigurable(object):
     configures them when ``config_ready`` milestone is reached.
 
     """
+
     CONFIG_NAMESPACE = None
     CONFIG_OPTIONS = {}
 
@@ -78,14 +82,18 @@ class GlobalConfigurable(object):
         :func:`coerce_config` passing ``CONFIG_OPTIONS`` as the ``converters`` dictionary.
 
         """
-        raise NotImplementedError('GlobalConfigurable objects must implement a configure method')
+        raise NotImplementedError(
+            "GlobalConfigurable objects must implement a configure method"
+        )
 
     @classmethod
     def create_global(cls):
         """Creates a global instance whose configuration is linked to ``tg.config``."""
         if cls.CONFIG_NAMESPACE is None:
-            raise TGConfigError('Must specify a CONFIG_NAMESPACE attribute in class for the'
-                                'namespace used by all configuration options.')
+            raise TGConfigError(
+                "Must specify a CONFIG_NAMESPACE attribute in class for the"
+                "namespace used by all configuration options."
+            )
 
         obj = cls()
         config_ready.register(obj._load_config, persist_on_reset=True)
@@ -93,7 +101,10 @@ class GlobalConfigurable(object):
 
     def _load_config(self):
         from tg.configuration import config
-        self.configure(**coerce_config(config, self.CONFIG_NAMESPACE,  self.CONFIG_OPTIONS))
+
+        self.configure(
+            **coerce_config(config, self.CONFIG_NAMESPACE, self.CONFIG_OPTIONS)
+        )
 
 
 class DependenciesList(object):
@@ -107,6 +118,7 @@ class DependenciesList(object):
     .. note:: This is highly inefficient as it is only meant to run at configuration time,
               a new implementation will probably be provided based on heapq in the future.
     """
+
     #: Those are the heads of the dependencies tree
     #:  - ``False`` means before everything else
     #:  - ``None`` means in the middle.
@@ -143,30 +155,32 @@ class DependenciesList(object):
                 # Inserting an object without a key would lead to unexpected ordering.
                 # we cannot use the object class as the key would not be unique across
                 # different instances.
-                raise ValueError('Inserting instances without a key is not allowed')
+                raise ValueError("Inserting instances without a key is not allowed")
 
         if after not in self.DEPENDENCY_HEADS and not isinstance(after, str):
             if inspect.isclass(after):
                 after = after.__name__
             else:
-                raise ValueError('after parameter must be a string, a class or a special value')
+                raise ValueError(
+                    "after parameter must be a string, a class or a special value"
+                )
 
         if key in self._inserted_keys:
-            raise KeyError('Already existing entry for this key')
+            raise KeyError("Already existing entry for this key")
 
         self._inserted_keys.append(key)
         self._dependencies.setdefault(after, []).append((key, entry))
         self._resolve_ordering()
 
     def __repr__(self):
-        return '<DependenciesList %s>' % [x[0] for x in self._ordered_elements]
+        return "<DependenciesList %s>" % [x[0] for x in self._ordered_elements]
 
     def __iter__(self):
         return iter(self._ordered_elements)
 
     def values(self):
         """Returns all the inserted values without their key as a generator"""
-        return (x[1]for x in self._ordered_elements)
+        return (x[1] for x in self._ordered_elements)
 
     def replace(self, key, newvalue):
         """Replaces entry associated to key with a new one.
@@ -178,7 +192,7 @@ class DependenciesList(object):
             if inspect.isclass(key):
                 key = key.__name__
             else:
-                raise ValueError('key parameter must be a string or a class')
+                raise ValueError("key parameter must be a string or a class")
 
         for entries in self._dependencies.values():
             for idx, value in enumerate(entries):
@@ -193,7 +207,7 @@ class DependenciesList(object):
             if inspect.isclass(key):
                 key = key.__name__
             else:
-                raise ValueError('key parameter must be a string or a class')
+                raise ValueError("key parameter must be a string or a class")
 
         for entries in self._dependencies.values():
             for idx, value in enumerate(entries):
@@ -207,12 +221,16 @@ class DependenciesList(object):
         ordered_elements = []
 
         existing_dependencies = set(self._inserted_keys) | set(self.DEPENDENCY_HEADS)
-        dependencies_without_heads = set(self._dependencies.keys()) - set(self.DEPENDENCY_HEADS)
+        dependencies_without_heads = set(self._dependencies.keys()) - set(
+            self.DEPENDENCY_HEADS
+        )
 
         # All entries that depend on a missing entry are converted
         # to depend from None so they end up being in the middle.
         dependencies = {}
-        for dependency in itertools.chain(self.DEPENDENCY_HEADS, dependencies_without_heads):
+        for dependency in itertools.chain(
+            self.DEPENDENCY_HEADS, dependencies_without_heads
+        ):
             entries = self._dependencies.get(dependency, [])
             if dependency not in existing_dependencies:
                 dependency = None
@@ -242,11 +260,12 @@ class DictionaryView(object):
     to the view will reflect into the dictionary updating
     the original keys.
     """
-    __slots__ = ('_d', '_keypath')
+
+    __slots__ = ("_d", "_keypath")
 
     def __init__(self, d, keypath):
-        if keypath and keypath[-1] != '.':
-            keypath = keypath + '.'
+        if keypath and keypath[-1] != ".":
+            keypath = keypath + "."
         self._d = d
         self._keypath = keypath
 
@@ -272,7 +291,7 @@ class DictionaryView(object):
             object.__setattr__(self, key, value)
 
     def update(self, d, **d2):
-        if hasattr(d, 'keys'):
+        if hasattr(d, "keys"):
             for key in d.keys():
                 self[key] = d[key]
         else:

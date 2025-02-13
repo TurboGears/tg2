@@ -32,6 +32,7 @@ class MinimalApplicationConfigurator(ApplicationConfigurator):
         - enable requests local registry for tg.request, tg.response, etc...
 
     """
+
     def __init__(self):
         super(MinimalApplicationConfigurator, self).__init__()
 
@@ -43,6 +44,3 @@ class MinimalApplicationConfigurator(ApplicationConfigurator):
         self.register(TemplateRenderingConfigurationComponent)
         self.register(RegistryConfigurationComponent, after=True)
         self.register(ValidationConfigurationComponent)
-
-
-

@@ -20,31 +20,29 @@ class StaticsConfigurationComponent(ConfigurationComponent):
         - ``paths.static_files``: Directory where the static files should be served from.
                                   Refer to :class:`.PathsConfigurationComponent` for configuration.
     """
-    id = 'statics'
+
+    id = "statics"
 
     def get_defaults(self):
-        return {
-            'serve_static': True
-        }
+        return {"serve_static": True}
 
     def get_coercion(self):
-        return {
-            'serve_static': asbool
-        }
+        return {"serve_static": asbool}
 
     def get_actions(self):
         return (
             BeforeConfigConfigurationAction(self._configure),
-            AppReadyConfigurationAction(self._add_middleware)
+            AppReadyConfigurationAction(self._add_middleware),
         )
 
     def _configure(self, conf, app):
-        if not conf['paths']['static_files']:
-            conf['serve_static'] = False
+        if not conf["paths"]["static_files"]:
+            conf["serve_static"] = False
 
     def _add_middleware(self, conf, app):
-        if not conf['serve_static']:
+        if not conf["serve_static"]:
             return app
 
         from tg.support.statics import StaticsMiddleware
-        return StaticsMiddleware(app, conf['paths']['static_files'])
+
+        return StaticsMiddleware(app, conf["paths"]["static_files"])

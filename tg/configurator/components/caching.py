@@ -23,31 +23,28 @@ class CachingConfigurationComponent(ConfigurationComponent):
 
     Refer to :class:`.CacheApplicationWrapper` for additional options.
     """
-    id = 'caching'
+
+    id = "caching"
 
     def get_defaults(self):
-        return {
-            'cache.enabled': True
-        }
+        return {"cache.enabled": True}
 
     def get_coercion(self):
-        return {
-            'cache.enabled': asbool
-        }
+        return {"cache.enabled": asbool}
 
     def on_bind(self, configurator):
         from ..application import ApplicationConfigurator
+
         if not isinstance(configurator, ApplicationConfigurator):
-            raise TGConfigError('Caching only works on an ApplicationConfigurator')
+            raise TGConfigError("Caching only works on an ApplicationConfigurator")
 
         from ...appwrappers.caching import CacheApplicationWrapper
+
         configurator.register_application_wrapper(CacheApplicationWrapper, after=True)
 
     def get_actions(self):
-        return (
-            BeforeConfigConfigurationAction(self._configure_caching),
-        )
+        return (BeforeConfigConfigurationAction(self._configure_caching),)
 
     def _configure_caching(self, conf, app):
-        if 'cache_dir' in conf:
-            conf.setdefault('cache.data_dir', os.path.join(conf['cache_dir'], 'cache'))
+        if "cache_dir" in conf:
+            conf.setdefault("cache.data_dir", os.path.join(conf["cache_dir"], "cache"))

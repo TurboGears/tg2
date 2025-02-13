@@ -26,23 +26,30 @@ class I18NApplicationWrapper(ApplicationWrapper):
           TurboGears to save and update the session for each request.
 
     """
+
     def __init__(self, handler, config):
         super(I18NApplicationWrapper, self).__init__(handler, config)
 
         options = {
-            'enabled': False,
-            'lang_session_key': 'tg_lang',
-            'no_session_touch': False,
-            'lang': None
+            "enabled": False,
+            "lang_session_key": "tg_lang",
+            "no_session_touch": False,
+            "lang": None,
         }
-        options.update(coerce_config(config, 'i18n.',  {
-            'enabled': asbool,
-            'no_session_touch': asbool,
-        }))
+        options.update(
+            coerce_config(
+                config,
+                "i18n.",
+                {
+                    "enabled": asbool,
+                    "no_session_touch": asbool,
+                },
+            )
+        )
 
-        self.enabled = options['enabled']
+        self.enabled = options["enabled"]
         self.options = options
-        log.debug('i18n enabled: %s -> %s', self.enabled, self.options)
+        log.debug("i18n enabled: %s -> %s", self.enabled, self.options)
 
     @property
     def injected(self):
@@ -53,9 +60,9 @@ class I18NApplicationWrapper(ApplicationWrapper):
         if session_:
             session_existed = session_.accessed()
             # If session is available, we try to see if there are languages set
-            languages = session_.get(self.options['lang_session_key'])
-            if not session_existed and self.options['no_session_touch']:
-                session_.__dict__['_sess'] = None
+            languages = session_.get(self.options["lang_session_key"])
+            if not session_existed and self.options["no_session_touch"]:
+                session_.__dict__["_sess"] = None
 
             if languages:
                 if isinstance(languages, str):

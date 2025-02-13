@@ -3,10 +3,10 @@ from datetime import datetime, timedelta, tzinfo
 
 TIMEDELTA_ZERO = timedelta(0)
 DATETIME_RE = re.compile(
-    r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
-    r'[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})'
-    r'(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?'
-    r'(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$'
+    r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
+    r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
+    r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
+    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
 
@@ -66,8 +66,8 @@ def get_fixed_timezone(offset):
         offset = offset.seconds // 60
 
     offset //= 1  # ensure it's more than a minute
-    sign = '-' if offset < 0 else '+'
-    hhmm = '%02d%02d' % divmod(abs(offset), 60)
+    sign = "-" if offset < 0 else "+"
+    hhmm = "%02d%02d" % divmod(abs(offset), 60)
     name = sign + hhmm
     return _FixedOffsetTZ(offset, name)
 
@@ -82,20 +82,20 @@ def parse_datetime(value):
     """
     match = DATETIME_RE.match(value)
     if not match:
-        raise ValueError('Malformed date string')
+        raise ValueError("Malformed date string")
 
     kw = match.groupdict()
-    if kw['microsecond']:
-        kw['microsecond'] = kw['microsecond'].ljust(6, '0')
-    valuetz = kw.pop('tzinfo')
-    if valuetz == 'Z':
+    if kw["microsecond"]:
+        kw["microsecond"] = kw["microsecond"].ljust(6, "0")
+    valuetz = kw.pop("tzinfo")
+    if valuetz == "Z":
         valuetz = utctz
     elif valuetz is not None:
         offset_mins = int(valuetz[-2:]) if len(valuetz) > 3 else 0
         offset = 60 * int(valuetz[1:3]) + offset_mins
-        if valuetz[0] == '-':
+        if valuetz[0] == "-":
             offset = -offset
         valuetz = get_fixed_timezone(offset)
     kw = dict((k, int(v)) for k, v in kw.items() if v is not None)
-    kw['tzinfo'] = valuetz
+    kw["tzinfo"] = valuetz
     return datetime(**kw)

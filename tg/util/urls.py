@@ -11,7 +11,7 @@ def _smart_str(s):
     if isinstance(s, bytes):
         return s
     elif isinstance(s, str):
-        return s.encode('utf-8', 'strict')
+        return s.encode("utf-8", "strict")
     else:
         try:
             return str(s).encode("ascii", "strict")
@@ -20,8 +20,10 @@ def _smart_str(s):
                 # An Exception subclass containing non-ASCII data that doesn't
                 # know how to print itself properly. We shouldn't raise a
                 # further exception.
-                return ' '.join([_smart_str(arg).decode('utf-8') for arg in s.args]).encode('utf-8', 'strict')
-            return str(s).encode('utf-8', 'strict')
+                return " ".join(
+                    [_smart_str(arg).decode("utf-8") for arg in s.args]
+                ).encode("utf-8", "strict")
+            return str(s).encode("utf-8", "strict")
 
 
 def _generate_smart_str(params):
@@ -44,12 +46,12 @@ def _urlencode(params):
     return urllib.parse.urlencode([i for i in _generate_smart_str(params)])
 
 
-def build_url(environ, base_url='/', params=None):
+def build_url(environ, base_url="/", params=None):
     """Build a URL based on the given WSGI environ, a base URL and its parameters."""
-    if base_url.startswith('/'):
-        base_url = environ['SCRIPT_NAME'] + base_url
+    if base_url.startswith("/"):
+        base_url = environ["SCRIPT_NAME"] + base_url
 
     if params:
-        return '?'.join((base_url, _urlencode(params)))
+        return "?".join((base_url, _urlencode(params)))
 
     return base_url

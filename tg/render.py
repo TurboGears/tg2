@@ -1,6 +1,6 @@
 try:
     from urllib import quote_plus
-except ImportError: #pragma: no cover
+except ImportError:  # pragma: no cover
     from urllib.parse import quote_plus
 
 
@@ -11,11 +11,15 @@ from tg.util import Bunch
 
 class MissingRendererError(Exception):
     def __init__(self, template_engine):
-        Exception.__init__(self,
-            ("The renderer for '%(template_engine)s' templates is missing. "
-            "Try adding the following line in you app_cfg.py:\n"
-            "\"base_config.renderers.append('%(template_engine)s')\"") % dict(
-            template_engine=template_engine))
+        Exception.__init__(
+            self,
+            (
+                "The renderer for '%(template_engine)s' templates is missing. "
+                "Try adding the following line in you app_cfg.py:\n"
+                "\"base_config.renderers.append('%(template_engine)s')\""
+            )
+            % dict(template_engine=template_engine),
+        )
         self.template_engine = template_engine
 
 
@@ -62,7 +66,7 @@ def _get_tg_vars():
     translator = tgl.translator
     response = tgl.response
     session = tgl.session
-    helpers = conf['helpers']
+    helpers = conf["helpers"]
 
     try:
         validation = req.validation
@@ -76,14 +80,15 @@ def _get_tg_vars():
         quote_plus=quote_plus,
         url=tg.url,
         # this will be None if no identity
-        identity = req.environ.get('repoze.who.identity'),
-        session = session,
-        locale = req.plain_languages,
-        errors = validation and validation.errors,
-        inputs = validation and validation.values,
-        request = req,
-        auth_stack_enabled = 'repoze.who.plugins' in req.environ,
-        predicates = predicates)
+        identity=req.environ.get("repoze.who.identity"),
+        session=session,
+        locale=req.plain_languages,
+        errors=validation and validation.errors,
+        inputs=validation and validation.values,
+        request=req,
+        auth_stack_enabled="repoze.who.plugins" in req.environ,
+        predicates=predicates,
+    )
 
     root_vars = Bunch(
         c=tmpl_context,
@@ -101,23 +106,26 @@ def _get_tg_vars():
         translator=translator,
         ungettext=tg.i18n.ungettext,
         _=tg.i18n.ugettext,
-        N_=tg.i18n.gettext_noop)
+        N_=tg.i18n.gettext_noop,
+    )
 
     # If there is an identity, push it to the Pylons template context
-    tmpl_context.identity = tg_vars['identity']
+    tmpl_context.identity = tg_vars["identity"]
 
     # Allow users to provide a callable that defines extra vars to be
     # added to the template namespace
-    variable_provider = conf.get('variable_provider', None)
+    variable_provider = conf.get("variable_provider", None)
     if variable_provider:
         root_vars.update(variable_provider())
     return root_vars
 
-#Monkey patch pylons_globals for cases when pylons.templating is used
-#instead of tg.render to programmatically render templates.
-try: #pragma: no cover
+
+# Monkey patch pylons_globals for cases when pylons.templating is used
+# instead of tg.render to programmatically render templates.
+try:  # pragma: no cover
     import pylons
     import pylons.templating
+
     pylons.templating.pylons_globals = _get_tg_vars
 except ImportError:
     pass
@@ -178,9 +186,9 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     config = tg.config._current_obj()
 
     if template_engine is None:
-        template_engine = config['default_renderer']
+        template_engine = config["default_renderer"]
 
-    render_function = config['render_functions'].get(template_engine)
+    render_function = config["render_functions"].get(template_engine)
     if render_function is None:
         # engine is not present in the engine list, warn developer
         raise MissingRendererError(template_engine)
@@ -188,30 +196,40 @@ def render(template_vars, template_engine=None, template_name=None, **kwargs):
     if not template_vars:
         template_vars = {}
 
-    caching_options = template_vars.get('tg_cache', {})
-    kwargs['cache_key'] = caching_options.get('key')
-    kwargs['cache_expire'] = caching_options.get('expire')
-    kwargs['cache_type'] = caching_options.get('type')
+    caching_options = template_vars.get("tg_cache", {})
+    kwargs["cache_key"] = caching_options.get("key")
+    kwargs["cache_expire"] = caching_options.get("expire")
+    kwargs["cache_type"] = caching_options.get("type")
 
-    tg.hooks.notify('before_render_call', (template_engine, template_name, template_vars, kwargs))
+    tg.hooks.notify(
+        "before_render_call", (template_engine, template_name, template_vars, kwargs)
+    )
 
     tg_vars = template_vars
 
-    engines_without_vars = config['rendering_engines_without_vars']
+    engines_without_vars = config["rendering_engines_without_vars"]
     if template_engine not in engines_without_vars:
         # Get the extra vars, and merge in the vars from the controller
         tg_vars = _get_tg_vars()
         tg_vars.update(template_vars)
 
-    kwargs['result'] = render_function(template_name, tg_vars, **kwargs)
+    kwargs["result"] = render_function(template_name, tg_vars, **kwargs)
 
-    tg.hooks.notify('after_render_call', (template_engine, template_name, template_vars, kwargs))
-    return kwargs['result']
+    tg.hooks.notify(
+        "after_render_call", (template_engine, template_name, template_vars, kwargs)
+    )
+    return kwargs["result"]
 
 
-def cached_template(template_name, render_func, ns_options=(),
-                    cache_key=None, cache_type=None, cache_expire=None,
-                    **kwargs):
+def cached_template(
+    template_name,
+    render_func,
+    ns_options=(),
+    cache_key=None,
+    cache_type=None,
+    cache_expire=None,
+    **kwargs,
+):
     """Cache and render a template, took from Pylons
 
     Cache a template to the namespace ``template_name``, along with a
@@ -253,11 +271,11 @@ def cached_template(template_name, render_func, ns_options=(),
     if cache_key is not None or cache_type is not None or cache_expire is not None:
         get_cache_kw = {}
         if cache_type is not None:
-            get_cache_kw['type'] = cache_type
+            get_cache_kw["type"] = cache_type
 
         if not cache_key:
-            cache_key = 'default'
-        if cache_expire == 'never':
+            cache_key = "default"
+        if cache_expire == "never":
             cache_expire = None
 
         namespace = template_name
@@ -265,9 +283,9 @@ def cached_template(template_name, render_func, ns_options=(),
             namespace += str(kwargs.get(name))
 
         cache = tg.cache.get_cache(namespace, **get_cache_kw)
-        content = cache.get_value(cache_key, createfunc=render_func,
-            expiretime=cache_expire)
+        content = cache.get_value(
+            cache_key, createfunc=render_func, expiretime=cache_expire
+        )
         return content
     else:
         return render_func()
-

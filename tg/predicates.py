@@ -8,20 +8,35 @@ This is module provides the predicate checkers that were present in the
 original "identity" framework of TurboGears 1, plus others.
 
 """
+
 from .request_local import request
 
-__all__ = ['Predicate', 'CompoundPredicate', 'All', 'Any',
-           'has_all_permissions', 'has_any_permission', 'has_permission',
-           'in_all_groups', 'in_any_group', 'in_group', 'is_user',
-           'is_anonymous', 'not_anonymous', 'NotAuthorizedError']
+__all__ = [
+    "Predicate",
+    "CompoundPredicate",
+    "All",
+    "Any",
+    "has_all_permissions",
+    "has_any_permission",
+    "has_permission",
+    "in_all_groups",
+    "in_any_group",
+    "in_group",
+    "is_user",
+    "is_anonymous",
+    "not_anonymous",
+    "NotAuthorizedError",
+]
 
-try: #pragma: no cover
+try:  # pragma: no cover
     # If repoze.what is available use repoze.what Predicate and
     # NotAuthorizedError adding booleanization support to the
     # predicates
     from repoze.what.predicates import NotAuthorizedError, Predicate
+
     Predicate.__nonzero__ = lambda self: self.is_met(request.environ)
 except ImportError:
+
     class NotAuthorizedError(Exception):
         pass
 
@@ -67,7 +82,7 @@ except ImportError:
             :param environ: The WSGI environment.
             :raise NotAuthorizedError: If it the predicate is not met.
             """
-            credentials = environ.get('repoze.what.credentials', {})
+            credentials = environ.get("repoze.what.credentials", {})
             try:
                 self.evaluate(environ, credentials)
             except NotAuthorizedError:
@@ -81,7 +96,7 @@ except ImportError:
             :return: Whether the predicate is met or not.
             :rtype: bool
             """
-            credentials = environ.get('repoze.what.credentials', {})
+            credentials = environ.get("repoze.what.credentials", {})
             try:
                 self.evaluate(environ, credentials)
                 return True
@@ -90,7 +105,9 @@ except ImportError:
 
         def __nonzero__(self):
             return self.is_met(request.environ)
+
         __bool__ = __nonzero__
+
 
 class CompoundPredicate(Predicate):
     """A predicate composed of other predicates."""
@@ -112,6 +129,7 @@ class Not(Predicate):
         p = Not(not_anonymous())
 
     """
+
     message = "The condition must not be met"
 
     def __init__(self, predicate, **kwargs):
@@ -166,7 +184,10 @@ class Any(CompoundPredicate):
         p = Any(is_user('rms'), is_user('linus'))
 
     """
-    message = "At least one of the following predicates must be met: %(failed_predicates)s"
+
+    message = (
+        "At least one of the following predicates must be met: %(failed_predicates)s"
+    )
 
     def evaluate(self, environ, credentials):
         """
@@ -184,7 +205,7 @@ class Any(CompoundPredicate):
                 return
             except NotAuthorizedError as exc:
                 errors.append(str(exc))
-        failed_predicates = ', '.join(errors)
+        failed_predicates = ", ".join(errors)
         self.unmet(failed_predicates=failed_predicates)
 
 
@@ -208,8 +229,7 @@ class is_user(Predicate):
         self.user_name = user_name
 
     def evaluate(self, environ, credentials):
-        if credentials and\
-           self.user_name == credentials.get('repoze.what.userid'):
+        if credentials and self.user_name == credentials.get("repoze.what.userid"):
             return
         self.unmet()
 
@@ -234,7 +254,7 @@ class in_group(Predicate):
         self.group_name = group_name
 
     def evaluate(self, environ, credentials):
-        if credentials and self.group_name in credentials.get('groups'):
+        if credentials and self.group_name in credentials.get("groups"):
             return
         self.unmet()
 
@@ -251,10 +271,9 @@ class in_all_groups(All):
 
     """
 
-
     def __init__(self, *groups, **kwargs):
         group_predicates = [in_group(g) for g in groups]
-        super(in_all_groups,self).__init__(*group_predicates, **kwargs)
+        super(in_all_groups, self).__init__(*group_predicates, **kwargs)
 
 
 class in_any_group(Any):
@@ -269,12 +288,14 @@ class in_any_group(Any):
 
     """
 
-    message = "The member must belong to at least one of the following groups: %(group_list)s"
+    message = (
+        "The member must belong to at least one of the following groups: %(group_list)s"
+    )
 
     def __init__(self, *groups, **kwargs):
         self.group_list = ", ".join(groups)
         group_predicates = [in_group(g) for g in groups]
-        super(in_any_group,self).__init__(*group_predicates, **kwargs)
+        super(in_any_group, self).__init__(*group_predicates, **kwargs)
 
 
 class is_anonymous(Predicate):
@@ -327,6 +348,7 @@ class has_permission(Predicate):
         p = has_permission('hire')
 
     """
+
     message = 'The user must have the "%(permission_name)s" permission'
 
     def __init__(self, permission_name, **kwargs):
@@ -334,8 +356,7 @@ class has_permission(Predicate):
         self.permission_name = permission_name
 
     def evaluate(self, environ, credentials):
-        if credentials and\
-           self.permission_name in credentials.get('permissions'):
+        if credentials and self.permission_name in credentials.get("permissions"):
             return
         self.unmet()
 
@@ -356,8 +377,7 @@ class has_all_permissions(All):
 
     def __init__(self, *permissions, **kwargs):
         permission_predicates = [has_permission(p) for p in permissions]
-        super(has_all_permissions, self).__init__(*permission_predicates,
-            **kwargs)
+        super(has_all_permissions, self).__init__(*permission_predicates, **kwargs)
 
 
 class has_any_permission(Any):
@@ -378,5 +398,4 @@ class has_any_permission(Any):
     def __init__(self, *permissions, **kwargs):
         self.permission_list = ", ".join(permissions)
         permission_predicates = [has_permission(p) for p in permissions]
-        super(has_any_permission,self).__init__(*permission_predicates,
-            **kwargs)
+        super(has_any_permission, self).__init__(*permission_predicates, **kwargs)

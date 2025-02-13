@@ -24,17 +24,16 @@ class HelpersConfigurationComponent(ConfigurationComponent):
         * ``helpers``: Set a different object as the template helpers.
 
     """
-    id = 'helpers'
+
+    id = "helpers"
 
     def get_defaults(self):
         return {
-            'helpers': None,
+            "helpers": None,
         }
 
     def get_actions(self):
-        return (
-            ConfigReadyConfigurationAction(self._setup_helpers),
-        )
+        return (ConfigReadyConfigurationAction(self._setup_helpers),)
 
     def _setup_helpers(self, conf, app):
         """Add helpers and globals objects to the ``conf``.
@@ -44,23 +43,21 @@ class HelpersConfigurationComponent(ConfigurationComponent):
         as ``tg.app_globals`` and ``helpers``.
         """
         # Setup Helpers
-        h = conf.get('helpers', None)
+        h = conf.get("helpers", None)
         if h is None:
             try:
-                h = conf['package'].lib.helpers
+                h = conf["package"].lib.helpers
             except AttributeError:
                 pass
 
         if h is None:
             try:
-                h = import_module('.lib.helpers', package=conf['package'].__name__)
+                h = import_module(".lib.helpers", package=conf["package"].__name__)
             except (ImportError, AttributeError):
                 pass
 
         if h is None:
-            log.warning('helpers not provided and lib.helpers is not available.')
+            log.warning("helpers not provided and lib.helpers is not available.")
             h = Bunch()
 
-        conf['helpers'] = h
-
-
+        conf["helpers"] = h

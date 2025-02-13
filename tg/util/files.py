@@ -19,10 +19,11 @@ class DottedFileNameFinder(object):
     The reason is that is uses this function itself and just adds
     caching mechanism on top.
     """
+
     def __init__(self):
         self.__cache = dict()
 
-    def get_dotted_filename(self, template_name, template_extension='.html'):
+    def get_dotted_filename(self, template_name, template_extension=".html"):
         """this helper function is designed to search a template or any other
         file by python module name.
 
@@ -61,15 +62,15 @@ class DottedFileNameFinder(object):
             # the template name was not found in our cache
             try:
                 # Allow for the package.file!ext syntax
-                template_name, template_extension = template_name.rsplit('!', 1)
-                template_extension = '.' + template_extension
+                template_name, template_extension = template_name.rsplit("!", 1)
+                template_extension = "." + template_extension
             except ValueError:
                 pass
 
-            divider = template_name.rfind('.')
+            divider = template_name.rfind(".")
             if divider >= 0:
                 package = template_name[:divider]
-                basename = template_name[divider + 1:]
+                basename = template_name[divider + 1 :]
                 resourcename = basename + template_extension
 
                 try:
@@ -88,14 +89,16 @@ class DottedFileNameFinder(object):
                             result = str(f)
                         else:
                             # importing from a zipfile or py2exe
-                            if not hasattr(self, '__temp_dir'):
+                            if not hasattr(self, "__temp_dir"):
                                 self.__temp_dir = tempfile.mkdtemp()
 
-                            result = os.path.join(self.__temp_dir, package, resourcename)
+                            result = os.path.join(
+                                self.__temp_dir, package, resourcename
+                            )
                             if not os.path.isdir(os.path.dirname(result)):
                                 os.makedirs(os.path.dirname(result))
 
-                            with open(result, 'wb') as result_f:
+                            with open(result, "wb") as result_f:
                                 result_f.write(f.read_bytes())
                 except FileNotFoundError as e:
                     # Historical behaviour has been to return file even when it doesn't exist
@@ -103,7 +106,8 @@ class DottedFileNameFinder(object):
                     result = e.filename
                 except ModuleNotFoundError as e:
                     raise DottedFileLocatorError(
-                        "%s. Perhaps you have forgotten an __init__.py in that folder." % e
+                        "%s. Perhaps you have forgotten an __init__.py in that folder."
+                        % e
                     )
             else:
                 result = template_name
@@ -114,7 +118,7 @@ class DottedFileNameFinder(object):
             return result
 
     @classmethod
-    def lookup(cls, name, extension='.html'):
+    def lookup(cls, name, extension=".html"):
         """Convenience method that permits to quickly get a file by dotted notation.
 
         Creates a :class:`.DottedFileNameFinder` and uses it to lookup the given file
@@ -128,9 +132,20 @@ class DottedFileNameFinder(object):
         return finder.get_dotted_filename(name, extension)
 
 
-_FILENAME_ASCII_STRIP_RE = re.compile(r'[^A-Za-z0-9_.-]')
-_WINDOWS_DEVICE_FILES = ('CON', 'AUX', 'COM1', 'COM2', 'COM3', 'COM4', 'LPT1',
-                         'LPT2', 'LPT3', 'PRN', 'NUL')
+_FILENAME_ASCII_STRIP_RE = re.compile(r"[^A-Za-z0-9_.-]")
+_WINDOWS_DEVICE_FILES = (
+    "CON",
+    "AUX",
+    "COM1",
+    "COM2",
+    "COM3",
+    "COM4",
+    "LPT1",
+    "LPT2",
+    "LPT3",
+    "PRN",
+    "NUL",
+)
 
 
 def safe_filename(filename):
@@ -151,23 +166,23 @@ def safe_filename(filename):
     """
     if isinstance(filename, str):
         from unicodedata import normalize
-        filename = normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
+
+        filename = normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
 
     for sep in os.path.sep, os.path.altsep:
         if sep:
-            filename = filename.replace(sep, ' ')
+            filename = filename.replace(sep, " ")
 
-    filename = str(_FILENAME_ASCII_STRIP_RE.sub(
-        '',
-        '_'.join(filename.split())
-    )).strip('._')
+    filename = str(_FILENAME_ASCII_STRIP_RE.sub("", "_".join(filename.split()))).strip(
+        "._"
+    )
 
     # on nt a couple of special files are present in each folder.  We
     # have to ensure that the target file is not such a filename.  In
     # this case we prepend an underline
-    if os.name == 'nt' and filename:  # pragma: no cover
-        filebasename = filename.split('.')[0]
+    if os.name == "nt" and filename:  # pragma: no cover
+        filebasename = filename.split(".")[0]
         if filebasename.upper() in _WINDOWS_DEVICE_FILES:
-            filename = '_' + filename
+            filename = "_" + filename
 
     return filename

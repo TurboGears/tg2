@@ -18,12 +18,12 @@ def script_json_encode(obj, encoder=_script_json_encoder, **kwargs):
     notable exception of double quoted attributes.  In that case single
     quote your attributes or HTML escape it in addition.
     """
-    rv = json_encode(obj, encoder=encoder, **kwargs) \
-        .replace('<', '\\u003c') \
-        .replace('>', '\\u003e') \
-        .replace('&', '\\u0026') \
-        .replace("'", '\\u0027')
+    rv = (
+        json_encode(obj, encoder=encoder, **kwargs)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("'", "\\u0027")
+    )
 
     return rv
-
-

@@ -1,6 +1,7 @@
 """
 Flash messaging system for sending info to the user in a non-obtrusive way
 """
+
 import json
 import urllib.parse
 from logging import getLogger
@@ -14,12 +15,12 @@ from tg.support import converters
 
 log = getLogger(__name__)
 
-DEFAULT_FLASH_TEMPLATE = Template('''\
+DEFAULT_FLASH_TEMPLATE = Template("""\
 <div id="${container_id}">
     <div class="${status}">${message}</div>
-</div>''')
+</div>""")
 
-DEFAULT_JSFLASH_TEMPLATE = Template('''\
+DEFAULT_JSFLASH_TEMPLATE = Template("""\
 <div id="${container_id}"></div>
 <script type="text/javascript">
 //<![CDATA[
@@ -45,7 +46,7 @@ var webflash = window.webflash({"id": "${container_id}", "name": "${cookie_name}
 ${js_call}
 })()
 //]]>
-</script>''')
+</script>""")
 
 
 class TGFlash(GlobalConfigurable):
@@ -64,19 +65,25 @@ class TGFlash(GlobalConfigurable):
     For a complete list of options supported by Flash objects see :meth:`.TGFlash.configure`.
     """
 
-    CONFIG_NAMESPACE = 'flash.'
-    CONFIG_OPTIONS = {'template': converters.astemplate,
-                      'js_template': converters.astemplate,
-                      'allow_html': converters.asbool}
+    CONFIG_NAMESPACE = "flash."
+    CONFIG_OPTIONS = {
+        "template": converters.astemplate,
+        "js_template": converters.astemplate,
+        "allow_html": converters.asbool,
+    }
 
     def __init__(self, **options):
         self.configure(**options)
 
-    def configure(self, cookie_name="webflash", default_status="ok",
-                  template=DEFAULT_FLASH_TEMPLATE,
-                  js_call='webflash.render()',
-                  js_template=DEFAULT_JSFLASH_TEMPLATE,
-                  allow_html=False):
+    def configure(
+        self,
+        cookie_name="webflash",
+        default_status="ok",
+        template=DEFAULT_FLASH_TEMPLATE,
+        js_call="webflash.render()",
+        js_template=DEFAULT_JSFLASH_TEMPLATE,
+        allow_html=False,
+    ):
         """Flash messages can be configured through :class:`.ApplicationConfigurator`
         using the following options:
 
@@ -109,25 +116,25 @@ class TGFlash(GlobalConfigurable):
         # Force the message to be unicode so lazystrings, etc... are coerced
         message = str(message)
 
-        payload = self._prepare_payload(message=message,
-                                        status=status or self.default_status,
-                                        **extra_payload)
+        payload = self._prepare_payload(
+            message=message, status=status or self.default_status, **extra_payload
+        )
 
         if request is not None:
             # Save the payload in environ too in case JavaScript is not being
             # used and the message is being displayed in the same request.
-            request.environ['webflash.payload'] = payload
+            request.environ["webflash.payload"] = payload
 
         resp = response._current_obj()
         resp.set_cookie(self.cookie_name, payload, samesite="Strict")
-        if len(resp.headers['Set-Cookie']) > 4096:
-            raise ValueError('Flash value is too long (cookie would be >4k)')
+        if len(resp.headers["Set-Cookie"]) > 4096:
+            raise ValueError("Flash value is too long (cookie would be >4k)")
 
     def _prepare_payload(self, **data):
         return urllib.parse.quote(json.dumps(data))
 
     def _get_message(self, payload):
-        msg = payload.get('message','')
+        msg = payload.get("message", "")
         if self.allow_html is False:
             msg = escape(msg)
         return msg
@@ -147,15 +154,17 @@ class TGFlash(GlobalConfigurable):
     def _render_static_version(self, container_id):
         payload = self.pop_payload()
         if not payload:
-            return ''
-        payload['message'] = self._get_message(payload)
-        payload['container_id'] = container_id
+            return ""
+        payload["message"] = self._get_message(payload)
+        payload["container_id"] = container_id
         return self.static_template.substitute(payload)
 
     def _render_js_version(self, container_id):
-        return self.js_template.substitute(container_id=container_id,
-                                           cookie_name=self.cookie_name,
-                                           js_call=self.js_call)
+        return self.js_template.substitute(
+            container_id=container_id,
+            cookie_name=self.cookie_name,
+            js_call=self.js_call,
+        )
 
     def pop_payload(self):
         """Fetch current flash message, status and related information.
@@ -164,26 +173,26 @@ class TGFlash(GlobalConfigurable):
         """
         # First try fetching it from the request
         req = request._current_obj()
-        payload = req.environ.get('webflash.payload', {})
+        payload = req.environ.get("webflash.payload", {})
         if not payload:
             payload = req.cookies.get(self.cookie_name, {})
 
         if payload:
             payload = json.loads(urllib.parse.unquote(payload))
-            if 'webflash.deleted_cookie' not in req.environ:
+            if "webflash.deleted_cookie" not in req.environ:
                 response.set_cookie(self.cookie_name, None, samesite="Strict")
-                req.environ['webflash.delete_cookie'] = True
+                req.environ["webflash.delete_cookie"] = True
         return payload or {}
 
     @property
     def message(self):
         """Get only current flash message, getting the flash message will delete the cookie."""
-        return self.pop_payload().get('message')
+        return self.pop_payload().get("message")
 
     @property
     def status(self):
         """Get only current flash status, getting the flash status will delete the cookie."""
-        return self.pop_payload().get('status') or self.default_status
+        return self.pop_payload().get("status") or self.default_status
 
 
 flash = TGFlash.create_global()

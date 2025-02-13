@@ -13,7 +13,7 @@ import threading as threadinglocal
 from tg.support import NoDefault
 from tg.support.objectproxy import TurboGearsObjectProxy
 
-__all__ = ['StackedObjectProxy', 'RegistryManager']
+__all__ = ["StackedObjectProxy", "RegistryManager"]
 
 
 def _getboolattr(obj, attrname):
@@ -37,7 +37,8 @@ class StackedObjectProxy(TurboGearsObjectProxy):
     objects can be removed with _pop_object.
 
     """
-    _is_coroutine_marker = False # make sure inspect.iscoroutine doesn't crash
+
+    _is_coroutine_marker = False  # make sure inspect.iscoroutine doesn't crash
 
     def __init__(self, default=NoDefault, name="Default"):
         """Create a new StackedObjectProxy
@@ -46,10 +47,10 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         has been pushed on.
 
         """
-        self.__dict__['____name__'] = name
-        self.__dict__['____local__'] = threadinglocal.local()
+        self.__dict__["____name__"] = name
+        self.__dict__["____local__"] = threadinglocal.local()
         if default is not NoDefault:
-            self.__dict__['____default_object__'] = default
+            self.__dict__["____default_object__"] = default
 
     def _current_obj(self):
         """Returns the current active object being proxied to
@@ -66,13 +67,14 @@ class StackedObjectProxy(TurboGearsObjectProxy):
         if objects:
             return objects[-1][0]
         else:
-            obj = self.__dict__.get('____default_object__', NoDefault)
+            obj = self.__dict__.get("____default_object__", NoDefault)
             if obj is not NoDefault:
                 return obj
             else:
                 raise TypeError(
-                    'No object (name: %s) has been registered for this '
-                    'thread' % self.____name__)
+                    "No object (name: %s) has been registered for this "
+                    "thread" % self.____name__
+                )
 
     def _push_object(self, obj):
         """Make ``obj`` the active object for this thread-local.
@@ -109,10 +111,11 @@ class StackedObjectProxy(TurboGearsObjectProxy):
 
             if obj and popped_obj is not obj:
                 raise AssertionError(
-                    'The object popped (%s) is not the same as the object '
-                    'expected (%s)' % (popped_obj, obj))
+                    "The object popped (%s) is not the same as the object "
+                    "expected (%s)" % (popped_obj, obj)
+                )
         except (AttributeError, IndexError):
-            raise AssertionError('No object has been registered for this thread')
+            raise AssertionError("No object has been registered for this thread")
 
     def _object_stack(self):
         """Returns all of the objects stacked in this container
@@ -125,7 +128,7 @@ class StackedObjectProxy(TurboGearsObjectProxy):
             except AttributeError:
                 return []
             return objs[:]
-        except AssertionError: #pragma: no cover
+        except AssertionError:  # pragma: no cover
             return []
 
     def _preserve_object(self):
@@ -165,6 +168,7 @@ class Registry(object):
     tracked.
 
     """
+
     def __init__(self, enable_preservation=False):
         """Create a new Registry object
 
@@ -174,9 +178,9 @@ class Registry(object):
         """
         self.reglist = []
 
-        #preservation makes possible to keep around the objects
-        #this is especially useful when debugging to avoid
-        #discarding the objects after request completion.
+        # preservation makes possible to keep around the objects
+        # this is especially useful when debugging to avoid
+        # discarding the objects after request completion.
         self.enable_preservation = enable_preservation
 
     def prepare(self):
@@ -204,7 +208,7 @@ class Registry(object):
             del myreglist[stacked_id]
 
         # Avoid leaking memory on successive request when preserving objects
-        if _getboolattr(stacked, '_is_preserved'):
+        if _getboolattr(stacked, "_is_preserved"):
             stacked._pop_object()
 
         stacked._push_object(obj)
@@ -214,7 +218,7 @@ class Registry(object):
         """Remove all objects from all StackedObjectProxy instances that
         were tracked at this Registry context"""
         for stacked, obj in self.reglist[-1].values():
-            if not _getboolattr(stacked, '_is_preserved'):
+            if not _getboolattr(stacked, "_is_preserved"):
                 stacked._pop_object(obj)
         self.reglist.pop()
 
@@ -223,7 +227,7 @@ class Registry(object):
             return
 
         for stacked, obj in self.reglist[-1].values():
-            if hasattr(stacked, '_preserve_object'):
+            if hasattr(stacked, "_preserve_object"):
                 stacked._preserve_object()
 
 
@@ -242,6 +246,7 @@ class RegistryManager(object):
     object which is a Registry instance.
 
     """
+
     def __init__(self, application, streaming=False, preserve_exceptions=False):
         self.application = application
         self.streaming = streaming
@@ -249,7 +254,7 @@ class RegistryManager(object):
 
     def __call__(self, environ, start_response):
         app_iter = None
-        reg = environ.setdefault('paste.registry', Registry(self.preserve_exceptions))
+        reg = environ.setdefault("paste.registry", Registry(self.preserve_exceptions))
         reg.prepare()
 
         try:
@@ -276,7 +281,7 @@ class RegistryManager(object):
             reg.preserve()
             raise
         finally:
-            if hasattr(data, 'close'):
+            if hasattr(data, "close"):
                 data.close()
             reg.cleanup()
 
@@ -290,13 +295,14 @@ class DispatchingConfig(StackedObjectProxy):
     Specific configurations are registered (and deregistered) either
     for the process or for threads.
     """
+
     # @@: What should happen when someone tries to add this
     # configuration to itself?  Probably the conf should become
     # resolved, and get rid of this delegation wrapper
 
-    def __init__(self, name='DispatchingConfig'):
+    def __init__(self, name="DispatchingConfig"):
         super(DispatchingConfig, self).__init__(name=name)
-        self.__dict__['_process_configs'] = []
+        self.__dict__["_process_configs"] = []
 
     def push_thread_config(self, conf):
         """
@@ -338,8 +344,8 @@ class DispatchingConfig(StackedObjectProxy):
         if conf is not None and popped is not conf:
             raise AssertionError(
                 "The config popped (%s) is not the same as the config "
-                "expected (%s)"
-                % (popped, conf))
+                "expected (%s)" % (popped, conf)
+            )
 
     def _current_obj(self):
         try:
@@ -348,6 +354,7 @@ class DispatchingConfig(StackedObjectProxy):
             if self._process_configs:
                 return self._process_configs[-1]
             raise AttributeError(
-                "No configuration has been registered for this process "
-                "or thread")
+                "No configuration has been registered for this process or thread"
+            )
+
     current = current_conf = _current_obj

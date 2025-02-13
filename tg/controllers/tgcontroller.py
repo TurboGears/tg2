@@ -36,5 +36,5 @@ class TGController(DecoratedController, CoreDispatcher, ObjectDispatcher):
 
     """
 
-__all__ = ['TGController']
 
+__all__ = ["TGController"]

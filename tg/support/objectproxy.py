@@ -1,4 +1,3 @@
-
 class TurboGearsObjectProxy(object):
     """
     Foundation for the TurboGears request locals
@@ -6,6 +5,7 @@ class TurboGearsObjectProxy(object):
 
     Mostly inspired by paste.registry.StackedObjectProxy
     """
+
     def __dir__(self):
         dir_list = dir(self.__class__) + list(self.__dict__.keys())
         try:
@@ -22,7 +22,7 @@ class TurboGearsObjectProxy(object):
             # on a stacked object proxy during discovery phase of doctest.
             # As it will try to access __wrapped__.
             raise AttributeError(attr)
-        
+
         return getattr(self._current_obj(), attr)
 
     def __setattr__(self, attr, value):
@@ -47,9 +47,11 @@ class TurboGearsObjectProxy(object):
         try:
             return repr(self._current_obj())
         except (TypeError, AttributeError):
-            return '<%s.%s object at 0x%x>' % (self.__class__.__module__,
-                                               self.__class__.__name__,
-                                               id(self))
+            return "<%s.%s object at 0x%x>" % (
+                self.__class__.__module__,
+                self.__class__.__name__,
+                id(self),
+            )
 
     def __iter__(self):
         return iter(self._current_obj())
@@ -62,6 +64,7 @@ class TurboGearsObjectProxy(object):
 
     def __nonzero__(self):
         return bool(self._current_obj())
+
     __bool__ = __nonzero__
 
     _is_coroutine = None

@@ -6,6 +6,7 @@ class LazyString(object):
     to create the actual string. This is used mostly by lazy internationalization.
 
     """
+
     def __init__(self, func, *args, **kwargs):
         self.func = func
         self.args = args
@@ -37,9 +38,13 @@ def lazify(func):
     with the decorated function as factory.
 
     """
+
     def newfunc(*args, **kwargs):
         return LazyString(func, *args, **kwargs)
-    newfunc.__name__ = 'lazy_%s' % func.__name__
-    newfunc.__doc__ = 'Lazy-evaluated version of the %s function\n\n%s' % \
-        (func.__name__, func.__doc__)
+
+    newfunc.__name__ = "lazy_%s" % func.__name__
+    newfunc.__doc__ = "Lazy-evaluated version of the %s function\n\n%s" % (
+        func.__name__,
+        func.__doc__,
+    )
     return newfunc

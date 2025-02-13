@@ -83,28 +83,29 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
           disabled and :class:`tg.appwrappers.identity.IdentityApplicationWrapper` is
           used instead.
         * ``sa_auth.authtkt.timeout``: Timeout of the authtkt token.
-        * ``sa_auth.authtkt.reissue_time``: Frequency at which the authtkt token 
+        * ``sa_auth.authtkt.reissue_time``: Frequency at which the authtkt token
                                             should be refreshed.
         * ``sa_auth.authtkt.secure``: Make cookie HTTPS only and disable Javascript access.
-        * ``sa_auth.authtkt.samesite``: Enable a ``SameSite=X`` option on the cookie. 
+        * ``sa_auth.authtkt.samesite``: Enable a ``SameSite=X`` option on the cookie.
 
     """
+
     id = "sa_auth"
 
     def get_defaults(self):
         return {
-            'sa_auth.enabled': False,
-            'skip_authentication': False,
-            'sa_auth.log_stream': logging.getLogger('auth'),
-            'sa_auth.form_plugin': None
+            "sa_auth.enabled": False,
+            "skip_authentication": False,
+            "sa_auth.log_stream": logging.getLogger("auth"),
+            "sa_auth.form_plugin": None,
         }
 
     def get_coercion(self):
         return {
-            'sa_auth.enabled': asbool,
-            'skip_authentication': asbool,
-            'sa_auth.log_stream': aslogger,
-            'sa_auth.form_identifies': asbool
+            "sa_auth.enabled": asbool,
+            "skip_authentication": asbool,
+            "sa_auth.log_stream": aslogger,
+            "sa_auth.form_identifies": asbool,
         }
 
     def get_actions(self):
@@ -115,19 +116,27 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
 
     def on_bind(self, configurator):
         from ..application import ApplicationConfigurator
+
         if not isinstance(configurator, ApplicationConfigurator):
-            raise TGConfigError('Simple Authentication only works on an ApplicationConfigurator')
+            raise TGConfigError(
+                "Simple Authentication only works on an ApplicationConfigurator"
+            )
 
         from ...appwrappers.identity import IdentityApplicationWrapper
-        configurator.register_application_wrapper(IdentityApplicationWrapper, after=True)
+
+        configurator.register_application_wrapper(
+            IdentityApplicationWrapper, after=True
+        )
 
     def _configure(self, conf, app):
-        if not conf['sa_auth.enabled']:
+        if not conf["sa_auth.enabled"]:
             return
 
-        if not conf['skip_authentication'] and 'sa_auth.cookie_secret' not in conf:
-            raise TGConfigError("You must provide a value for authentication cookies secret. "
-                                "Make sure that you have an 'sa_auth.cookie_secret' config value.")
+        if not conf["skip_authentication"] and "sa_auth.cookie_secret" not in conf:
+            raise TGConfigError(
+                "You must provide a value for authentication cookies secret. "
+                "Make sure that you have an 'sa_auth.cookie_secret' config value."
+            )
 
     def _add_middleware(self, conf, app):
         """
@@ -139,17 +148,17 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
         if not conf["sa_auth.enabled"]:
             return app
 
-        auth_args = get_partial_dict('sa_auth', conf)
+        auth_args = get_partial_dict("sa_auth", conf)
 
         # Removing keywords not used by repoze.who:
-        auth_args.pop('enabled', None)
-        auth_args.pop('password_encryption_method', None)
+        auth_args.pop("enabled", None)
+        auth_args.pop("password_encryption_method", None)
 
         # Removing authmetadata as is not used by repoze.who:
-        tgauthmetadata = auth_args.pop('authmetadata', None)
+        tgauthmetadata = auth_args.pop("authmetadata", None)
 
         try:
-            pos = auth_args['authenticators'].index(('default', None))
+            pos = auth_args["authenticators"].index(("default", None))
         except KeyError:
             # Didn't specify authenticators, setup default one
             pos = None
@@ -161,21 +170,27 @@ class SimpleAuthenticationConfigurationComponent(ConfigurationComponent):
         if pos is None or pos >= 0:
             authenticator = None
             if tgauthmetadata:
-                if not hasattr(tgauthmetadata, 'authenticate'):
+                if not hasattr(tgauthmetadata, "authenticate"):
                     raise TGConfigError("authmetadata in app_cfg missing authenticate.")
 
                 if tgauthmetadata.authenticate is not None:
                     from tg.configuration.auth import create_default_authenticator
-                    auth_args, tgauth = create_default_authenticator(tgauthmetadata, **auth_args)
-                    authenticator = ('tgappauth', tgauth)                
+
+                    auth_args, tgauth = create_default_authenticator(
+                        tgauthmetadata, **auth_args
+                    )
+                    authenticator = ("tgappauth", tgauth)
 
                     if pos is None:
-                        auth_args['authenticators'] = [authenticator]
+                        auth_args["authenticators"] = [authenticator]
                     else:
                         # We make a copy so that we don't modify the original one.
-                        auth_args['authenticators'] = auth_args['authenticators']
-                        auth_args['authenticators'][pos] = authenticator
+                        auth_args["authenticators"] = auth_args["authenticators"]
+                        auth_args["authenticators"][pos] = authenticator
 
         from tg.configuration.auth import setup_auth
-        app = setup_auth(app, skip_authentication=conf['skip_authentication'], **auth_args)
+
+        app = setup_auth(
+            app, skip_authentication=conf["skip_authentication"], **auth_args
+        )
         return app
