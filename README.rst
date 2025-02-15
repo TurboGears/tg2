@@ -40,7 +40,7 @@ Get Started
 -----------
 
 .. image:: https://asciinema.org/a/181221.png
-    :target: https://asciinema.org/a/181221
+    :target: https://asciinema.org/a/181221?autoplay=1
 
 To try TurboGears just get ``pip`` if you don't already have it::
 
