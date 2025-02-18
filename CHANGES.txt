@@ -1,5 +1,34 @@
 = Change Log =
 
+== 2.5.0 (**Feb 18, 2025**) ==
+
+* Support for Python 3.13
+* Remove support for repoze.what
+* Switch to pyproject.toml
+* Minimum requirement Python 3.8
+* RequireValue validation helper
+* Resolve SQLAlchemy deprecation warnings
+* Fix dotted filenames support on Python3.8
+* Drop usage of pkg_resources for dottedfiles
+* more powerful pluggable validation and formencode support extracted in tgext.formencode
+* Remove builtin support for Tw2, now in charge of tgext.tw2
+* Do not proxy _is_coroutine attr, fixes #136 (#137)
+* Address some auth_backend leftovers
+* Remove deprecated DecoratedController._handle_validation_errors
+* Mandate context argument in DecoratedController._perform_validate
+* Remove deprecated tmpl_context attributes
+* Remove deprecated beaker.session. prefix to session options
+* Remove deprecated request.controller_state and upgrade version
+* simplify test dependencies install
+* SQLAlchemy 2.0
+* Migrate to pytest
+* jinja3 capitalized exception message (#124)
+* support sqlalchemy 1.4 (#123)
+* Fix signed_cookie wrongly injecting newlines in the cookie
+* Provide samesite also when unsetting the cookie
+* Make sure webflash cookie is emitted with samesite
+* Compatible with backlash 0.3.0
+
 == 2.4.3 (**Mar 1, 2020**) ==
 
 * Support for ``i18n.native`` list of languages to disable translation for languages the templates are natively written in.
