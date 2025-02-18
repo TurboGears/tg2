@@ -36,6 +36,10 @@ TurboGears helps you get going fast and gets out of your way when you want it!
 TurboGears can be used *both* as a *full stack* framework or as a
 *microframework* in single file mode.
 
+The following content covers examples in minimal mode, to see
+an example for full stack capabilities take a look at
+`tg.devtools <https://github.com/turboGears/tg2devtools>`_
+
 Get Started
 -----------
 
