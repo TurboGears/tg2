@@ -50,6 +50,7 @@ testing = [
     "Mako",
     "WebTest",
     "backlash>=0.3.0",
+    "raven",
     "Beaker",
     "sqlalchemy",
     "jinja2",
