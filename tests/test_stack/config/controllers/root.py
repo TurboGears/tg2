@@ -28,7 +28,7 @@ class RootController(TGController):
         
     @expose()
     def config_set_method(self):
-        return str(config.get('pylons'))
+        return str(config.get('default_renderer'))
 
     @expose()
     def config_dict_set(self, foo):

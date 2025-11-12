@@ -586,8 +586,8 @@ def test_override_template_on_noncontroller():
 def test_jinja2_manual_rendering():
     app = setup_noDB()
     tgresp = app.get('/jinja2_manual_rendering')
-    pyresp = app.get('/jinja2_manual_rendering?frompylons=1')
-    assert str(tgresp) == str(pyresp), str(tgresp) + '\n------\n' + str(pyresp)
+    assert '<h1>Index</h1>' in tgresp
+    assert 'Welcome on my awsome homepage.' in tgresp
 
 def test_no_template():
     app = setup_noDB()

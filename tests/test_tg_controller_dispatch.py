@@ -7,23 +7,21 @@ from webob import Request, Response
 from tests.test_validation import IntValidator
 
 try:
-    from pylons.controllers.xmlrpc import XMLRPCController
-except ImportError:
-    try:
-        from xmlrpclib import dumps
-    except ImportError:
-        from xmlrpc.client import dumps
+    from xmlrpc.client import dumps
+except ImportError:  # pragma: no cover
+    from xmlrpclib import dumps  # type: ignore
 
-    class XMLRPCController(object):
-        def __call__(self, environ, start_response):
-            raw_response = self.textvalue()
-            response = dumps((raw_response,), methodresponse=True, allow_none=False).encode('utf-8')
 
-            headers = []
-            headers.append(('Content-Length', str(len(response))))
-            headers.append(('Content-Type', 'text/xml'))
-            start_response("200 OK", headers)
-            return [response]
+class XMLRPCController(object):
+    def __call__(self, environ, start_response):
+        raw_response = self.textvalue()
+        response = dumps((raw_response,), methodresponse=True, allow_none=False).encode('utf-8')
+
+        headers = []
+        headers.append(('Content-Length', str(len(response))))
+        headers.append(('Content-Type', 'text/xml'))
+        start_response("200 OK", headers)
+        return [response]
 
 
 import tg

@@ -109,7 +109,7 @@ def _get_tg_vars():
         N_=tg.i18n.gettext_noop,
     )
 
-    # If there is an identity, push it to the Pylons template context
+    # If there is an identity, push it to the template context
     tmpl_context.identity = tg_vars["identity"]
 
     # Allow users to provide a callable that defines extra vars to be
@@ -118,18 +118,6 @@ def _get_tg_vars():
     if variable_provider:
         root_vars.update(variable_provider())
     return root_vars
-
-
-# Monkey patch pylons_globals for cases when pylons.templating is used
-# instead of tg.render to programmatically render templates.
-try:  # pragma: no cover
-    import pylons
-    import pylons.templating
-
-    pylons.templating.pylons_globals = _get_tg_vars
-except ImportError:
-    pass
-# end monkeying around
 
 
 def render(template_vars, template_engine=None, template_name=None, **kwargs):

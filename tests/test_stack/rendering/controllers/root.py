@@ -371,17 +371,8 @@ class RootController(TGController):
         return dict(format='something', status="ok")
 
     @expose()
-    def jinja2_manual_rendering(self, frompylons=False):
-        try:
-            import pylons
-        except ImportError:
-            frompylons = False
-
-        if frompylons:
-            from pylons.templating import render_jinja2
-            return render_jinja2('jinja_inherits.jinja')
-        else:
-            return render_template({}, 'jinja', 'jinja_inherits.jinja')
+    def jinja2_manual_rendering(self):
+        return render_template({}, 'jinja', 'jinja_inherits.jinja')
 
     @expose()
     def no_template_generator(self):
