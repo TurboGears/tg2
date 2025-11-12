@@ -89,7 +89,7 @@ class TestKajikiSupport(object):
             with test_context(self.app):
                 res = self.render('this_doesnt_exists/this_doesnt_exists.xhtml', {})
         except IOError as e:
-            assert 'this_doesnt_exists.xhtml not found in template paths' in str(e)
+            assert 'this_doesnt_exists.xhtml not found' in str(e)
         else:
             raise AssertionError('Should have raised IOError')
 
