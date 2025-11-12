@@ -3,7 +3,6 @@
 == 2.5.0 (**Feb 18, 2025**) ==
 
 * Support for Python 3.13
-* Support for Python 3.14
 * Remove support for repoze.what
 * Switch to pyproject.toml
 * Minimum requirement Python 3.8
