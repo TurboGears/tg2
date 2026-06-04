@@ -130,7 +130,11 @@ class Request(WebObRequest):
         # This was: dict(((str(n), v) for n,v in self.params.mixed().items()))
         # so that keys were all strings making possible to use them as arguments.
         # Now it seems that all keys are always strings, did WebOb change behavior?
-        params = self.params.mixed()
+        try:
+            params = self.params.mixed()
+        except UnicodeDecodeError:
+            self.__dict__["args_params"] = {}
+            raise HTTPBadRequest("Invalid request parameters")
         if (
             self.content_type
             and self.content_type.lower() == "application/json"

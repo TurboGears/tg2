@@ -619,6 +619,12 @@ class TestTGController(TestWSGIController):
         r = self.app.get('/hello/YourName/silly?name=You&more=1')
         assert 'Hello You' in r, r
 
+    def test_malformed_query_parameter_name_is_bad_request(self):
+        self.app.get('/?percent%ADd=1', status=400)
+
+    def test_malformed_query_parameter_value_is_bad_request(self):
+        self.app.get('/?x=%AD', status=400)
+
     def test_response_without_charset(self):
         r = self.app.get('/index_unicode')
         assert 'Hello World' in r, r

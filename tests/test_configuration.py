@@ -1722,6 +1722,29 @@ class TestAppConfig:
         resp = app.get('/test', status=403)
         assert 'ERROR!!!' in resp, resp
 
+    def test_custom_error_document_handles_malformed_query_string(self):
+        class ErrorController(TGController):
+            @expose()
+            def document(self, *args, **kw):
+                return 'ERROR!!!'
+
+        class RootController(TGController):
+            error = ErrorController()
+
+            @expose()
+            def test(self):
+                return 'OK'
+
+        conf = AppConfig(minimal=True, root_controller=RootController())
+        conf['errorpage.enabled'] = True
+        conf['errorpage.status_codes'] = [400]
+        conf['errorpage.handle_exceptions'] = False
+        app = conf.make_wsgi_app(full_stack=True)
+        app = TestApp(app)
+
+        resp = app.get('/test?x=%AD', status=400)
+        assert 'ERROR!!!' in resp, resp
+
     def test_error_document_passthrough(self):
         class ErrorController(TGController):
             @expose()
