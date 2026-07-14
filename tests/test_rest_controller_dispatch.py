@@ -549,8 +549,7 @@ class TestRestController(TestWSGIController):
         assert "/['empty']" in r, r
 
     def test_put_miss(self):
-        r = self.app.put('/rest/something')
-        assert "/['rest', 'something']" in r, r
+        self.app.put('/rest/something', status=400)
 
     def test_delete_miss(self):
         r = self.app.delete('/rest/something')
@@ -754,8 +753,7 @@ class TestRestController(TestWSGIController):
         assert 'subrest put' in r, r
 
     def test_sub_post_req_bad(self):
-        r = self.app.post('/rest2/reqsubrest',)
-        assert "['rest2', 'reqsubrest']" in r, r
+        self.app.post('/rest2/reqsubrest', status=400)
 
     def test_sub_delete_hack(self):
         r = self.app.post('/rest2/1/subrest/2?_method=DELETE')

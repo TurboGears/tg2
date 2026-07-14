@@ -119,7 +119,7 @@ def abort(
 def validation_errors_response(*args, **kwargs):
     """Returns a :class:`.Response` object with validation errors.
 
-    The response will be created with a *412 Precondition Failed*
+    The response will be created with a *422 Unprocessable Content*
     status code and errors are reported in JSON format as response body.
 
     Typical usage is as ``error_handler`` for JSON based api::
@@ -139,11 +139,11 @@ def validation_errors_response(*args, **kwargs):
     )
     values = req.validation.values
     try:
-        return Response(status=412, json_body={"errors": errors, "values": values})
+        return Response(status=422, json_body={"errors": errors, "values": values})
     except TypeError:
         # values cannot be encoded to JSON, this might happen after
         # validation passed and validators converted them to complex objects.
         # In this case use request params, instead of controller params.
         return Response(
-            status=412, json_body={"errors": errors, "values": req.args_params}
+            status=422, json_body={"errors": errors, "values": req.args_params}
         )

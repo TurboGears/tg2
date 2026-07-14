@@ -500,12 +500,12 @@ class TestTGController(TestWSGIController):
         assert resp.status.startswith('412')
 
     def test_json_error_handler(self):
-        resp = self.app.post('/validate_json_errors', {'uid': 'NaN'}, status=412)
+        resp = self.app.post('/validate_json_errors', {'uid': 'NaN'}, status=422)
         assert resp.json['errors']['uid'] == 'Please enter an integer value'
 
     def test_json_error_handler_complex_type(self):
         resp = self.app.post('/validate_json_errors_complex_types', {'date': '2014-01-01'},
-                             status=412)
+                             status=422)
         assert resp.json['values']['date'] == '2014-01-01', resp
 
     def test_throw_way_validation_intent(self):
@@ -530,7 +530,7 @@ class TestTGController(TestWSGIController):
 
     def test_type_hint_validation_invalid_type(self):
         """Test that invalid type for parameter with type hint raises error"""
-        resp = self.app.post('/type_hint_validation', {'num': 'not_a_number', 'name': 'test'}, status=412)
+        resp = self.app.post('/type_hint_validation', {'num': 'not_a_number', 'name': 'test'}, status=422)
         assert 'num' in resp.json['errors']
 
     def test_type_hint_validation_with_error_handler(self):
@@ -540,7 +540,7 @@ class TestTGController(TestWSGIController):
 
     def test_type_hint_validation_with_error_handler_fail(self):
         """Test type hint validation with error handler on failure"""
-        resp = self.app.post('/type_hint_validation_with_error', {'num': 'not_a_number'}, status=412)
+        resp = self.app.post('/type_hint_validation_with_error', {'num': 'not_a_number'}, status=422)
         assert 'num' in resp.json['errors']
 
     def test_type_hint_optional_validation(self):
@@ -558,18 +558,18 @@ class TestTGController(TestWSGIController):
         assert resp.text == '25', resp
 
     def test_convert_validation_fail(self):
-        resp = self.app.post('/post_pow2', {'num': 'HELLO'}, status=412)
+        resp = self.app.post('/post_pow2', {'num': 'HELLO'}, status=422)
         assert 'This must be a number' in resp.json['errors']['num']
 
     def test_convert_validation_missing(self):
-        resp = self.app.post('/post_pow2', {'num': ''}, status=412)
+        resp = self.app.post('/post_pow2', {'num': ''}, status=422)
         assert 'This must be a number' in resp.json['errors']['num']
 
-        resp = self.app.post('/post_pow2', status=412)
+        resp = self.app.post('/post_pow2', status=422)
         assert 'This must be a number' in resp.json['errors']['num']
 
     def test_convert_validation_optional(self):
-        resp = self.app.post('/post_pow2_opt', {'num': 'HELLO'}, status=412)
+        resp = self.app.post('/post_pow2_opt', {'num': 'HELLO'}, status=422)
         assert 'This must be a number' in resp.json['errors']['num']
 
         resp = self.app.post('/post_pow2_opt', {'num': '5'})
@@ -582,18 +582,18 @@ class TestTGController(TestWSGIController):
         assert resp.text == '0', resp
 
     def test_validation_errors_unicode(self):
-        resp = self.app.post('/unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
+        resp = self.app.post('/unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=422)
         assert resp.json['errors']['num'] == str('àèìòù'), resp.json
 
     def test_validation_errors_lazy_unicode(self):
-        resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=412)
+        resp = self.app.post('/lazy_unicode_error_pow', {'num': 'NOT_A_NUMBER'}, status=422)
         assert resp.json['errors']['num'] == str('àèìòù'), resp.json
 
     def test_requirevalue_validation(self):
         resp = self.app.post('/require_value', {"val": "hello"})
         assert resp.text == 'hello', resp
 
-        resp = self.app.post('/require_value', {}, status=412)
+        resp = self.app.post('/require_value', {}, status=422)
         assert resp.json["errors"]["val"] == 'Value is required', resp
 
     def test_convert_default_none_missing(self):
@@ -613,17 +613,17 @@ class TestTGController(TestWSGIController):
 
     def test_convert_default_none_invalid(self):
         """Test Convert with explicit default=None - invalid value should error"""
-        resp = self.app.post('/post_pow2_opt_none', {'num': 'HELLO'}, status=412)
+        resp = self.app.post('/post_pow2_opt_none', {'num': 'HELLO'}, status=422)
         assert 'Must be a number' in resp.json['errors']['num']
 
     def test_convert_no_default_required_missing(self):
         """Test Convert with no default - missing value should error (required)"""
-        resp = self.app.post('/post_pow2_required', status=412)
+        resp = self.app.post('/post_pow2_required', status=422)
         assert 'Must be a number' in resp.json['errors']['num']
 
     def test_convert_no_default_required_empty(self):
         """Test Convert with no default - empty value should error (required)"""
-        resp = self.app.post('/post_pow2_required', {'num': ''}, status=412)
+        resp = self.app.post('/post_pow2_required', {'num': ''}, status=422)
         assert 'Must be a number' in resp.json['errors']['num']
 
     def test_convert_no_default_required_with_value(self):
@@ -633,7 +633,7 @@ class TestTGController(TestWSGIController):
 
     def test_convert_no_default_required_invalid(self):
         """Test Convert with no default - invalid value should error"""
-        resp = self.app.post('/post_pow2_required', {'num': 'HELLO'}, status=412)
+        resp = self.app.post('/post_pow2_required', {'num': 'HELLO'}, status=422)
         assert 'Must be a number' in resp.json['errors']['num']
 
 
@@ -666,7 +666,7 @@ class TestChainValidation(TestWSGIController):
         assert res.text == '>0'
 
     def test_last_chain_validation(self):
-        res = self.app.get('/chain_validation_begin', params={'val': 0}, status=412)
+        res = self.app.get('/chain_validation_begin', params={'val': 0}, status=422)
         assert res.json == json.loads('{"errors":{"val":"Invalid"},"values":{"val":"0"}}')
 
 
