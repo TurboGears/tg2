@@ -34,7 +34,7 @@ license = { text = "MIT" }
 urls = { Homepage = "http://www.turbogears.org/" }
 dependencies = [
     "WebOb>=1.8.9,<1.10.0",
-    "crank>=0.8.0,<0.9.0",
+    "crank>=0.9.0,<0.10.0",
     "repoze.lru",
     "MarkupSafe"
 ]
