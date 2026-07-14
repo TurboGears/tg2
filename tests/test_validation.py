@@ -349,6 +349,26 @@ class BasicTGController(TGController):
     def require_value(self, val=None):
         return val
 
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, 'Must be a number', default=None)
+    }, error_handler=validation_errors_response)
+    def post_pow2_opt_none(self, num=None):
+        """Test Convert with explicit default=None - field is optional, defaults to None"""
+        if num is None:
+            return 'none'
+        return str(num*num)
+
+    @expose(content_type='text/plain')
+    @validate({
+        'num': Convert(int, 'Must be a number')
+    }, error_handler=validation_errors_response)
+    def post_pow2_required(self, num=None):
+        """Test Convert with no default - field is required"""
+        if num is None:
+            return 'should-not-happen'
+        return str(num*num)
+
 
 class TestTGController(TestWSGIController):
     def setup_method(self):
@@ -576,6 +596,46 @@ class TestTGController(TestWSGIController):
         resp = self.app.post('/require_value', {}, status=412)
         assert resp.json["errors"]["val"] == 'Value is required', resp
 
+    def test_convert_default_none_missing(self):
+        """Test Convert with explicit default=None - missing value should use None"""
+        resp = self.app.post('/post_pow2_opt_none')
+        assert resp.text == 'none', resp
+
+    def test_convert_default_none_empty(self):
+        """Test Convert with explicit default=None - empty value should use None"""
+        resp = self.app.post('/post_pow2_opt_none', {'num': ''})
+        assert resp.text == 'none', resp
+
+    def test_convert_default_none_with_value(self):
+        """Test Convert with explicit default=None - provided value should be used"""
+        resp = self.app.post('/post_pow2_opt_none', {'num': '5'})
+        assert resp.text == '25', resp
+
+    def test_convert_default_none_invalid(self):
+        """Test Convert with explicit default=None - invalid value should error"""
+        resp = self.app.post('/post_pow2_opt_none', {'num': 'HELLO'}, status=412)
+        assert 'Must be a number' in resp.json['errors']['num']
+
+    def test_convert_no_default_required_missing(self):
+        """Test Convert with no default - missing value should error (required)"""
+        resp = self.app.post('/post_pow2_required', status=412)
+        assert 'Must be a number' in resp.json['errors']['num']
+
+    def test_convert_no_default_required_empty(self):
+        """Test Convert with no default - empty value should error (required)"""
+        resp = self.app.post('/post_pow2_required', {'num': ''}, status=412)
+        assert 'Must be a number' in resp.json['errors']['num']
+
+    def test_convert_no_default_required_with_value(self):
+        """Test Convert with no default - provided value should be used"""
+        resp = self.app.post('/post_pow2_required', {'num': '5'})
+        assert resp.text == '25', resp
+
+    def test_convert_no_default_required_invalid(self):
+        """Test Convert with no default - invalid value should error"""
+        resp = self.app.post('/post_pow2_required', {'num': 'HELLO'}, status=412)
+        assert 'Must be a number' in resp.json['errors']['num']
+
 
 class TestChainValidation(TestWSGIController):
     def setup_method(self):
@@ -723,3 +783,63 @@ class TestValidationConfiguration:
             resp = app.get("/test", {"fail": 1})
         assert "No validation explode function found for" in str(exc_info.value)
         assert "FakeError" in str(exc_info.value)
+
+
+class TestConvertDefaultBehavior:
+    """Unit tests for Convert class default behavior with _nodefault sentinel"""
+
+    def test_convert_no_default_missing_value(self):
+        """Convert with no default should raise error on missing value"""
+        validator = Convert(int, 'Invalid')
+        with pytest.raises(TGValidationError) as exc_info:
+            validator.to_python(None)
+        assert str(exc_info.value) == 'Invalid'
+
+    def test_convert_no_default_empty_string(self):
+        """Convert with no default should raise error on empty string"""
+        validator = Convert(int, 'Invalid')
+        with pytest.raises(TGValidationError) as exc_info:
+            validator.to_python('')
+        assert str(exc_info.value) == 'Invalid'
+
+    def test_convert_no_default_valid_value(self):
+        """Convert with no default should convert valid value"""
+        validator = Convert(int, 'Invalid')
+        result = validator.to_python('42')
+        assert result == 42
+
+    def test_convert_default_none_missing_value(self):
+        """Convert with explicit default=None should return None on missing value"""
+        validator = Convert(int, 'Invalid', default=None)
+        result = validator.to_python(None)
+        assert result is None
+
+    def test_convert_default_none_empty_string(self):
+        """Convert with explicit default=None should return None on empty string"""
+        validator = Convert(int, 'Invalid', default=None)
+        result = validator.to_python('')
+        assert result is None
+
+    def test_convert_default_none_valid_value(self):
+        """Convert with explicit default=None should convert valid value"""
+        validator = Convert(int, 'Invalid', default=None)
+        result = validator.to_python('42')
+        assert result == 42
+
+    def test_convert_default_zero_missing_value(self):
+        """Convert with default=0 should return 0 on missing value"""
+        validator = Convert(int, 'Invalid', default=0)
+        result = validator.to_python(None)
+        assert result == 0
+
+    def test_convert_default_zero_empty_string(self):
+        """Convert with default=0 should return 0 on empty string"""
+        validator = Convert(int, 'Invalid', default=0)
+        result = validator.to_python('')
+        assert result == 0
+
+    def test_convert_default_string_missing_value(self):
+        """Convert with default='default' should return 'default' on missing value"""
+        validator = Convert(str, 'Invalid', default='default')
+        result = validator.to_python(None)
+        assert result == 'default'

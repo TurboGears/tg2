@@ -2,6 +2,9 @@ from tg.configuration.utils import TGConfigError
 
 from .i18n import lazy_ugettext
 
+# Sentinel object to distinguish "no default supplied" from default=None
+_nodefault = object()
+
 
 class _ValidationStatus(object):
     """Current request parameters validation status.
@@ -142,6 +145,9 @@ class Convert(object):
 
     A ``default`` value can be provided for values that are missing
     (evaluate to false) which will be used in place of the missing value.
+    If no default is provided, the field is required and will raise a
+    validation error when missing. Use ``default=None`` explicitly to
+    make a field optional with a default value of None.
 
     Example::
 
@@ -151,16 +157,24 @@ class Convert(object):
         }, error_handler=insert_number)
         def post_pow2(self, num):
             return str(num*num)
+
+        @expose()
+        @validate({
+            'num': Convert(int, 'Must be a number', default=None)
+        }, error_handler=insert_number)
+        def post_pow2_opt(self, num):
+            # num will be None if not provided
+            return str(num*num) if num is not None else 'none'
     """
 
-    def __init__(self, func, msg=lazy_ugettext("Invalid"), default=None):
+    def __init__(self, func, msg=lazy_ugettext("Invalid"), default=_nodefault):
         self._func = func
         self._msg = msg
         self._default = default
 
     def to_python(self, value, state=None):
         if RequireValue.is_empty(value):
-            if self._default is None:
+            if self._default is _nodefault:
                 raise TGValidationError(self._msg, value)
             return self._default
 
