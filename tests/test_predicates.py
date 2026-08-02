@@ -68,6 +68,32 @@ class TestPredicate(BasePredicateTester):
         p = EqualsTwo()
         self.assertEqual(previous_msg, p.message)
 
+    def test_repr_uses_stable_attributes_for_custom_predicates(self):
+        class Callback:
+            def __call__(self):
+                pass
+
+            def __repr__(self):
+                raise AssertionError("predicate repr must not call callable repr")
+
+        class CustomPredicate(predicates.Predicate):
+            pass
+
+        predicate = CustomPredicate()
+        predicate.zeta = object()
+        predicate.name = 'example'
+        predicate.labels = ['first', 'second']
+        predicate.callback = Callback()
+
+        assert repr(predicate) == (
+            f"{__name__}.TestPredicate.test_repr_uses_stable_attributes_for_custom_predicates"
+            ".<locals>.CustomPredicate("
+            f"callback={__name__}.TestPredicate."
+            "test_repr_uses_stable_attributes_for_custom_predicates.<locals>.Callback, "
+            "labels=<builtins.list>, name='example', zeta=<builtins.object>)"
+        )
+        assert repr(predicates.is_user('amol')) == "tg.predicates.is_user(user_name='amol')"
+
     def test_unicode_messages(self):
         unicode_msg = str('请登陆')
         p = EqualsTwo(msg=unicode_msg)

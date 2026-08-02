@@ -12,6 +12,7 @@ from .bunch import Bunch
 from .decorators import no_warn
 from .files import DottedFileLocatorError, DottedFileNameFinder  # noqa: F401
 from .lazystring import LazyString, lazify
+from .misc import callable_name
 
 __all__ = (
     "Bunch",
@@ -20,4 +21,5 @@ __all__ = (
     "DottedFileNameFinder",
     "LazyString",
     "lazify",
+    "callable_name",
 )

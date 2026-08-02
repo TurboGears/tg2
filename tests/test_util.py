@@ -7,6 +7,7 @@ import pytest
 
 import tg
 from tg.controllers.util import url
+from tg.util import callable_name
 from tg.util.bunch import Bunch, get_partial_dict
 from tg.util.dates import get_fixed_timezone, parse_datetime, utctz
 from tg.util.files import DottedFileLocatorError, DottedFileNameFinder, safe_filename
@@ -350,6 +351,18 @@ class TestWebTestUtilities(object):
 
 
 class TestMiscUtils(object):
+    def test_callable_name(self):
+        class Callable:
+            def __call__(self):
+                pass
+
+            def __repr__(self):
+                raise AssertionError("callable_name must not call repr")
+
+        assert callable_name(unless) == "tg.util.misc.unless"
+        assert callable_name(list.append) == "list.append"
+        assert callable_name(Callable()) == f"{__name__}.{Callable.__qualname__}"
+
     def test_unless(self):
         not5 = unless(lambda x: x % 5, 0)
         assert not5(6) == 1

@@ -785,6 +785,35 @@ class TestValidationConfiguration:
         assert "FakeError" in str(exc_info.value)
 
 
+class _RepresentationMethod:
+    def method(self, value):
+        return value
+
+
+class _RepresentationCallable:
+    def __call__(self, value):
+        return value
+
+    def __repr__(self):
+        raise AssertionError("validation repr must not call callable repr")
+
+
+class TestValidationRepresentations:
+    def test_convert_and_require_value_representations(self):
+        assert repr(Convert(int)) == (
+            "Convert(func=builtins.int, msg='Invalid', default=<required>)"
+        )
+        assert repr(Convert(_RepresentationCallable(), msg=17, default=None)) == (
+            "Convert(func=tests.test_validation._RepresentationCallable, "
+            "msg=17, default=None)"
+        )
+        assert repr(RequireValue(_RepresentationMethod().method)) == (
+            "RequireValue(msg=tests.test_validation._RepresentationMethod.method)"
+        )
+        assert repr(RequireValue(object())) == "RequireValue(msg=<builtins.object>)"
+        assert repr(RequireValue()) == "RequireValue(msg='Required')"
+
+
 class TestConvertDefaultBehavior:
     """Unit tests for Convert class default behavior with _nodefault sentinel"""
 

@@ -2,6 +2,17 @@
 from functools import wraps
 
 
+def callable_name(value):
+    """Return a stable qualified name for a callable."""
+    module = getattr(value, "__module__", None)
+    qualname = getattr(value, "__qualname__", None)
+    if qualname:
+        return f"{module}.{qualname}" if module else qualname
+
+    value_type = type(value)
+    return f"{value_type.__module__}.{value_type.__qualname__}"
+
+
 def unless(func, check=None):
     """Wraps ``func`` ensuring it returns a value different from ``check``.
 

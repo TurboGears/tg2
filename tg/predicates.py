@@ -10,6 +10,7 @@ original "identity" framework of TurboGears 1, plus others.
 """
 
 from .request_local import request
+from .util import callable_name
 
 __all__ = [
     "Predicate",
@@ -37,6 +38,23 @@ class Predicate(object):
     def __init__(self, msg=None):
         if msg:
             self.message = msg
+
+    def __repr__(self):
+        attributes = []
+        for name, value in sorted(self.__dict__.items()):
+            if type(value) in (str, int, float, bool, type(None)):
+                rendered = repr(value)
+            elif callable(value):
+                rendered = callable_name(value)
+            else:
+                value_type = type(value)
+                rendered = f"<{value_type.__module__}.{value_type.__qualname__}>"
+            attributes.append(f"{name}={rendered}")
+        predicate_type = type(self)
+        return (
+            f"{predicate_type.__module__}.{predicate_type.__qualname__}"
+            f"({', '.join(attributes)})"
+        )
 
     def evaluate(self, environ, credentials):
         raise NotImplementedError

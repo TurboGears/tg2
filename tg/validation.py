@@ -1,6 +1,8 @@
 from tg.configuration.utils import TGConfigError
 
 from .i18n import lazy_ugettext
+from .util import callable_name
+from .util.lazystring import LazyString
 
 # Sentinel object to distinguish "no default supplied" from default=None
 _nodefault = object()
@@ -183,6 +185,17 @@ class Convert(object):
         except Exception:
             raise TGValidationError(self._msg, value)
 
+    def __repr__(self):
+        default = (
+            "<required>"
+            if self._default is _nodefault
+            else _diagnostic_text(self._default)
+        )
+        return (
+            f"Convert(func={_diagnostic_text(self._func)}, "
+            f"msg={_diagnostic_text(self._msg)}, default={default})"
+        )
+
 
 class RequireValue(object):
     """Mark a value as required during validation.
@@ -215,3 +228,22 @@ class RequireValue(object):
         if self.is_empty(value):
             raise TGValidationError(self._msg, value)
         return value
+
+    def __repr__(self):
+        return f"RequireValue(msg={_diagnostic_text(self._msg)})"
+
+
+def _diagnostic_text(value):
+    if (
+        type(value) is LazyString
+        and len(value.args) == 1
+        and type(value.args[0]) is str
+        and not value.kwargs
+    ):
+        return repr(value.args[0])
+    if type(value) in (str, int, float, bool, type(None)):
+        return repr(value)
+    if callable(value):
+        return callable_name(value)
+    value_type = type(value)
+    return f"<{value_type.__module__}.{value_type.__qualname__}>"
