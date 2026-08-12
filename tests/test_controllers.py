@@ -95,28 +95,32 @@ def test_lurl_as_HTTPFound_location():
     with test_context(None, '/'):
         exc = HTTPFound(location=lurl('/lurl'))
 
-        def _fake_start_response(*args, **kw):
-            pass
+        response_headers = {}
 
-        resp = exc({'PATH_INFO':'/',
-                    'wsgi.url_scheme': 'HTTP',
-                    'REQUEST_METHOD': 'GET',
-                    'SERVER_NAME': 'localhost',
-                    'SERVER_PORT': '80'}, _fake_start_response)
-        assert b'resource was found at http://localhost:80/lurl' in resp[0]
+        def _fake_start_response(status, headers, *args):
+            response_headers.update(headers)
+
+        exc({'PATH_INFO':'/',
+             'wsgi.url_scheme': 'http',
+             'REQUEST_METHOD': 'GET',
+             'SERVER_NAME': 'localhost',
+             'SERVER_PORT': '80'}, _fake_start_response)
+        assert response_headers['Location'] == 'http://localhost/lurl'
 
 def test_HTTPFound_without_location():
     exc = HTTPFound(add_slash=True)
  
-    def _fake_start_response(*args, **kw):
-        pass
+    response_headers = {}
 
-    resp = exc({'PATH_INFO':'/here',
-                'wsgi.url_scheme': 'HTTP',
-                'REQUEST_METHOD': 'GET',
-                'SERVER_NAME': 'localhost',
-                'SERVER_PORT': '80'}, _fake_start_response)
-    assert b'resource was found at http://localhost:80/here/' in resp[0]
+    def _fake_start_response(status, headers, *args):
+        response_headers.update(headers)
+
+    exc({'PATH_INFO':'/here',
+         'wsgi.url_scheme': 'http',
+         'REQUEST_METHOD': 'GET',
+         'SERVER_NAME': 'localhost',
+         'SERVER_PORT': '80'}, _fake_start_response)
+    assert response_headers['Location'] == 'http://localhost/here/'
 
 @no_warn
 def test_lurl_format():
