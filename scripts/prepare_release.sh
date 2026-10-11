@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 1 || ! $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.?dev[0-9]+)?$ ]]; then
-    echo "Usage: $0 MAJOR.MINOR.PATCH[.devN]" >&2
+if (( $# < 1 || $# > 2 )); then
+    echo "Usage: $0 MAJOR.MINOR.PATCH[.devN] [--push]" >&2
+    exit 2
+fi
+if [[ ! $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.?dev[0-9]+)?$ ]] || { (( $# == 2 )) && [[ $2 != --push ]]; }; then
+    echo "Usage: $0 MAJOR.MINOR.PATCH[.devN] [--push]" >&2
     exit 2
 fi
 
 version=$1
-workdir=$(cd "$(mktemp -d)" && pwd)
-trap 'rm -rf "$workdir"' EXIT
+push_release=false
+[[ $# -eq 2 ]] && push_release=true
+workdir=$(cd "$(mktemp -d /tmp/tg-release.XXXXXX)" && pwd)
+trap 'if [[ "$push_release" == true || "$retain_workdir" != true ]]; then rm -rf "$workdir"; fi' EXIT
+retain_workdir=false
 core="$workdir/tg2"
 devtools="$workdir/tg2devtools"
 wheelhouse="$workdir/wheelhouse"
@@ -65,12 +72,11 @@ for template in (
     template.write_text(text)
 PY
 
-mkdir "$wheelhouse"
-python -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$core"
-python -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$devtools"
-
 python -m venv "$workdir/venv"
 python_bin="$workdir/venv/bin/python"
+mkdir "$wheelhouse"
+"$python_bin" -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$core"
+"$python_bin" -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$devtools"
 shopt -s nullglob
 core_wheels=("$wheelhouse"/turbogears2-*.whl)
 devtools_wheels=("$wheelhouse"/tg_devtools-*.whl)
@@ -83,37 +89,27 @@ if ((${#devtools_wheels[@]} != 1)); then
     exit 1
 fi
 "$python_bin" -m pip install "${core_wheels[0]}" "${devtools_wheels[0]}"
-"$python_bin" -m pip install kajiki genshi jinja2 mako pytest WebTest
+expected_version=$(
+    "$python_bin" -c 'from importlib.metadata import version; print(version("TurboGears2"))'
+)
+"$python_bin" -m pip install packaging kajiki genshi jinja2 mako pytest WebTest
 
 (
     cd "$workdir"
     export TG_TEST_DEPENDENCIES=pypi
+    export PRESERVE_TEST_ARTIFACTS=1
     export PIP_FIND_LINKS="$wheelhouse"
     "$python_bin" -m pytest "$devtools/devtools/tests"
 )
+actual_version=$(
+    "$workdir/TESTENV/bin/python" -c 'from importlib.metadata import version; print(version("TurboGears2"))'
+)
+if ! "$python_bin" -c 'import sys; from packaging.version import Version; sys.exit(Version(sys.argv[1]) != Version(sys.argv[2]))' "$actual_version" "$expected_version"; then
+    echo "Quickstart installed TurboGears2 $actual_version; expected $expected_version." >&2
+    exit 1
+fi
+printf 'Verified quickstart TurboGears2 version: %s\n' "$actual_version"
 
-# Check both remotes before publishing either repository.
-for repo in "$core" "$devtools"; do
-    remote_master=$(git -C "$repo" ls-remote --heads origin refs/heads/master | cut -f1)
-    local_master=$(git -C "$repo" rev-parse origin/master)
-    if [[ "$remote_master" != "$local_master" ]]; then
-        echo "Remote master changed during release testing in $repo; aborting." >&2
-        exit 1
-    fi
-    expected_development=$core_development
-    [[ "$repo" == "$devtools" ]] && expected_development=$devtools_development
-    remote_development=$(git -C "$repo" ls-remote --heads origin refs/heads/development | cut -f1)
-    if [[ "$remote_development" != "$expected_development" ]]; then
-        echo "Remote development changed during release testing in $repo; aborting." >&2
-        exit 1
-    fi
-    if [[ -n $(git -C "$repo" ls-remote origin "refs/tags/tg$version" "refs/tags/tg$version^{}") ]]; then
-        echo "Release tag tg$version already exists in $repo; aborting." >&2
-        exit 1
-    fi
-done
-
-published_repos=()
 for repo in "$core" "$devtools"; do
     git -C "$repo" add pyproject.toml
     if [[ "$repo" == "$core" ]]; then
@@ -126,14 +122,51 @@ for repo in "$core" "$devtools"; do
     git -C "$repo" checkout -B master origin/master
     git -C "$repo" merge --ff-only development
     git -C "$repo" tag -a "tg$version" -m "Release $version"
-    if ! git -C "$repo" push --atomic origin master development "tg$version"; then
-        echo "Atomic push failed for $(basename "$repo"); verify its remote refs before retrying." >&2
-        if ((${#published_repos[@]})); then
-            printf 'Already published: %s\n' "${published_repos[*]}" >&2
-            echo "Release is partial; publish the remaining repository before retrying." >&2
-        fi
-        exit 1
-    fi
-    published_repos+=("$(basename "$repo")")
     git -C "$repo" checkout development
 done
+
+if [[ "$push_release" == true ]]; then
+    # Check both remotes before publishing either repository.
+    for repo in "$core" "$devtools"; do
+        remote_master=$(git -C "$repo" ls-remote --heads origin refs/heads/master | cut -f1)
+        local_master=$(git -C "$repo" rev-parse origin/master)
+        if [[ "$remote_master" != "$local_master" ]]; then
+            echo "Remote master changed during release testing in $repo; aborting." >&2
+            exit 1
+        fi
+        expected_development=$core_development
+        [[ "$repo" == "$devtools" ]] && expected_development=$devtools_development
+        remote_development=$(git -C "$repo" ls-remote --heads origin refs/heads/development | cut -f1)
+        if [[ "$remote_development" != "$expected_development" ]]; then
+            echo "Remote development changed during release testing in $repo; aborting." >&2
+            exit 1
+        fi
+        if [[ -n $(git -C "$repo" ls-remote origin "refs/tags/tg$version" "refs/tags/tg$version^{}") ]]; then
+            echo "Release tag tg$version already exists in $repo; aborting." >&2
+            exit 1
+        fi
+    done
+
+    published_repos=()
+    for repo in "$core" "$devtools"; do
+        if ! git -C "$repo" push --atomic origin master development "tg$version"; then
+            echo "Atomic push failed for $(basename "$repo"); verify its remote refs before retrying." >&2
+            if ((${#published_repos[@]})); then
+                printf 'Already published: %s\n' "${published_repos[*]}" >&2
+                echo "Release is partial; publish the remaining repository before retrying." >&2
+            fi
+            exit 1
+        fi
+        published_repos+=("$(basename "$repo")")
+    done
+else
+    retain_workdir=true
+    printf 'Prepared release retained at: %s\n' "$workdir"
+    for repo in "$core" "$devtools"; do
+        printf '%s master=%s development=%s tg%s=%s\n' \
+            "$(basename "$repo")" \
+            "$(git -C "$repo" rev-parse refs/heads/master)" \
+            "$(git -C "$repo" rev-parse refs/heads/development)" \
+            "$version" "$(git -C "$repo" rev-parse "refs/tags/tg$version^{commit}")"
+    done
+fi
