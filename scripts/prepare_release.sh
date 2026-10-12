@@ -42,6 +42,7 @@ git clone --branch development --single-branch git@github.com:TurboGears/tg2devt
 git clone --branch development --single-branch git@github.com:TurboGears/tg2docs.git "$docs"
 git -C "$core" fetch origin master:refs/remotes/origin/master
 git -C "$devtools" fetch origin master:refs/remotes/origin/master
+git -C "$docs" fetch origin master:refs/remotes/origin/master
 
 # Dev releases of X.Y.Z are covered by the "From ... to X.Y.Z" chapter.
 upgrade_version=${version%.dev*}
@@ -52,6 +53,7 @@ if ! grep -Eq "^From .+ to ${upgrade_version//./\\.}$" "$docs/docs/reference/upg
 fi
 core_development=$(git -C "$core" rev-parse origin/development)
 devtools_development=$(git -C "$devtools" rev-parse origin/development)
+docs_development=$(git -C "$docs" rev-parse origin/development)
 
 core_version=$(sed -n 's/^version = "\([^"]*\)"$/\1/p' "$core/pyproject.toml")
 devtools_version=$(sed -n 's/^version = "\([^"]*\)"$/\1/p' "$devtools/pyproject.toml")
@@ -155,9 +157,16 @@ for repo in "$core" "$devtools"; do
     git -C "$repo" checkout development
 done
 
+# Docs have no version to bump, so they get no release commit; the annotated
+# tag alone triggers the workflow that publishes the versioned text docs.
+git -C "$docs" checkout -B master origin/master
+git -C "$docs" merge --ff-only development
+git -C "$docs" tag -a "tg$version" -m "Release $version"
+git -C "$docs" checkout development
+
 if [[ "$push_release" == true ]]; then
-    # Check both remotes before publishing either repository.
-    for repo in "$core" "$devtools"; do
+    # Check every remote before publishing any repository.
+    for repo in "$core" "$devtools" "$docs"; do
         remote_master=$(git -C "$repo" ls-remote --heads origin refs/heads/master | cut -f1)
         local_master=$(git -C "$repo" rev-parse origin/master)
         if [[ "$remote_master" != "$local_master" ]]; then
@@ -166,6 +175,7 @@ if [[ "$push_release" == true ]]; then
         fi
         expected_development=$core_development
         [[ "$repo" == "$devtools" ]] && expected_development=$devtools_development
+        [[ "$repo" == "$docs" ]] && expected_development=$docs_development
         remote_development=$(git -C "$repo" ls-remote --heads origin refs/heads/development | cut -f1)
         if [[ "$remote_development" != "$expected_development" ]]; then
             echo "Remote development changed during release testing in $repo; aborting." >&2
@@ -178,7 +188,7 @@ if [[ "$push_release" == true ]]; then
     done
 
     published_repos=()
-    for repo in "$core" "$devtools"; do
+    for repo in "$core" "$devtools" "$docs"; do
         if ! git -C "$repo" push --atomic origin master development "tg$version"; then
             echo "Atomic push failed for $(basename "$repo"); verify its remote refs before retrying." >&2
             if ((${#published_repos[@]})); then
@@ -190,8 +200,8 @@ if [[ "$push_release" == true ]]; then
         published_repos+=("$(basename "$repo")")
     done
 
-    # Both tags are published; generate notes and let maintainers curate
-    # them on GitHub afterwards.
+    # All tags are published; generate notes and let maintainers curate
+    # them on GitHub afterwards. Docs get no GitHub release.
     failed_repos=()
     for github_repo in TurboGears/tg2 TurboGears/tg2devtools; do
         if ! gh release create "tg$version" --title "Version $version" --generate-notes --repo "$github_repo"; then
@@ -296,7 +306,7 @@ PY
 else
     retain_workdir=true
     printf 'Prepared release retained at: %s\n' "$workdir"
-    for repo in "$core" "$devtools"; do
+    for repo in "$core" "$devtools" "$docs"; do
         printf '%s master=%s development=%s tg%s=%s\n' \
             "$(basename "$repo")" \
             "$(git -C "$repo" rev-parse refs/heads/master)" \
