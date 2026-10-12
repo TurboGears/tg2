@@ -67,7 +67,21 @@ sed -i "s/^version = \"$core_version\"$/version = \"$version\"/" "$core/pyprojec
 sed -i "s/TurboGears2 >= $core_version/TurboGears2 >= $version/" "$devtools/pyproject.toml" \
     "$devtools/devtools/gearbox/quickstart/template/pyproject.toml_tmpl" \
     "$devtools/devtools/gearbox/quickstart/template-api/pyproject.toml_tmpl"
-sed -i "/^= Change Log =$/s/$/\n\n== $version (**$(date '+%b %-d, %Y')**) ==/" "$core/CHANGES.txt"
+# The change log section is generated from the commit history since the
+# previous release, reviewed by the maintainer, and committed with the bump.
+if ! prev_tag=$(git -C "$core" describe --tags --abbrev=0 --match 'tg*' HEAD); then
+    echo "No previous tg* tag found in $core; cannot generate the change log section." >&2
+    exit 1
+fi
+if grep -q "^== $version " "$core/CHANGES.txt"; then
+    echo "CHANGES.txt already has a section for $version; remove it so the script can generate it." >&2
+    exit 1
+fi
+section="$workdir/changelog_section.txt"
+printf '\n== %s (**%s**) ==\n\n' "$version" "$(date '+%b %-d, %Y')" > "$section"
+git -C "$core" log --no-merges --format="* %s" "$prev_tag..HEAD" >> "$section"
+sed -i "/^= Change Log =$/r $section" "$core/CHANGES.txt"
+
 for edited in "$core/pyproject.toml" "$devtools/pyproject.toml"; do
     grep -q "^version = \"$version\"$" "$edited" || { echo "Version was not updated in $edited." >&2; exit 1; }
 done
@@ -77,6 +91,14 @@ for edited in "$devtools/pyproject.toml" \
     grep -q "TurboGears2 >= $version" "$edited" || { echo "TurboGears2 dependency was not updated in $edited." >&2; exit 1; }
 done
 grep -q "^== $version " "$core/CHANGES.txt" || { echo "Changelog section for $version was not added to $core/CHANGES.txt." >&2; exit 1; }
+
+echo "Review the new change log section for $version in $core/CHANGES.txt, then save and exit."
+"${EDITOR:-vi}" "$core/CHANGES.txt"
+grep -q "^== $version " "$core/CHANGES.txt" || { echo "The change log section for $version is missing from $core/CHANGES.txt; re-run the script and keep the section during review." >&2; exit 1; }
+if ! awk -v v="^== $version " '/^== / { in_section = $0 ~ v; next } in_section && NF { filled = 1 } END { exit !filled }' "$core/CHANGES.txt"; then
+    echo "The change log section for $version is empty; re-run the script and fill the section during review." >&2
+    exit 1
+fi
 
 python -m venv "$workdir/venv"
 python_bin="$workdir/venv/bin/python"
@@ -168,8 +190,8 @@ if [[ "$push_release" == true ]]; then
         published_repos+=("$(basename "$repo")")
     done
 
-    # Both tags are published; the release commit's changelog section is empty,
-    # so generate notes and let maintainers curate them on GitHub afterwards.
+    # Both tags are published; generate notes and let maintainers curate
+    # them on GitHub afterwards.
     failed_repos=()
     for github_repo in TurboGears/tg2 TurboGears/tg2devtools; do
         if ! gh release create "tg$version" --title "Version $version" --generate-notes --repo "$github_repo"; then
