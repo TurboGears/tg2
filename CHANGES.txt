@@ -1,5 +1,24 @@
 = Change Log =
 
+== 2.5.1 (**Oct 12, 2026**) ==
+
+* Improve repr of predicates and validators
+* Migrate from 412 to 422 for validation errors
+* Convert accepts None as the default value
+* Handle failures in parsing parameters (#149)
+* abstract tg.Request from WSGI specifics
+* Support decoding json body
+* Limited to Python 3.10+
+* add allowed_methods to @expose
+* Remove Pylons leftovers and add 3.14 tests target
+* Quickstarts now include turbogears specific skills for agents
+* remove dependency on tomllib
+* tgdocs command
+* Support for agentic engineering commands
+* New quickstart-api to quickstart api servers
+* New quickstart, simpler and easier to customize
+* i18n commands that don't require setup.py
+
 == 2.5.0 (**Feb 18, 2025**) ==
 
 * Support for Python 3.13
