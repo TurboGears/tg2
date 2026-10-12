@@ -121,7 +121,11 @@ if ((${#devtools_wheels[@]} != 1)); then
     exit 1
 fi
 "$python_bin" -m pip install "${core_wheels[0]}" "${devtools_wheels[0]}"
+# The version probes run from $workdir because python -c prepends the current
+# directory to sys.path, and a TurboGears2.egg-info left in the source
+# checkout by a local editable install would shadow the venv's version.
 expected_version=$(
+    cd "$workdir"
     "$python_bin" -c 'from importlib.metadata import version; print(version("TurboGears2"))'
 )
 "$python_bin" -m pip install packaging kajiki genshi jinja2 mako pytest WebTest
@@ -134,6 +138,8 @@ expected_version=$(
     "$python_bin" -m pytest "$devtools/devtools/tests"
 )
 actual_version=$(
+    # Probed from $workdir so a checkout egg-info cannot shadow the venv version.
+    cd "$workdir"
     "$workdir/TESTENV/bin/python" -c 'from importlib.metadata import version; print(version("TurboGears2"))'
 )
 if ! "$python_bin" -c 'import sys; from packaging.version import Version; sys.exit(Version(sys.argv[1]) != Version(sys.argv[2]))' "$actual_version" "$expected_version"; then
