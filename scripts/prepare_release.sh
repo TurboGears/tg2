@@ -10,8 +10,8 @@ if [[ ! $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.?dev[0-9]+)?$ ]] || { (( $# == 2 )) && [
     exit 2
 fi
 
-# uv builds the distribution artifacts in every mode and twine publishes
-# them; check both upfront so a missing tool fails before any clone.
+# uv builds the distribution artifacts in every mode and twine validates and
+# publishes them; check both upfront so a missing tool fails before any clone.
 if ! command -v uv >/dev/null; then
     echo "uv is required to build the release artifacts; install it from https://docs.astral.sh/uv/ before releasing." >&2
     exit 1
@@ -115,6 +115,12 @@ mkdir "$wheelhouse"
 # that get uploaded, so the wheelhouse holds the exact published artifacts.
 uv build --out-dir "$wheelhouse" "$core"
 uv build --out-dir "$wheelhouse" "$devtools"
+# twine check runs the same rendering validation PyPI applies on upload, so
+# a description PyPI would reject fails the run before any release step.
+if ! twine check "$wheelhouse"/*; then
+    echo "twine check rejected the artifacts; fix the README markup in the source repositories and re-run." >&2
+    exit 1
+fi
 shopt -s nullglob
 core_wheels=("$wheelhouse"/turbogears2-*.whl)
 devtools_wheels=("$wheelhouse"/tg_devtools-*.whl)
