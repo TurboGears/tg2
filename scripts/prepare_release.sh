@@ -10,73 +10,81 @@ if [[ ! $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.?dev[0-9]+)?$ ]] || { (( $# == 2 )) && [
     exit 2
 fi
 
+# uv builds the distribution artifacts in every mode and twine publishes
+# them; check both upfront so a missing tool fails before any clone.
+if ! command -v uv >/dev/null; then
+    echo "uv is required to build the release artifacts; install it from https://docs.astral.sh/uv/ before releasing." >&2
+    exit 1
+fi
+if ! command -v twine >/dev/null; then
+    echo "twine is required to publish to PyPI; install it from https://twine.readthedocs.io/ before releasing." >&2
+    exit 1
+fi
+
 version=$1
 push_release=false
 [[ $# -eq 2 ]] && push_release=true
+if [[ "$push_release" == true ]] && ! command -v gh >/dev/null; then
+    echo "gh is required for --push; install it from https://cli.github.com/ before releasing." >&2
+    exit 1
+fi
 workdir=$(cd "$(mktemp -d /tmp/tg-release.XXXXXX)" && pwd)
-trap 'if [[ "$push_release" == true || "$retain_workdir" != true ]]; then rm -rf "$workdir"; fi' EXIT
+trap 'if [[ "$retain_workdir" != true ]]; then rm -rf "$workdir"; fi' EXIT
 retain_workdir=false
 core="$workdir/tg2"
 devtools="$workdir/tg2devtools"
+docs="$workdir/tg2docs"
 wheelhouse="$workdir/wheelhouse"
+website="$workdir/tgwebsite"
 
 git clone --branch development --single-branch git@github.com:TurboGears/tg2.git "$core"
 git clone --branch development --single-branch git@github.com:TurboGears/tg2devtools.git "$devtools"
+git clone --branch development --single-branch git@github.com:TurboGears/tg2docs.git "$docs"
 git -C "$core" fetch origin master:refs/remotes/origin/master
 git -C "$devtools" fetch origin master:refs/remotes/origin/master
+
+# Dev releases of X.Y.Z are covered by the "From ... to X.Y.Z" chapter.
+upgrade_version=${version%.dev*}
+upgrade_version=${upgrade_version%dev*}
+if ! grep -Eq "^From .+ to ${upgrade_version//./\\.}$" "$docs/docs/reference/upgrading.rst"; then
+    echo "docs/reference/upgrading.rst lacks a \"From ... to $upgrade_version\" chapter; add it to tg2docs before releasing." >&2
+    exit 1
+fi
 core_development=$(git -C "$core" rev-parse origin/development)
 devtools_development=$(git -C "$devtools" rev-parse origin/development)
 
-python - "$version" "$core" "$devtools" <<'PY'
-from datetime import date
-from pathlib import Path
-import re
-import sys
-
-version, core, devtools = sys.argv[1:]
-core = Path(core)
-devtools = Path(devtools)
-
-def replace_once(text, old, new, path):
-    if text.count(old) != 1:
-        raise ValueError(f"Expected exactly one {old!r} in {path}")
-    return text.replace(old, new, 1)
-
-
-metadata = core / "pyproject.toml"
-text = metadata.read_text()
-core_version = re.search(r'(?m)^version = "([^"]+)"$', text).group(1)
-
-metadata = devtools / "pyproject.toml"
-devtools_text = metadata.read_text()
-devtools_version = re.search(r'(?m)^version = "([^"]+)"$', devtools_text).group(1)
-if core_version != devtools_version:
-    raise ValueError(f"Project versions are not aligned: {core_version} != {devtools_version}")
-
-text = replace_once(text, f'version = "{core_version}"', f'version = "{version}"', core / "pyproject.toml")
-(core / "pyproject.toml").write_text(text)
-
-changelog = core / "CHANGES.txt"
-text = replace_once(changelog.read_text(), "= Change Log =\n", f"= Change Log =\n\n== {version} (**{date.today():%b %-d, %Y}**) ==\n", changelog)
-changelog.write_text(text)
-
-text = replace_once(devtools_text, f'version = "{devtools_version}"', f'version = "{version}"', metadata)
-text = replace_once(text, f'TurboGears2 >= {core_version}', f'TurboGears2 >= {version}', metadata)
-metadata.write_text(text)
-
-for template in (
-    devtools / "devtools/gearbox/quickstart/template/pyproject.toml_tmpl",
-    devtools / "devtools/gearbox/quickstart/template-api/pyproject.toml_tmpl",
-):
-    text = replace_once(template.read_text(), f"TurboGears2 >= {core_version}", f"TurboGears2 >= {version}", template)
-    template.write_text(text)
-PY
+core_version=$(sed -n 's/^version = "\([^"]*\)"$/\1/p' "$core/pyproject.toml")
+devtools_version=$(sed -n 's/^version = "\([^"]*\)"$/\1/p' "$devtools/pyproject.toml")
+if [[ -z "$core_version" || -z "$devtools_version" ]]; then
+    echo "Could not read the current version from pyproject.toml in $core or $devtools." >&2
+    exit 1
+fi
+if [[ "$core_version" != "$devtools_version" ]]; then
+    echo "Project versions are not aligned: $core_version != $devtools_version" >&2
+    exit 1
+fi
+sed -i "s/^version = \"$core_version\"$/version = \"$version\"/" "$core/pyproject.toml" "$devtools/pyproject.toml"
+sed -i "s/TurboGears2 >= $core_version/TurboGears2 >= $version/" "$devtools/pyproject.toml" \
+    "$devtools/devtools/gearbox/quickstart/template/pyproject.toml_tmpl" \
+    "$devtools/devtools/gearbox/quickstart/template-api/pyproject.toml_tmpl"
+sed -i "/^= Change Log =$/s/$/\n\n== $version (**$(date '+%b %-d, %Y')**) ==/" "$core/CHANGES.txt"
+for edited in "$core/pyproject.toml" "$devtools/pyproject.toml"; do
+    grep -q "^version = \"$version\"$" "$edited" || { echo "Version was not updated in $edited." >&2; exit 1; }
+done
+for edited in "$devtools/pyproject.toml" \
+    "$devtools/devtools/gearbox/quickstart/template/pyproject.toml_tmpl" \
+    "$devtools/devtools/gearbox/quickstart/template-api/pyproject.toml_tmpl"; do
+    grep -q "TurboGears2 >= $version" "$edited" || { echo "TurboGears2 dependency was not updated in $edited." >&2; exit 1; }
+done
+grep -q "^== $version " "$core/CHANGES.txt" || { echo "Changelog section for $version was not added to $core/CHANGES.txt." >&2; exit 1; }
 
 python -m venv "$workdir/venv"
 python_bin="$workdir/venv/bin/python"
 mkdir "$wheelhouse"
-"$python_bin" -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$core"
-"$python_bin" -m pip wheel --no-deps --wheel-dir "$wheelhouse" "$devtools"
+# uv builds the wheels that get installed and tested together with the sdists
+# that get uploaded, so the wheelhouse holds the exact published artifacts.
+uv build --out-dir "$wheelhouse" "$core"
+uv build --out-dir "$wheelhouse" "$devtools"
 shopt -s nullglob
 core_wheels=("$wheelhouse"/turbogears2-*.whl)
 devtools_wheels=("$wheelhouse"/tg_devtools-*.whl)
@@ -159,6 +167,110 @@ if [[ "$push_release" == true ]]; then
         fi
         published_repos+=("$(basename "$repo")")
     done
+
+    # Both tags are published; the release commit's changelog section is empty,
+    # so generate notes and let maintainers curate them on GitHub afterwards.
+    failed_repos=()
+    for github_repo in TurboGears/tg2 TurboGears/tg2devtools; do
+        if ! gh release create "tg$version" --title "Version $version" --generate-notes --repo "$github_repo"; then
+            failed_repos+=("$github_repo")
+            echo "GitHub release creation failed for $github_repo; the tag tg$version was already pushed." >&2
+            echo "Create it manually with: gh release create \"tg$version\" --title \"Version $version\" --generate-notes --repo $github_repo" >&2
+        fi
+    done
+    if ((${#failed_repos[@]})); then
+        retain_workdir=true
+        echo "PyPI upload and the website update were not performed; the release artifacts are kept in $wheelhouse." >&2
+        echo "After creating the missing release(s), publish them with: twine upload \"$wheelhouse\"/*" >&2
+        exit 1
+    fi
+
+    # Both GitHub releases exist; publish the already tested artifacts.
+    if ! twine upload "$wheelhouse"/*; then
+        retain_workdir=true
+        echo "twine upload failed; the workdir with the artifacts is kept at $workdir." >&2
+        echo "Retry manually with: twine upload \"$wheelhouse\"/*" >&2
+        exit 1
+    fi
+
+    # PyPI's index can lag behind a successful upload, so wait until both
+    # projects list the version before advertising it on the website.
+    if ! "$python_bin" - "$version" <<'PY'
+import http.client
+import json
+import sys
+import time
+import urllib.error
+import urllib.request
+
+from packaging.utils import canonicalize_version
+
+# PyPI keys releases by the canonicalized version, so 2.5.1dev1 is listed as 2.5.1.dev1.
+version = canonicalize_version(sys.argv[1])
+for attempt in range(20):
+    pending = []
+    for project in ("TurboGears2", "tg.devtools"):
+        try:
+            with urllib.request.urlopen(f"https://pypi.org/pypi/{project}/json", timeout=30) as response:
+                listed = version in {canonicalize_version(release) for release in json.load(response)["releases"]}
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException, ValueError):
+            # Read-phase timeouts and truncated or invalid bodies are not URLError
+            # subclasses; any failed fetch counts as pending and is retried.
+            listed = False
+        if not listed:
+            pending.append(project)
+    if not pending:
+        sys.exit(0)
+    if attempt < 19:
+        time.sleep(15)
+print(f"PyPI has not listed {version} for: {', '.join(pending)}", file=sys.stderr)
+sys.exit(1)
+PY
+    then
+        retain_workdir=true
+        echo "Upload succeeded, but PyPI does not list $version yet (or could not be reached); the website was NOT updated." >&2
+        echo "Once PyPI lists $version, update the website manually: clone git@github.com:TurboGears/tgwebsite.git, update the version and release date in src/current-status.rst and the version in src/themes/w3/layout.html, commit \"Release $version\" and push origin master." >&2
+        exit 1
+    fi
+
+    # The website advertises the latest stable release; dev releases skip it.
+    if [[ "$version" == *dev* ]]; then
+        echo "Development release; the website was not updated." >&2
+    else
+        # Any failure here leaves a fully published release, so keep the clone
+        # for manual fixing instead of losing the remaining work. The subshell
+        # runs in a tested context where set -e is ignored, hence || exit 1.
+        if ! (
+            git clone --branch master --single-branch git@github.com:TurboGears/tgwebsite.git "$website" || exit 1
+            # The previous release is read from the status page so the announcement and
+            # download box keep pointing at consistent versions.
+            status="$website/src/current-status.rst"
+            layout="$website/src/themes/w3/layout.html"
+            previous=$(sed -n 's/^Latest stable release: \([^ ]*\) — released .\+$/\1/p' "$status") || exit 1
+            [[ -n "$previous" ]] || { echo "Latest stable release line not found in $status." >&2; exit 1; }
+            sed -i "s/^Latest stable release: $previous — released .*$/Latest stable release: $version — released $(date '+%B %-d, %Y')/" "$status" || exit 1
+            sed -i "s|releases/tag/tg$previous|releases/tag/tg$version|" "$status" "$layout" || exit 1
+            sed -i "s|>$previous</a>|>$version</a>|" "$layout" || exit 1
+            grep -q "^Latest stable release: $version — released" "$status" || { echo "Latest stable release line was not updated in $status." >&2; exit 1; }
+            grep -q "releases/tag/tg$version" "$status" || { echo "Release link was not updated in $status." >&2; exit 1; }
+            grep -q "releases/tag/tg$version" "$layout" || { echo "Release link was not updated in $layout." >&2; exit 1; }
+            grep -q ">$version</a>" "$layout" || { echo "Download box version was not updated in $layout." >&2; exit 1; }
+            git -C "$website" add src/current-status.rst src/themes/w3/layout.html || exit 1
+            git -C "$website" commit -m "Release $version" || exit 1
+            # Pushes to master auto-deploy GitHub Pages.
+            git -C "$website" push origin master || exit 1
+        ); then
+            retain_workdir=true
+            echo "Release $version is fully published, but the website was not updated." >&2
+            if [[ -d "$website" ]]; then
+                echo "The clone at $website is kept for manual fixing; fix any partially edited files, then run: git -C $website add src/current-status.rst src/themes/w3/layout.html && git -C $website commit -m \"Release $version\" || true; git -C $website push origin master" >&2
+            else
+                echo "Re-create the clone with: git clone --branch master --single-branch git@github.com:TurboGears/tgwebsite.git $website" >&2
+                echo "Then update the version and release date in src/current-status.rst and the version in src/themes/w3/layout.html, commit \"Release $version\" and push origin master." >&2
+            fi
+            exit 1
+        fi
+    fi
 else
     retain_workdir=true
     printf 'Prepared release retained at: %s\n' "$workdir"
