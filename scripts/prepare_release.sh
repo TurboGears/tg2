@@ -69,10 +69,15 @@ sed -i "s/^version = \"$core_version\"$/version = \"$version\"/" "$core/pyprojec
 sed -i "s/TurboGears2 >= $core_version/TurboGears2 >= $version/" "$devtools/pyproject.toml" \
     "$devtools/devtools/gearbox/quickstart/template/pyproject.toml_tmpl" \
     "$devtools/devtools/gearbox/quickstart/template-api/pyproject.toml_tmpl"
-# The change log section is generated from the commit history since the
-# previous release, reviewed by the maintainer, and committed with the bump.
-if ! prev_tag=$(git -C "$core" describe --tags --abbrev=0 --match 'tg*' HEAD); then
+# The change log section is generated from the commit history of both
+# repositories since their previous release, reviewed by the maintainer,
+# and committed with the bump.
+if ! core_prev_tag=$(git -C "$core" describe --tags --abbrev=0 --match 'tg*' HEAD); then
     echo "No previous tg* tag found in $core; cannot generate the change log section." >&2
+    exit 1
+fi
+if ! devtools_prev_tag=$(git -C "$devtools" describe --tags --abbrev=0 --match 'tg*' HEAD); then
+    echo "No previous tg* tag found in $devtools; cannot generate the change log section." >&2
     exit 1
 fi
 if grep -q "^== $version " "$core/CHANGES.txt"; then
@@ -81,7 +86,8 @@ if grep -q "^== $version " "$core/CHANGES.txt"; then
 fi
 section="$workdir/changelog_section.txt"
 printf '\n== %s (**%s**) ==\n\n' "$version" "$(date '+%b %-d, %Y')" > "$section"
-git -C "$core" log --no-merges --format="* %s" "$prev_tag..HEAD" >> "$section"
+git -C "$core" log --no-merges --format="* %s" "$core_prev_tag..HEAD" >> "$section"
+git -C "$devtools" log --no-merges --format="* %s" "$devtools_prev_tag..HEAD" >> "$section"
 sed -i "/^= Change Log =$/r $section" "$core/CHANGES.txt"
 
 for edited in "$core/pyproject.toml" "$devtools/pyproject.toml"; do
