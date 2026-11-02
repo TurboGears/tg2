@@ -152,7 +152,10 @@ class Request(WebObRequest):
     @property
     def quoted_path_info(self):
         """PATH used for dispatching the request."""
-        bpath = str(self.path_info).encode(self.url_encoding)
+        try:
+            bpath = str(self.path_info).encode(self.url_encoding)
+        except UnicodeDecodeError:
+            bpath = self.environ["PATH_INFO"].encode("latin-1")
         return urllib.parse.quote(bpath, PATH_SAFE)
 
     def disable_error_pages(self):
