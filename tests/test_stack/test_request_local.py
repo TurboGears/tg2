@@ -1,9 +1,20 @@
 
+import pytest
+
 from tg.caching import cached_property
 from tg.request_local import Request, Response
 
 
 class TestRequest(object):
+    @pytest.mark.parametrize('path, encoding, expected', [
+        ('/\xc3\xa4/a b%?', 'utf-8', '/%C3%A4/a%20b%25%3F'),
+        ('/\xe4/a b%?', 'latin-1', '/%E4/a%20b%25%3F'),
+        ('/\xc0/a b%?', 'utf-8', '/%C0/a%20b%25%3F'),
+    ])
+    def test_quoted_path_info(self, path, encoding, expected):
+        r = Request({'PATH_INFO': path}, url_encoding=encoding)
+        assert r.quoted_path_info == expected
+
     def test_language(self):
         r = Request({}, headers={'Accept-Language': 'en-gb;q=0.8, da'})
         bmatch = r.languages_best_match()

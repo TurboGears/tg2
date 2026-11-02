@@ -535,6 +535,17 @@ class TestNotFoundController(TestWSGIController):
         r = self.app.get('/%D0%BF%D1%80%D0%B0%D0%B2%D0%B0', status=404)
         assert '404 Not Found' in r, r
 
+    @pytest.mark.parametrize('path, environ', [
+        ('/%C0', {}),
+        ('/%80', {}),
+        ('/%C3%28', {}),
+        ('/%E2%82', {}),
+        ('/', {'PATH_INFO': '/\xc0'}),
+    ])
+    def test_not_found_malformed_utf8(self, path, environ):
+        r = self.app.get(path, extra_environ=environ, status=404)
+        assert '404 Not Found' in r, r
+
 class TestNotFoundWithIndexController(TestWSGIController):
 
     def setup_method(self):
