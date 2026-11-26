@@ -13,6 +13,7 @@ from crank.util import flatten_arguments, get_params_with_argspec
 
 import tg
 from tg.configuration.utils import TGConfigError
+from tg.decorators import Decoration
 from tg.exceptions import HTTPMethodNotAllowed
 from tg.flash import flash
 from tg.predicates import NotAuthorizedError, not_anonymous
@@ -88,8 +89,11 @@ class DecoratedController(object, metaclass=_DecoratedControllerMeta):
         if not resp_headers.get("Content-Type"):
             resp_headers.pop("Content-Type", None)
 
-        # Enforce limited HTTP Methods in case they were registered
-        self._enforce_allowed_methods(action.decoration, context.request)
+        # Enforce limited HTTP Methods in case they were registered.
+        # Actions set by a custom _dispatch might have never been exposed,
+        # so they might not have a decoration yet.
+        decoration = Decoration.get_decoration(default_im_func(action))
+        self._enforce_allowed_methods(decoration, context.request)
 
         if remainder:
             remainder = tuple(map(urllib.request.url2pathname, remainder or []))
