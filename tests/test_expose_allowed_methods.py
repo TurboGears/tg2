@@ -84,3 +84,26 @@ class TestInheritedExposeAllowedMethods(TestWSGIController):
         post_data = json.loads(self.app.post("/endpoint").text)
         assert post_data["message"] == "child"
         self.app.put("/endpoint", status=405)
+
+
+class CustomDispatchController(TGController):
+    """Dispatches to a method that was never exposed, like a JSON-RPC
+    controller that picks the method to call from the request body."""
+
+    def _dispatch(self, state, remainder=None):
+        state.set_action(self._rpc_call, [])
+        state.set_params({"value": "called"})
+        return state
+
+    def _rpc_call(self, value):
+        return value
+
+
+class TestCustomDispatchToUnexposedAction(TestWSGIController):
+    def setup_method(self):
+        TestWSGIController.setup_method(self)
+        self.app = make_app(CustomDispatchController)
+
+    def test_unexposed_action_is_not_method_restricted(self):
+        assert self.app.get("/").text == "called"
+        assert self.app.post("/").text == "called"
